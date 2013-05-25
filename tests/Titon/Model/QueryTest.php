@@ -5,11 +5,12 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Common;
+namespace Titon\Model;
 
 use Titon\Model\Query;
 use Titon\Model\Source\Mysql;
 use Titon\Test\TestCase;
+use \Exception;
 
 /**
  * Test class for Titon\Model\Query.
@@ -102,6 +103,13 @@ class QueryTest extends TestCase {
 			'created' => 'asc'
 		]);
 		$this->assertEquals(['id' => 'DESC', 'created' => 'ASC'], $this->object->getOrderBy());
+
+		try {
+			$this->object->orderBy('id', 'ascending');
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
 	}
 
 	/**

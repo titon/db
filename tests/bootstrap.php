@@ -17,3 +17,11 @@ if (!file_exists(VENDOR_DIR . '/autoload.php')) {
 
 $loader = require VENDOR_DIR . '/autoload.php';
 $loader->add('Titon\\Model', TEST_DIR);
+
+// Define database credentials
+\Titon\Common\Config::set('db', [
+	'database' => 'test',
+	'host' => 'localhost',
+	'user' => 'root',
+	'pass' => ''
+]);

@@ -10,6 +10,6 @@ namespace Titon\Model\Source;
 /**
  * Represents the SQLite database.
  */
-class Sqlite {
+class Sqlite extends AbstractDboSource {
 
 }

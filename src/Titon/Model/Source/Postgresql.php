@@ -10,6 +10,6 @@ namespace Titon\Model\Source;
 /**
  * Represents the PostgreSQL database.
  */
-class Postgresql {
+class Postgresql extends AbstractDboSource {
 
 }

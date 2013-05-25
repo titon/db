@@ -10,6 +10,6 @@ namespace Titon\Model\Source;
 /**
  * Represents the MongoDB database.
  */
-class Mongo {
+class Mongo extends AbstractDboSource {
 
 }

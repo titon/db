@@ -10,6 +10,6 @@ namespace Titon\Model\Source;
 /**
  * Represents the Oracle database.
  */
-class Oracle {
+class Oracle extends AbstractDboSource {
 
 }
