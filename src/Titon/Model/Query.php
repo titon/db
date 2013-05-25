@@ -118,6 +118,14 @@ class Query {
 		$this->_having = new Clause();
 	}
 
+	public function fetch() {
+		$statement = $this->_source->buildStatement($this);
+	}
+
+	public function fetchMany() {
+		$statement = $this->_source->buildStatement($this);
+	}
+
 	/**
 	 * Set the list of fields to return.
 	 *
@@ -146,102 +154,6 @@ class Query {
 		$this->_table = (string) $table;
 
 		return $this;
-	}
-
-	/**
-	 * Set what fields to group on.
-	 *
-	 * @param string $field,...
-	 * @return \Titon\Model\Query
-	 */
-	public function groupBy() {
-		$this->_groupBy = array_unique(array_merge($this->_groupBy, func_get_args()));
-
-		return $this;
-	}
-
-	/**
-	 * Define the parameters to use for the having clause.
-	 *
-	 * @param string $field
-	 * @param mixed $value
-	 * @return \Titon\Model\Query
-	 */
-	public function having($field, $value = null) {
-		if ($field instanceof Closure) {
-			$field = $field->bindTo($this->_having, 'Titon\Model\Query\Clause');
-			$field();
-		} else {
-			$this->_having->also($field, $value);
-		}
-
-		return $this;
-	}
-
-	/**
-	 * Set the record limit and offset.
-	 *
-	 * @param int $limit
-	 * @param int $offset
-	 * @return \Titon\Model\Query
-	 */
-	public function limit($limit, $offset = null) {
-		$this->_limit = (int) $limit;
-		$this->_offset = (int) $offset;
-
-		return $this;
-	}
-
-	/**
-	 * Set the fields and direction to order by.
-	 *
-	 * @param string|array $field
-	 * @param string $direction
-	 * @return \Titon\Model\Query
-	 * @throws \Titon\Model\Exception
-	 */
-	public function orderBy($field, $direction = self::DESC) {
-		if (is_array($field)) {
-			foreach ($field as $key => $dir) {
-				$this->orderBy($key, $dir);
-			}
-		} else {
-			$direction = strtoupper($direction);
-
-			if ($direction != self::ASC && $direction != self::DESC) {
-				throw new Exception(sprintf('Invalid order direction %s for field %s', $direction, $field));
-			}
-
-			$this->_orderBy[$field] = $direction;
-		}
-
-		return $this;
-	}
-
-	/**
-	 * Define the parameters to use for the where clause.
-	 *
-	 * @param string $field
-	 * @param mixed $value
-	 * @return \Titon\Model\Query
-	 */
-	public function where($field, $value = null) {
-		if ($field instanceof Closure) {
-			$field = $field->bindTo($this->_where, 'Titon\Model\Query\Clause');
-			$field();
-		} else {
-			$this->_where->also($field, $value);
-		}
-
-		return $this;
-	}
-
-	public function fetch() {
-		$statement = $this->_source->buildStatement($this);
-	}
-
-	public function fetchMany() {
-		$statement = $this->_source->buildStatement($this);
 	}
 
 	/**
@@ -323,6 +235,94 @@ class Query {
 	 */
 	public function getWhere() {
 		return $this->_where;
+	}
+
+	/**
+	 * Set what fields to group on.
+	 *
+	 * @param string $field,...
+	 * @return \Titon\Model\Query
+	 */
+	public function groupBy() {
+		$this->_groupBy = array_unique(array_merge($this->_groupBy, func_get_args()));
+
+		return $this;
+	}
+
+	/**
+	 * Define the parameters to use for the having clause.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query
+	 */
+	public function having($field, $value = null) {
+		if ($field instanceof Closure) {
+			$field = $field->bindTo($this->_having, 'Titon\Model\Query\Clause');
+			$field();
+		} else {
+			$this->_having->also($field, $value);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Set the record limit and offset.
+	 *
+	 * @param int $limit
+	 * @param int $offset
+	 * @return \Titon\Model\Query
+	 */
+	public function limit($limit, $offset = 0) {
+		$this->_limit = (int) $limit;
+		$this->_offset = (int) $offset;
+
+		return $this;
+	}
+
+	/**
+	 * Set the fields and direction to order by.
+	 *
+	 * @param string|array $field
+	 * @param string $direction
+	 * @return \Titon\Model\Query
+	 * @throws \Titon\Model\Exception
+	 */
+	public function orderBy($field, $direction = self::DESC) {
+		if (is_array($field)) {
+			foreach ($field as $key => $dir) {
+				$this->orderBy($key, $dir);
+			}
+		} else {
+			$direction = strtoupper($direction);
+
+			if ($direction != self::ASC && $direction != self::DESC) {
+				throw new Exception(sprintf('Invalid order direction %s for field %s', $direction, $field));
+			}
+
+			$this->_orderBy[$field] = $direction;
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Define the parameters to use for the where clause.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query
+	 */
+	public function where($field, $value = null) {
+		if ($field instanceof Closure) {
+			$field = $field->bindTo($this->_where, 'Titon\Model\Query\Clause');
+			$field();
+		} else {
+			$this->_where->also($field, $value);
+		}
+
+		return $this;
 	}
 
 }

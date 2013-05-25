@@ -93,9 +93,7 @@ class Model extends Base {
 	 * @return \Titon\Model\Source
 	 */
 	public function getConnection($key) {
-		$connection = Registry::factory('Titon\Model\Connection');
-
-		$source = $connection->getSource($key);
+		$source = Registry::factory('Titon\Model\Connection')->getSource($key);
 		$source->connect();
 
 		return $source;
