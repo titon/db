@@ -7,8 +7,8 @@
 
 namespace Titon\Model;
 
-use Titon\Model\Source\Mysql;
-use Titon\Model\Source\Mongo;
+use Titon\Model\Source\Dbo\Mysql;
+use Titon\Model\Source\Dbo\Mongo;
 use Titon\Test\TestCase;
 
 /**
@@ -32,7 +32,7 @@ class ConnectionTest extends TestCase {
 	 * Test getting and setting data sources.
 	 */
 	public function testAddGetSource() {
-		$this->assertInstanceOf('Titon\Model\Source\Mysql', $this->object->getSource('mysql'));
+		$this->assertInstanceOf('Titon\Model\Source\Dbo\Mysql', $this->object->getSource('mysql'));
 
 		try {
 			$this->object->getSource('mongo');
@@ -42,7 +42,7 @@ class ConnectionTest extends TestCase {
 		}
 
 		$this->object->addSource(new Mongo('mongo', []));
-		$this->assertInstanceOf('Titon\Model\Source\Mongo', $this->object->getSource('mongo'));
+		$this->assertInstanceOf('Titon\Model\Source\Dbo\Mongo', $this->object->getSource('mongo'));
 	}
 
 	/**

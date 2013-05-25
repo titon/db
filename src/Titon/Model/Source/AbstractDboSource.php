@@ -4,6 +4,7 @@ namespace Titon\Model\Source;
 
 use Titon\Model\Query;
 use Titon\Model\Query\Clause;
+use Titon\Model\Result\DboResult;
 use Titon\Utility\String;
 use \PDO;
 
@@ -28,6 +29,13 @@ abstract class AbstractDboSource extends AbstractSource {
 		'dsn' => '',
 		'socket' => ''
 	];
+
+	/**
+	 * The last queried PDOStatement.
+	 *
+	 * @type \PDOStatement
+	 */
+	protected $_statement;
 
 	/**
 	 * {@inheritdoc}
@@ -110,6 +118,35 @@ abstract class AbstractDboSource extends AbstractSource {
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Execute a raw SQL statement.
+	 *
+	 * @param string $sql
+	 * @return \Titon\Model\Result
+	 */
+	public function executeSql($sql) {
+		$statement = $this->_connection->query($sql);
+
+		$this->_statement = $statement;
+
+		return new DboResult($statement);
+	}
+
+	/**
+	 * Execute a Query object. The query will be converted into a PDOStatement beforehand.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return \Titon\Model\Result
+	 */
+	public function executeQuery(Query $query) {
+		$statement = $this->buildStatement($query);
+		$statement->execute();
+
+		$this->_statement = $statement;
+
+		return new DboResult($statement);
 	}
 
 	/**
@@ -388,10 +425,20 @@ abstract class AbstractDboSource extends AbstractSource {
 	}
 
 	/**
-	 * {@inheritdoc}
+	 * Query the database. Will accept a raw SQL string, or a Query object.
+	 *
+	 * @param \Titon\Model\Query|string $query
+	 * @return \Titon\Model\Result
 	 */
-	public function query() {
+	public function query($query) {
+		if ($query instanceof Query) {
+			return $this->executeQuery($query);
 
+		} else if (is_string($query)) {
+			return $this->executeSql($query);
+		}
+
+		throw new Exception('Query must be a raw SQL string or a Titon\Model\Query instance');
 	}
 
 	/**
@@ -412,6 +459,15 @@ abstract class AbstractDboSource extends AbstractSource {
 	 */
 	public function quoteFields(array $values) {
 		return implode(', ', array_map([$this, 'quote'], $values));
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function reset() {
+		if ($this->_statement instanceof PDOStatement) {
+			$this->_statement->closeCursor();
+		}
 	}
 
 	/**

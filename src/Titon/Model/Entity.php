@@ -17,4 +17,18 @@ namespace Titon\Model;
  */
 class Entity {
 
+	public function __construct(array $data = []) {
+		$this->mapData($data);
+	}
+
+	public function mapData(array $data) {
+		foreach ($data as $key => $value) {
+			$this->{$key} = $value;
+		}
+	}
+
+	public function mapRelation($key, Entity $entity) {
+
+	}
+
 }

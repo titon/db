@@ -7,13 +7,15 @@
 
 namespace Titon\Model;
 
-use Titon\Model\Query\Clause;
+use Titon\Model\Model;
 use Titon\Model\Exception;
-use Titon\Model\Source;
+use Titon\Model\Query\Clause;
 use \Closure;
 
 /**
- * Functionality for query building using an OOP approach.
+ * Provides an object oriented interface for building an SQL query.
+ * Once the query params have been defined, the query can call the parent model to prepare the SQL statement,
+ * and finally execute the query and return the results.
  */
 class Query {
 
@@ -56,6 +58,13 @@ class Query {
 	protected $_limit;
 
 	/**
+	 * That parent model instance.
+	 *
+	 * @type \Titon\Model\Model
+	 */
+	protected $_model;
+
+	/**
 	 * What offset to start records from.
 	 *
 	 * @type int
@@ -69,13 +78,6 @@ class Query {
 	 * @type string[]
 	 */
 	protected $_orderBy = [];
-
-	/**
-	 * That datasource to query against.
-	 *
-	 * @type \Titon\Model\Source
-	 */
-	protected $_source;
 
 	/**
 	 * The database table.
@@ -102,28 +104,50 @@ class Query {
 	 * Set the type of query.
 	 *
 	 * @param int $type
-	 * @param \Titon\Model\Source $source
+	 * @param \Titon\Model\Model $model
 	 * @throws \Titon\Model\Exception
 	 */
-	public function __construct($type, Source $source) {
+	public function __construct($type, Model $model) {
 		if ($type < self::INSERT || $type > self::DELETE) {
 			throw new Exception(sprintf('Invalid query type %s', $type));
 		}
 
 		$this->_type = $type;
-		$this->_source = $source;
+		$this->_model = $model;
 
 		// Instantiate clauses
 		$this->_where = new Clause();
 		$this->_having = new Clause();
 	}
 
-	public function fetch() {
-		$statement = $this->_source->buildStatement($this);
+	/**
+	 * Pass the query to the model to interact with the database.
+	 * Return the count of how many records exist.
+	 *
+	 * @return \Titon\Model\Entity
+	 */
+	public function count() {
+		return $this->_model->count($this);
 	}
 
-	public function fetchMany() {
-		$statement = $this->_source->buildStatement($this);
+	/**
+	 * Pass the query to the model to interact with the database.
+	 * Return the first record from the results.
+	 *
+	 * @return \Titon\Model\Entity
+	 */
+	public function fetch() {
+		return $this->_model->fetch($this);
+	}
+
+	/**
+	 * Pass the query to the model to interact with the database.
+	 * Return all records from the results.
+	 *
+	 * @return \Titon\Model\Entity[]
+	 */
+	public function fetchAll() {
+		return $this->_model->fetchAll($this);
 	}
 
 	/**
@@ -305,6 +329,16 @@ class Query {
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Pass the query to the model to interact with the database.
+	 * Return the count of how many records were affected.
+	 *
+	 * @return int
+	 */
+	public function save() {
+		return $this->_model->save($this);
 	}
 
 	/**

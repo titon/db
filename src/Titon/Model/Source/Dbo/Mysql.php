@@ -5,7 +5,7 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model\Source;
+namespace Titon\Model\Source\Dbo;
 
 use Titon\Model\Source\AbstractDboSource;
 use \PDO;

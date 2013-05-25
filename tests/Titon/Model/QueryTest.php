@@ -8,7 +8,7 @@
 namespace Titon\Model;
 
 use Titon\Model\Query;
-use Titon\Model\Source\Mysql;
+use Titon\Model\Source\Dbo\Mysql;
 use Titon\Test\TestCase;
 use \Exception;
 

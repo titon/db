@@ -74,6 +74,8 @@ abstract class AbstractSource extends Base implements Source {
 	 * {@inheritdoc}
 	 */
 	public function disconnect() {
+		$this->reset();
+
 		if ($this->isConnected()) {
 			unset($this->_connection);
 			$this->_connected = false;

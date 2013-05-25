@@ -35,6 +35,7 @@ class Model extends Base {
 	 * 	prefix			- (string) Prefix to prepend to the table name
 	 * 	primaryKey		- (string) The field representing the primary key
 	 * 	displayField	- (string) The field representing a description of the record
+	 * 	entity			- (stirng) The Entity class to wrap results in
 	 *
 	 * @type array
 	 */
@@ -43,7 +44,8 @@ class Model extends Base {
 		'table' => '',
 		'prefix' => '',
 		'primaryKey' => 'id',
-		'displayField' => ['title', 'name', 'id']
+		'displayField' => ['title', 'name', 'id'],
+		'entity' => 'Titon\Model\Entity'
 	];
 
 	/**
@@ -87,16 +89,76 @@ class Model extends Base {
 	}
 
 	/**
+	 * Return a count of results from the query.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return int
+	 */
+	public function count(Query $query) {
+		return $this->getConnection()->query($query)->count();
+	}
+
+	/**
+	 * Return an entity for the first result from the query.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return \Titon\Model\Entity
+	 */
+	public function fetch(Query $query) {
+		$result = $this->getConnection()->query($query)->fetch();
+
+		if (!$result) {
+			return null;
+		}
+
+		$entity = $this->config->entity;
+
+		return new $entity($result);
+	}
+
+	/**
+	 * Return a list of entities from the results of the query.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return \Titon\Model\Entity[]
+	 */
+	public function fetchAll(Query $query) {
+		$results = $this->getConnection()->query($query)->fetchAll();
+
+		if (!$results) {
+			return [];
+		}
+
+		$entity = $this->config->entity;
+		$entities = [];
+
+		foreach ($results as $result) {
+			$entities[] = new $entity($result);
+		}
+
+		return $entities;
+	}
+
+	/**
 	 * Return the connection and data source defined by key.
 	 *
-	 * @param string $key
 	 * @return \Titon\Model\Source
 	 */
-	public function getConnection($key) {
-		$source = Registry::factory('Titon\Model\Connection')->getSource($key);
+	public function getConnection() {
+		$source = Registry::factory('Titon\Model\Connection')->getSource($this->config->connection);
 		$source->connect();
 
 		return $source;
+	}
+
+	/**
+	 * Return a count of how many rows were affected by the query.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return int
+	 */
+	public function save(Query $query) {
+		return $this->getConnection()->query($query)->save();
 	}
 
 	/**
@@ -106,10 +168,8 @@ class Model extends Base {
 	 * @return \Titon\Model\Query
 	 */
 	public function query($type) {
-		$config = $this->config->all();
-
-		$query = new Query($type, $this->getConnection($config['connection']));
-		$query->from($config['prefix'] . $config['table']);
+		$query = new Query($type, $this);
+		$query->from($this->config->prefix . $this->config->table);
 
 		return $query;
 	}

@@ -5,11 +5,13 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model\Source;
+namespace Titon\Model\Source\Dbo;
+
+use Titon\Model\Source\AbstractDboSource;
 
 /**
- * Represents the SQLite database.
+ * Represents the PostgreSQL database.
  */
-class Sqlite extends AbstractDboSource {
+class Postgresql extends AbstractDboSource {
 
 }

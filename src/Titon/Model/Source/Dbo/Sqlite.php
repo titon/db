@@ -5,11 +5,13 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model\Source;
+namespace Titon\Model\Source\Dbo;
+
+use Titon\Model\Source\AbstractDboSource;
 
 /**
- * Represents the Oracle database.
+ * Represents the SQLite database.
  */
-class Oracle extends AbstractDboSource {
+class Sqlite extends AbstractDboSource {
 
 }

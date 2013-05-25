@@ -71,8 +71,14 @@ interface Source {
 	/**
 	 * Query the data source for data records.
 	 *
-	 * @return mixed
+	 * @param \Titon\Model\Query|string $query
+	 * @return \Titon\Model\Result
 	 */
-	public function query();
+	public function query($query);
+
+	/**
+	 * Reset the data source for the next query.
+	 */
+	public function reset();
 
 }

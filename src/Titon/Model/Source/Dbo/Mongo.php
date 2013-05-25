@@ -5,11 +5,13 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model\Source;
+namespace Titon\Model\Source\Dbo;
+
+use Titon\Model\Source\AbstractDboSource;
 
 /**
- * Represents the PostgreSQL database.
+ * Represents the MongoDB database.
  */
-class Postgresql extends AbstractDboSource {
+class Mongo extends AbstractDboSource {
 
 }
