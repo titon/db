@@ -9,6 +9,7 @@ namespace Titon\Model;
 
 use Titon\Model\Query\Clause;
 use Titon\Model\Exception;
+use Titon\Model\Source;
 use \Closure;
 
 /**
@@ -70,6 +71,13 @@ class Query {
 	protected $_orderBy = [];
 
 	/**
+	 * That datasource to query against.
+	 *
+	 * @type \Titon\Model\Source
+	 */
+	protected $_source;
+
+	/**
 	 * The database table.
 	 *
 	 * @type string
@@ -94,14 +102,20 @@ class Query {
 	 * Set the type of query.
 	 *
 	 * @param int $type
+	 * @param \Titon\Model\Source $source
 	 * @throws \Titon\Model\Exception
 	 */
-	public function __construct($type) {
+	public function __construct($type, Source $source) {
 		if ($type < self::INSERT || $type > self::DELETE) {
 			throw new Exception(sprintf('Invalid query type %s', $type));
 		}
 
 		$this->_type = $type;
+		$this->_source = $source;
+
+		// Instantiate clauses
+		$this->_where = new Clause();
+		$this->_having = new Clause();
 	}
 
 	/**
@@ -117,7 +131,7 @@ class Query {
 			$fields = $fields[0];
 		}
 
-		$this->_fields = $fields;
+		$this->_fields = array_unique($fields);
 
 		return $this;
 	}
@@ -154,16 +168,12 @@ class Query {
 	 * @return \Titon\Model\Query
 	 */
 	public function having($field, $value = null) {
-		$clause = new Clause();
-
 		if ($field instanceof Closure) {
-			$field = $field->bindTo($clause, 'Titon\Model\Query\Clause');
+			$field = $field->bindTo($this->_having, 'Titon\Model\Query\Clause');
 			$field();
 		} else {
-			$clause->also($field, $value);
+			$this->_having->also($field, $value);
 		}
-
-		$this->_having = $clause;
 
 		return $this;
 	}
@@ -196,6 +206,8 @@ class Query {
 				$this->orderBy($key, $dir);
 			}
 		} else {
+			$direction = strtoupper($direction);
+
 			if ($direction != self::ASC && $direction != self::DESC) {
 				throw new Exception(sprintf('Invalid order direction %s for field %s', $direction, $field));
 			}
@@ -214,18 +226,103 @@ class Query {
 	 * @return \Titon\Model\Query
 	 */
 	public function where($field, $value = null) {
-		$clause = new Clause();
-
 		if ($field instanceof Closure) {
-			$field = $field->bindTo($clause, 'Titon\Model\Query\Clause');
+			$field = $field->bindTo($this->_where, 'Titon\Model\Query\Clause');
 			$field();
 		} else {
-			$clause->also($field, $value);
+			$this->_where->also($field, $value);
 		}
 
-		$this->_where = $clause;
-
 		return $this;
+	}
+
+	public function fetch() {
+		$statement = $this->_source->buildStatement($this);
+	}
+
+	public function fetchMany() {
+		$statement = $this->_source->buildStatement($this);
+	}
+
+	/**
+	 * Return the list of fields and or values.
+	 *
+	 * @return string[]
+	 */
+	public function getFields() {
+		return $this->_fields;
+	}
+
+	/**
+	 * Return the group by fields.
+	 *
+	 * @return string[]
+	 */
+	public function getGroupBy() {
+		return $this->_groupBy;
+	}
+
+	/**
+	 * Return the having clause.
+	 *
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function getHaving() {
+		return $this->_having;
+	}
+
+	/**
+	 * Return the limit.
+	 *
+	 * @return int
+	 */
+	public function getLimit() {
+		return $this->_limit;
+	}
+
+	/**
+	 * Return the offset.
+	 *
+	 * @return int
+	 */
+	public function getOffset() {
+		return $this->_offset;
+	}
+
+	/**
+	 * Return the order by fields.
+	 *
+	 * @return string[]
+	 */
+	public function getOrderBy() {
+		return $this->_orderBy;
+	}
+
+	/**
+	 * Return the table name.
+	 *
+	 * @return string
+	 */
+	public function getTable() {
+		return $this->_table;
+	}
+
+	/**
+	 * Return the type of query.
+	 *
+	 * @return int
+	 */
+	public function getType() {
+		return $this->_type;
+	}
+
+	/**
+	 * Return the where clause.
+	 *
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function getWhere() {
+		return $this->_where;
 	}
 
 }

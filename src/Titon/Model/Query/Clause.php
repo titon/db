@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Query;
 
+use Titon\Model\Exception;
 use \Closure;
 
 /**
@@ -18,20 +19,15 @@ class Clause {
 	const ALSO = 'AND';
 	const EITHER = 'OR';
 
-	// Operators
-	const EQ = '=';
-	const NEQ = '!=';
-	const GT = '>';
-	const GTE = '>=';
-	const LT = '<';
-	const LTE = '<=';
-	const IN = 'IN';
-	const NIN = 'NOT IN';
-	const NOT = 'NOT';
+	// Special operators
 	const NULL = 'IS NULL';
+	const NOT_NULL = 'IS NOT NULL';
+	const IN = 'IN';
+	const NOT_IN = 'NOT IN';
 	const BETWEEN = 'BETWEEN';
+	const NOT_BETWEEN = 'NOT BETWEEN';
 	const LIKE = 'LIKE';
-	const NLIKE = 'NOT LIKE';
+	const NOT_LIKE = 'NOT LIKE';
 
 	/**
 	 * Type of clause, either AND or OR.
@@ -55,7 +51,7 @@ class Clause {
 	 * @param string $op
 	 * @return \Titon\Model\Query\Clause
 	 */
-	public function also($field, $value = null, $op = self::EQ) {
+	public function also($field, $value, $op = '=') {
 		return $this->_process(self::ALSO, $field, $value, $op);
 	}
 
@@ -67,7 +63,7 @@ class Clause {
 	 * @param string $op
 	 * @return \Titon\Model\Query\Clause
 	 */
-	public function either($field, $value = null, $op = self::EQ) {
+	public function either($field, $value, $op = '=') {
 		return $this->_process(self::EITHER, $field, $value, $op);
 	}
 
@@ -90,37 +86,59 @@ class Clause {
 	}
 
 	/**
+	 * Generate a new sub-grouped clause.
+	 *
+	 * @param \Closure $callback
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function where(Closure $callback) {
+		$clause = new Clause();
+
+		$callback = $callback->bindTo($clause, 'Titon\Model\Query\Clause');
+		$callback();
+
+		$this->_params[] = $clause;
+
+		return $this;
+	}
+
+	/**
 	 * Process a parameter before adding it to the list.
-	 * If the field is a closure, generate a new sub-clause.
+	 * Set the primary clause type if it has not been set.
 	 *
 	 * @param string $type
 	 * @param string $field
 	 * @param mixed $value
 	 * @param string $op
 	 * @return \Titon\Model\Query\Clause
+	 * @throws \Titon\Model\Exception
 	 */
-	protected function _process($type, $field, $value = null, $op = self::EQ) {
+	protected function _process($type, $field, $value = null, $op = '=') {
 		if (!$this->_type) {
 			$this->_type = $type;
 		}
 
-		// Build a new sub-clause if a Closure is passed
-		if ($field instanceof Closure) {
-			$clause = new Clause();
+		$op = strtoupper($op);
 
-			$field = $field->bindTo($clause, 'Titon\Model\Query\Clause');
-			$field();
-
-			$this->_params[] = $clause;
-
-		// Else append more parameters
-		} else {
-			$this->_params[] = [
-				'field' => $field,
-				'value' => $value,
-				'op' => $op
-			];
+		if (is_array($value)) {
+			if ($op === '=') {
+				$op = self::IN;
+			} else if ($op === '!=' || $op === '<>') {
+				$op = self::NOT_IN;
+			}
+		} else if ($value === null) {
+			$op = self::NULL;
 		}
+
+		if (($op === self::BETWEEN || $op === self::NOT_BETWEEN) && (!is_array($value) || count($value) !== 2)) {
+			throw new Exception(sprintf('%s clause must have an array of 2 values', $op));
+		}
+
+		$this->_params[] = [
+			'field' => $field,
+			'value' => $value,
+			'op' => $op
+		];
 
 		return $this;
 	}

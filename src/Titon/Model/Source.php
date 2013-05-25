@@ -7,10 +7,21 @@
 
 namespace Titon\Model;
 
+use Titon\Model\Query;
+
 /**
  * Represents a data source, whether a database, API, or other storage system.
  */
 interface Source {
+
+	/**
+	 * Build a PDOStatement based off the current query parameters.
+	 * Bind any necessary values to the statement.
+	 *
+	 * @param Query $query
+	 * @return \PDOStatement
+	 */
+	public function buildStatement(Query $query);
 
 	/**
 	 * Connect to the data source, whether a database or remote API.

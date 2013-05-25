@@ -8,6 +8,7 @@
 namespace Titon\Model;
 
 use Titon\Common\Base;
+use Titon\Common\Registry;
 use Titon\Common\Traits\Instanceable;
 use Titon\Model\Query;
 
@@ -86,6 +87,21 @@ class Model extends Base {
 	}
 
 	/**
+	 * Return the connection and data source defined by key.
+	 *
+	 * @param string $key
+	 * @return \Titon\Model\Source
+	 */
+	public function getConnection($key) {
+		$connection = Registry::factory('Titon\Model\Connection');
+
+		$source = $connection->getSource($key);
+		$source->connect();
+
+		return $source;
+	}
+
+	/**
 	 * Instantiate a new database query builder.
 	 *
 	 * @param int $type
@@ -94,7 +110,7 @@ class Model extends Base {
 	public function query($type) {
 		$config = $this->config->all();
 
-		$query = new Query($type, $config['connection']);
+		$query = new Query($type, $this->getConnection($config['connection']));
 		$query->from($config['prefix'] . $config['table']);
 
 		return $query;
