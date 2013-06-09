@@ -7,11 +7,18 @@
 
 namespace Titon\Model\Source\Dbo;
 
-use Titon\Model\Source\AbstractDboSource;
+use Titon\Model\Source\Dbo\AbstractDboSource;
 
 /**
  * Represents the SQLite database.
  */
 class Sqlite extends AbstractDboSource {
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getDriver() {
+		return 'sqlite';
+	}
 
 }

@@ -30,14 +30,14 @@ class Model extends Base {
 	/**
 	 * Configuration.
 	 *
-	 * 	connection		- (string) The connection login credentials key
-	 * 	table			- (string) Database table name
-	 * 	prefix			- (string) Prefix to prepend to the table name
-	 * 	primaryKey		- (string) The field representing the primary key
-	 * 	displayField	- (string) The field representing a description of the record
-	 * 	entity			- (stirng) The Entity class to wrap results in
-	 *
-	 * @type array
+	 * @type array {
+	 * 		@type $string $connection		The connection login credentials key
+	 * 		@type $string $table			Database table name
+	 * 		@type $string $prefix			Prefix to prepend to the table name
+	 * 		@type $string $primaryKey		The field representing the primary key
+	 * 		@type $string $displayField		The field representing a readable label
+	 * 		@type $string $entity			The Entity class to wrap results in
+	 * }
 	 */
 	protected $_config = [
 		'connection' => 'default',

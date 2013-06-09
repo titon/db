@@ -19,7 +19,7 @@ $loader = require VENDOR_DIR . '/autoload.php';
 $loader->add('Titon\\Model', TEST_DIR);
 
 // Define database credentials
-\Titon\Common\Config::set('db', [
+Titon\Common\Config::set('db', [
 	'database' => 'test',
 	'host' => 'localhost',
 	'user' => 'root',

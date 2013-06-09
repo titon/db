@@ -48,7 +48,7 @@ class Query {
 	 *
 	 * @type \Titon\Model\Query\Clause
 	 */
-	protected $_having = [];
+	protected $_having;
 
 	/**
 	 * How many records to return.
@@ -114,8 +114,6 @@ class Query {
 
 		$this->_type = $type;
 		$this->_model = $model;
-
-		// Instantiate clauses
 		$this->_where = new Clause();
 		$this->_having = new Clause();
 	}

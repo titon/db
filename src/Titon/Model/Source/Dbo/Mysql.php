@@ -7,7 +7,7 @@
 
 namespace Titon\Model\Source\Dbo;
 
-use Titon\Model\Source\AbstractDboSource;
+use Titon\Model\Source\Dbo\AbstractDboSource;
 use \PDO;
 
 /**
@@ -18,7 +18,9 @@ class Mysql extends AbstractDboSource {
 	/**
 	 * Configuration.
 	 *
-	 * @type array
+	 * @type array {
+	 *		@type int $port	Default port
+	 * ]
 	 */
 	protected $_config = [
 		'port' => 3306
@@ -34,9 +36,7 @@ class Mysql extends AbstractDboSource {
 	];
 
 	/**
-	 * Return the MySQL PDO driver name.
-	 *
-	 * @return string
+	 * {@inheritdoc}
 	 */
 	public function getDriver() {
 		return 'mysql';

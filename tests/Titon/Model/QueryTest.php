@@ -25,7 +25,7 @@ class QueryTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new Query(Query::SELECT, new Mysql('default', []));
+		$this->object = new Query(Query::SELECT, Model::getInstance());
 	}
 
 	/**

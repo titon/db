@@ -1,12 +1,15 @@
 <?php
 
-namespace Titon\Model\Source;
+namespace Titon\Model\Source\Dbo;
 
 use Titon\Model\Query;
+use Titon\Model\Exception;
 use Titon\Model\Query\Clause;
 use Titon\Model\Result\DboResult;
+use Titon\Model\Source\AbstractSource;
 use Titon\Utility\String;
 use \PDO;
+use \PDOStatement;
 
 /**
  * http://php.net/manual/en/pdo.drivers.php
@@ -43,7 +46,7 @@ abstract class AbstractDboSource extends AbstractSource {
 	 * @throws \Titon\Model\Exception
 	 */
 	public function buildStatement(Query $query) {
-		$statements = $this->getStatements();
+		$statements = $this->mapStatements();
 		$type = $query->getType();
 
 		if (empty($statements[$type])) {
@@ -121,7 +124,7 @@ abstract class AbstractDboSource extends AbstractSource {
 	}
 
 	/**
-	 * Execute a raw SQL statement.
+	 * Execute a raw string SQL statement.
 	 *
 	 * @param string $sql
 	 * @return \Titon\Model\Result
@@ -238,7 +241,7 @@ abstract class AbstractDboSource extends AbstractSource {
 	/**
 	 * Format the having clause.
 	 *
-	 * @param \Titon\Model\Query\Clause $where
+	 * @param \Titon\Model\Query\Clause $having
 	 * @return string
 	 */
 	public function formatHaving(Clause $having) {
@@ -341,6 +344,13 @@ abstract class AbstractDboSource extends AbstractSource {
 	}
 
 	/**
+	 * Return the PDO driver name.
+	 *
+	 * @return string
+	 */
+	abstract public function getDriver();
+
+	/**
 	 * Format and build the DSN based on the current configuration.
 	 *
 	 * @return string
@@ -415,7 +425,7 @@ abstract class AbstractDboSource extends AbstractSource {
 	 *
 	 * @return array
 	 */
-	public function getStatements() {
+	public function mapStatements() {
 		return [
 			Query::INSERT => 'INSERT INTO {table} {fields} VALUES {values}',
 			Query::SELECT => 'SELECT {fields} FROM {table} {where} {groupBy} {having} {orderBy} {limit}',
@@ -425,10 +435,9 @@ abstract class AbstractDboSource extends AbstractSource {
 	}
 
 	/**
-	 * Query the database. Will accept a raw SQL string, or a Query object.
+	 * {@inheritdoc}
 	 *
-	 * @param \Titon\Model\Query|string $query
-	 * @return \Titon\Model\Result
+	 * @throws \Titon\Model\Exception
 	 */
 	public function query($query) {
 		if ($query instanceof Query) {
@@ -454,7 +463,7 @@ abstract class AbstractDboSource extends AbstractSource {
 	/**
 	 * Quote an array of identifiers.
 	 *
-	 * @param array $fields
+	 * @param array $values
 	 * @return string
 	 */
 	public function quoteFields(array $values) {

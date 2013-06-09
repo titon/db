@@ -16,9 +16,9 @@ interface Source {
 
 	/**
 	 * Build a PDOStatement based off the current query parameters.
-	 * Bind any necessary values to the statement.
+	 * Binds any necessary values to the statement.
 	 *
-	 * @param Query $query
+	 * @param \Titon\Model\Query $query
 	 * @return \PDOStatement
 	 */
 	public function buildStatement(Query $query);

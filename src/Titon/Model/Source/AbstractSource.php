@@ -11,10 +11,10 @@ abstract class AbstractSource extends Base implements Source {
 	/**
 	 * Configuration.
 	 *
-	 * 	persistent	- (bool) Should we use persistent data connections
-	 * 	encoding	- (string) Charset encoding for the remote data source
-	 *
-	 * @type array
+	 * @type array {
+	 *		@type bool $persistent	Should we use persistent data connections
+	 * 		@type string $encoding	Charset encoding for the remote data source
+	 * }
 	 */
 	protected $_config = [
 		'persistent' => true,

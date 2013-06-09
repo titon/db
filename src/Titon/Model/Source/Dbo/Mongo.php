@@ -7,11 +7,18 @@
 
 namespace Titon\Model\Source\Dbo;
 
-use Titon\Model\Source\AbstractDboSource;
+use Titon\Model\Source\Dbo\AbstractDboSource;
 
 /**
  * Represents the MongoDB database.
  */
 class Mongo extends AbstractDboSource {
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getDriver() {
+		return 'mongodb';
+	}
 
 }
