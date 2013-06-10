@@ -10,17 +10,16 @@ namespace Titon\Model\Source\Dbo;
 use Titon\Common\Config;
 use Titon\Model\Query;
 use Titon\Model\Query\Clause;
-use Titon\Model\Source\Dbo\AbstractDboSource;
 use Titon\Model\Source\Dbo\Mysql;
 use Titon\Test\TestCase;
 use \Exception;
 
 /**
- * Test class for Titon\Model\Source\Dbo\AbstractDboSource.
+ * Test class for Titon\Model\Source\Dbo\Mysql.
  *
- * @property \Titon\Model\Source\Dbo\AbstractDboSource $object
+ * @property \Titon\Model\Source\Dbo\Mysql $object
  */
-class AbstractDboSourceTest extends TestCase {
+class MysqlTest extends TestCase {
 
 	/**
 	 * Use MySql as the base.
