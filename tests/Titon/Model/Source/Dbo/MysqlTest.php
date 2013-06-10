@@ -175,24 +175,13 @@ class MysqlTest extends TestCase {
 		$clause->also('id', [4, 5], Clause::BETWEEN)->also('id', [1337, 666], Clause::NOT_BETWEEN);
 		$this->assertEquals('`id` BETWEEN ? AND ? AND `id` NOT BETWEEN ? AND ?', $this->object->formatClause($clause));
 
-		// Requires 2 values in the array
-		try {
-			$clause = new Clause();
-			$clause->also('id', [1, 2, 3, 4, 5], Clause::BETWEEN);
-			$this->object->formatClause($clause);
-
-			$this->assertTrue(false);
-		} catch (Exception $e) {
-			$this->assertTrue(true);
-		}
-
 		// NESTING
 		$clause = new Clause();
 		$clause->either('color', 'red', '!=')->either('color', 'blue', '!=')->either('color', 'green', '!=');
-		$clause->where(function() {
+		$clause->group(function() {
 			$this->also('size', 1, '>=');
 			$this->also('size', 10, '<=');
-			$this->where(function() {
+			$this->group(function() {
 				$this->also('size', 15);
 				$this->also('size', 20);
 			});

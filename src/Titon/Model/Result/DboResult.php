@@ -37,6 +37,7 @@ class DboResult implements Result {
 	 */
 	public function count() {
 		$count = (int) $this->_statement->fetchColumn();
+
 		$this->_statement->closeCursor();
 
 		return $count;
@@ -47,6 +48,7 @@ class DboResult implements Result {
 	 */
 	public function fetch() {
 		$result = (array) $this->_statement->fetch(PDO::FETCH_ASSOC);
+
 		$this->_statement->closeCursor();
 
 		return $result;
@@ -57,6 +59,7 @@ class DboResult implements Result {
 	 */
 	public function fetchAll() {
 		$results = (array) $this->_statement->fetchAll(PDO::FETCH_ASSOC);
+
 		$this->_statement->closeCursor();
 
 		return $results;
@@ -67,6 +70,7 @@ class DboResult implements Result {
 	 */
 	public function save() {
 		$count = (int) $this->_statement->rowCount();
+
 		$this->_statement->closeCursor();
 
 		return $count;

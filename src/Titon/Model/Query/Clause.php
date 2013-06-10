@@ -82,7 +82,7 @@ class Clause {
 	 * @return string
 	 */
 	public function getType() {
-		return $this->_type;
+		return $this->_type ?: self::ALSO;
 	}
 
 	/**
@@ -91,7 +91,7 @@ class Clause {
 	 * @param \Closure $callback
 	 * @return \Titon\Model\Query\Clause
 	 */
-	public function where(Closure $callback) {
+	public function group(Closure $callback) {
 		$clause = new Clause();
 
 		$callback = $callback->bindTo($clause, 'Titon\Model\Query\Clause');
@@ -126,8 +126,13 @@ class Clause {
 			} else if ($op === '!=' || $op === '<>') {
 				$op = self::NOT_IN;
 			}
-		} else if ($value === null && $op !== self::NOT_NULL) {
-			$op = self::NULL;
+
+		} else if ($value === null) {
+			if ($op === '=') {
+				$op = self::NULL;
+			} else if ($op === '!=' || $op === '<>') {
+				$op = self::NOT_NULL;
+			}
 		}
 
 		if (($op === self::BETWEEN || $op === self::NOT_BETWEEN) && (!is_array($value) || count($value) !== 2)) {
