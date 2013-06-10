@@ -5,9 +5,10 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model;
+namespace Titon\Model\Source\Dbo;
 
 use Titon\Common\Config;
+use Titon\Model\Query;
 use Titon\Model\Query\Clause;
 use Titon\Model\Source\Dbo\AbstractDboSource;
 use Titon\Model\Source\Dbo\Mysql;
