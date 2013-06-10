@@ -98,7 +98,7 @@ abstract class AbstractDboSource extends AbstractSource {
 				$type = PDO::PARAM_NULL;
 
 			} else if (is_numeric($value)) {
-				if (is_float($value) && floatval($value) === $value) {
+				if (is_float($value) || is_float(floatval($value))) {
 					$type = PDO::PARAM_STR; // Floats use string type
 					$value = (float) $value;
 				} else {
@@ -313,7 +313,6 @@ abstract class AbstractDboSource extends AbstractSource {
 						$value = sprintf('%s %s (%s)', $field, $param['op'], implode(', ', array_fill(0, count($param['value']), '?')));
 					break;
 					case Clause::NULL:
-					case null:
 						$value = sprintf('%s IS NULL', $field);
 					break;
 					case Clause::NOT_NULL:
@@ -321,6 +320,9 @@ abstract class AbstractDboSource extends AbstractSource {
 					break;
 					case Clause::BETWEEN:
 						$value = sprintf('%s BETWEEN ? AND ?', $field);
+					break;
+					case Clause::NOT_BETWEEN:
+						$value = sprintf('%s NOT BETWEEN ? AND ?', $field);
 					break;
 					default:
 						$value = sprintf('%s %s ?', $field, $param['op']);

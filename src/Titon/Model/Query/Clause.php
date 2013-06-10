@@ -126,7 +126,7 @@ class Clause {
 			} else if ($op === '!=' || $op === '<>') {
 				$op = self::NOT_IN;
 			}
-		} else if ($value === null) {
+		} else if ($value === null && $op !== self::NOT_NULL) {
 			$op = self::NULL;
 		}
 
