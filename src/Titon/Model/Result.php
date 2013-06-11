@@ -8,7 +8,7 @@
 namespace Titon\Model;
 
 /**
- * Handles the results of a data source query.
+ * Handles the results of a query.
  */
 interface Result {
 

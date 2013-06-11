@@ -10,6 +10,7 @@ namespace Titon\Model;
 use Titon\Common\Base;
 use Titon\Common\Registry;
 use Titon\Common\Traits\Instanceable;
+use Titon\Model\Schema;
 use Titon\Model\Query;
 
 /**
@@ -21,8 +22,8 @@ use Titon\Model\Query;
  * 	- Allows for queries to be built and executed
  * 		- Returns Entity objects for each record in the result
  *
- * http://en.wikipedia.org/wiki/Database_model
- * http://en.wikipedia.org/wiki/Relational_model
+ * @link http://en.wikipedia.org/wiki/Database_model
+ * @link http://en.wikipedia.org/wiki/Relational_model
  */
 class Model extends Base {
 	use Instanceable;
@@ -47,6 +48,13 @@ class Model extends Base {
 		'displayField' => ['title', 'name', 'id'],
 		'entity' => 'Titon\Model\Entity'
 	];
+
+	/**
+	 * Database table schema object.
+	 *
+	 * @type \Titon\Model\Schema
+	 */
+	protected $_schema;
 
 	/**
 	 * Instantiate a new query for inserting records.
@@ -86,6 +94,15 @@ class Model extends Base {
 	 */
 	public static function delete(array $fields = []) {
 		return self::getInstance()->query(Query::DELETE)->fields($fields);
+	}
+
+	/**
+	 * Instantiate a new query for describing a table.
+	 *
+	 * @return \Titon\Model\Query
+	 */
+	public static function describe() {
+		return self::getInstance()->query(Query::DESCRIBE);
 	}
 
 	/**
@@ -140,15 +157,52 @@ class Model extends Base {
 	}
 
 	/**
-	 * Return the connection and data source defined by key.
+	 * Return the connection and driver defined by key.
 	 *
-	 * @return \Titon\Model\Source
+	 * @return \Titon\Model\Driver
 	 */
 	public function getConnection() {
-		$source = Registry::factory('Titon\Model\Connection')->getSource($this->config->connection);
-		$source->connect();
+		/** @type \Titon\Model\Driver $driver */
+		$driver = Registry::factory('Titon\Model\Connection')->getDriver($this->config->connection);
+		$driver->connect();
 
-		return $source;
+		return $driver;
+	}
+
+	/**
+	 * Return a schema object that represents the database table.
+	 *
+	 * @return \Titon\Model\Schema
+	 */
+	public function getSchema() {
+		if ($this->_schema) {
+			return $this->_schema;
+		}
+
+		$fields = $this->query(Query::DESCRIBE)->fetchAll();
+		$columns = [];
+
+		foreach ($fields as $field) {
+			$column = [];
+			$column['null'] = ($field->Null === 'YES');
+			$column['default'] = $column['null'] ? null : $field->Default;
+
+			switch ($field->Key) {
+				case 'PRI': $column['key'] = Schema::CONSTRAINT_PRIMARY; break;
+				case 'UNI': $column['key'] = Schema::CONSTRAINT_UNIQUE; break;
+				case 'MUL': $column['key'] = Schema::INDEX; break;
+			}
+
+			if ($field->Extra === 'auto_increment') {
+				$column['ai'] = true;
+			}
+
+			$columns[$field->Field] = $column;
+		}
+
+		$this->_schema = new Schema($this->config->prefix . $this->config->table, $columns);
+
+		return $this->_schema;
 	}
 
 	/**

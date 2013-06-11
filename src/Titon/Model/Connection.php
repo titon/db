@@ -1,61 +1,61 @@
 <?php
 /**
  * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
+ * @license		http://opendriver.org/licenses/bsd-license.php
  * @link		http://titon.io
  */
 
 namespace Titon\Model;
 
 use Titon\Model\Exception;
-use Titon\Model\Source;
+use Titon\Model\Driver;
 
 /**
- * Manages data source connection and login credentials.
+ * Manages drivers, connections and login credentials.
  */
 class Connection {
 
 	/**
-	 * Source mappings.
+	 * Driver mappings.
 	 *
-	 * @type \Titon\Model\Source[]
+	 * @type \Titon\Model\Driver[]
 	 */
-	protected $_sources = [];
+	protected $_drivers = [];
 
 	/**
-	 * Add a data source that houses login credentials.
+	 * Add a driver that houses login credentials.
 	 *
-	 * @param \Titon\Model\Source $source
+	 * @param \Titon\Model\Driver $driver
 	 * @return \Titon\Model\Connection
 	 */
-	public function addSource(Source $source) {
-		$this->_sources[$source->getKey()] = $source;
+	public function addDriver(Driver $driver) {
+		$this->_drivers[$driver->getKey()] = $driver;
 
 		return $this;
 	}
 
 	/**
-	 * Return a source by key.
+	 * Return a driver by key.
 	 *
 	 * @param string $key
-	 * @return \Titon\Model\Source
+	 * @return \Titon\Model\Driver
 	 * @throws \Titon\Model\Exception
 	 */
-	public function getSource($key) {
-		if (isset($this->_sources[$key])) {
-			return $this->_sources[$key];
+	public function getDriver($key) {
+		if (isset($this->_drivers[$key])) {
+			return $this->_drivers[$key];
 		}
 
-		throw new Exception(sprintf('Invalid data source %s', $key));
+		throw new Exception(sprintf('Invalid driver %s', $key));
 	}
 
 	/**
-	 * Returns the list of sources.
+	 * Returns the list of drivers.
 	 *
-	 * @return \Titon\Model\Source[]
+	 * @return \Titon\Model\Driver[]
 	 */
-	public function getSources() {
-		return $this->_sources;
+	public function getDrivers() {
+		return $this->_drivers;
 	}
 
 }

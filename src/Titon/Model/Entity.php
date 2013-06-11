@@ -19,7 +19,7 @@ use Countable;
  * 	- Data mapping functionality during creation
  * 	- Getter and setter support
  *
- * http://en.wikipedia.org/wiki/Entity_class
+ * @link http://en.wikipedia.org/wiki/Entity_class
  */
 class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, Countable {
 

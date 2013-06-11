@@ -12,9 +12,9 @@ use \PDO;
 use \PDOStatement;
 
 /**
- * The DboResult handles the processing of a PDOStatement to return the correct results.
+ * The PdoResult handles the processing of a PDOStatement to return the correct results.
  */
-class DboResult implements Result {
+class PdoResult implements Result {
 
 	/**
 	 * PDOStatement instance.

@@ -1,12 +1,12 @@
 <?php
 
-namespace Titon\Model\Source;
+namespace Titon\Model\Driver;
 
 use Titon\Common\Base;
-use Titon\Model\Source;
+use Titon\Model\Driver;
 use Titon\Utility\Hash;
 
-abstract class AbstractSource extends Base implements Source {
+abstract class AbstractDriver extends Base implements Driver {
 
 	/**
 	 * Configuration.
@@ -43,7 +43,7 @@ abstract class AbstractSource extends Base implements Source {
 	protected $_flags = [];
 
 	/**
-	 * Unique source identifier.
+	 * Unique identifier.
 	 *
 	 * @type string
 	 */

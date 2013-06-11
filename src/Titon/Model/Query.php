@@ -28,6 +28,12 @@ class Query {
 	const SELECT = 2;
 	const UPDATE = 3;
 	const DELETE = 4;
+	const TRUNCATE = 5;
+	const DESCRIBE = 6;
+	const EXPLAIN = 7;
+	const DROP_TABLE = 10;
+	const CREATE_TABLE = 20;
+	const ALTER_TABLE = 30;
 
 	/**
 	 * The fields to query for. An empty array will query all fields.
@@ -108,10 +114,6 @@ class Query {
 	 * @throws \Titon\Model\Exception
 	 */
 	public function __construct($type, Model $model) {
-		if ($type < self::INSERT || $type > self::DELETE) {
-			throw new Exception(sprintf('Invalid query type %s', $type));
-		}
-
 		$this->_type = $type;
 		$this->_model = $model;
 		$this->_where = new Clause();

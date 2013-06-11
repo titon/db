@@ -20,7 +20,7 @@ $loader->add('Titon\\Model', TEST_DIR);
 
 // Define database credentials
 Titon\Common\Config::set('db', [
-	'database' => 'titon_test',
+	'database' => 'test',
 	'host' => 'localhost',
 	'user' => 'root',
 	'pass' => ''

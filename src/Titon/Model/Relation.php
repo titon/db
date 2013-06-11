@@ -5,11 +5,12 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model\Model;
+namespace Titon\Model;
 
 /**
- * Represents a relational database schema.
+ * Represents a relation of one model to another:
+ * one to one, one to many, many to many
  */
-class Schema {
+class Relation {
 
 }

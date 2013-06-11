@@ -12,50 +12,50 @@ use Titon\Model\Query;
 /**
  * Represents a data source, whether a database, API, or other storage system.
  */
-interface Source {
+interface Driver {
 
 	/**
-	 * Build a PDOStatement based off the current query parameters.
+	 * Build an SQL statement based off the current query parameters.
 	 * Binds any necessary values to the statement.
 	 *
 	 * @param \Titon\Model\Query $query
-	 * @return \PDOStatement
+	 * @return mixed
 	 */
 	public function buildStatement(Query $query);
 
 	/**
-	 * Connect to the data source, whether a database or remote API.
+	 * Connect to the driver.
 	 */
 	public function connect();
 
 	/**
-	 * Disconnect from the data source.
+	 * Disconnect from the driver.
 	 */
 	public function disconnect();
 
 	/**
-	 * Return the encoding for the data source.
+	 * Return the encoding for the driver.
 	 *
 	 * @return string
 	 */
 	public function getEncoding();
 
 	/**
-	 * Return a list of flags used to connect to the data source.
+	 * Return a list of flags used to connect to the driver.
 	 *
 	 * @return array
 	 */
 	public function getFlags();
 
 	/**
-	 * Return the unique source identifier.
+	 * Return the unique identifier.
 	 *
 	 * @return string
 	 */
 	public function getKey();
 
 	/**
-	 * Return true if connected to the data source.
+	 * Return true if connected to the driver.
 	 *
 	 * @return bool
 	 */
@@ -69,7 +69,7 @@ interface Source {
 	public function isPersistent();
 
 	/**
-	 * Query the data source for data records.
+	 * Query the driver for data records.
 	 *
 	 * @param \Titon\Model\Query|string $query
 	 * @return \Titon\Model\Result
@@ -77,7 +77,7 @@ interface Source {
 	public function query($query);
 
 	/**
-	 * Reset the data source for the next query.
+	 * Reset the driver for the next query.
 	 */
 	public function reset();
 

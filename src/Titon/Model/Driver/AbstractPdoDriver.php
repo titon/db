@@ -1,12 +1,12 @@
 <?php
 
-namespace Titon\Model\Source\Dbo;
+namespace Titon\Model\Driver\Dbo;
 
 use Titon\Model\Query;
 use Titon\Model\Exception;
 use Titon\Model\Query\Clause;
-use Titon\Model\Result\DboResult;
-use Titon\Model\Source\AbstractSource;
+use Titon\Model\Result\PdoResult;
+use Titon\Model\Driver\AbstractDriver;
 use Titon\Utility\String;
 use \PDO;
 use \PDOStatement;
@@ -16,7 +16,7 @@ use \PDOStatement;
  *
  * @property PDO $_connection
  */
-abstract class AbstractDboSource extends AbstractSource {
+abstract class AbstractPdoDriver extends AbstractDriver {
 
 	/**
 	 * Configuration.
@@ -30,7 +30,10 @@ abstract class AbstractDboSource extends AbstractSource {
 		'user' => '',
 		'pass' => '',
 		'dsn' => '',
-		'socket' => ''
+		'socket' => '',
+
+		// Driver specific
+		'quoteCharacter' => '`'
 	];
 
 	/**
@@ -53,16 +56,33 @@ abstract class AbstractDboSource extends AbstractSource {
 			throw new Exception(sprintf('Invalid query type'));
 		}
 
-		$statement = $this->_connection->prepare(trim(String::insert($statements[$type], [
-			'table' => $this->formatTable($query->getTable()),
-			'fields' => $this->formatFields($query->getFields(), $type),
-			'values' => $this->formatValues($query->getFields(), $type),
-			'where' => $this->formatWhere($query->getWhere()),
-			'groupBy' => $this->formatGroupBy($query->getGroupBy()),
-			'having' => $this->formatHaving($query->getHaving()),
-			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset()),
-		])));
+		switch ($type) {
+			case Query::CREATE_TABLE:
+				$params = [
+					'table' => $this->formatTable($query->getTable())
+				];
+			break;
+			case Query::DESCRIBE:
+			case Query::TRUNCATE:
+				$params = [
+					'table' => $this->formatTable($query->getTable())
+				];
+			break;
+			default:
+				$params = [
+					'table' => $this->formatTable($query->getTable()),
+					'fields' => $this->formatFields($query->getFields(), $type),
+					'values' => $this->formatValues($query->getFields(), $type),
+					'where' => $this->formatWhere($query->getWhere()),
+					'groupBy' => $this->formatGroupBy($query->getGroupBy()),
+					'having' => $this->formatHaving($query->getHaving()),
+					'orderBy' => $this->formatOrderBy($query->getOrderBy()),
+					'limit' => $this->formatLimit($query->getLimit(), $query->getOffset()),
+				];
+			break;
+		}
+
+		$statement = $this->_connection->prepare(trim(String::insert($statements[$type], $params)));
 
 		foreach ($this->resolveBinds($query) as $i => $value) {
 			$statement->bindValue($i + 1, $value);
@@ -134,7 +154,7 @@ abstract class AbstractDboSource extends AbstractSource {
 
 		$this->_statement = $statement;
 
-		return new DboResult($statement);
+		return new PdoResult($statement);
 	}
 
 	/**
@@ -149,7 +169,7 @@ abstract class AbstractDboSource extends AbstractSource {
 
 		$this->_statement = $statement;
 
-		return new DboResult($statement);
+		return new PdoResult($statement);
 	}
 
 	/**
@@ -429,10 +449,19 @@ abstract class AbstractDboSource extends AbstractSource {
 	 */
 	public function mapStatements() {
 		return [
-			Query::INSERT => 'INSERT INTO {table} {fields} VALUES {values}',
-			Query::SELECT => 'SELECT {fields} FROM {table} {where} {groupBy} {having} {orderBy} {limit}',
-			Query::UPDATE => 'UPDATE {table} SET {fields} {where} {orderBy} {limit}',
-			Query::DELETE => 'DELETE FROM {table} {where} {orderBy} {limit}'
+			Query::INSERT	=> 'INSERT INTO {table} {fields} VALUES {values}',
+			Query::SELECT	=> 'SELECT {fields} FROM {table} {where} {groupBy} {having} {orderBy} {limit}',
+			Query::UPDATE	=> 'UPDATE {table} SET {fields} {where} {orderBy} {limit}',
+			Query::DELETE	=> 'DELETE FROM {table} {where} {orderBy} {limit}',
+			Query::TRUNCATE	=> 'TRUNCATE {table}',
+			Query::DESCRIBE	=> 'DESCRIBE {table}',
+			Query::EXPLAIN	=> 'EXPLAIN EXTENDED SELECT {options}',
+
+			Query::DROP_TABLE	=> false,
+
+			Query::CREATE_TABLE	=> 'CREATE TABLE {table} ({fields}{indexes}) {params}',
+
+			Query::ALTER_TABLE	=> false,
 		];
 	}
 
@@ -453,13 +482,15 @@ abstract class AbstractDboSource extends AbstractSource {
 	}
 
 	/**
-	 * Quote an SQL identifier by wrapping with backticks.
+	 * Quote an SQL identifier by wrapping with a driver specific character.
 	 *
 	 * @param string $value
 	 * @return string
 	 */
 	public function quote($value) {
-		return '`' . trim($value, '`') . '`';
+		$char = $this->config->quoteCharacter;
+
+		return $char . trim($value, $char) . $char;
 	}
 
 	/**
