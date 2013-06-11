@@ -24,16 +24,16 @@ class Query {
 	const DESC = 'DESC';
 
 	// Types
-	const INSERT = 1;
-	const SELECT = 2;
-	const UPDATE = 3;
-	const DELETE = 4;
-	const TRUNCATE = 5;
-	const DESCRIBE = 6;
-	const EXPLAIN = 7;
-	const DROP_TABLE = 10;
-	const CREATE_TABLE = 20;
-	const ALTER_TABLE = 30;
+	const INSERT = 'insert';
+	const SELECT = 'select';
+	const UPDATE = 'update';
+	const DELETE = 'delete';
+	const TRUNCATE = 'truncate';
+	const DESCRIBE = 'describe';
+	const EXPLAIN = 'explain';
+	const DROP_TABLE = 'dropTable';
+	const CREATE_TABLE = 'createTable';
+	const ALTER_TABLE = 'alterTable';
 
 	/**
 	 * List of boolean attributes for the current query.

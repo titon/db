@@ -7,6 +7,7 @@
 
 namespace Titon\Model;
 
+use Titon\Model\Driver\Dialect;
 use Titon\Model\Query;
 
 /**
@@ -32,6 +33,13 @@ interface Driver {
 	 * Disconnect from the driver.
 	 */
 	public function disconnect();
+
+	/**
+	 * Return the dialect.
+	 *
+	 * @return \Titon\Model\Driver\Dialect
+	 */
+	public function getDialect();
 
 	/**
 	 * Return the encoding for the driver.
@@ -79,7 +87,7 @@ interface Driver {
 	 * Query the driver for data records.
 	 *
 	 * @param \Titon\Model\Query|string $query
-	 * @return \Titon\Model\Result
+	 * @return \Titon\Model\Query\Result
 	 */
 	public function query($query);
 
@@ -87,5 +95,13 @@ interface Driver {
 	 * Reset the driver for the next query.
 	 */
 	public function reset();
+
+	/**
+	 * Set the driver specific dialect.
+	 *
+	 * @param \Titon\Model\Driver\Dialect $dialect
+	 * @return \Titon\Model\Driver
+	 */
+	public function setDialect(Dialect $dialect);
 
 }

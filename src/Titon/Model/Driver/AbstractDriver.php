@@ -36,6 +36,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	protected $_connection;
 
 	/**
+	 * Dialect object instance.
+	 *
+	 * @type \Titon\Model\Driver\Dialect
+	 */
+	protected $_dialect;
+
+	/**
 	 * Flags used for connecting.
 	 *
 	 * @type array
@@ -85,6 +92,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	/**
 	 * {@inheritdoc}
 	 */
+	public function getDialect() {
+		return $this->_dialect;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
 	public function getEncoding() {
 		return $this->config->encoding;
 	}
@@ -115,6 +129,15 @@ abstract class AbstractDriver extends Base implements Driver {
 	 */
 	public function isPersistent() {
 		return $this->config->persistent;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function setDialect(Dialect $dialect) {
+		$this->_dialect = $dialect;
+
+		return $this;
 	}
 
 }
