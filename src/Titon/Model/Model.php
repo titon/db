@@ -9,6 +9,7 @@ namespace Titon\Model;
 
 use Titon\Common\Base;
 use Titon\Common\Registry;
+use Titon\Common\Traits\Attachable;
 use Titon\Common\Traits\Instanceable;
 use Titon\Model\Query;
 use Titon\Model\Driver\Schema;
@@ -26,7 +27,7 @@ use Titon\Model\Driver\Schema;
  * @link http://en.wikipedia.org/wiki/Relational_model
  */
 class Model extends Base {
-	use Instanceable;
+	use Instanceable, Attachable;
 
 	/**
 	 * Configuration.
@@ -48,6 +49,13 @@ class Model extends Base {
 		'displayField' => ['title', 'name', 'id'],
 		'entity' => 'Titon\Model\Entity'
 	];
+
+	/**
+	 * Model to model relationships.
+	 *
+	 * @type \Titon\Model\Relation[]
+	 */
+	protected $_relations = [];
 
 	/**
 	 * Database table schema object.
@@ -103,6 +111,24 @@ class Model extends Base {
 	 */
 	public static function describe() {
 		return self::getInstance()->query(Query::DESCRIBE);
+	}
+
+	/**
+	 * Add a relation between another model.
+	 *
+	 * @param \Titon\Model\Relation $relation
+	 * @return \Titon\Model\Model
+	 */
+	public function addRelation(Relation $relation) {
+		$this->_relations[$relation->getAlias()] = $relation;
+
+		$this->attachObject([
+			'alias' => $relation->getAlias(),
+			'class' => $relation->getModel(),
+			'interface' => 'Titon\Model\Model'
+		]);
+
+		return $this;
 	}
 
 	/**
@@ -167,6 +193,43 @@ class Model extends Base {
 		$driver->connect();
 
 		return $driver;
+	}
+
+	/**
+	 * Return a relation by alias.
+	 *
+	 * @param string $alias
+	 * @return \Titon\Model\Relation
+	 * @throws \Titon\Model\Exception
+	 */
+	public function getRelation($alias) {
+		if (isset($this->_relations[$alias])) {
+			return $this->_relations[$alias];
+		}
+
+		throw new Exception(sprintf('Model relation %s does not exist', $alias));
+	}
+
+	/**
+	 * Return all relations, or all relations by type.
+	 *
+	 * @param int $type
+	 * @return \Titon\Model\Relation[]
+	 */
+	public function getRelations($type = 0) {
+		if (!$type) {
+			return $this->_relations;
+		}
+
+		$relations = [];
+
+		foreach ($this->_relations as $relation) {
+			if ($relation->getType() === $type) {
+				$relations[] = $relation;
+			}
+		}
+
+		return $relations;
 	}
 
 	/**

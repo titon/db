@@ -93,6 +93,13 @@ class Query {
 	protected $_orderBy = [];
 
 	/**
+	 * Additional sub-queries to execute, usually for join type data.
+	 *
+	 * @type \Titon\Model\Query[]
+	 */
+	protected $_subQueries = [];
+
+	/**
 	 * The database table.
 	 *
 	 * @type string
@@ -275,6 +282,15 @@ class Query {
 	}
 
 	/**
+	 * Return the sub-queries.
+	 *
+	 * @return \Titon\Model\Query[]
+	 */
+	public function getSubQueries() {
+		return $this->_subQueries;
+	}
+
+	/**
 	 * Return the table name.
 	 *
 	 * @return string
@@ -394,6 +410,31 @@ class Query {
 			$field();
 		} else {
 			$this->_where->also($field, $value);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Include a model relation by querying and joining the records.
+	 *
+	 * @param string $alias
+	 * @param \Titon\Model\Query|\Closure $query
+	 * @return \Titon\Model\Query
+	 */
+	public function with($alias, $query) {
+		$this->_model->getRelation($alias); // Do relation check
+
+		if ($query instanceof Closure) {
+			$relatedQuery = $this->_model->getObject($alias)->query(Query::SELECT);
+
+			$query = $query->bindTo($relatedQuery, 'Titon\Model\Query');
+			$query();
+
+			$this->_subQueries[$alias] = $relatedQuery;
+
+		} else if ($query instanceof Query) {
+			$this->_subQueries[$alias] = $query;
 		}
 
 		return $this;
