@@ -5,9 +5,9 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model\Result;
+namespace Titon\Model\Query\Result;
 
-use Titon\Model\Result;
+use Titon\Model\Query\Result;
 use \PDO;
 use \PDOStatement;
 

@@ -5,7 +5,7 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model;
+namespace Titon\Model\Query;
 
 /**
  * Handles the results of a query.
