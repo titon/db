@@ -1,4 +1,9 @@
 <?php
+/**
+ * @copyright	Copyright 2010-2013, The Titon Project
+ * @license		http://opensource.org/licenses/bsd-license.php
+ * @link		http://titon.io
+ */
 
 namespace Titon\Model\Driver;
 
@@ -6,6 +11,11 @@ use Titon\Common\Base;
 use Titon\Model\Driver;
 use Titon\Utility\Hash;
 
+/**
+ * Implements basic driver functionality.
+ *
+ * @package Titon\Model\Driver
+ */
 abstract class AbstractDriver extends Base implements Driver {
 
 	/**

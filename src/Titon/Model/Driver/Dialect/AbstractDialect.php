@@ -1,7 +1,11 @@
 <?php
+/**
+ * @copyright	Copyright 2010-2013, The Titon Project
+ * @license		http://opensource.org/licenses/bsd-license.php
+ * @link		http://titon.io
+ */
 
 namespace Titon\Model\Driver\Dialect;
-
 
 use Titon\Common\Base;
 use Titon\Model\Driver\Dialect;
@@ -11,6 +15,11 @@ use Titon\Model\Query;
 use Titon\Model\Query\Clause;
 use Titon\Utility\String;
 
+/**
+ * Provides shared dialect functionality as well as MySQL style statement building.
+ *
+ * @package Titon\Model\Driver\Dialect
+ */
 abstract class AbstractDialect extends Base implements Dialect {
 
 	/**
@@ -409,7 +418,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
-	 * {@inheritdoc}
+	 * Quote an array of identifiers.
+	 *
+	 * @param array $values
+	 * @return string
 	 */
 	public function quoteList(array $values) {
 		return implode(', ', array_map([$this, 'quote'], $values));

@@ -8,7 +8,7 @@
 namespace Titon\Model\Driver;
 
 /**
- * Represents a relational database schema.
+ * Represents a database table schema.
  */
 class Schema {
 

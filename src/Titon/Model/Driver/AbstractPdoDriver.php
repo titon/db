@@ -1,4 +1,9 @@
 <?php
+/**
+ * @copyright	Copyright 2010-2013, The Titon Project
+ * @license		http://opensource.org/licenses/bsd-license.php
+ * @link		http://titon.io
+ */
 
 namespace Titon\Model\Driver\Dbo;
 
@@ -12,7 +17,9 @@ use \PDO;
 use \PDOStatement;
 
 /**
- * http://php.net/manual/en/pdo.drivers.php
+ * Implements PDO based driver functionality.
+ *
+ * @link http://php.net/manual/en/pdo.drivers.php
  *
  * @property \PDO $_connection
  */
@@ -252,6 +259,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	public function reset() {
 		if ($this->_statement instanceof PDOStatement) {
 			$this->_statement->closeCursor();
+			$this->_statement = null;
 		}
 	}
 
