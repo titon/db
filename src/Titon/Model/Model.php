@@ -10,8 +10,8 @@ namespace Titon\Model;
 use Titon\Common\Base;
 use Titon\Common\Registry;
 use Titon\Common\Traits\Instanceable;
-use Titon\Model\Schema;
 use Titon\Model\Query;
+use Titon\Model\Driver\Schema;
 
 /**
  * Represents a database table.
@@ -52,7 +52,7 @@ class Model extends Base {
 	/**
 	 * Database table schema object.
 	 *
-	 * @type \Titon\Model\Schema
+	 * @type \Titon\Model\Driver\Schema
 	 */
 	protected $_schema;
 
@@ -172,7 +172,7 @@ class Model extends Base {
 	/**
 	 * Return a schema object that represents the database table.
 	 *
-	 * @return \Titon\Model\Schema
+	 * @return \Titon\Model\Driver\Schema
 	 */
 	public function getSchema() {
 		if ($this->_schema) {

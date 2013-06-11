@@ -14,7 +14,7 @@ use \PDOStatement;
 /**
  * http://php.net/manual/en/pdo.drivers.php
  *
- * @property PDO $_connection
+ * @property \PDO $_connection
  */
 abstract class AbstractPdoDriver extends AbstractDriver {
 

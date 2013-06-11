@@ -36,6 +36,13 @@ class Query {
 	const ALTER_TABLE = 30;
 
 	/**
+	 * List of boolean attributes for the current query.
+	 *
+	 * @type array
+	 */
+	protected $_attributes = [];
+
+	/**
 	 * The fields to query for. An empty array will query all fields.
 	 *
 	 * @type string[]
@@ -121,6 +128,19 @@ class Query {
 	}
 
 	/**
+	 * Set an attribute.
+	 *
+	 * @param string $key
+	 * @param mixed $value
+	 * @return \Titon\Model\Query
+	 */
+	public function attribute($key, $value) {
+		$this->_attributes[$key] = $value;
+
+		return $this;
+	}
+
+	/**
 	 * Pass the query to the model to interact with the database.
 	 * Return the count of how many records exist.
 	 *
@@ -128,6 +148,17 @@ class Query {
 	 */
 	public function count() {
 		return $this->_model->count($this);
+	}
+
+	/**
+	 * Turn on distinct query statement.
+	 *
+	 * @return \Titon\Model\Query
+	 */
+	public function distinct() {
+		$this->attribute('distinct', true);
+
+		return $this;
 	}
 
 	/**
@@ -178,6 +209,15 @@ class Query {
 		$this->_table = (string) $table;
 
 		return $this;
+	}
+
+	/**
+	 * Return the list of attributes.
+	 *
+	 * @return array
+	 */
+	public function getAttributes() {
+		return $this->_attributes;
 	}
 
 	/**

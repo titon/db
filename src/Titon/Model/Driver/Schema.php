@@ -5,7 +5,7 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model;
+namespace Titon\Model\Driver;
 
 /**
  * Represents a relational database schema.

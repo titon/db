@@ -62,6 +62,13 @@ interface Driver {
 	public function isConnected();
 
 	/**
+	 * Return true if the driver is ready for use.
+	 *
+	 * @return bool
+	 */
+	public function isEnabled();
+
+	/**
 	 * Return true if the connection is persistent.
 	 *
 	 * @return bool
