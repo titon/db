@@ -64,7 +64,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		$statement = $this->_connection->prepare(call_user_func([$dialect, $method], $query));
 
 		foreach ($this->resolveBinds($query) as $i => $value) {
-			$statement->bindValue($i + 1, $value);
+			$statement->bindValue($i + 1, $value, $this->resolveType($value));
 		}
 
 		return $statement;
@@ -82,44 +82,6 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		]);
 
 		$this->_connected = true;
-	}
-
-	/**
-	 * Escape a value using PDO parameter binding and quoting.
-	 *
-	 * @param mixed $value
-	 * @param int $type
-	 * @return mixed
-	 */
-	public function escape($value, $type = null) {
-		if (!$type) {
-			if ($value === null) {
-				$type = PDO::PARAM_NULL;
-
-			} else if (is_numeric($value)) {
-				if (is_float($value) || is_float(floatval($value))) {
-					$type = PDO::PARAM_STR; // Floats use string type
-					$value = (float) $value;
-				} else {
-					$type = PDO::PARAM_INT;
-					$value = (int) $value;
-				}
-
-			} else if (is_bool($value)) {
-				$type = PDO::PARAM_BOOL;
-				$value = (int) $value; // Turn into 0 and 1
-
-			} else if (is_string($value)) {
-				$type = PDO::PARAM_STR;
-				$value = (string) $value;
-			}
-		}
-
-		if ($type) {
-			return $this->_connection->quote($value, $type);
-		}
-
-		return $value;
 	}
 
 	/**
@@ -276,7 +238,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		// Grab the values from insert and update queries
 		if ($type === Query::INSERT || $type === Query::UPDATE) {
 			foreach ($query->getFields() as $value) {
-				$binds[] = $this->escape($value);
+				$binds[] = $value;
 			}
 		}
 
@@ -289,10 +251,10 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 				} else {
 					if (is_array($param['value'])) {
 						foreach ($param['value'] as $value) {
-							$binds[] = $this->escape($value);
+							$binds[] = $value;
 						}
 					} else {
-						$binds[] = $this->escape($param['value']);
+						$binds[] = $param['value'];
 					}
 				}
 			}
@@ -302,6 +264,34 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		$resolveClause($query->getHaving());
 
 		return $binds;
+	}
+
+	/**
+	 * Resolve the value type for PDO parameter binding and quoting.
+	 *
+	 * @param mixed $value
+	 * @return int
+	 */
+	public function resolveType($value) {
+		if ($value === null) {
+			$type = PDO::PARAM_NULL;
+
+		} else if (is_numeric($value)) {
+			if (is_float($value) || is_float(floatval($value))) {
+				$type = PDO::PARAM_STR; // Floats use string type
+
+			} else {
+				$type = PDO::PARAM_INT;
+			}
+
+		} else if (is_bool($value)) {
+			$type = PDO::PARAM_BOOL;
+
+		} else {
+			$type = PDO::PARAM_STR;
+		}
+
+		return $type;
 	}
 
 }

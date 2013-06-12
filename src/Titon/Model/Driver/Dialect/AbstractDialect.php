@@ -335,13 +335,13 @@ abstract class AbstractDialect extends Base implements Dialect {
 				switch ($param['op']) {
 					case Clause::IN:
 					case Clause::NOT_IN:
-						$clause = $this->getClause('in');
+						$identifier = $this->getClause('in');
 
 						if ($param['op'] === Clause::NOT_IN) {
-							$clause = $this->getClause('notIn');
+							$identifier = $this->getClause('notIn');
 						}
 
-						$value = sprintf($clause, $field, $param['op'], implode(', ', array_fill(0, count($param['value']), '?')));
+						$value = sprintf($identifier, $field, implode(', ', array_fill(0, count($param['value']), '?')));
 					break;
 					case Clause::NULL:
 						$value = sprintf($this->getClause('null'), $field);

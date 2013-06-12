@@ -14,6 +14,7 @@ use Titon\Common\Traits\Cacheable;
 use Titon\Common\Traits\Instanceable;
 use Titon\Model\Query;
 use Titon\Model\Driver\Schema;
+use Titon\Utility\Hash;
 
 /**
  * Represents a database table.
@@ -108,7 +109,7 @@ class Model extends Base {
 	 * Add a relation between another model.
 	 *
 	 * @param \Titon\Model\Relation $relation
-	 * @return \Titon\Model\Relation
+	 * @return \Titon\Model\Relation|\Titon\Model\Relation\ManyToMany
 	 */
 	public function addRelation(Relation $relation) {
 		$this->_relations[$relation->getAlias()] = $relation;
@@ -136,27 +137,35 @@ class Model extends Base {
 	 * Return an entity for the first result from the query.
 	 *
 	 * @param \Titon\Model\Query $query
-	 * @return \Titon\Model\Entity
+	 * @param bool $wrap
+	 * @return \Titon\Model\Entity|array
 	 */
-	public function fetch(Query $query) {
+	public function fetch(Query $query, $wrap = true) {
 		$result = $this->getDriver()->query($query)->fetch();
 
 		if (!$result) {
 			return null;
 		}
 
+		$result = $this->fetchRelations($query, $result, $wrap);
+
+		if (!$wrap) {
+			return $result;
+		}
+
 		$entity = $this->getEntity();
 
-		return new $entity($this->fetchRelations($query, $result));
+		return new $entity($result);
 	}
 
 	/**
 	 * Return a list of entities from the results of the query.
 	 *
 	 * @param \Titon\Model\Query $query
-	 * @return \Titon\Model\Entity[]
+	 * @param bool $wrap
+	 * @return \Titon\Model\Entity[]|array
 	 */
-	public function fetchAll(Query $query) {
+	public function fetchAll(Query $query, $wrap = true) {
 		$results = $this->getDriver()->query($query)->fetchAll();
 
 		if (!$results) {
@@ -167,7 +176,13 @@ class Model extends Base {
 		$entities = [];
 
 		foreach ($results as $result) {
-			$entities[] = new $entity($this->fetchRelations($query, $result));
+			$result = $this->fetchRelations($query, $result, $wrap);
+
+			if (!$wrap) {
+				$entities[] = $result;
+			} else {
+				$entities[] = new $entity($result);
+			}
 		}
 
 		return $entities;
@@ -181,9 +196,10 @@ class Model extends Base {
 	 *
 	 * @param \Titon\Model\Query $query
 	 * @param array $result
+	 * @param bool $wrap
 	 * @return array
 	 */
-	public function fetchRelations(Query $query, array $result) {
+	public function fetchRelations(Query $query, array $result, $wrap = true) {
 		$queries = $query->getSubQueries();
 
 		if (!$queries) {
@@ -191,38 +207,94 @@ class Model extends Base {
 		}
 
 		foreach ($queries as $alias => $subQuery) {
+			$newQuery = clone $subQuery;
 			$relation = $this->getRelation($alias);
+			$relatedModel = $this->getObject($alias);
 
 			switch ($relation->getType()) {
 
-				// The related model should be pointing to the parent model
-				// So use the parent ID in the related foreign key
+				// Has One
+				// The related model should be pointing to this model
+				// So use this ID in the related foreign key
 				// Since we only want one record, limit it and single fetch
 				case Relation::ONE_TO_ONE:
-					$result[$alias] = $subQuery
-						->where($relation->getForeignKey(), $result[$this->getPrimaryKey()])
-						->limit(1)
-						->fetch();
+					$foreignValue = $result[$this->getPrimaryKey()];
+
+					if ($foreignValue) {
+						$result[$alias] = $newQuery
+							->where($relation->getForeignKey(), $result[$this->getPrimaryKey()])
+							->limit(1)
+							->fetch($wrap);
+					} else {
+						$result[$alias] = null;
+					}
 				break;
 
-				// The related models should be pointing to the parent model
-				// So use the parent ID in the related foreign key
+				// Has Many
+				// The related models should be pointing to this model
+				// So use this ID in the related foreign key
 				// Since we want multiple records, fetch all with no limit
 				case Relation::ONE_TO_MANY:
-					$result[$alias] = $subQuery
-						->where($relation->getForeignKey(), $result[$this->getPrimaryKey()])
-						->fetchAll();
+					$foreignValue = $result[$this->getPrimaryKey()];
+
+					if ($foreignValue) {
+						$result[$alias] = $newQuery
+							->where($relation->getRelatedForeignKey(), $result[$this->getPrimaryKey()])
+							->fetchAll($wrap);
+					} else {
+						$result[$alias] = [];
+					}
 				break;
 
+				// Belongs To
+				// This model should be pointing to the related model
+				// So use the foreign key as the related ID
+				// We should only be fetching a single record
 				case Relation::MANY_TO_ONE:
+					$foreignValue = $result[$relation->getForeignKey()];
 
+					if ($foreignValue) {
+						$result[$alias] = $newQuery
+							->where($relatedModel->getPrimaryKey(), $result[$relation->getForeignKey()])
+							->limit(1)
+							->fetch($wrap);
+					} else {
+						$result[$alias] = null;
+					}
 				break;
 
+				// Has And Belongs To Many
+				// This model points to a related model through a junction table
+				// Query the junction table for lookup IDs pointing to the related data
 				case Relation::MANY_TO_MANY:
+					$foreignValue = $result[$this->getPrimaryKey()];
 
+					if (!$foreignValue) {
+						$result[$alias] = [];
+						continue;
+					}
 
+					// Do a query on the junction table to gather IDs
+					$junctionLookup = Registry::factory($relation->getJunctionModel())
+						->query(Query::SELECT)
+						->where($relation->getForeignKey(), $foreignValue)
+						->fetchAll(false); // Don't wrap so we can pluck
+
+					if (!$junctionLookup) {
+						$result[$alias] = [];
+						continue;
+					}
+
+					// Fetch the related records using the lookup IDs
+					$lookupIds = Hash::pluck($junctionLookup, $relation->getRelatedForeignKey());
+
+					$result[$alias] = $newQuery
+						->where($relatedModel->getPrimaryKey(), $lookupIds)
+						->fetchAll($wrap);
 				break;
 			}
+
+			unset($newQuery);
 		}
 
 		return $result;
@@ -293,7 +365,7 @@ class Model extends Base {
 	 * Return a relation by alias.
 	 *
 	 * @param string $alias
-	 * @return \Titon\Model\Relation
+	 * @return \Titon\Model\Relation|\Titon\Model\Relation\ManyToMany
 	 * @throws \Titon\Model\Exception
 	 */
 	public function getRelation($alias) {

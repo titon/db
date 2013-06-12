@@ -11,13 +11,14 @@ use Titon\Model\Model;
 use Titon\Model\Exception;
 use Titon\Model\Query\Clause;
 use \Closure;
+use \JsonSerializable;
 
 /**
  * Provides an object oriented interface for building an SQL query.
  * Once the query params have been defined, the query can call the parent model to prepare the SQL statement,
  * and finally execute the query and return the results.
  */
-class Query {
+class Query implements JsonSerializable {
 
 	// Order directions
 	const ASC = 'ASC';
@@ -135,6 +136,15 @@ class Query {
 	}
 
 	/**
+	 * When cloning, be sure to clone the sub-objects.
+	 * Leave the model instance intact however.
+	 */
+	public function __clone() {
+		$this->_where = clone $this->_where;
+		$this->_having = clone $this->_having;
+	}
+
+	/**
 	 * Set an attribute.
 	 *
 	 * @param string $key
@@ -172,20 +182,22 @@ class Query {
 	 * Pass the query to the model to interact with the database.
 	 * Return the first record from the results.
 	 *
+	 * @param bool $wrap
 	 * @return \Titon\Model\Entity
 	 */
-	public function fetch() {
-		return $this->_model->fetch($this);
+	public function fetch($wrap = true) {
+		return $this->_model->fetch($this, $wrap);
 	}
 
 	/**
 	 * Pass the query to the model to interact with the database.
 	 * Return all records from the results.
 	 *
+	 * @param bool $wrap
 	 * @return \Titon\Model\Entity[]
 	 */
-	public function fetchAll() {
-		return $this->_model->fetchAll($this);
+	public function fetchAll($wrap = true) {
+		return $this->_model->fetchAll($this, $wrap);
 	}
 
 	/**
@@ -225,6 +237,15 @@ class Query {
 	 */
 	public function getAttributes() {
 		return $this->_attributes;
+	}
+
+	/**
+	 * Generate a unique cache key for this query.
+	 *
+	 * @return string
+	 */
+	public function getCacheKey() {
+		return md5(json_encode($this->jsonSerialize()));
 	}
 
 	/**
@@ -357,6 +378,28 @@ class Query {
 	}
 
 	/**
+	 * Return all data for serialization.
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize() {
+		return [
+			'attributes' => $this->getAttributes(),
+			'fields' => $this->getFields(),
+			'groupBy' => $this->getGroupBy(),
+			'having' => $this->getHaving()->getParams(),
+			'limit' => $this->getLimit(),
+			'model' => (string) $this->getModel(),
+			'offset' => $this->getOffset(),
+			'orderBy' => $this->getOrderBy(),
+			'subQueries' => $this->getSubQueries(),
+			'table' => $this->getTable(),
+			'type' => $this->getType(),
+			'where' => $this->getWhere()->getParams()
+		];
+	}
+
+	/**
 	 * Set the record limit and offset.
 	 *
 	 * @param int $limit
@@ -427,29 +470,44 @@ class Query {
 	/**
 	 * Include a model relation by querying and joining the records.
 	 *
-	 * @param string $alias
+	 * @param string|string[] $alias
 	 * @param \Titon\Model\Query|\Closure $query
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception
 	 */
-	public function with($alias, $query) {
+	public function with($alias, $query = null) {
 		if ($this->getType() !== self::SELECT) {
-			throw new Exception(sprintf('Only select queries can join related data'));
+			throw new Exception('Only select queries can join related data');
+		}
+
+		// Allow an array of aliases to easily be set
+		if (is_array($alias)) {
+			foreach ($alias as $name) {
+				$this->with($name);
+			}
+
+			return $this;
 		}
 
 		$relation = $this->_model->getRelation($alias); // Do relation check
 
-		if ($query instanceof Closure) {
-			$relatedQuery = $this->_model->getObject($alias)->query(Query::SELECT);
-
-			$query = $query->bindTo($relatedQuery, 'Titon\Model\Query');
-			$query($relation);
-
-		} else if ($query instanceof Query) {
+		if ($query instanceof Query) {
 			$relatedQuery = $query;
 
 		} else {
-			throw new Exception(sprintf('Invalid relation query, must be an instance of Titon\Model\Query or Closure'));
+			$relatedQuery = $this->_model->getObject($alias)->query(Query::SELECT);
+
+			// Apply relation conditions
+			if ($conditions = $relation->getConditions()) {
+				$conditions = $conditions->bindTo($relatedQuery, 'Titon\Model\Query');
+				$conditions($relation);
+			}
+
+			// Apply with conditions
+			if ($query instanceof Closure) {
+				$query = $query->bindTo($relatedQuery, 'Titon\Model\Query');
+				$query($relation);
+			}
 		}
 
 		$this->_subQueries[$alias] = $relatedQuery;
