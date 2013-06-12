@@ -125,4 +125,8 @@ class Schema {
 
 	}
 
+	public function hasColumn($column) {
+		return isset($this->_columns[$column]);
+	}
+
 }

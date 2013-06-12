@@ -10,6 +10,7 @@ namespace Titon\Model;
 use Titon\Common\Base;
 use Titon\Common\Registry;
 use Titon\Common\Traits\Attachable;
+use Titon\Common\Traits\Cacheable;
 use Titon\Common\Traits\Instanceable;
 use Titon\Model\Query;
 use Titon\Model\Driver\Schema;
@@ -27,13 +28,13 @@ use Titon\Model\Driver\Schema;
  * @link http://en.wikipedia.org/wiki/Relational_model
  */
 class Model extends Base {
-	use Instanceable, Attachable;
+	use Instanceable, Attachable, Cacheable;
 
 	/**
 	 * Configuration.
 	 *
 	 * @type array {
-	 * 		@type $string $connection		The connection login credentials key
+	 * 		@type $string $connection		The connection driver key
 	 * 		@type $string $table			Database table name
 	 * 		@type $string $prefix			Prefix to prepend to the table name
 	 * 		@type $string $primaryKey		The field representing the primary key
@@ -97,20 +98,10 @@ class Model extends Base {
 	/**
 	 * Instantiate a new query for deleting records.
 	 *
-	 * @param array $fields
 	 * @return \Titon\Model\Query
 	 */
-	public static function delete(array $fields = []) {
-		return self::getInstance()->query(Query::DELETE)->fields($fields);
-	}
-
-	/**
-	 * Instantiate a new query for describing a table.
-	 *
-	 * @return \Titon\Model\Query
-	 */
-	public static function describe() {
-		return self::getInstance()->query(Query::DESCRIBE);
+	public static function delete() {
+		return self::getInstance()->query(Query::DELETE);
 	}
 
 	/**
@@ -138,7 +129,7 @@ class Model extends Base {
 	 * @return int
 	 */
 	public function count(Query $query) {
-		return $this->getConnection()->query($query)->count();
+		return $this->getDriver()->query($query)->count();
 	}
 
 	/**
@@ -148,13 +139,13 @@ class Model extends Base {
 	 * @return \Titon\Model\Entity
 	 */
 	public function fetch(Query $query) {
-		$result = $this->getConnection()->query($query)->fetch();
+		$result = $this->getDriver()->query($query)->fetch();
 
 		if (!$result) {
 			return null;
 		}
 
-		$entity = $this->config->entity;
+		$entity = $this->getEntity();
 
 		return new $entity($this->fetchRelations($query, $result));
 	}
@@ -166,13 +157,13 @@ class Model extends Base {
 	 * @return \Titon\Model\Entity[]
 	 */
 	public function fetchAll(Query $query) {
-		$results = $this->getConnection()->query($query)->fetchAll();
+		$results = $this->getDriver()->query($query)->fetchAll();
 
 		if (!$results) {
 			return [];
 		}
 
-		$entity = $this->config->entity;
+		$entity = $this->getEntity();
 		$entities = [];
 
 		foreach ($results as $result) {
@@ -186,7 +177,7 @@ class Model extends Base {
 	 * Once the primary query has been executed and the results have been fetched,
 	 * loop over all sub-queries and fetch related data.
 	 *
-	 * The related data will be appended into the array under the relation alias.
+	 * The related data will be added to the array indexed by the relation alias.
 	 *
 	 * @param \Titon\Model\Query $query
 	 * @param array $result
@@ -239,26 +230,55 @@ class Model extends Base {
 	}
 
 	/**
-	 * Return the connection and driver defined by key.
+	 * Return the connection driver key.
+	 *
+	 * @return string
+	 */
+	public function getConnection() {
+		return $this->config->connection;
+	}
+
+	/**
+	 * Return the field used as the display field.
+	 *
+	 * @return string
+	 */
+	public function getDisplayField() {
+		return $this->cache(__METHOD__, function() {
+			$fields = $this->config->displayField;
+			$schema = $this->getSchema();
+
+			foreach ($fields as $field) {
+				if ($schema->hasColumn($field)) {
+					return $field;
+				}
+			}
+
+			return $this->getPrimaryKey();
+		});
+	}
+
+	/**
+	 * Return the driver defined by key.
 	 *
 	 * @return \Titon\Model\Driver
 	 */
-	public function getConnection() {
+	public function getDriver() {
 
 		/** @type \Titon\Model\Driver $driver */
-		$driver = Registry::factory('Titon\Model\Connection')->getDriver($this->config->connection);
+		$driver = Registry::factory('Titon\Model\Connection')->getDriver($this->getConnection());
 		$driver->connect();
 
 		return $driver;
 	}
 
 	/**
-	 * Return the list of fields to use as the display field.
+	 * Return the entity class name.
 	 *
-	 * @return array|string
+	 * @return string
 	 */
-	public function getDisplayField() {
-		return $this->config->displayField;
+	public function getEntity() {
+		return $this->config->entity;
 	}
 
 	/**
@@ -338,9 +358,27 @@ class Model extends Base {
 			$columns[$field->Field] = $column;
 		}
 
-		$this->_schema = new Schema($this->config->prefix . $this->config->table, $columns);
+		$this->_schema = new Schema($this->getTable(), $columns);
 
 		return $this->_schema;
+	}
+
+	/**
+	 * Return the full table name including prefix.
+	 *
+	 * @return string
+	 */
+	public function getTable() {
+		return $this->config->prefix . $this->config->table;
+	}
+
+	/**
+	 * Return only the table prefix.
+	 *
+	 * @return string
+	 */
+	public function getTablePrefix() {
+		return $this->config->prefix;
 	}
 
 	/**
@@ -350,7 +388,7 @@ class Model extends Base {
 	 * @return int
 	 */
 	public function save(Query $query) {
-		return $this->getConnection()->query($query)->save();
+		return $this->getDriver()->query($query)->save();
 	}
 
 	/**
@@ -361,7 +399,7 @@ class Model extends Base {
 	 */
 	public function query($type) {
 		$query = new Query($type, $this);
-		$query->from($this->config->prefix . $this->config->table);
+		$query->from($this->getTable());
 
 		return $query;
 	}
