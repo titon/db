@@ -1,11 +1,8 @@
 {
-	"name": "titon/mvc",
+	"name": "titon/model",
 	"type": "library",
-	"description": "The Titon model package provides functionality for data reading, writing and mapping, either from a database or external source.",
-	"keywords": [
-		"titon", "model", "entity", "database", "datasource", "query", "connection", "relation", "document",
-		"mysql", "postgresql", "sqlite", "mongodb", "oracle", "schema"
-	],
+	"description": "The Titon model package provides a basic database abstraction layer and an object relational mapper.",
+	"keywords": ["titon", "model", "entity", "database", "driver", "query", "connection", "relation", "schema"],
 	"homepage": "https://github.com/titon/Model",
 	"license": "BSD-2",
 	"authors": [
