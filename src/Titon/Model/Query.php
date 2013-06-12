@@ -7,10 +7,12 @@
 
 namespace Titon\Model;
 
+use Titon\Common\Registry;
 use Titon\Model\Model;
 use Titon\Model\Exception;
 use Titon\Model\Query\Clause;
 use \Closure;
+use \Serializable;
 use \JsonSerializable;
 
 /**
@@ -18,7 +20,7 @@ use \JsonSerializable;
  * Once the query params have been defined, the query can call the parent model to prepare the SQL statement,
  * and finally execute the query and return the results.
  */
-class Query implements JsonSerializable {
+class Query implements Serializable, JsonSerializable {
 
 	// Order directions
 	const ASC = 'ASC';
@@ -160,8 +162,14 @@ class Query implements JsonSerializable {
 	 * @param mixed $value
 	 * @return \Titon\Model\Query
 	 */
-	public function attribute($key, $value) {
-		$this->_attributes[$key] = $value;
+	public function attribute($key, $value = null) {
+		if (is_array($key)) {
+			foreach ($key as $k => $v) {
+				$this->attribute($k, $v);
+			}
+		} else {
+			$this->_attributes[$key] = $value;
+		}
 
 		return $this;
 	}
@@ -375,7 +383,13 @@ class Query implements JsonSerializable {
 	 * @return \Titon\Model\Query
 	 */
 	public function groupBy() {
-		$this->_groupBy = array_unique(array_merge($this->_groupBy, func_get_args()));
+		$fields = func_get_args();
+
+		if (is_array($fields[0])) {
+			$fields = $fields[0];
+		}
+
+		$this->_groupBy = array_unique(array_merge($this->_groupBy, $fields));
 
 		return $this;
 	}
@@ -524,6 +538,62 @@ class Query implements JsonSerializable {
 	}
 
 	/**
+	 * Serialize the query.
+	 *
+	 * @return string
+	 */
+	public function serialize() {
+		return serialize($this->jsonSerialize());
+	}
+
+	/**
+	 * Reconstruct the query once unserialized.
+	 *
+	 * @param array $data
+	 */
+	public function unserialize($data) {
+		$data = unserialize($data);
+
+		$this->__construct($data['type'], Registry::factory($data['model']));
+
+		if ($data['attributes']) {
+			$this->attribute($data['attributes']);
+		}
+
+		if ($data['fields']) {
+			$this->fields($data['fields']);
+		}
+
+		if ($data['groupBy']) {
+			$this->groupBy($data['groupBy']);
+		}
+
+		if ($data['limit']) {
+			$this->limit($data['limit'], $data['offset']);
+		}
+
+		if ($data['orderBy']) {
+			$this->orderBy($data['orderBy']);
+		}
+
+		if ($data['table']) {
+			$this->from($data['table']);
+		}
+
+		if ($data['having']) {
+			$this->_having = $data['having'];
+		}
+
+		if ($data['where']) {
+			$this->_where = $data['where'];
+		}
+
+		if ($data['subQueries']) {
+			$this->_subQueries = $data['subQueries'];
+		}
+	}
+
+	/**
 	 * Return all data for serialization.
 	 *
 	 * @return array
@@ -533,7 +603,7 @@ class Query implements JsonSerializable {
 			'attributes' => $this->getAttributes(),
 			'fields' => $this->getFields(),
 			'groupBy' => $this->getGroupBy(),
-			'having' => $this->getHaving()->getParams(),
+			'having' => $this->getHaving(),
 			'limit' => $this->getLimit(),
 			'model' => (string) $this->getModel(),
 			'offset' => $this->getOffset(),
@@ -541,7 +611,7 @@ class Query implements JsonSerializable {
 			'subQueries' => $this->getSubQueries(),
 			'table' => $this->getTable(),
 			'type' => $this->getType(),
-			'where' => $this->getWhere()->getParams()
+			'where' => $this->getWhere()
 		];
 	}
 

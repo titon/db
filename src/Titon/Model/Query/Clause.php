@@ -9,11 +9,13 @@ namespace Titon\Model\Query;
 
 use Titon\Model\Exception;
 use \Closure;
+use \Serializable;
+use \JsonSerializable;
 
 /**
  * Functionality for handling advanced query clauses: where, having
  */
-class Clause {
+class Clause implements Serializable, JsonSerializable {
 
 	// Types
 	const ALSO = 'AND';
@@ -146,6 +148,40 @@ class Clause {
 		];
 
 		return $this;
+	}
+
+	/**
+	 * Serialize the query clause.
+	 *
+	 * @return string
+	 */
+	public function serialize() {
+		return serialize($this->jsonSerialize());
+	}
+
+	/**
+	 * Reconstruct the query clause once unserialized.
+	 *
+	 * @param array $data
+	 */
+	public function unserialize($data) {
+		$data = unserialize($data);
+
+		foreach ($data['params'] as $param) {
+			$this->_process($data['type'], $param['field'], $param['value'], $param['op']);
+		}
+	}
+
+	/**
+	 * Return all data for serialization.
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize() {
+		return [
+			'type' => $this->getType(),
+			'params' => $this->getParams()
+		];
 	}
 
 }
