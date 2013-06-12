@@ -145,6 +145,15 @@ class Query implements JsonSerializable {
 	}
 
 	/**
+	 * Magic method for toString().
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return $this->toString();
+	}
+
+	/**
 	 * Set an attribute.
 	 *
 	 * @param string $key
@@ -164,7 +173,7 @@ class Query implements JsonSerializable {
 	 * @return \Titon\Model\Entity
 	 */
 	public function count() {
-		return $this->_model->count($this);
+		return $this->getModel()->count($this);
 	}
 
 	/**
@@ -186,7 +195,7 @@ class Query implements JsonSerializable {
 	 * @return \Titon\Model\Entity
 	 */
 	public function fetch($wrap = true) {
-		return $this->_model->fetch($this, $wrap);
+		return $this->getModel()->fetch($this, $wrap);
 	}
 
 	/**
@@ -197,7 +206,19 @@ class Query implements JsonSerializable {
 	 * @return \Titon\Model\Entity[]
 	 */
 	public function fetchAll($wrap = true) {
-		return $this->_model->fetchAll($this, $wrap);
+		return $this->getModel()->fetchAll($this, $wrap);
+	}
+
+	/**
+	 * Pass the query to the model to interact with the database.
+	 * Return all records as a key value list.
+	 *
+	 * @param string $key
+	 * @param string $value
+	 * @return array
+	 */
+	public function fetchList($key = null, $value = null) {
+		return $this->getModel()->fetchList($this, $key, $value);
 	}
 
 	/**
@@ -245,7 +266,7 @@ class Query implements JsonSerializable {
 	 * @return string
 	 */
 	public function getCacheKey() {
-		return md5(json_encode($this->jsonSerialize()));
+		return $this->toString();
 	}
 
 	/**
@@ -378,28 +399,6 @@ class Query implements JsonSerializable {
 	}
 
 	/**
-	 * Return all data for serialization.
-	 *
-	 * @return array
-	 */
-	public function jsonSerialize() {
-		return [
-			'attributes' => $this->getAttributes(),
-			'fields' => $this->getFields(),
-			'groupBy' => $this->getGroupBy(),
-			'having' => $this->getHaving()->getParams(),
-			'limit' => $this->getLimit(),
-			'model' => (string) $this->getModel(),
-			'offset' => $this->getOffset(),
-			'orderBy' => $this->getOrderBy(),
-			'subQueries' => $this->getSubQueries(),
-			'table' => $this->getTable(),
-			'type' => $this->getType(),
-			'where' => $this->getWhere()->getParams()
-		];
-	}
-
-	/**
 	 * Set the record limit and offset.
 	 *
 	 * @param int $limit
@@ -446,7 +445,16 @@ class Query implements JsonSerializable {
 	 * @return int
 	 */
 	public function save() {
-		return $this->_model->save($this);
+		return $this->getModel()->save($this);
+	}
+
+	/**
+	 * Return a unique MD5 hash of the query.
+	 *
+	 * @return string
+	 */
+	public function toString() {
+		return md5(json_encode($this->jsonSerialize()));
 	}
 
 	/**
@@ -489,13 +497,13 @@ class Query implements JsonSerializable {
 			return $this;
 		}
 
-		$relation = $this->_model->getRelation($alias); // Do relation check
+		$relation = $this->getModel()->getRelation($alias); // Do relation check
 
 		if ($query instanceof Query) {
 			$relatedQuery = $query;
 
 		} else {
-			$relatedQuery = $this->_model->getObject($alias)->query(Query::SELECT);
+			$relatedQuery = $this->getModel()->getObject($alias)->query(Query::SELECT);
 
 			// Apply relation conditions
 			if ($conditions = $relation->getConditions()) {
@@ -513,6 +521,28 @@ class Query implements JsonSerializable {
 		$this->_subQueries[$alias] = $relatedQuery;
 
 		return $this;
+	}
+
+	/**
+	 * Return all data for serialization.
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize() {
+		return [
+			'attributes' => $this->getAttributes(),
+			'fields' => $this->getFields(),
+			'groupBy' => $this->getGroupBy(),
+			'having' => $this->getHaving()->getParams(),
+			'limit' => $this->getLimit(),
+			'model' => (string) $this->getModel(),
+			'offset' => $this->getOffset(),
+			'orderBy' => $this->getOrderBy(),
+			'subQueries' => $this->getSubQueries(),
+			'table' => $this->getTable(),
+			'type' => $this->getType(),
+			'where' => $this->getWhere()->getParams()
+		];
 	}
 
 }

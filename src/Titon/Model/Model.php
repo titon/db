@@ -67,45 +67,6 @@ class Model extends Base {
 	protected $_schema;
 
 	/**
-	 * Instantiate a new query for inserting records.
-	 *
-	 * @param array $fields
-	 * @return \Titon\Model\Query
-	 */
-	public static function insert(array $fields = []) {
-		return self::getInstance()->query(Query::INSERT)->fields($fields);
-	}
-
-	/**
-	 * Instantiate a new query for selecting records.
-	 *
-	 * @param array $fields
-	 * @return \Titon\Model\Query
-	 */
-	public static function select(array $fields = []) {
-		return self::getInstance()->query(Query::SELECT)->fields($fields);
-	}
-
-	/**
-	 * Instantiate a new query for updating records.
-	 *
-	 * @param array $fields
-	 * @return \Titon\Model\Query
-	 */
-	public static function update(array $fields = []) {
-		return self::getInstance()->query(Query::UPDATE)->fields($fields);
-	}
-
-	/**
-	 * Instantiate a new query for deleting records.
-	 *
-	 * @return \Titon\Model\Query
-	 */
-	public static function delete() {
-		return self::getInstance()->query(Query::DELETE);
-	}
-
-	/**
 	 * Add a relation between another model.
 	 *
 	 * @param \Titon\Model\Relation $relation
@@ -186,6 +147,32 @@ class Model extends Base {
 		}
 
 		return $entities;
+	}
+
+	/**
+	 * Return the results as a list of key values.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @param string $key The field to use as the array key
+	 * @param string $value The field to use as the array value
+	 * @return array
+	 */
+	public function fetchList(Query $query, $key = null, $value = null) {
+		$results = $this->fetchAll($query, false);
+
+		if (!$results) {
+			return [];
+		}
+
+		$key = $key ?: $this->getPrimaryKey();
+		$value = $value ?: $this->getDisplayField();
+		$list = [];
+
+		foreach ($results as $result) {
+			$list[Hash::extract($result, $key)] = Hash::extract($result, $value);
+		}
+
+		return $list;
 	}
 
 	/**
@@ -480,7 +467,7 @@ class Model extends Base {
 	}
 
 	/**
-	 * Instantiate a new database query builder.
+	 * Instantiate a new query builder.
 	 *
 	 * @param int $type
 	 * @return \Titon\Model\Query
