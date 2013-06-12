@@ -264,6 +264,15 @@ class Query {
 	}
 
 	/**
+	 * Return the parent model.
+	 *
+	 * @return \Titon\Model\Model
+	 */
+	public function getModel() {
+		return $this->_model;
+	}
+
+	/**
 	 * Return the offset.
 	 *
 	 * @return int
@@ -424,13 +433,17 @@ class Query {
 	 * @throws \Titon\Model\Exception
 	 */
 	public function with($alias, $query) {
-		$this->_model->getRelation($alias); // Do relation check
+		if ($this->getType() !== self::SELECT) {
+			throw new Exception(sprintf('Only select queries can join related data'));
+		}
+
+		$relation = $this->_model->getRelation($alias); // Do relation check
 
 		if ($query instanceof Closure) {
 			$relatedQuery = $this->_model->getObject($alias)->query(Query::SELECT);
 
 			$query = $query->bindTo($relatedQuery, 'Titon\Model\Query');
-			$query();
+			$query($relation);
 
 		} else if ($query instanceof Query) {
 			$relatedQuery = $query;

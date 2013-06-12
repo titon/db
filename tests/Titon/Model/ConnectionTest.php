@@ -1,14 +1,13 @@
 <?php
 /**
  * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
+ * @license		http://opendriver.org/licenses/bsd-license.php
  * @link		http://titon.io
  */
 
 namespace Titon\Model;
 
-use Titon\Model\Source\Dbo\Mysql;
-use Titon\Model\Source\Dbo\Mongo;
+use Titon\Test\Stub\TestDriver;
 use Titon\Test\TestCase;
 
 /**
@@ -25,34 +24,34 @@ class ConnectionTest extends TestCase {
 		parent::setUp();
 
 		$this->object = new Connection();
-		$this->object->addSource(new Mysql('mysql', []));
+		$this->object->addDriver(new TestDriver('mysql', []));
 	}
 
 	/**
-	 * Test getting and setting data sources.
+	 * Test getting and setting data drivers.
 	 */
-	public function testAddGetSource() {
-		$this->assertInstanceOf('Titon\Model\Source\Dbo\Mysql', $this->object->getSource('mysql'));
+	public function testAddGetDriver() {
+		$this->assertInstanceOf('Titon\Model\Driver', $this->object->getDriver('mysql'));
 
 		try {
-			$this->object->getSource('mongo');
+			$this->object->getDriver('foobar');
 			$this->assertTrue(false);
 		} catch (Exception $e) {
 			$this->assertTrue(true);
 		}
 
-		$this->object->addSource(new Mongo('mongo', []));
-		$this->assertInstanceOf('Titon\Model\Source\Dbo\Mongo', $this->object->getSource('mongo'));
+		$this->object->addDriver(new TestDriver('foobar', []));
+		$this->assertInstanceOf('Titon\Model\Driver', $this->object->getDriver('foobar'));
 	}
 
 	/**
-	 * Test that getSources() returns all.
+	 * Test that getDrivers() returns all.
 	 */
-	public function testGetSources() {
-		$this->assertEquals(1, count($this->object->getSources()));
+	public function testGetDrivers() {
+		$this->assertEquals(1, count($this->object->getDrivers()));
 
-		$this->object->addSource(new Mongo('mongo', []));
-		$this->assertEquals(2, count($this->object->getSources()));
+		$this->object->addDriver(new TestDriver('foobar', []));
+		$this->assertEquals(2, count($this->object->getDrivers()));
 	}
 
 }

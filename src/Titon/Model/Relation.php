@@ -12,10 +12,10 @@ namespace Titon\Model;
  */
 interface Relation {
 
-	const ONE_TO_ONE = 1;
-	const ONE_TO_MANY = 2;
-	const MANY_TO_ONE = 3;
-	const MANY_TO_MANY = 4;
+	const ONE_TO_ONE = 'oneToOne'; // Has One
+	const ONE_TO_MANY = 'oneToMany'; // Has Many
+	const MANY_TO_ONE = 'manyToOne'; // Belongs To
+	const MANY_TO_MANY = 'manyToMany'; // Has And Belongs To Many
 
 	public function getAlias();
 

@@ -8,6 +8,8 @@
 namespace Titon\Model;
 
 use Titon\Model\Query;
+use Titon\Test\Stub\Model\Profile;
+use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
 use \Exception;
 
@@ -24,7 +26,17 @@ class QueryTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new Query(Query::SELECT, Model::getInstance());
+		$this->object = new Query(Query::SELECT, new User());
+	}
+
+	/**
+	 * Test getting and setting of attributes.
+	 */
+	public function testAttributes() {
+		$this->assertEquals([], $this->object->getAttributes());
+
+		$this->object->attribute('readonly', true);
+		$this->assertEquals(['readonly' => true], $this->object->getAttributes());
 	}
 
 	/**
@@ -126,6 +138,36 @@ class QueryTest extends TestCase {
 			$this->also('level', [1, 100], Query\Clause::BETWEEN);
 		});
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
+	}
+
+	/**
+	 * Test that with() generates relational sub-queries.
+	 */
+	public function testWith() {
+		// Missing relation
+		try {
+			$this->object->with('Foobar', function() {});
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+
+		// Not a query
+		try {
+			$this->object->with('Profile', []);
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+
+		$this->object->with('Profile', function(Relation $relation) {
+			$this->where($relation->getForeignKey(), 1);
+		});
+
+		$query = new Query(Query::SELECT, new Profile());
+		$query->from('profiles')->where('user_id', 1);
+
+		$this->assertEquals(['Profile' => $query], $this->object->getSubQueries());
 	}
 
 }
