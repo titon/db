@@ -1,7 +1,7 @@
 {
 	"name": "titon/model",
 	"type": "library",
-	"description": "The Titon model package provides a basic database abstraction layer and an object relational mapper.",
+	"description": "The Titon model package provides a basic database abstraction layer and an object relational mapper. Requires the PDO extension for database connections.",
 	"keywords": ["titon", "model", "entity", "database", "driver", "query", "connection", "relation", "schema"],
 	"homepage": "https://github.com/titon/Model",
 	"license": "BSD-2",

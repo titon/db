@@ -85,6 +85,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @param \Titon\Model\Driver $driver
 	 */
 	public function __construct(Driver $driver) {
+		parent::__construct();
+
 		$this->setDriver($driver);
 	}
 

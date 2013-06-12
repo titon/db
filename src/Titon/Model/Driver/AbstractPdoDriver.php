@@ -5,7 +5,7 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model\Driver\Dbo;
+namespace Titon\Model\Driver;
 
 use Titon\Model\Query;
 use Titon\Model\Exception;
