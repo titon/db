@@ -421,6 +421,7 @@ class Query {
 	 * @param string $alias
 	 * @param \Titon\Model\Query|\Closure $query
 	 * @return \Titon\Model\Query
+	 * @throws \Titon\Model\Exception
 	 */
 	public function with($alias, $query) {
 		$this->_model->getRelation($alias); // Do relation check
@@ -431,11 +432,14 @@ class Query {
 			$query = $query->bindTo($relatedQuery, 'Titon\Model\Query');
 			$query();
 
-			$this->_subQueries[$alias] = $relatedQuery;
-
 		} else if ($query instanceof Query) {
-			$this->_subQueries[$alias] = $query;
+			$relatedQuery = $query;
+
+		} else {
+			throw new Exception(sprintf('Invalid relation query, must be an instance of Titon\Model\Query or Closure'));
 		}
+
+		$this->_subQueries[$alias] = $relatedQuery;
 
 		return $this;
 	}

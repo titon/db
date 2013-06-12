@@ -117,7 +117,7 @@ class Model extends Base {
 	 * Add a relation between another model.
 	 *
 	 * @param \Titon\Model\Relation $relation
-	 * @return \Titon\Model\Model
+	 * @return \Titon\Model\Relation
 	 */
 	public function addRelation(Relation $relation) {
 		$this->_relations[$relation->getAlias()] = $relation;
@@ -128,7 +128,7 @@ class Model extends Base {
 			'interface' => 'Titon\Model\Model'
 		]);
 
-		return $this;
+		return $relation;
 	}
 
 	/**
@@ -156,7 +156,7 @@ class Model extends Base {
 
 		$entity = $this->config->entity;
 
-		return new $entity($result);
+		return new $entity($this->fetchRelations($query, $result));
 	}
 
 	/**
@@ -176,10 +176,66 @@ class Model extends Base {
 		$entities = [];
 
 		foreach ($results as $result) {
-			$entities[] = new $entity($result);
+			$entities[] = new $entity($this->fetchRelations($query, $result));
 		}
 
 		return $entities;
+	}
+
+	/**
+	 * Once the primary query has been executed and the results have been fetched,
+	 * loop over all sub-queries and fetch related data.
+	 *
+	 * The related data will be appended into the array under the relation alias.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @param array $result
+	 * @return array
+	 */
+	public function fetchRelations(Query $query, array $result) {
+		$queries = $query->getSubQueries();
+
+		if (!$queries) {
+			return $result;
+		}
+
+		foreach ($queries as $alias => $subQuery) {
+			$relation = $this->getRelation($alias);
+			$model = $this->getObject($alias);
+
+			switch ($relation->getType()) {
+
+				// The related model should be pointing to the parent model
+				// So use the parent ID in the related foreign key
+				// Since we only want one record, limit it and single fetch
+				case Relation::ONE_TO_ONE:
+					$result[$alias] = $subQuery
+						->where($relation->getForeignKey(), $result[$model->getPrimaryKey()])
+						->limit(1)
+						->fetch();
+				break;
+
+				// The related models should be pointing to the parent model
+				// So use the parent ID in the related foreign key
+				// Since we want multiple records, fetch all with no limit
+				case Relation::ONE_TO_MANY:
+					$result[$alias] = $subQuery
+						->where($relation->getForeignKey(), $result[$model->getPrimaryKey()])
+						->fetchAll();
+				break;
+
+				case Relation::MANY_TO_ONE:
+
+				break;
+
+				case Relation::MANY_TO_MANY:
+
+
+				break;
+			}
+		}
+
+		return $result;
 	}
 
 	/**
@@ -188,11 +244,30 @@ class Model extends Base {
 	 * @return \Titon\Model\Driver
 	 */
 	public function getConnection() {
+
 		/** @type \Titon\Model\Driver $driver */
 		$driver = Registry::factory('Titon\Model\Connection')->getDriver($this->config->connection);
 		$driver->connect();
 
 		return $driver;
+	}
+
+	/**
+	 * Return the list of fields to use as the display field.
+	 *
+	 * @return array|string
+	 */
+	public function getDisplayField() {
+		return $this->config->displayField;
+	}
+
+	/**
+	 * Return the field used as the primary, usually the ID.
+	 *
+	 * @return string
+	 */
+	public function getPrimaryKey() {
+		return $this->config->primaryKey;
 	}
 
 	/**

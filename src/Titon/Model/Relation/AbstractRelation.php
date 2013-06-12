@@ -14,7 +14,9 @@ abstract class AbstractRelation extends Base implements Relation {
 		'dependent' => true
 	];
 
-	public function __construct($alias, $model) {
+	public function __construct($alias, $model, array $config = []) {
+		parent::__construct($config);
+
 		$this->setAlias($alias);
 		$this->setModel($model);
 	}
