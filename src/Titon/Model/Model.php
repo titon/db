@@ -192,7 +192,6 @@ class Model extends Base {
 
 		foreach ($queries as $alias => $subQuery) {
 			$relation = $this->getRelation($alias);
-			$model = $this->getObject($alias);
 
 			switch ($relation->getType()) {
 
@@ -201,7 +200,7 @@ class Model extends Base {
 				// Since we only want one record, limit it and single fetch
 				case Relation::ONE_TO_ONE:
 					$result[$alias] = $subQuery
-						->where($relation->getForeignKey(), $result[$model->getPrimaryKey()])
+						->where($relation->getForeignKey(), $result[$this->getPrimaryKey()])
 						->limit(1)
 						->fetch();
 				break;
@@ -211,7 +210,7 @@ class Model extends Base {
 				// Since we want multiple records, fetch all with no limit
 				case Relation::ONE_TO_MANY:
 					$result[$alias] = $subQuery
-						->where($relation->getForeignKey(), $result[$model->getPrimaryKey()])
+						->where($relation->getForeignKey(), $result[$this->getPrimaryKey()])
 						->fetchAll();
 				break;
 
@@ -248,7 +247,7 @@ class Model extends Base {
 			$fields = $this->config->displayField;
 			$schema = $this->getSchema();
 
-			foreach ($fields as $field) {
+			foreach ((array) $fields as $field) {
 				if ($schema->hasColumn($field)) {
 					return $field;
 				}
@@ -388,7 +387,24 @@ class Model extends Base {
 	 * @return int
 	 */
 	public function save(Query $query) {
-		return $this->getDriver()->query($query)->save();
+		$count = $this->getDriver()->query($query)->save();
+
+		/* Cascade delete records
+		if ($count && $query->getType() === Query::DELETE) {
+			foreach ($this->getRelations() as $relation) {
+				if (!$relation->isDependent()) {
+					continue;
+				}
+
+				/ @type \Titon\Model\Model $model /
+				$model = $this->getObject($relation->getAlias());
+				$model->query(Query::DELETE)
+					->where($relation->getForeignKey(), 1)
+					->save();
+			}
+		}*/
+
+		return $count;
 	}
 
 	/**
