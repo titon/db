@@ -46,6 +46,13 @@ class Query implements Serializable, JsonSerializable {
 	protected $_attributes = [];
 
 	/**
+	 * How long to cache the query for.
+	 *
+	 * @type mixed
+	 */
+	protected $_cacheLength = null;
+
+	/**
 	 * The fields to query for. An empty array will query all fields.
 	 *
 	 * @type string[]
@@ -175,6 +182,18 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Set the cache duration length.
+	 *
+	 * @param mixed $expires
+	 * @return \Titon\Model\Query
+	 */
+	public function cacheFor($expires) {
+		$this->_cacheLength = $expires;
+
+		return $this;
+	}
+
+	/**
 	 * Pass the query to the model to interact with the database.
 	 * Return the count of how many records exist.
 	 *
@@ -274,7 +293,16 @@ class Query implements Serializable, JsonSerializable {
 	 * @return string
 	 */
 	public function getCacheKey() {
-		return $this->toString();
+		return get_class($this) . '-' . $this->toString();
+	}
+
+	/**
+	 * Return the cache length.
+	 *
+	 * @return string
+	 */
+	public function getCacheLength() {
+		return $this->_cacheLength;
 	}
 
 	/**

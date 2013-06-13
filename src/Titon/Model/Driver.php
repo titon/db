@@ -36,6 +36,13 @@ interface Driver {
 	public function disconnect();
 
 	/**
+	 * Return the connection object.
+	 *
+	 * @return object
+	 */
+	public function getConnection();
+
+	/**
 	 * Return the dialect.
 	 *
 	 * @return \Titon\Model\Driver\Dialect
@@ -64,6 +71,13 @@ interface Driver {
 	public function getKey();
 
 	/**
+	 * Return a list of logged query statements.
+	 *
+	 * @return array
+	 */
+	public function getLoggedQueries();
+
+	/**
 	 * Return the storage engine.
 	 *
 	 * @return \Titon\Cache\Storage
@@ -90,6 +104,15 @@ interface Driver {
 	 * @return bool
 	 */
 	public function isPersistent();
+
+	/**
+	 * Log a query statement and its bound parameters.
+	 *
+	 * @param string $statement
+	 * @param array $params
+	 * @return \Titon\Model\Driver
+	 */
+	public function logQuery($statement, array $params = []);
 
 	/**
 	 * Query the driver for data records.

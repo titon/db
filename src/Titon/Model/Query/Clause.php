@@ -141,7 +141,10 @@ class Clause implements Serializable, JsonSerializable {
 			throw new Exception(sprintf('%s clause must have an array of 2 values', $op));
 		}
 
-		$this->_params[] = [
+		$castValue = is_array($value) ? implode('', $value) : $value;
+		$key = $field . $op . $castValue;
+
+		$this->_params[$key] = [
 			'field' => $field,
 			'value' => $value,
 			'op' => $op

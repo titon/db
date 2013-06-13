@@ -20,8 +20,6 @@ use \PDOStatement;
  * Implements PDO based driver functionality.
  *
  * @link http://php.net/manual/en/pdo.drivers.php
- *
- * @property \PDO $_connection
  */
 abstract class AbstractPdoDriver extends AbstractDriver {
 
@@ -61,11 +59,15 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			throw new Exception(sprintf('Query statement %s does not exist or has not been implemented', $type));
 		}
 
-		$statement = $this->_connection->prepare(call_user_func([$dialect, $method], $query));
+		/** @type \PDOStatement $statement */
+		$statement = $this->getConnection()->prepare(call_user_func([$dialect, $method], $query));
+		$binds = $this->resolveBinds($query);
 
-		foreach ($this->resolveBinds($query) as $i => $value) {
+		foreach ($binds as $i => $value) {
 			$statement->bindValue($i + 1, $value, $this->resolveType($value));
 		}
+
+		$this->logQuery($statement, $binds);
 
 		return $statement;
 	}
@@ -82,35 +84,6 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		]);
 
 		$this->_connected = true;
-	}
-
-	/**
-	 * Execute a raw string SQL statement.
-	 *
-	 * @param string $sql
-	 * @return \Titon\Model\Query\Result
-	 */
-	public function executeSql($sql) {
-		$statement = $this->_connection->query($sql);
-
-		$this->_statement = $statement;
-
-		return new PdoResult($statement);
-	}
-
-	/**
-	 * Execute a Query object. The query will be converted into a PDOStatement beforehand.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return \Titon\Model\Query\Result
-	 */
-	public function executeQuery(Query $query) {
-		$statement = $this->buildStatement($query);
-		$statement->execute();
-
-		$this->_statement = $statement;
-
-		return new PdoResult($statement);
 	}
 
 	/**
@@ -201,18 +174,68 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 	/**
 	 * {@inheritdoc}
+	 */
+	public function logQuery($statement, array $params = []) {
+		if ($statement instanceof PDOStatement) {
+			$statement = $statement->queryString;
+		}
+
+		$this->_logs[] = [
+			'statement' => $statement,
+			'params' => $params
+		];
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritdoc}
 	 *
 	 * @throws \Titon\Model\Exception
 	 */
 	public function query($query) {
+		$storage = $this->getStorage();
+		$cacheLength = null;
+
+		// Check the cache first
 		if ($query instanceof Query) {
-			return $this->executeQuery($query);
+			$cacheKey = $query->getCacheKey();
+			$cacheLength = $query->getCacheLength();
 
 		} else if (is_string($query)) {
-			return $this->executeSql($query);
+			$cacheKey = 'SQL-' . md5($query);
+
+		} else {
+			throw new Exception('Query must be a raw SQL string or a Titon\Model\Query instance');
 		}
 
-		throw new Exception('Query must be a raw SQL string or a Titon\Model\Query instance');
+		if ($storage) {
+			if ($cache = $storage->get($cacheKey)) {
+				return $cache;
+			}
+		}
+
+		// Execute query
+		if ($query instanceof Query) {
+			$statement = $this->buildStatement($query);
+			$statement->execute();
+
+		} else {
+			$statement = $this->getConnection()->query($query);
+
+			$this->logQuery($statement);
+		}
+
+		$this->_statement = $statement;
+
+		// Return and cache result
+		$result = new PdoResult($statement);
+
+		if ($storage) {
+			$storage->set($cacheKey, $result, $cacheLength);
+		}
+
+		return $result;
 	}
 
 	/**

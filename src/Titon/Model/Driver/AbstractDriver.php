@@ -61,6 +61,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	protected $_flags = [];
 
 	/**
+	 * Logged query statements and bound parameters.
+	 *
+	 * @type array
+	 */
+	protected $_logs = [];
+
+	/**
 	 * Unique identifier.
 	 *
 	 * @type string
@@ -110,6 +117,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	/**
 	 * {@inheritdoc}
 	 */
+	public function getConnection() {
+		return $this->_connection;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
 	public function getDialect() {
 		return $this->_dialect;
 	}
@@ -133,6 +147,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	 */
 	public function getKey() {
 		return $this->_key;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getLoggedQueries() {
+		return $this->_logs;
 	}
 
 	/**
