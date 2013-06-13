@@ -182,6 +182,17 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Bind a Closure callback to this query and execute it.
+	 *
+	 * @param \Closure $callback
+	 * @param mixed $argument
+	 */
+	public function bindCallback(Closure $callback, $argument) {
+		$callback = $callback->bindTo($this, 'Titon\Model\Query');
+		$callback($argument);
+	}
+
+	/**
 	 * Set the cache duration length.
 	 *
 	 * @param mixed $expires
@@ -545,18 +556,17 @@ class Query implements Serializable, JsonSerializable {
 			$relatedQuery = $query;
 
 		} else {
-			$relatedQuery = $this->getModel()->getObject($alias)->query(Query::SELECT);
+			/** @type \Titon\Model\Query $relatedQuery */
+			$relatedQuery = $this->getModel()->getObject($alias)->select();
 
 			// Apply relation conditions
 			if ($conditions = $relation->getConditions()) {
-				$conditions = $conditions->bindTo($relatedQuery, 'Titon\Model\Query');
-				$conditions($relation);
+				$relatedQuery->bindCallback($conditions, $relation);
 			}
 
 			// Apply with conditions
 			if ($query instanceof Closure) {
-				$query = $query->bindTo($relatedQuery, 'Titon\Model\Query');
-				$query($relation);
+				$relatedQuery->bindCallback($query, $relation);
 			}
 		}
 

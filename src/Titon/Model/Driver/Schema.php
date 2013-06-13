@@ -105,8 +105,11 @@ class Schema {
 
 	}
 
+	/**
+	 * @return array
+	 */
 	public function getColumns() {
-
+		return $this->_columns;
 	}
 
 	public function getIndexes() {

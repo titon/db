@@ -137,6 +137,13 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	}
 
 	/**
+	 * {@inheritdoc}
+	 */
+	public function getLastInsertID() {
+		return $this->getConnection()->lastInsertId();
+	}
+
+	/**
 	 * Return the database password.
 	 *
 	 * @return string

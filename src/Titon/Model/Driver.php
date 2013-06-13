@@ -71,6 +71,20 @@ interface Driver {
 	public function getKey();
 
 	/**
+	 * Return the ID of the last auto incremented record.
+	 *
+	 * @return int
+	 */
+	public function getLastIncrementID();
+
+	/**
+	 * Return the ID of the last inserted record.
+	 *
+	 * @return int
+	 */
+	public function getLastInsertID();
+
+	/**
 	 * Return a list of logged query statements.
 	 *
 	 * @return array

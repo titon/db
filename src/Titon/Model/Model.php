@@ -100,16 +100,24 @@ class Model extends Base {
 	 *
 	 * @param int $id
 	 * @param bool $cascade
-	 * @return int
+	 * @return bool
 	 */
 	public function delete($id, $cascade = true) {
+		$state = $this->preDelete($id, $cascade);
+
+		if (!$state) {
+			return false;
+		}
+
 		$count = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id)->save();
 
 		if ($count && $cascade) {
 			$this->deleteDependents($id);
 		}
 
-		return $count;
+		$this->postDelete();
+
+		return (bool) $count;
 	}
 
 	/**
@@ -136,8 +144,7 @@ class Model extends Base {
 				case Relation::ONE_TO_ONE:
 				case Relation::ONE_TO_MANY:
 					$results = $relatedModel
-						->query(Query::SELECT)
-						->fields($primaryKey)
+						->select($primaryKey)
 						->where($relation->getRelatedForeignKey(), $id)
 						->fetchAll();
 
@@ -149,10 +156,9 @@ class Model extends Base {
 				break;
 
 				case Relation::MANY_TO_MANY:
-					if ($lookupIds = $this->_lookupManyToMany($relation, $id)) {
+					if ($lookupIds = $this->_lookupJunction($relation, $id)) {
 						$results = $relatedModel
-							->query(Query::SELECT)
-							->fields($primaryKey)
+							->select($primaryKey)
 							->where($primaryKey, $lookupIds)
 							->fetchAll();
 
@@ -305,7 +311,7 @@ class Model extends Base {
 					}
 
 					// Fetch the related records using the lookup IDs
-					$lookupIds = $this->_lookupManyToMany($relation, $foreignValue);
+					$lookupIds = $this->_lookupJunction($relation, $foreignValue);
 
 					if (!$lookupIds) {
 						$result[$alias] = [];
@@ -486,25 +492,163 @@ class Model extends Base {
 	}
 
 	/**
-	 * Modify the results after a query has executed.
+	 * Insert data into the database as a new record.
+	 * If any related data exists, insert new records after joining them to the original record.
+	 * Validate schema data and related data structure before inserting.
 	 *
-	 * @param array $results
-	 * @param string $queryType
+	 * // TODO atomic checks, transaction for related
+	 *
+	 * @param array $data
+	 * @return int
+	 */
+	public function insert(array $data) {
+		$data = $this->preInsert($data);
+
+		if (!$data) {
+			return 0;
+		}
+
+		$this->_validateRelationData($data);
+
+		$relatedData = $this->_extractRelationData($data);
+		$schema = $this->getSchema();
+
+		// Remove fields that aren't part of the schema
+		$data = array_intersect_key($data, $schema->getColumns());
+
+		// Insert the record
+		$count = $this->query(Query::INSERT)->fields($data)->save();
+
+		if (!$count) {
+			return 0;
+		}
+
+		$id = $this->getDriver()->getLastInsertID();
+
+		// Insert related data
+		$this->insertRelations($id, $relatedData);
+
+		$this->postInsert($id);
+
+		return $id;
+	}
+
+	/**
+	 * Insert related data by using the ID of the parent model as the foreign value.
+	 *
+	 * @param int $id
+	 * @param array $data
+	 */
+	public function insertRelations($id, array $data) {
+		if (!$data) {
+			return;
+		}
+
+		foreach ($data as $alias => $values) {
+			if (empty($data[$alias])) {
+				continue;
+			}
+
+			$relation = $this->getRelation($alias);
+			$relatedModel = $this->getObject($alias);
+			$relatedData = $data[$alias];
+
+			switch ($relation->getType()) {
+				// Append the ID and save
+				case Relation::ONE_TO_ONE:
+					$relatedData[$relation->getRelatedForeignKey()] = $id;
+
+					$relatedModel->insert($relatedData);
+				break;
+
+				// Loop through and create each record
+				case Relation::ONE_TO_MANY:
+					foreach ($relatedData as $hasManyData) {
+						$hasManyData[$relation->getRelatedForeignKey()] = $id;
+
+						$relatedModel->insert($hasManyData);
+					}
+				break;
+
+				// Loop through and create junction and related records
+				case Relation::MANY_TO_MANY:
+					$junctionModel = Registry::factory($relation->getJunctionModel());
+					$junctionData = [$relation->getForeignKey() => $id];
+
+					foreach ($relatedData as $habtmData) {
+						$junctionData[$relation->getRelatedForeignKey()] = $relatedModel->insert($habtmData);
+
+						$junctionModel->insert($junctionData);
+					}
+				break;
+
+				// Can not save belongs to relations
+				case Relation::MANY_TO_ONE:
+					continue;
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Callback called after a delete query.
+	 */
+	public function postDelete() {
+		return;
+	}
+
+	/**
+	 * Callback called after an insert query.
+	 *
+	 * @param int $id The last insert ID
+	 */
+	public function postInsert($id) {
+		return;
+	}
+
+	/**
+	 * Callback called after a select query.
+	 *
+	 * @param array $results The results of the query
+	 * @param string $fetchType Type of fetch used
 	 * @return array
 	 */
-	public function postQuery(array $results, $queryType) {
+	public function postSelect(array $results, $fetchType) {
 		return $results;
 	}
 
 	/**
-	 * Modify the query before it executes.
-	 * If a value is returned, that will take precedence for the results.
+	 * Callback called before a delete query.
+	 * Return a falsey value to stop the process.
+	 *
+	 * @param int $id
+	 * @param bool $cascade
+	 * @return mixed
+	 */
+	public function preDelete($id, $cascade) {
+		return true;
+	}
+
+	/**
+	 * Callback called before an insert query.
+	 * Return a falsey value to stop the process.
+	 *
+	 * @param array $data
+	 * @return mixed
+	 */
+	public function preInsert(array $data) {
+		return $data;
+	}
+
+	/**
+	 * Callback called before a select query.
+	 * Return an array of data to use instead of the fetch results.
 	 *
 	 * @param \Titon\Model\Query $query
 	 * @param string $fetchType
 	 * @return mixed
 	 */
-	public function preQuery(Query $query, $fetchType) {
+	public function preSelect(Query $query, $fetchType) {
 		return;
 	}
 
@@ -532,6 +676,35 @@ class Model extends Base {
 	}
 
 	/**
+	 * Instantiate a new select query.
+	 *
+	 * @return \Titon\Model\Query
+	 */
+	public function select() {
+		return $this->query(Query::SELECT)->fields(func_get_args());
+	}
+
+	/**
+	 * Extract related model data from an array of complex data.
+	 *
+	 * @param array $data
+	 * @return array
+	 */
+	protected function _extractRelationData(array &$data) {
+		$aliases = array_keys($this->getRelations());
+		$related = [];
+
+		foreach ($aliases as $alias) {
+			if (isset($data[$alias])) {
+				$related[$alias] = $data[$alias];
+				unset($data[$alias]);
+			}
+		}
+
+		return $related;
+	}
+
+	/**
 	 * All-in-one method for fetching results from a query.
 	 * Before the query is executed, the preQuery() method is called.
 	 * After the query is executed, relations will be fetched, and then postQuery() will be called.
@@ -547,9 +720,9 @@ class Model extends Base {
 	 * @return array|\Titon\Model\Entity|\Titon\Model\Entity[]
 	 */
 	protected function _fetchResults(Query $query, $fetchType, $wrap) {
-		$result = $this->preQuery($query, $fetchType);
+		$result = $this->preSelect($query, $fetchType);
 
-		// Use the return of preQuery() if applicable
+		// Use the return of preSelect() if applicable
 		if ($result) {
 			return $result;
 		}
@@ -560,12 +733,12 @@ class Model extends Base {
 			return [];
 		}
 
-		// Apply relations before postQuery()
+		// Apply relations before postSelect()
 		foreach ($results as &$result) {
 			$result = $this->fetchRelations($query, $result, $wrap);
 		}
 
-		$results = $this->postQuery($results, $query->getType());
+		$results = $this->postSelect($results, $fetchType);
 
 		// Wrap the results in entities
 		if ($wrap) {
@@ -591,13 +764,53 @@ class Model extends Base {
 	 * @param int $id
 	 * @return array
 	 */
-	protected function _lookupManyToMany(ManyToMany $relation, $id) {
+	protected function _lookupJunction(ManyToMany $relation, $id) {
 		$model = Registry::factory($relation->getJunctionModel());
 
 		return $model
-			->query(Query::SELECT)
+			->select()
 			->where($relation->getForeignKey(), $id)
 			->fetchList($model->getPrimaryKey(), $relation->getRelatedForeignKey());
+	}
+
+	/**
+	 * Validate that relation data is structured correctly.
+	 * Will only validate the top-level dimensions.
+	 *
+	 * @param array $data
+	 * @throws \Titon\Model\Exception
+	 */
+	protected function _validateRelationData(array $data) {
+		foreach ($this->getRelations() as $alias => $relation) {
+			if (empty($data[$alias])) {
+				continue;
+			}
+
+			$relatedData = $data[$alias];
+
+			switch ($relation->getType()) {
+				// Only child records can be validated
+				case Relation::MANY_TO_ONE:
+					continue;
+				break;
+
+				// Both require a numerical indexed array
+				// With each value being an array of data
+				case Relation::ONE_TO_MANY:
+				case Relation::MANY_TO_MANY:
+					if (!Hash::isNumeric(array_keys($relatedData))) {
+						throw new Exception(sprintf('%s related data must be structured in a numerical multi-dimension array', $relation->getType()));
+					}
+				break;
+
+				// A single dimension of data
+				case Relation::ONE_TO_ONE:
+					if (Hash::isNumeric(array_keys($relatedData))) {
+						throw new Exception(sprintf('%s related data must be structured in a single-dimension array', $relation->getType()));
+					}
+				break;
+			}
+		}
 	}
 
 }
