@@ -14,6 +14,7 @@ use Titon\Common\Traits\Cacheable;
 use Titon\Common\Traits\Instanceable;
 use Titon\Model\Query;
 use Titon\Model\Driver\Schema;
+use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
 
 /**
@@ -21,7 +22,7 @@ use Titon\Utility\Hash;
  *
  * 	- Defines a schema
  * 	- Defines relations
- * 		- one to one, one to many, many to many
+ * 		- One-to-one, One-to-many, Many-to-one, Many-to-many
  * 	- Allows for queries to be built and executed
  * 		- Returns Entity objects for each record in the result
  *
@@ -92,6 +93,85 @@ class Model extends Base {
 	 */
 	public function count(Query $query) {
 		return $this->getDriver()->query($query)->count();
+	}
+
+	/**
+	 * Delete a record by ID. If $cascade is true, delete all related records.
+	 *
+	 * @param int $id
+	 * @param bool $cascade
+	 * @return int
+	 */
+	public function delete($id, $cascade = true) {
+		$count = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id)->save();
+
+		if ($count && $cascade) {
+			$this->deleteDependents($id);
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Loop through all model relations and delete dependent records using the ID as a base.
+	 * Will return a count of how many dependent records were deleted.
+	 *
+	 * @param int $id
+	 * @return int
+	 */
+	public function deleteDependents($id) {
+		$count = 0;
+
+		foreach ($this->getRelations() as $alias => $relation) {
+			if (!$relation->isDependent()) {
+				continue;
+			}
+
+			/** @type \Titon\Model\Model $relatedModel */
+			$relatedModel = $this->getObject($alias);
+			$primaryKey = $relatedModel->getPrimaryKey();
+			$results = [];
+
+			switch ($relation->getType()) {
+				case Relation::ONE_TO_ONE:
+				case Relation::ONE_TO_MANY:
+					$results = $relatedModel
+						->query(Query::SELECT)
+						->fields($primaryKey)
+						->where($relation->getRelatedForeignKey(), $id)
+						->fetchAll();
+
+					// Delete all the records
+					$count += $relatedModel
+						->query(Query::DELETE)
+						->where($relation->getRelatedForeignKey(), $id)
+						->save();
+				break;
+
+				case Relation::MANY_TO_MANY:
+					if ($lookupIds = $this->_lookupManyToMany($relation, $id)) {
+						$results = $relatedModel
+							->query(Query::SELECT)
+							->fields($primaryKey)
+							->where($primaryKey, $lookupIds)
+							->fetchAll();
+
+						// Delete junction records
+						Registry::factory($relation->getJunctionModel())->delete(array_keys($lookupIds), false);
+
+						// Delete all the records
+						$count += $relatedModel->delete($lookupIds, false);
+					}
+				break;
+			}
+
+			// Loop through the records and cascade delete
+			foreach ($results as $result) {
+				$count += $relatedModel->deleteDependents($result[$relatedModel->getPrimaryKey()]);
+			}
+		}
+
+		return $count;
 	}
 
 	/**
@@ -172,11 +252,11 @@ class Model extends Base {
 
 					if ($foreignValue) {
 						$result[$alias] = $newQuery
-							->where($relation->getForeignKey(), $result[$this->getPrimaryKey()])
+							->where($relation->getForeignKey(), $foreignValue)
 							->limit(1)
 							->fetch($wrap);
 					} else {
-						$result[$alias] = null;
+						$result[$alias] = [];
 					}
 				break;
 
@@ -189,7 +269,7 @@ class Model extends Base {
 
 					if ($foreignValue) {
 						$result[$alias] = $newQuery
-							->where($relation->getRelatedForeignKey(), $result[$this->getPrimaryKey()])
+							->where($relation->getRelatedForeignKey(), $foreignValue)
 							->fetchAll($wrap);
 					} else {
 						$result[$alias] = [];
@@ -205,11 +285,11 @@ class Model extends Base {
 
 					if ($foreignValue) {
 						$result[$alias] = $newQuery
-							->where($relatedModel->getPrimaryKey(), $result[$relation->getForeignKey()])
+							->where($relatedModel->getPrimaryKey(), $foreignValue)
 							->limit(1)
 							->fetch($wrap);
 					} else {
-						$result[$alias] = null;
+						$result[$alias] = [];
 					}
 				break;
 
@@ -224,19 +304,13 @@ class Model extends Base {
 						continue;
 					}
 
-					// Do a query on the junction table to gather IDs
-					$junctionLookup = Registry::factory($relation->getJunctionModel())
-						->query(Query::SELECT)
-						->where($relation->getForeignKey(), $foreignValue)
-						->fetchAll(false); // Don't wrap so we can pluck
+					// Fetch the related records using the lookup IDs
+					$lookupIds = $this->_lookupManyToMany($relation, $foreignValue);
 
-					if (!$junctionLookup) {
+					if (!$lookupIds) {
 						$result[$alias] = [];
 						continue;
 					}
-
-					// Fetch the related records using the lookup IDs
-					$lookupIds = Hash::pluck($junctionLookup, $relation->getRelatedForeignKey());
 
 					$result[$alias] = $newQuery
 						->where($relatedModel->getPrimaryKey(), $lookupIds)
@@ -415,9 +489,10 @@ class Model extends Base {
 	 * Modify the results after a query has executed.
 	 *
 	 * @param array $results
+	 * @param string $queryType
 	 * @return array
 	 */
-	public function postQuery(array $results) {
+	public function postQuery(array $results, $queryType) {
 		return $results;
 	}
 
@@ -426,20 +501,11 @@ class Model extends Base {
 	 * If a value is returned, that will take precedence for the results.
 	 *
 	 * @param \Titon\Model\Query $query
+	 * @param string $fetchType
 	 * @return mixed
 	 */
-	public function preQuery(Query $query) {
+	public function preQuery(Query $query, $fetchType) {
 		return;
-	}
-
-	/**
-	 * Return a count of how many rows were affected by the query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return int
-	 */
-	public function save(Query $query) {
-		return $this->getDriver()->query($query)->save();
 	}
 
 	/**
@@ -453,6 +519,16 @@ class Model extends Base {
 		$query->from($this->getTable());
 
 		return $query;
+	}
+
+	/**
+	 * Return a count of how many rows were affected by the query.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return int
+	 */
+	public function save(Query $query) {
+		return $this->getDriver()->query($query)->save();
 	}
 
 	/**
@@ -471,10 +547,9 @@ class Model extends Base {
 	 * @return array|\Titon\Model\Entity|\Titon\Model\Entity[]
 	 */
 	protected function _fetchResults(Query $query, $fetchType, $wrap) {
-		$result = $this->preQuery($query);
+		$result = $this->preQuery($query, $fetchType);
 
-		// If preQuery() returns something
-		// Use it instead of the real results
+		// Use the return of preQuery() if applicable
 		if ($result) {
 			return $result;
 		}
@@ -490,14 +565,14 @@ class Model extends Base {
 			$result = $this->fetchRelations($query, $result, $wrap);
 		}
 
-		$results = $this->postQuery($results);
+		$results = $this->postQuery($results, $query->getType());
 
 		// Wrap the results in entities
 		if ($wrap) {
 			$entity = $this->getEntity();
 
 			foreach ($results as $i => $result) {
-				$result[$i] = new $entity($result);
+				$results[$i] = new $entity($result);
 			}
 		}
 
@@ -507,6 +582,22 @@ class Model extends Base {
 		}
 
 		return $results;
+	}
+
+	/**
+	 * Looks up foreign keys within a junction table and returns a list of IDs.
+	 *
+	 * @param \Titon\Model\Relation\ManyToMany $relation
+	 * @param int $id
+	 * @return array
+	 */
+	protected function _lookupManyToMany(ManyToMany $relation, $id) {
+		$model = Registry::factory($relation->getJunctionModel());
+
+		return $model
+			->query(Query::SELECT)
+			->where($relation->getForeignKey(), $id)
+			->fetchList($model->getPrimaryKey(), $relation->getRelatedForeignKey());
 	}
 
 }
