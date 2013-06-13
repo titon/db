@@ -354,29 +354,38 @@ class Model extends Base {
 	 * @return \Titon\Model\Driver\Schema
 	 */
 	public function getSchema() {
-		if ($this->_schema) {
+		if ($this->_schema instanceof Schema) {
 			return $this->_schema;
 		}
 
-		$fields = $this->query(Query::DESCRIBE)->fetchAll(false);
-		$columns = [];
+		// Manually defined columns
+		if (is_array($this->_schema)) {
+			$columns = $this->_schema;
 
-		foreach ($fields as $field) {
-			$column = [];
-			$column['null'] = ($field['Null'] === 'YES');
-			$column['default'] = $column['null'] ? null : $field['Default'];
+		// Inspect database for columns
+		} else {
+			$fields = $this->query(Query::DESCRIBE)->fetchAll(false);
+			$columns = [];
 
-			switch ($field['Key']) {
-				case 'PRI': $column['key'] = Schema::CONSTRAINT_PRIMARY; break;
-				case 'UNI': $column['key'] = Schema::CONSTRAINT_UNIQUE; break;
-				case 'MUL': $column['key'] = Schema::INDEX; break;
+			// TODO type, length
+
+			foreach ($fields as $field) {
+				$column = [];
+				$column['null'] = ($field['Null'] === 'YES');
+				$column['default'] = $column['null'] ? null : $field['Default'];
+
+				switch ($field['Key']) {
+					case 'PRI': $column['primary'] = true; break;
+					case 'UNI': $column['unique'] = true; break;
+					case 'MUL': $column['index'] = true; break;
+				}
+
+				if ($field['Extra'] === 'auto_increment') {
+					$column['ai'] = true;
+				}
+
+				$columns[$field['Field']] = $column;
 			}
-
-			if ($field['Extra'] === 'auto_increment') {
-				$column['ai'] = true;
-			}
-
-			$columns[$field['Field']] = $column;
 		}
 
 		$this->_schema = new Schema($this->getTable(), $columns);
