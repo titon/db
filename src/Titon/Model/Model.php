@@ -102,21 +102,7 @@ class Model extends Base {
 	 * @return \Titon\Model\Entity|array
 	 */
 	public function fetch(Query $query, $wrap = true) {
-		$result = $this->getDriver()->query($query)->fetch();
-
-		if (!$result) {
-			return null;
-		}
-
-		$result = $this->fetchRelations($query, $result, $wrap);
-
-		if (!$wrap) {
-			return $result;
-		}
-
-		$entity = $this->getEntity();
-
-		return new $entity($result);
+		return $this->_fetchResults($query, __FUNCTION__, $wrap);
 	}
 
 	/**
@@ -127,26 +113,7 @@ class Model extends Base {
 	 * @return \Titon\Model\Entity[]|array
 	 */
 	public function fetchAll(Query $query, $wrap = true) {
-		$results = $this->getDriver()->query($query)->fetchAll();
-
-		if (!$results) {
-			return [];
-		}
-
-		$entity = $this->getEntity();
-		$entities = [];
-
-		foreach ($results as $result) {
-			$result = $this->fetchRelations($query, $result, $wrap);
-
-			if (!$wrap) {
-				$entities[] = $result;
-			} else {
-				$entities[] = new $entity($result);
-			}
-		}
-
-		return $entities;
+		return $this->_fetchResults($query, __FUNCTION__, $wrap);
 	}
 
 	/**
@@ -158,11 +125,7 @@ class Model extends Base {
 	 * @return array
 	 */
 	public function fetchList(Query $query, $key = null, $value = null) {
-		$results = $this->fetchAll($query, false);
-
-		if (!$results) {
-			return [];
-		}
+		$results = $this->_fetchResults($query, __FUNCTION__, false);
 
 		$key = $key ?: $this->getPrimaryKey();
 		$value = $value ?: $this->getDisplayField();
@@ -395,25 +358,25 @@ class Model extends Base {
 			return $this->_schema;
 		}
 
-		$fields = $this->query(Query::DESCRIBE)->fetchAll();
+		$fields = $this->query(Query::DESCRIBE)->fetchAll(false);
 		$columns = [];
 
 		foreach ($fields as $field) {
 			$column = [];
-			$column['null'] = ($field->Null === 'YES');
-			$column['default'] = $column['null'] ? null : $field->Default;
+			$column['null'] = ($field['Null'] === 'YES');
+			$column['default'] = $column['null'] ? null : $field['Default'];
 
-			switch ($field->Key) {
+			switch ($field['Key']) {
 				case 'PRI': $column['key'] = Schema::CONSTRAINT_PRIMARY; break;
 				case 'UNI': $column['key'] = Schema::CONSTRAINT_UNIQUE; break;
 				case 'MUL': $column['key'] = Schema::INDEX; break;
 			}
 
-			if ($field->Extra === 'auto_increment') {
+			if ($field['Extra'] === 'auto_increment') {
 				$column['ai'] = true;
 			}
 
-			$columns[$field->Field] = $column;
+			$columns[$field['Field']] = $column;
 		}
 
 		$this->_schema = new Schema($this->getTable(), $columns);
@@ -440,30 +403,34 @@ class Model extends Base {
 	}
 
 	/**
+	 * Modify the results after a query has executed.
+	 *
+	 * @param array $results
+	 * @return array
+	 */
+	public function postQuery(array $results) {
+		return $results;
+	}
+
+	/**
+	 * Modify the query before it executes.
+	 * If a value is returned, that will take precedence for the results.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return mixed
+	 */
+	public function preQuery(Query $query) {
+		return;
+	}
+
+	/**
 	 * Return a count of how many rows were affected by the query.
 	 *
 	 * @param \Titon\Model\Query $query
 	 * @return int
 	 */
 	public function save(Query $query) {
-		$count = $this->getDriver()->query($query)->save();
-
-		/* Cascade delete records
-		if ($count && $query->getType() === Query::DELETE) {
-			foreach ($this->getRelations() as $relation) {
-				if (!$relation->isDependent()) {
-					continue;
-				}
-
-				/ @type \Titon\Model\Model $model /
-				$model = $this->getObject($relation->getAlias());
-				$model->query(Query::DELETE)
-					->where($relation->getForeignKey(), 1)
-					->save();
-			}
-		}*/
-
-		return $count;
+		return $this->getDriver()->query($query)->save();
 	}
 
 	/**
@@ -477,6 +444,60 @@ class Model extends Base {
 		$query->from($this->getTable());
 
 		return $query;
+	}
+
+	/**
+	 * All-in-one method for fetching results from a query.
+	 * Before the query is executed, the preQuery() method is called.
+	 * After the query is executed, relations will be fetched, and then postQuery() will be called.
+	 * If wrap is true, all results will be wrapped in an Entity class.
+	 *
+	 * Depending on the $fetchType, the returned results will differ.
+	 * If the type is "fetch" a single item will be returned, either an array or entity.
+	 * All other types currently return an array or an array of entities.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @param string $fetchType
+	 * @param bool $wrap
+	 * @return array|\Titon\Model\Entity|\Titon\Model\Entity[]
+	 */
+	protected function _fetchResults(Query $query, $fetchType, $wrap) {
+		$result = $this->preQuery($query);
+
+		// If preQuery() returns something
+		// Use it instead of the real results
+		if ($result) {
+			return $result;
+		}
+
+		$results = $this->getDriver()->query($query)->fetchAll();
+
+		if (!$results) {
+			return [];
+		}
+
+		// Apply relations before postQuery()
+		foreach ($results as &$result) {
+			$result = $this->fetchRelations($query, $result, $wrap);
+		}
+
+		$results = $this->postQuery($results);
+
+		// Wrap the results in entities
+		if ($wrap) {
+			$entity = $this->getEntity();
+
+			foreach ($results as $i => $result) {
+				$result[$i] = new $entity($result);
+			}
+		}
+
+		// Return early for single records
+		if ($fetchType === 'fetch') {
+			return $results[0];
+		}
+
+		return $results;
 	}
 
 }
