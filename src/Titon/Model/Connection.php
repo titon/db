@@ -26,12 +26,12 @@ class Connection {
 	 * Add a driver that houses login credentials.
 	 *
 	 * @param \Titon\Model\Driver $driver
-	 * @return \Titon\Model\Connection
+	 * @return \Titon\Model\Driver
 	 */
 	public function addDriver(Driver $driver) {
 		$this->_drivers[$driver->getKey()] = $driver;
 
-		return $this;
+		return $driver;
 	}
 
 	/**
