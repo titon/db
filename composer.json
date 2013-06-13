@@ -17,7 +17,8 @@
 		"titon/common": "*"
 	},
 	"require-dev": {
-		"titon/test": "*"
+		"titon/test": "*",
+		"titon/cache": "*"
 	},
 	"autoload": {
 		"psr-0": { "Titon\\Model": "src/" }

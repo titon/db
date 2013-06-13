@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver;
 
 use Titon\Common\Base;
+use Titon\Cache\Storage;
 use Titon\Model\Driver;
 use Titon\Utility\Hash;
 
@@ -65,6 +66,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	 * @type string
 	 */
 	protected $_key;
+
+	/**
+	 * Storage engine instance.
+	 *
+	 * @type \Titon\Cache\Storage
+	 */
+	protected $_storage;
 
 	/**
 	 * Store the identifier key, configuration and optional flags.
@@ -130,6 +138,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	/**
 	 * {@inheritdoc}
 	 */
+	public function getStorage() {
+		return $this->_storage;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
 	public function isConnected() {
 		return $this->_connected;
 	}
@@ -146,6 +161,15 @@ abstract class AbstractDriver extends Base implements Driver {
 	 */
 	public function setDialect(Dialect $dialect) {
 		$this->_dialect = $dialect;
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function setStorage(Storage $storage) {
+		$this->_storage = $storage;
 
 		return $this;
 	}

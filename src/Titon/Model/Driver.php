@@ -7,6 +7,7 @@
 
 namespace Titon\Model;
 
+use Titon\Cache\Storage;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Query;
 
@@ -63,6 +64,13 @@ interface Driver {
 	public function getKey();
 
 	/**
+	 * Return the storage engine.
+	 *
+	 * @return \Titon\Cache\Storage
+	 */
+	public function getStorage();
+
+	/**
 	 * Return true if connected to the driver.
 	 *
 	 * @return bool
@@ -103,5 +111,13 @@ interface Driver {
 	 * @return \Titon\Model\Driver
 	 */
 	public function setDialect(Dialect $dialect);
+
+	/**
+	 * Set the storage engine for query caching.
+	 *
+	 * @param \Titon\Cache\Storage $storage
+	 * @return \Titon\Model\Driver
+	 */
+	public function setStorage(Storage $storage);
 
 }
