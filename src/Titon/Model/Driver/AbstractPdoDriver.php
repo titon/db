@@ -26,12 +26,20 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	/**
 	 * Configuration.
 	 *
-	 * @type array
+	 * @type array {
+	 * 		@type string $database	The database name
+	 * 		@type string $host		The hostname or IP to connect to
+	 * 		@type int $port			The port to connect with
+	 * 		@type string $user		Login user name
+	 * 		@type string $pass		Login user password
+	 * 		@type string $dsn		Custom DSN that would take precedence
+	 * 		@type string $socket	Path to unix socket to connect with
+	 * }
 	 */
 	protected $_config = [
 		'database' => '',
 		'host' => 'localhost',
-		'port' => '',
+		'port' => 0,
 		'user' => '',
 		'pass' => '',
 		'dsn' => '',
@@ -78,7 +86,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	public function connect() {
 		$this->disconnect();
 
-		$this->_connection = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->_flags + [
+		$this->_connection = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->config->flags + [
 			PDO::ATTR_PERSISTENT => $this->isPersistent(),
 			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
 		]);

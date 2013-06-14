@@ -24,12 +24,16 @@ abstract class AbstractDriver extends Base implements Driver {
 	 *
 	 * @type array {
 	 *		@type bool $persistent	Should we use persistent data connections
-	 * 		@type string $encoding	Charset encoding for the remote data source
+	 * 		@type string $encoding	Charset encoding for the driver
+	 * 		@type string $timezone	Timezone for the driver
+	 * 		@type array $flags		Flags used when connecting
 	 * }
 	 */
 	protected $_config = [
 		'persistent' => true,
-		'encoding' => 'UTF-8'
+		'encoding' => 'UTF-8',
+		'timezone' => 'UTC',
+		'flags' => []
 	];
 
 	/**
@@ -54,13 +58,6 @@ abstract class AbstractDriver extends Base implements Driver {
 	protected $_dialect;
 
 	/**
-	 * Flags used for connecting.
-	 *
-	 * @type array
-	 */
-	protected $_flags = [];
-
-	/**
 	 * Logged query statements and bound parameters.
 	 *
 	 * @type array
@@ -82,17 +79,15 @@ abstract class AbstractDriver extends Base implements Driver {
 	protected $_storage;
 
 	/**
-	 * Store the identifier key, configuration and optional flags.
+	 * Store the identifier key and configuration.
 	 *
 	 * @param string $key
 	 * @param array $config
-	 * @param array $flags
 	 */
-	public function __construct($key, array $config, array $flags = []) {
-		parent::__construct($config);
-
+	public function __construct($key, array $config) {
 		$this->_key = $key;
-		$this->_flags = Hash::merge($this->_flags, $flags);
+
+		parent::__construct($config);
 	}
 
 	/**
