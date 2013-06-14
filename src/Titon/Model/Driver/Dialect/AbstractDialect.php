@@ -40,7 +40,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	protected $_clauses = [
 		'between'		=> '%s BETWEEN ? AND ?',
-		'count'			=> 'COUNT(*)',
+		'count'			=> 'COUNT(%s)',
 		'groupBy'		=> 'GROUP BY %s',
 		'having'		=> 'HAVING %s',
 		'in'			=> '%s IN (%s)',
@@ -74,10 +74,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 		Query::DELETE		=> 'DELETE FROM {table} {where} {orderBy} {limit}',
 		Query::TRUNCATE		=> 'TRUNCATE {table}',
 		Query::DESCRIBE		=> 'DESCRIBE {table}',
-		Query::EXPLAIN		=> 'EXPLAIN EXTENDED SELECT {options}',
 		Query::DROP_TABLE	=> 'DROP TABLE {table}',
-		Query::CREATE_TABLE	=> 'CREATE TABLE {table} ({fields}{indexes}) {params}',
-		Query::ALTER_TABLE	=> 'ALTER TABLE {table}'
+		Query::CREATE_TABLE	=> 'CREATE TABLE {table} ({fields}{indexes}) {params}'
 	];
 
 	/**
@@ -113,11 +111,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function buildSelect(Query $query) {
 		$attributes = $query->getAttributes();
+		$fields = $this->formatFields($query->getFields(), $query->getType());
 
 		if (!empty($attributes['count'])) {
-			$fields = $this->getClause('count');
-		} else {
-			$fields = $this->formatFields($query->getFields(), $query->getType());
+			$fields = sprintf($this->getClause('count'), $fields);
 		}
 
 		return $this->renderStatement($this->getStatement(Query::SELECT), [
@@ -182,6 +179,18 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function buildDescribe(Query $query) {
 		return $this->renderStatement($this->getStatement(Query::DESCRIBE), [
+			'table' => $this->formatTable($query->getTable())
+		]);
+	}
+
+	/**
+	 * Build the DROP TABLE query.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return string
+	 */
+	public function buildDropTable(Query $query) {
+		return $this->renderStatement($this->getStatement(Query::DROP_TABLE), [
 			'table' => $this->formatTable($query->getTable())
 		]);
 	}

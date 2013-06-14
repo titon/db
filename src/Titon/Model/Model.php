@@ -99,7 +99,10 @@ class Model extends Base {
 	 * @return int
 	 */
 	public function count(Query $query) {
-		$query->fields([])->attribute('count', true);
+		$query
+			->attribute('count', true)
+			->fields($this->getPrimaryKey()) // Use FK to count on
+			->limit(null); // Remove the limit
 
 		return $this->getDriver()->query($query)->count();
 	}
@@ -159,7 +162,7 @@ class Model extends Base {
 					$results = $relatedModel
 						->select($primaryKey)
 						->where($relation->getRelatedForeignKey(), $id)
-						->fetchAll();
+						->fetchAll(false);
 
 					// Delete all the records
 					$count += $relatedModel
@@ -169,24 +172,34 @@ class Model extends Base {
 				break;
 
 				case Relation::MANY_TO_MANY:
-					if ($lookupIds = $this->_lookupJunction($relation, $id)) {
-						$results = $relatedModel
-							->select($primaryKey)
-							->where($primaryKey, $lookupIds)
-							->fetchAll();
+					$junctionModel = Registry::factory($relation->getJunctionModel());
+					$junctionResults = $junctionModel
+						->select()
+						->where($relation->getForeignKey(), $id)
+						->fetchAll(false);
 
-						// Delete junction records
-						Registry::factory($relation->getJunctionModel())->delete(array_keys($lookupIds), false);
-
-						// Delete all the records
-						$count += $relatedModel->delete($lookupIds, false);
+					if (!$junctionResults) {
+						continue;
 					}
+
+					$lookupIds = Hash::pluck($junctionResults, $relation->getRelatedForeignKey());
+
+					$results = $relatedModel
+						->select($primaryKey)
+						->where($primaryKey, $lookupIds)
+						->fetchAll(false);
+
+					// Delete junction records
+					$junctionModel->delete(Hash::pluck($junctionResults, $junctionModel->getPrimaryKey()), false);
+
+					// Delete all the records
+					$count += $relatedModel->delete($lookupIds, false);
 				break;
 			}
 
 			// Loop through the records and cascade delete
 			foreach ($results as $result) {
-				$count += $relatedModel->deleteDependents($result[$relatedModel->getPrimaryKey()]);
+				$count += $relatedModel->deleteDependents($result[$primaryKey]);
 			}
 		}
 
@@ -333,17 +346,32 @@ class Model extends Base {
 						continue;
 					}
 
-					// Fetch the related records using the lookup IDs
-					$lookupIds = $this->_lookupJunction($relation, $foreignValue);
+					// Fetch the related records using the junction IDs
+					$junctionModel = Registry::factory($relation->getJunctionModel());
+					$junctionResults = $junctionModel
+						->select()
+						->where($relation->getForeignKey(), $foreignValue)
+						->fetchAll(false);
 
-					if (!$lookupIds) {
+					if (!$junctionResults) {
 						$result[$alias] = [];
 						continue;
 					}
 
-					$result[$alias] = $newQuery
-						->where($relatedModel->getPrimaryKey(), $lookupIds)
+					$m2mResults = $newQuery
+						->where($relatedModel->getPrimaryKey(), Hash::pluck($junctionResults, $relation->getRelatedForeignKey()))
 						->fetchAll($wrap);
+
+					// Include the junction data
+					foreach ($m2mResults as $i => $m2mResult) {
+						foreach ($junctionResults as $junctionResult) {
+							if ($junctionResult[$relation->getRelatedForeignKey()] == $m2mResult[$relatedModel->getPrimaryKey()]) {
+								$m2mResults[$i]['Junction'] = $junctionResult;
+							}
+						}
+					}
+
+					$result[$alias] = $m2mResults;
 				break;
 			}
 
@@ -545,6 +573,7 @@ class Model extends Base {
 		}
 
 		$id = $this->getDriver()->getLastInsertID();
+		$this->data = $data;
 
 		// Upsert related data
 		$this->upsertRelations($id, $relatedData);
@@ -685,6 +714,8 @@ class Model extends Base {
 			return false;
 		}
 
+		$this->data = $data;
+
 		// Upsert related data
 		$this->upsertRelations($id, $relatedData);
 
@@ -764,7 +795,7 @@ class Model extends Base {
 
 				// Loop through and append the foreign key with the current ID
 				case Relation::ONE_TO_MANY:
-					foreach ($relatedData as $hasManyData) {
+					foreach ($relatedData as &$hasManyData) {
 						$hasManyData[$rfk] = $id;
 
 						$relatedModel->upsert($hasManyData);
@@ -777,7 +808,7 @@ class Model extends Base {
 					$junctionModel = Registry::factory($relation->getJunctionModel());
 					$junctionData = [$fk => $id];
 
-					foreach ($relatedData as $habtmData) {
+					foreach ($relatedData as &$habtmData) {
 						$foreign_id = $relatedModel->upsert($habtmData);
 						$junctionData[$rfk] = $foreign_id;
 
@@ -798,6 +829,8 @@ class Model extends Base {
 					continue;
 				break;
 			}
+
+			$this->data[$alias] = $relatedData;
 
 			$updated++;
 		}
@@ -855,16 +888,18 @@ class Model extends Base {
 		}
 
 		// Apply relations before postFetch()
-		foreach ($results as &$result) {
-			$result = $this->fetchRelations($query, $result, $wrap);
+		foreach ($results as $i => $result) {
+			$results[$i] = $this->fetchRelations($query, $result, $wrap);
 		}
 
 		$results = $this->postFetch($results, $fetchType);
 
-		// Wrap the results in entities
-		if ($wrap) {
-			$entity = $this->getEntity();
+		$this->data = $results;
 
+		// Wrap the results in entities
+		$entity = $this->getEntity();
+
+		if ($wrap && $entity) {
 			foreach ($results as $i => $result) {
 				$results[$i] = new $entity($result);
 			}
@@ -876,22 +911,6 @@ class Model extends Base {
 		}
 
 		return $results;
-	}
-
-	/**
-	 * Looks up foreign keys within a junction table and returns a list of IDs.
-	 *
-	 * @param \Titon\Model\Relation\ManyToMany $relation
-	 * @param int $id
-	 * @return array
-	 */
-	protected function _lookupJunction(ManyToMany $relation, $id) {
-		$model = Registry::factory($relation->getJunctionModel());
-
-		return $model
-			->select()
-			->where($relation->getForeignKey(), $id)
-			->fetchList($model->getPrimaryKey(), $relation->getRelatedForeignKey());
 	}
 
 	/**

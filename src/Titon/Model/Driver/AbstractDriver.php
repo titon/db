@@ -138,13 +138,6 @@ abstract class AbstractDriver extends Base implements Driver {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getFlags() {
-		return $this->_flags;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
 	public function getKey() {
 		return $this->_key;
 	}

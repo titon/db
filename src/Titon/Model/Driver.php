@@ -57,25 +57,11 @@ interface Driver {
 	public function getEncoding();
 
 	/**
-	 * Return a list of flags used to connect to the driver.
-	 *
-	 * @return array
-	 */
-	public function getFlags();
-
-	/**
 	 * Return the unique identifier.
 	 *
 	 * @return string
 	 */
 	public function getKey();
-
-	/**
-	 * Return the ID of the last auto incremented record.
-	 *
-	 * @return int
-	 */
-	public function getLastIncrementID();
 
 	/**
 	 * Return the ID of the last inserted record.

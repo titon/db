@@ -33,10 +33,8 @@ class Query implements Serializable, JsonSerializable {
 	const DELETE = 'delete';
 	const TRUNCATE = 'truncate';
 	const DESCRIBE = 'describe';
-	const EXPLAIN = 'explain';
 	const DROP_TABLE = 'dropTable';
 	const CREATE_TABLE = 'createTable';
-	const ALTER_TABLE = 'alterTable';
 
 	/**
 	 * List of boolean attributes for the current query.
