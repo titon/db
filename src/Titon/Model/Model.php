@@ -99,6 +99,8 @@ class Model extends Base {
 	 * @return int
 	 */
 	public function count(Query $query) {
+		$query->fields([])->attribute('count', true);
+
 		return $this->getDriver()->query($query)->count();
 	}
 

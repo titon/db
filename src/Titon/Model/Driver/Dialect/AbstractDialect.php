@@ -40,6 +40,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	protected $_clauses = [
 		'between'		=> '%s BETWEEN ? AND ?',
+		'count'			=> 'COUNT(*)',
 		'groupBy'		=> 'GROUP BY %s',
 		'having'		=> 'HAVING %s',
 		'in'			=> '%s IN (%s)',
@@ -111,9 +112,17 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildSelect(Query $query) {
+		$attributes = $query->getAttributes();
+
+		if (!empty($attributes['count'])) {
+			$fields = $this->getClause('count');
+		} else {
+			$fields = $this->formatFields($query->getFields(), $query->getType());
+		}
+
 		return $this->renderStatement($this->getStatement(Query::SELECT), [
 			'table' => $this->formatTable($query->getTable()),
-			'fields' => $this->formatFields($query->getFields(), $query->getType()),
+			'fields' => $fields,
 			'where' => $this->formatWhere($query->getWhere()),
 			'groupBy' => $this->formatGroupBy($query->getGroupBy()),
 			'having' => $this->formatHaving($query->getHaving()),
