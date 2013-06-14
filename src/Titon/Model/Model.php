@@ -33,6 +33,13 @@ class Model extends Base {
 	use Instanceable, Attachable, Cacheable;
 
 	/**
+	 * Data or results from the last query.
+	 *
+	 * @type array
+	 */
+	public $data = [];
+
+	/**
 	 * Configuration.
 	 *
 	 * @type array {
@@ -61,9 +68,9 @@ class Model extends Base {
 	protected $_relations = [];
 
 	/**
-	 * Database table schema object.
+	 * Database table schema object, or an array of column data.
 	 *
-	 * @type \Titon\Model\Driver\Schema
+	 * @type \Titon\Model\Driver\Schema|array
 	 */
 	protected $_schema;
 
@@ -111,7 +118,11 @@ class Model extends Base {
 
 		$count = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id)->save();
 
-		if ($count && $cascade) {
+		if (!$count) {
+			return false;
+		}
+
+		if ($cascade) {
 			$this->deleteDependents($id);
 		}
 
@@ -178,6 +189,16 @@ class Model extends Base {
 		}
 
 		return $count;
+	}
+
+	/**
+	 * Check if a record with an ID exists.
+	 *
+	 * @param int $id
+	 * @return bool
+	 */
+	public function exists($id) {
+		return (bool) $this->select()->where($this->getPrimaryKey(), $id)->count();
 	}
 
 	/**
@@ -499,10 +520,10 @@ class Model extends Base {
 	 * // TODO atomic checks, transaction for related
 	 *
 	 * @param array $data
-	 * @return int
+	 * @return int The record ID on success, 0 on failure
 	 */
 	public function insert(array $data) {
-		$data = $this->preInsert($data);
+		$data = $this->preSave($data);
 
 		if (!$data) {
 			return 0;
@@ -510,11 +531,9 @@ class Model extends Base {
 
 		$this->_validateRelationData($data);
 
+		// Filter the data
 		$relatedData = $this->_extractRelationData($data);
-		$schema = $this->getSchema();
-
-		// Remove fields that aren't part of the schema
-		$data = array_intersect_key($data, $schema->getColumns());
+		$data = array_intersect_key($data, $this->getSchema()->getColumns());
 
 		// Insert the record
 		$count = $this->query(Query::INSERT)->fields($data)->save();
@@ -525,69 +544,12 @@ class Model extends Base {
 
 		$id = $this->getDriver()->getLastInsertID();
 
-		// Insert related data
-		$this->insertRelations($id, $relatedData);
+		// Upsert related data
+		$this->upsertRelations($id, $relatedData);
 
-		$this->postInsert($id);
+		$this->postSave($id, true);
 
 		return $id;
-	}
-
-	/**
-	 * Insert related data by using the ID of the parent model as the foreign value.
-	 *
-	 * @param int $id
-	 * @param array $data
-	 */
-	public function insertRelations($id, array $data) {
-		if (!$data) {
-			return;
-		}
-
-		foreach ($data as $alias => $values) {
-			if (empty($data[$alias])) {
-				continue;
-			}
-
-			$relation = $this->getRelation($alias);
-			$relatedModel = $this->getObject($alias);
-			$relatedData = $data[$alias];
-
-			switch ($relation->getType()) {
-				// Append the ID and save
-				case Relation::ONE_TO_ONE:
-					$relatedData[$relation->getRelatedForeignKey()] = $id;
-
-					$relatedModel->insert($relatedData);
-				break;
-
-				// Loop through and create each record
-				case Relation::ONE_TO_MANY:
-					foreach ($relatedData as $hasManyData) {
-						$hasManyData[$relation->getRelatedForeignKey()] = $id;
-
-						$relatedModel->insert($hasManyData);
-					}
-				break;
-
-				// Loop through and create junction and related records
-				case Relation::MANY_TO_MANY:
-					$junctionModel = Registry::factory($relation->getJunctionModel());
-					$junctionData = [$relation->getForeignKey() => $id];
-
-					foreach ($relatedData as $habtmData) {
-						$junctionData[$relation->getRelatedForeignKey()] = $relatedModel->insert($habtmData);
-
-						$junctionModel->insert($junctionData);
-					}
-				break;
-
-				// Can not save belongs to relations
-				case Relation::MANY_TO_ONE:
-					continue;
-				break;
-			}
-		}
 	}
 
 	/**
@@ -598,23 +560,24 @@ class Model extends Base {
 	}
 
 	/**
-	 * Callback called after an insert query.
-	 *
-	 * @param int $id The last insert ID
-	 */
-	public function postInsert($id) {
-		return;
-	}
-
-	/**
 	 * Callback called after a select query.
 	 *
 	 * @param array $results The results of the query
 	 * @param string $fetchType Type of fetch used
 	 * @return array
 	 */
-	public function postSelect(array $results, $fetchType) {
+	public function postFetch(array $results, $fetchType) {
 		return $results;
+	}
+
+	/**
+	 * Callback called after an insert or update query.
+	 *
+	 * @param int $id The last insert ID
+	 * @param bool $created If the record was created
+	 */
+	public function postSave($id, $created = false) {
+		return;
 	}
 
 	/**
@@ -630,17 +593,6 @@ class Model extends Base {
 	}
 
 	/**
-	 * Callback called before an insert query.
-	 * Return a falsey value to stop the process.
-	 *
-	 * @param array $data
-	 * @return mixed
-	 */
-	public function preInsert(array $data) {
-		return $data;
-	}
-
-	/**
 	 * Callback called before a select query.
 	 * Return an array of data to use instead of the fetch results.
 	 *
@@ -648,8 +600,19 @@ class Model extends Base {
 	 * @param string $fetchType
 	 * @return mixed
 	 */
-	public function preSelect(Query $query, $fetchType) {
+	public function preFetch(Query $query, $fetchType) {
 		return;
+	}
+
+	/**
+	 * Callback called before an insert or update query.
+	 * Return a falsey value to stop the process.
+	 *
+	 * @param array $data
+	 * @return mixed
+	 */
+	public function preSave(array $data) {
+		return $data;
 	}
 
 	/**
@@ -659,6 +622,8 @@ class Model extends Base {
 	 * @return \Titon\Model\Query
 	 */
 	public function query($type) {
+		$this->data = [];
+
 		$query = new Query($type, $this);
 		$query->from($this->getTable());
 
@@ -685,6 +650,160 @@ class Model extends Base {
 	}
 
 	/**
+	 * Update a database record base on ID.
+	 * If any related data exists, update those records after verifying required IDs.
+	 * Validate schema data and related data structure before updating.
+	 *
+	 * // TODO atomic checks, transaction for related
+	 *
+	 * @param int $id
+	 * @param array $data
+	 * @return bool
+	 */
+	public function update($id, array $data) {
+		$data = $this->preSave($data);
+
+		if (!$data) {
+			return false;
+		}
+
+		$this->_validateRelationData($data);
+
+		// Filter the data
+		$relatedData = $this->_extractRelationData($data);
+		$data = array_intersect_key($data, $this->getSchema()->getColumns());
+
+		// Update the record
+		$count = $this->query(Query::UPDATE)
+			->fields($data)
+			->where($this->getPrimaryKey(), $id)
+			->save();
+
+		if (!$count) {
+			return false;
+		}
+
+		// Upsert related data
+		$this->upsertRelations($id, $relatedData);
+
+		$this->postSave($id);
+
+		return true;
+	}
+
+	/**
+	 * Either update or insert a record by checking for ID and record existence.
+	 *
+	 * @param array $data
+	 * @param int $id
+	 * @return int The record ID on success, 0 on failure
+	 */
+	public function upsert(array $data, $id = null) {
+		$pk = $this->getPrimaryKey();
+		$update = false;
+
+		// Check for an ID in the data
+		if (!$id && isset($data[$pk])) {
+			$id = $data[$pk];
+			unset($data[$pk]);
+		}
+
+		// Check for record existence
+		if ($id) {
+			$update = $this->exists($id);
+		}
+
+		// Either update
+		if ($update) {
+			if (!$this->update($id, $data)) {
+				return 0;
+			}
+
+		// Or insert
+		} else {
+			$id = $this->insert($data);
+		}
+
+		return $id;
+	}
+
+	/**
+	 * Either update or insert related data for the primary model's ID.
+	 * Each relation will handle upserting differently.
+	 *
+	 * @param int $id
+	 * @param array $data
+	 * @return int
+	 */
+	public function upsertRelations($id, array $data) {
+		$updated = 0;
+
+		if (!$data) {
+			return $updated;
+		}
+
+		foreach ($data as $alias => $relatedData) {
+			if (empty($data[$alias])) {
+				continue;
+			}
+
+			$relation = $this->getRelation($alias);
+			$relatedModel = $this->getObject($alias);
+			$fk = $relation->getForeignKey();
+			$rfk = $relation->getRelatedForeignKey();
+
+			switch ($relation->getType()) {
+				// Append the foreign key with the current ID
+				case Relation::ONE_TO_ONE:
+					$relatedData[$rfk] = $id;
+
+					$relatedModel->upsert($relatedData);
+				break;
+
+				// Loop through and append the foreign key with the current ID
+				case Relation::ONE_TO_MANY:
+					foreach ($relatedData as $hasManyData) {
+						$hasManyData[$rfk] = $id;
+
+						$relatedModel->upsert($hasManyData);
+					}
+				break;
+
+				// Loop through each set of data and upsert to gather an ID
+				// Use that foreign ID with the current ID and save in the junction table
+				case Relation::MANY_TO_MANY:
+					$junctionModel = Registry::factory($relation->getJunctionModel());
+					$junctionData = [$fk => $id];
+
+					foreach ($relatedData as $habtmData) {
+						$foreign_id = $relatedModel->upsert($habtmData);
+						$junctionData[$rfk] = $foreign_id;
+
+						// Only create the record if it doesn't already exist
+						$exists = (bool) $junctionModel->select()
+							->where($fk, $id)
+							->where($rfk, $foreign_id)
+							->count();
+
+						if (!$exists) {
+							$junctionModel->upsert($junctionData);
+						}
+					}
+				break;
+
+				// Can not save belongs to relations
+				case Relation::MANY_TO_ONE:
+					continue;
+				break;
+			}
+
+			$updated++;
+		}
+
+		return $updated;
+	}
+
+	/**
 	 * Extract related model data from an array of complex data.
 	 *
 	 * @param array $data
@@ -706,8 +825,8 @@ class Model extends Base {
 
 	/**
 	 * All-in-one method for fetching results from a query.
-	 * Before the query is executed, the preQuery() method is called.
-	 * After the query is executed, relations will be fetched, and then postQuery() will be called.
+	 * Before the query is executed, the preFetch() method is called.
+	 * After the query is executed, relations will be fetched, and then postFetch() will be called.
 	 * If wrap is true, all results will be wrapped in an Entity class.
 	 *
 	 * Depending on the $fetchType, the returned results will differ.
@@ -720,9 +839,9 @@ class Model extends Base {
 	 * @return array|\Titon\Model\Entity|\Titon\Model\Entity[]
 	 */
 	protected function _fetchResults(Query $query, $fetchType, $wrap) {
-		$result = $this->preSelect($query, $fetchType);
+		$result = $this->preFetch($query, $fetchType);
 
-		// Use the return of preSelect() if applicable
+		// Use the return of preFetch() if applicable
 		if ($result) {
 			return $result;
 		}
@@ -733,12 +852,12 @@ class Model extends Base {
 			return [];
 		}
 
-		// Apply relations before postSelect()
+		// Apply relations before postFetch()
 		foreach ($results as &$result) {
 			$result = $this->fetchRelations($query, $result, $wrap);
 		}
 
-		$results = $this->postSelect($results, $fetchType);
+		$results = $this->postFetch($results, $fetchType);
 
 		// Wrap the results in entities
 		if ($wrap) {
