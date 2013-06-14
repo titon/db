@@ -9,6 +9,8 @@ namespace Titon\Model\Query;
 
 /**
  * Handles the results of a query.
+ *
+ * @package Titon\Model\Query
  */
 interface Result {
 

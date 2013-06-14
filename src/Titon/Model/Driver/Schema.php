@@ -8,7 +8,9 @@
 namespace Titon\Model\Driver;
 
 /**
- * Represents a database table schema.
+ * Represents a database table schema and provides mapping for columns, indexes, types and constraints.
+ *
+ * @package Titon\Model\Driver
  */
 class Schema {
 

@@ -20,6 +20,8 @@ use Countable;
  * 	- Getter and setter support
  *
  * @link http://en.wikipedia.org/wiki/Entity_class
+ *
+ * @package Titon\Model
  */
 class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, Countable {
 

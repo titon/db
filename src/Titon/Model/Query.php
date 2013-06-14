@@ -19,6 +19,8 @@ use \JsonSerializable;
  * Provides an object oriented interface for building an SQL query.
  * Once the query params have been defined, the query can call the parent model to prepare the SQL statement,
  * and finally execute the query and return the results.
+ *
+ * @package Titon\Model
  */
 class Query implements Serializable, JsonSerializable {
 

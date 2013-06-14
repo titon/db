@@ -11,6 +11,8 @@ use Closure;
 
 /**
  * Represents a relation of one model to another.
+ *
+ * @package Titon\Model
  */
 interface Relation {
 

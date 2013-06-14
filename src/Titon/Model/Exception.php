@@ -9,6 +9,8 @@ namespace Titon\Model;
 
 /**
  * Exception for the model package.
+ *
+ * @package Titon\Model
  */
 class Exception extends \Exception {
 

@@ -13,6 +13,8 @@ use \PDOStatement;
 
 /**
  * The PdoResult handles the processing of a PDOStatement to return the correct results.
+ *
+ * @package Titon\Model\Query\Result
  */
 class PdoResult implements Result {
 

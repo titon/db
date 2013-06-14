@@ -28,6 +28,8 @@ use Titon\Utility\Hash;
  *
  * @link http://en.wikipedia.org/wiki/Database_model
  * @link http://en.wikipedia.org/wiki/Relational_model
+ *
+ * @package Titon\Model
  */
 class Model extends Base {
 	use Instanceable, Attachable, Cacheable;
@@ -105,7 +107,7 @@ class Model extends Base {
 	/**
 	 * Delete a record by ID. If $cascade is true, delete all related records.
 	 *
-	 * @param int $id
+	 * @param int|array $id
 	 * @param bool $cascade
 	 * @return bool
 	 */

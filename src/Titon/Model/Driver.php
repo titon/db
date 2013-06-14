@@ -14,6 +14,8 @@ use Titon\Model\Query\Log;
 
 /**
  * Represents a data source, whether a database, API, or other storage system.
+ *
+ * @package Titon\Model
  */
 interface Driver {
 

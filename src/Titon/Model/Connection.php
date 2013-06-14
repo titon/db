@@ -12,6 +12,8 @@ use Titon\Model\Driver;
 
 /**
  * Manages drivers, connections and login credentials.
+ *
+ * @package Titon\Model
  */
 class Connection {
 

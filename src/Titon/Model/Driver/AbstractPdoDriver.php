@@ -11,6 +11,7 @@ use Titon\Model\Query;
 use Titon\Model\Exception;
 use Titon\Model\Query\Clause;
 use Titon\Model\Query\Log;
+use Titon\Model\Query\Log\PdoLog;
 use Titon\Model\Query\Result\PdoResult;
 use Titon\Model\Driver\AbstractDriver;
 use Titon\Utility\String;
@@ -21,6 +22,8 @@ use \PDOStatement;
  * Implements PDO based driver functionality.
  *
  * @link http://php.net/manual/en/pdo.drivers.php
+ *
+ * @package Titon\Model\Driver
  */
 abstract class AbstractPdoDriver extends AbstractDriver {
 
@@ -229,7 +232,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		$statement->startTime = $startTime;
 
 		$this->_statement = $statement;
-		$this->logQuery(new Log\PdoLog($statement));
+
+		$this->logQuery(new PdoLog($statement));
 
 		// Return and cache result
 		$result = new PdoResult($statement);

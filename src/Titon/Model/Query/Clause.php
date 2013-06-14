@@ -13,7 +13,9 @@ use \Serializable;
 use \JsonSerializable;
 
 /**
- * Functionality for handling advanced query clauses: where, having
+ * Functionality for handling advanced query predicates: where, having
+ *
+ * @package Titon\Model\Query
  */
 class Clause implements Serializable, JsonSerializable {
 
