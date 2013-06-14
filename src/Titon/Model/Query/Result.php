@@ -13,7 +13,7 @@ namespace Titon\Model\Query;
 interface Result {
 
 	/**
-	 * Count the number of results. This assumes COUNT() was used.
+	 * Return a count for the number of results. This assumes COUNT() was used.
 	 *
 	 * @return int
 	 */

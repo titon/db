@@ -10,6 +10,7 @@ namespace Titon\Model\Driver;
 use Titon\Model\Query;
 use Titon\Model\Exception;
 use Titon\Model\Query\Clause;
+use Titon\Model\Query\Log;
 use Titon\Model\Query\Result\PdoResult;
 use Titon\Model\Driver\AbstractDriver;
 use Titon\Utility\String;
@@ -75,7 +76,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			$statement->bindValue($i + 1, $value, $this->resolveType($value));
 		}
 
-		$this->logQuery($statement, $binds);
+		$statement->params = $binds;
 
 		return $statement;
 	}
@@ -189,28 +190,13 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 	/**
 	 * {@inheritdoc}
-	 */
-	public function logQuery($statement, array $params = []) {
-		if ($statement instanceof PDOStatement) {
-			$statement = $statement->queryString;
-		}
-
-		$this->_logs[] = [
-			'statement' => $statement,
-			'params' => $params
-		];
-
-		return $this;
-	}
-
-	/**
-	 * {@inheritdoc}
 	 *
 	 * @throws \Titon\Model\Exception
 	 */
 	public function query($query) {
 		$storage = $this->getStorage();
 		$cacheLength = null;
+		$startTime = microtime();
 
 		// Check the cache first
 		if ($query instanceof Query) {
@@ -237,11 +223,13 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 		} else {
 			$statement = $this->getConnection()->query($query);
-
-			$this->logQuery($statement);
 		}
 
+		// Log the statement
+		$statement->startTime = $startTime;
+
 		$this->_statement = $statement;
+		$this->logQuery(new Log\PdoLog($statement));
 
 		// Return and cache result
 		$result = new PdoResult($statement);

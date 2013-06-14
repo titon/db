@@ -10,6 +10,7 @@ namespace Titon\Model;
 use Titon\Cache\Storage;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Query;
+use Titon\Model\Query\Log;
 
 /**
  * Represents a data source, whether a database, API, or other storage system.
@@ -106,13 +107,12 @@ interface Driver {
 	public function isPersistent();
 
 	/**
-	 * Log a query statement and its bound parameters.
+	 * Logs a query statement.
 	 *
-	 * @param string $statement
-	 * @param array $params
+	 * @param \Titon\Model\Query\Log $log
 	 * @return \Titon\Model\Driver
 	 */
-	public function logQuery($statement, array $params = []);
+	public function logQuery(Log $log);
 
 	/**
 	 * Query the driver for data records.

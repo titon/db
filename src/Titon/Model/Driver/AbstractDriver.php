@@ -10,6 +10,7 @@ namespace Titon\Model\Driver;
 use Titon\Common\Base;
 use Titon\Cache\Storage;
 use Titon\Model\Driver;
+use Titon\Model\Query\Log;
 use Titon\Utility\Hash;
 
 /**
@@ -163,6 +164,15 @@ abstract class AbstractDriver extends Base implements Driver {
 	 */
 	public function isPersistent() {
 		return $this->config->persistent;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function logQuery(Log $log) {
+		$this->_logs[] = $log;
+
+		return $this;
 	}
 
 	/**
