@@ -18,18 +18,19 @@ use \JsonSerializable;
 class Clause implements Serializable, JsonSerializable {
 
 	// Types
-	const ALSO = 'AND';
-	const EITHER = 'OR';
+	const ALSO = 'and';
+	const EITHER = 'or';
 
 	// Special operators
-	const NULL = 'IS NULL';
-	const NOT_NULL = 'IS NOT NULL';
-	const IN = 'IN';
-	const NOT_IN = 'NOT IN';
-	const BETWEEN = 'BETWEEN';
-	const NOT_BETWEEN = 'NOT BETWEEN';
-	const LIKE = 'LIKE';
-	const NOT_LIKE = 'NOT LIKE';
+	const NULL = 'null';
+	const NOT_NULL = 'notNull';
+	const IN = 'in';
+	const NOT_IN = 'notIn';
+	const BETWEEN = 'between';
+	const NOT_BETWEEN = 'notBetween';
+	const LIKE = 'like';
+	const NOT_LIKE = 'notLike';
+	const NOT = 'not';
 
 	/**
 	 * Type of clause, either AND or OR.
@@ -46,27 +47,109 @@ class Clause implements Serializable, JsonSerializable {
 	protected $_params = [];
 
 	/**
-	 * Add a parameter to the AND clause.
+	 * Set the predicate type.
 	 *
-	 * @param string $field
-	 * @param mixed $value
-	 * @param string $op
-	 * @return \Titon\Model\Query\Clause
+	 * @param int $type
 	 */
-	public function also($field, $value, $op = '=') {
-		return $this->_process(self::ALSO, $field, $value, $op);
+	public function __construct($type) {
+		$this->_type = $type;
 	}
 
 	/**
-	 * Add a parameter to the OR clause.
+	 * Process a parameter before adding it to the list.
+	 * Set the primary clause type if it has not been set.
 	 *
 	 * @param string $field
 	 * @param mixed $value
 	 * @param string $op
 	 * @return \Titon\Model\Query\Clause
+	 * @throws \Titon\Model\Exception
 	 */
-	public function either($field, $value, $op = '=') {
-		return $this->_process(self::EITHER, $field, $value, $op);
+	protected function add($field, $value, $op) {
+		$key = $field . $op . (is_array($value) ? implode('', $value) : $value);
+
+		$this->_params[$key] = [
+			'field' => $field,
+			'value' => $value,
+			'op' => $op
+		];
+
+		return $this;
+	}
+
+	/**
+	 * Generate a new sub-grouped AND clause.
+	 *
+	 * @param \Closure $callback
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function also(Closure $callback) {
+		$clause = new Clause(self::ALSO);
+		$clause->bindCallback($callback);
+
+		$this->_params[] = $clause;
+
+		return $this;
+	}
+
+	/**
+	 * Adds a between range "BETWEEN" expression.
+	 *
+	 * @param string $field
+	 * @param int $start
+	 * @param int $end
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function between($field, $start, $end) {
+		$this->add($field, [$start, $end], self::BETWEEN);
+
+		return $this;
+	}
+
+	/**
+	 * Bind a Closure callback to this clause and execute it.
+	 *
+	 * @param \Closure $callback
+	 */
+	public function bindCallback(Closure $callback) {
+		$callback = $callback->bindTo($this, 'Titon\Model\Query\Clause');
+		$callback();
+	}
+
+	/**
+	 * Generate a new sub-grouped OR clause.
+	 *
+	 * @param \Closure $callback
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function either(Closure $callback) {
+		$clause = new Clause(self::EITHER);
+		$clause->bindCallback($callback);
+
+		$this->_params[] = $clause;
+
+		return $this;
+	}
+
+	/**
+	 * Adds an equals "=" expression.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function eq($field, $value) {
+		if (is_array($value)) {
+			$this->in($field, $value);
+
+		} else if ($value === null) {
+			$this->null($field);
+
+		} else {
+			$this->add($field, $value, '=');
+		}
+
+		return $this;
 	}
 
 	/**
@@ -88,67 +171,177 @@ class Clause implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Generate a new sub-grouped clause.
+	 * Adds a greater than ">" expression.
 	 *
-	 * @param \Closure $callback
+	 * @param string $field
+	 * @param mixed $value
 	 * @return \Titon\Model\Query\Clause
 	 */
-	public function group(Closure $callback) {
-		$clause = new Clause();
-
-		$callback = $callback->bindTo($clause, 'Titon\Model\Query\Clause');
-		$callback();
-
-		$this->_params[] = $clause;
+	public function gt($field, $value) {
+		$this->add($field, $value, '>');
 
 		return $this;
 	}
 
 	/**
-	 * Process a parameter before adding it to the list.
-	 * Set the primary clause type if it has not been set.
+	 * Adds a greater than or equals to ">=" expression.
 	 *
-	 * @param string $type
 	 * @param string $field
 	 * @param mixed $value
-	 * @param string $op
 	 * @return \Titon\Model\Query\Clause
-	 * @throws \Titon\Model\Exception
 	 */
-	protected function _process($type, $field, $value = null, $op = '=') {
-		if (!$this->_type) {
-			$this->_type = $type;
-		}
+	public function gte($field, $value) {
+		$this->add($field, $value, '>=');
 
-		$op = strtoupper($op);
+		return $this;
+	}
 
+	/**
+	 * Adds an in array "IN()" expression.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function in($field, $value) {
+		$this->add($field, (array) $value, self::IN);
+
+		return $this;
+	}
+
+	/**
+	 * Adds a like wildcard "LIKE" expression.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function like($field, $value) {
+		$this->add($field, $value, self::LIKE);
+
+		return $this;
+	}
+
+	/**
+	 * Adds a less than "<" expression.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function lt($field, $value) {
+		$this->add($field, $value, '<');
+
+		return $this;
+	}
+
+	/**
+	 * Adds a less than or equals to "<=" expression.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function lte($field, $value) {
+		$this->add($field, $value, '<=');
+
+		return $this;
+	}
+
+	/**
+	 * Adds a not "NOT" expression.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function not($field, $value) {
+		$this->add($field, $value, self::NOT);
+
+		return $this;
+	}
+
+	/**
+	 * Adds a not between range "NOT BETWEEN" expression.
+	 *
+	 * @param string $field
+	 * @param int $start
+	 * @param int $end
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function notBetween($field, $start, $end) {
+		$this->add($field, [$start, $end], self::NOT_BETWEEN);
+
+		return $this;
+	}
+
+	/**
+	 * Adds a not equals "!=" expression.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function notEq($field, $value) {
 		if (is_array($value)) {
-			if ($op === '=') {
-				$op = self::IN;
-			} else if ($op === '!=' || $op === '<>') {
-				$op = self::NOT_IN;
-			}
+			$this->notIn($field, $value);
 
 		} else if ($value === null) {
-			if ($op === '=') {
-				$op = self::NULL;
-			} else if ($op === '!=' || $op === '<>') {
-				$op = self::NOT_NULL;
-			}
+			$this->notNull($field);
+
+		} else {
+			$this->add($field, $value, '!=');
 		}
 
-		if (($op === self::BETWEEN || $op === self::NOT_BETWEEN) && (!is_array($value) || count($value) !== 2)) {
-			throw new Exception(sprintf('%s clause must have an array of 2 values', $op));
-		}
+		return $this;
+	}
 
-		$castValue = is_array($value) ? implode('', $value) : $value;
-		$key = $field . $op . $castValue;
+	/**
+	 * Adds a not in array "NOT IN()" expression.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function notIn($field, $value) {
+		$this->add($field, (array) $value, self::NOT_IN);
 
-		$this->_params[$key] = [
-			'field' => $field,
-			'value' => $value,
-			'op' => $op
-		];
+		return $this;
+	}
+
+	/**
+	 * Adds a not like wildcard "LIKE" expression.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function notLike($field, $value) {
+		$this->add($field, $value, self::NOT_LIKE);
+
+		return $this;
+	}
+
+	/**
+	 * Adds a not is null "NOT IS NULL" expression.
+	 *
+	 * @param string $field
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function notNull($field) {
+		$this->add($field, null, self::NOT_NULL);
+
+		return $this;
+	}
+
+	/**
+	 * Adds an is null "IS NULL" expression.
+	 *
+	 * @param string $field
+	 * @return \Titon\Model\Query\Clause
+	 */
+	public function null($field) {
+		$this->add($field, null, self::NULL);
 
 		return $this;
 	}
@@ -170,8 +363,10 @@ class Clause implements Serializable, JsonSerializable {
 	public function unserialize($data) {
 		$data = unserialize($data);
 
+		$this->_type = $data['type'];
+
 		foreach ($data['params'] as $param) {
-			$this->_process($data['type'], $param['field'], $param['value'], $param['op']);
+			$this->add($param['field'], $param['value'], $param['op']);
 		}
 	}
 

@@ -39,6 +39,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @type array
 	 */
 	protected $_clauses = [
+		'and'			=> ' AND ',
 		'between'		=> '%s BETWEEN ? AND ?',
 		'count'			=> 'COUNT(%s)',
 		'groupBy'		=> 'GROUP BY %s',
@@ -46,10 +47,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'in'			=> '%s IN (%s)',
 		'limit'			=> 'LIMIT %s',
 		'limitOffset'	=> 'LIMIT %s,%s',
+		'not'			=> '%s NOT ?',
 		'notBetween'	=> '%s NOT BETWEEN ? AND ?',
 		'notIn'			=> '%s NOT IN (%s)',
 		'notNull'		=> '%s IS NOT NULL',
 		'null'			=> '%s IS NULL',
+		'or'			=> ' OR ',
 		'orderBy'		=> 'ORDER BY %s',
 		'where'			=> 'WHERE %s',
 		'valueGroup'	=> '(%s)'
@@ -353,25 +356,16 @@ abstract class AbstractDialect extends Base implements Dialect {
 				switch ($param['op']) {
 					case Clause::IN:
 					case Clause::NOT_IN:
-						$identifier = $this->getClause('in');
-
-						if ($param['op'] === Clause::NOT_IN) {
-							$identifier = $this->getClause('notIn');
-						}
-
-						$value = sprintf($identifier, $field, implode(', ', array_fill(0, count($param['value']), '?')));
+						$value = sprintf($this->getClause($param['op']), $field, implode(', ', array_fill(0, count($param['value']), '?')));
 					break;
+					case Clause::NOT:
 					case Clause::NULL:
-						$value = sprintf($this->getClause('null'), $field);
-					break;
 					case Clause::NOT_NULL:
-						$value = sprintf($this->getClause('notNull'), $field);
-					break;
 					case Clause::BETWEEN:
-						$value = sprintf($this->getClause('between'), $field);
-					break;
 					case Clause::NOT_BETWEEN:
-						$value = sprintf($this->getClause('notBetween'), $field);
+					case Clause::LIKE:
+					case Clause::NOT_LIKE:
+						$value = sprintf($this->getClause($param['op']), $field);
 					break;
 					default:
 						$value = sprintf('%s %s ?', $field, $param['op']);
@@ -382,7 +376,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			}
 		}
 
-		return implode(' ' . $clause->getType() . ' ', $output);
+		return implode($this->getClause($clause->getType()), $output);
 	}
 
 	/**

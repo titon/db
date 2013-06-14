@@ -99,11 +99,6 @@ class Model extends Base {
 	 * @return int
 	 */
 	public function count(Query $query) {
-		$query
-			->attribute('count', true)
-			->fields($this->getPrimaryKey()) // Use FK to count on
-			->limit(null); // Remove the limit
-
 		return $this->getDriver()->query($query)->count();
 	}
 

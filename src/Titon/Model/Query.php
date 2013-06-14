@@ -138,8 +138,6 @@ class Query implements Serializable, JsonSerializable {
 	public function __construct($type, Model $model) {
 		$this->_type = $type;
 		$this->_model = $model;
-		$this->_where = new Clause();
-		$this->_having = new Clause();
 	}
 
 	/**
@@ -147,8 +145,13 @@ class Query implements Serializable, JsonSerializable {
 	 * Leave the model instance intact however.
 	 */
 	public function __clone() {
-		$this->_where = clone $this->_where;
-		$this->_having = clone $this->_having;
+		if ($this->_where) {
+			$this->_where = clone $this->_where;
+		}
+
+		if ($this->_having) {
+			$this->_having = clone $this->_having;
+		}
 	}
 
 	/**
@@ -209,6 +212,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Entity
 	 */
 	public function count() {
+		$this
+			->attribute('count', true)
+			->fields($this->getModel()->getPrimaryKey()) // Use FK to count on
+			->limit(0); // Remove the limit
+
 		return $this->getModel()->count($this);
 	}
 
@@ -338,7 +346,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Clause
 	 */
 	public function getHaving() {
-		return $this->_having;
+		return $this->_having ?: new Clause(Clause::ALSO);
 	}
 
 	/**
@@ -410,7 +418,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Clause
 	 */
 	public function getWhere() {
-		return $this->_where;
+		return $this->_where ?: new Clause(Clause::ALSO);
 	}
 
 	/**
@@ -432,18 +440,25 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Define the parameters to use for the having clause.
+	 * Will create a new having clause using the AND conjunction.
+	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
 	 * @param mixed $value
 	 * @return \Titon\Model\Query
+	 * @throws \Titon\Model\Exception
 	 */
 	public function having($field, $value = null) {
+		if ($this->_having && $this->_having->getType() === Clause::EITHER) {
+			throw new Exception('Having clause already created using "OR" conjunction');
+		}
+
+		$this->_having = new Clause(Clause::ALSO);
+
 		if ($field instanceof Closure) {
-			$field = $field->bindTo($this->_having, 'Titon\Model\Query\Clause');
-			$field();
+			$this->_having->bindCallback($field);
 		} else {
-			$this->_having->also($field, $value);
+			$this->_having->eq($field, $value);
 		}
 
 		return $this;
@@ -490,6 +505,56 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Will create a new having clause using the "OR" conjunction.
+	 * Secondly allows for simple params to be added.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query
+	 * @throws \Titon\Model\Exception
+	 */
+	public function orHaving($field, $value = null) {
+		if ($this->_having && $this->_having->getType() === Clause::ALSO) {
+			throw new Exception('Having clause already created using "AND" conjunction');
+		}
+
+		$this->_having = new Clause(Clause::EITHER);
+
+		if ($field instanceof Closure) {
+			$this->_having->bindCallback($field);
+		} else {
+			$this->_having->eq($field, $value);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Will create a new where clause using the OR conjunction.
+	 * Secondly allows for simple params to be added.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @return \Titon\Model\Query
+	 * @throws \Titon\Model\Exception
+	 */
+	public function orWhere($field, $value = null) {
+		if ($this->_where && $this->_where->getType() === Clause::ALSO) {
+			throw new Exception('Where clause already created using "AND" conjunction');
+		}
+
+		$this->_where = new Clause(Clause::EITHER);
+
+		if ($field instanceof Closure) {
+			$this->_where->bindCallback($field);
+		} else {
+			$this->_where->eq($field, $value);
+		}
+
+		return $this;
+	}
+
+	/**
 	 * Pass the query to the model to interact with the database.
 	 * Return the count of how many records were affected.
 	 *
@@ -509,18 +574,25 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Define the parameters to use for the where clause.
+	 * Will create a new where clause using the AND conjunction.
+	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
 	 * @param mixed $value
 	 * @return \Titon\Model\Query
+	 * @throws \Titon\Model\Exception
 	 */
 	public function where($field, $value = null) {
+		if ($this->_where && $this->_where->getType() === Clause::EITHER) {
+			throw new Exception('Where clause already created using "OR" conjunction');
+		}
+
+		$this->_where = new Clause(Clause::ALSO);
+
 		if ($field instanceof Closure) {
-			$field = $field->bindTo($this->_where, 'Titon\Model\Query\Clause');
-			$field();
+			$this->_where->bindCallback($field);
 		} else {
-			$this->_where->also($field, $value);
+			$this->_where->eq($field, $value);
 		}
 
 		return $this;
