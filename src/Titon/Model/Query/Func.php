@@ -13,6 +13,23 @@ use Titon\Model\Driver;
  * The Func class represents an SQL function with optional arguments.
  * Provides support for argument type casting, literal arguments, and database column arguments.
  *
+ * Using scalar arguments will be type casted and will produce `SUBSTRING('Titon', -2, 2)`.
+ *
+ *		new Func('SUBSTRING', ['Titon', -2, 2]);
+ *
+ * Using literal arguments will produce `DATE_ADD('1988-02-26', INTERVAL 31 DAY)`.
+ *
+ * 		new Func('DATE_ADD', [
+ * 			'1988-02-26',
+ * 			'INTERVAL 31 DAY' => Func::LITERAL
+ * 		]);
+ *
+ * Using database columns/fields will quote and produce `COUNT(`id`)`.
+ *
+ * 		new Func('COUNT', ['id' => Func::FIELD]);
+ *
+ * Using no arguments will simply return the function name and an empty argument group.
+ *
  * @package Titon\Model\Query
  */
 class Func {
