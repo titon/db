@@ -17,7 +17,7 @@ use \JsonSerializable;
  *
  * @package Titon\Model\Query
  */
-class Clause implements Serializable, JsonSerializable {
+class Predicate implements Serializable, JsonSerializable {
 
 	// Types
 	const ALSO = 'and';
@@ -35,14 +35,14 @@ class Clause implements Serializable, JsonSerializable {
 	const NOT = 'not';
 
 	/**
-	 * Type of clause, either AND or OR.
+	 * Type of predicate, either AND or OR.
 	 *
 	 * @type string
 	 */
 	protected $_type;
 
 	/**
-	 * List of parameters for this clause group.
+	 * List of parameters for this predicate.
 	 *
 	 * @type array
 	 */
@@ -59,12 +59,12 @@ class Clause implements Serializable, JsonSerializable {
 
 	/**
 	 * Process a parameter before adding it to the list.
-	 * Set the primary clause type if it has not been set.
+	 * Set the primary predicate type if it has not been set.
 	 *
 	 * @param string $field
 	 * @param mixed $value
 	 * @param string $op
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 * @throws \Titon\Model\Exception
 	 */
 	protected function add($field, $value, $op) {
@@ -80,16 +80,16 @@ class Clause implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Generate a new sub-grouped AND clause.
+	 * Generate a new sub-grouped AND predicate.
 	 *
 	 * @param \Closure $callback
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function also(Closure $callback) {
-		$clause = new Clause(self::ALSO);
-		$clause->bindCallback($callback);
+		$predicate = new Predicate(self::ALSO);
+		$predicate->bindCallback($callback);
 
-		$this->_params[] = $clause;
+		$this->_params[] = $predicate;
 
 		return $this;
 	}
@@ -100,7 +100,7 @@ class Clause implements Serializable, JsonSerializable {
 	 * @param string $field
 	 * @param int $start
 	 * @param int $end
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function between($field, $start, $end) {
 		$this->add($field, [$start, $end], self::BETWEEN);
@@ -109,26 +109,26 @@ class Clause implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Bind a Closure callback to this clause and execute it.
+	 * Bind a Closure callback to this predicate and execute it.
 	 *
 	 * @param \Closure $callback
 	 */
 	public function bindCallback(Closure $callback) {
-		$callback = $callback->bindTo($this, 'Titon\Model\Query\Clause');
+		$callback = $callback->bindTo($this, 'Titon\Model\Query\Predicate');
 		$callback();
 	}
 
 	/**
-	 * Generate a new sub-grouped OR clause.
+	 * Generate a new sub-grouped OR predicate.
 	 *
 	 * @param \Closure $callback
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function either(Closure $callback) {
-		$clause = new Clause(self::EITHER);
-		$clause->bindCallback($callback);
+		$predicate = new Predicate(self::EITHER);
+		$predicate->bindCallback($callback);
 
-		$this->_params[] = $clause;
+		$this->_params[] = $predicate;
 
 		return $this;
 	}
@@ -138,7 +138,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function eq($field, $value) {
 		if (is_array($value)) {
@@ -155,7 +155,7 @@ class Clause implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Return the clause parameters.
+	 * Return the predicate parameters.
 	 *
 	 * @return array
 	 */
@@ -164,7 +164,7 @@ class Clause implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Return the type of clause.
+	 * Return the type of predicate.
 	 *
 	 * @return string
 	 */
@@ -177,7 +177,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function gt($field, $value) {
 		$this->add($field, $value, '>');
@@ -190,7 +190,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function gte($field, $value) {
 		$this->add($field, $value, '>=');
@@ -203,7 +203,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function in($field, $value) {
 		$this->add($field, (array) $value, self::IN);
@@ -216,7 +216,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function like($field, $value) {
 		$this->add($field, $value, self::LIKE);
@@ -229,7 +229,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function lt($field, $value) {
 		$this->add($field, $value, '<');
@@ -242,7 +242,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function lte($field, $value) {
 		$this->add($field, $value, '<=');
@@ -255,7 +255,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function not($field, $value) {
 		$this->add($field, $value, self::NOT);
@@ -269,7 +269,7 @@ class Clause implements Serializable, JsonSerializable {
 	 * @param string $field
 	 * @param int $start
 	 * @param int $end
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function notBetween($field, $start, $end) {
 		$this->add($field, [$start, $end], self::NOT_BETWEEN);
@@ -282,7 +282,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function notEq($field, $value) {
 		if (is_array($value)) {
@@ -303,7 +303,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function notIn($field, $value) {
 		$this->add($field, (array) $value, self::NOT_IN);
@@ -316,7 +316,7 @@ class Clause implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function notLike($field, $value) {
 		$this->add($field, $value, self::NOT_LIKE);
@@ -328,7 +328,7 @@ class Clause implements Serializable, JsonSerializable {
 	 * Adds a not is null "NOT IS NULL" expression.
 	 *
 	 * @param string $field
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function notNull($field) {
 		$this->add($field, null, self::NOT_NULL);
@@ -340,7 +340,7 @@ class Clause implements Serializable, JsonSerializable {
 	 * Adds an is null "IS NULL" expression.
 	 *
 	 * @param string $field
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function null($field) {
 		$this->add($field, null, self::NULL);
@@ -349,7 +349,7 @@ class Clause implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Serialize the query clause.
+	 * Serialize the query predicate.
 	 *
 	 * @return string
 	 */
@@ -358,7 +358,7 @@ class Clause implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Reconstruct the query clause once unserialized.
+	 * Reconstruct the query predicate once unserialized.
 	 *
 	 * @param array $data
 	 */

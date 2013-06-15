@@ -7,6 +7,8 @@
 
 namespace Titon\Model\Driver;
 
+use Titon\Model\Exception;
+
 /**
  * Represents a database table schema and provides mapping for columns, indexes, types and constraints.
  *
@@ -34,11 +36,11 @@ class Schema {
 	protected $_columns = [];
 
 	/**
-	 * Table column constraints.
+	 * Foreign keys mappings.
 	 *
 	 * @type array
 	 */
-	protected $_constraints = [];
+	protected $_foreignKeys = [];
 
 	/**
 	 * Table indexes.
@@ -48,11 +50,25 @@ class Schema {
 	protected $_indexes = [];
 
 	/**
+	 * Primary key mapping.
+	 *
+	 * @type array
+	 */
+	protected $_primaryKey = [];
+
+	/**
 	 * Table name.
 	 *
 	 * @type string
 	 */
 	protected $_table;
+
+	/**
+	 * Unique keys mappings.
+	 *
+	 * @type array
+	 */
+	protected $_uniqueKeys = [];
 
 	/**
 	 * Set the table and add optional columns.
@@ -62,74 +78,259 @@ class Schema {
 	 */
 	public function __construct($table, array $columns = []) {
 		$this->_table = $table;
+
 		$this->addColumns($columns);
 	}
 
-	public function addColumn($name, array $options) {
+	/**
+	 * Add a column to the table schema.
+	 *
+	 * @param string $column
+	 * @param array $options
+	 * @return \Titon\Model\Driver\Schema
+	 */
+	public function addColumn($column, array $options) {
 		$options = $options + [
+			'field' => $column,
 			'type' => '',
 			'length' => '',
-			'null' => false,
 			'default' => '',
 			'comment' => '',
-			'key' => '',
-			'ai' => false
+			'null' => false,
+			'ai' => false,
+			'index' => false,		// KEY index (field[, field])
+			'primary' => false,		// [CONSTRAINT symbol] PRIMARY KEY (field[, field])
+			'unique' => false,		// [CONSTRAINT symbol] UNIQUE KEY index (field[, field])
+			'foreign' => false		// [CONSTRAINT symbol] FOREIGN KEY (field) REFERENCES table(field) [ON DELETE CASCADE, etc]
 		];
 
-		$this->_columns[$name] = $options;
+		$this->_columns[$column] = $options;
 
-		switch ($options['key']) {
-			case self::INDEX:
+		if ($options['index']) {
+			$this->addIndex($column, $options['index']);
 
-			break;
-			case self::CONSTRAINT_PRIMARY:
-			case self::CONSTRAINT_UNIQUE:
+		} else if ($options['primary']) {
+			$this->addConstraint(self::CONSTRAINT_PRIMARY, $column, $options['primary']);
 
-			break;
+		} else if ($options['unique']) {
+			$this->addConstraint(self::CONSTRAINT_UNIQUE, $column, $options['unique']);
+
+		} else if ($options['foreign']) {
+			$this->addConstraint(self::CONSTRAINT_FOREIGN, $column, $options['foreign']);
 		}
-	}
 
-	public function addColumns(array $columns) {
-		foreach ($columns as $name => $options) {
-			$this->addColumn($name, $options);
-		}
-	}
-
-	public function addConstraint($name) {
-
-	}
-
-	public function addIndex($name, $type, $columns) {
-
-	}
-
-	public function getColumn($name) {
-
+		return $this;
 	}
 
 	/**
+	 * Add multiple columns. Index is the column name, the value is the array of options.
+	 *
+	 * @param array $columns
+	 * @return \Titon\Model\Driver\Schema
+	 */
+	public function addColumns(array $columns) {
+		foreach ($columns as $column => $options) {
+			$this->addColumn($column, $options);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Add a constraint for a column. The constraint is either a primary key, unique key or foreign key.
+	 * Each type of constraint requires different options, they are:
+	 *
+	 * Primary, Unique {
+	 * 		@type string $constraint	(Optional) Provide a name to reference the constraint by
+	 * }
+	 *
+	 * Unique {
+	 * 		@type string $index			Custom name for the index key, defaults to the column name
+	 * }
+	 *
+	 * Foreign {
+	 * 		@type string $references	A table and field that the foreign key references, should be in a "user.id" format
+	 * 		@type string $onUpdate		Action to use for ON UPDATE clauses
+	 * 		@type string $onDelete		Action to use for ON DELETE clauses
+	 * }
+	 *
+	 * @param string $type
+	 * @param string $column
+	 * @param string|array $key
+	 * @return \Titon\Model\Driver\Schema
+	 * @throws \Titon\Model\Exception
+	 */
+	public function addConstraint($type, $column, $key = null) {
+		$symbol = '';
+		$index = $column;
+
+		// These values are optional
+		// So only grab them if the data is an array
+		if (is_array($key)) {
+			if (isset($key['constraint'])) {
+				$symbol = $key['constraint'];
+			}
+
+			if (isset($key['index'])) {
+				$index = $key['index'];
+			}
+		}
+
+		switch ($type) {
+
+			// Only one primary key can exist
+			// However, multiple columns can exist in a primary key
+			case self::CONSTRAINT_PRIMARY:
+				if (is_string($key)) {
+					$symbol = $key;
+				}
+
+				if (empty($this->_primaryKey)) {
+					$this->_primaryKey = [
+						'constraint' => $symbol,
+						'columns' => [$column]
+					];
+				} else {
+					$this->_primaryKey['columns'][] = $column;
+				}
+			break;
+
+			// Multiple unique keys can exist
+			// Group by index
+			case self::CONSTRAINT_UNIQUE:
+				if (is_string($key)) {
+					$index = $key;
+				}
+
+				if (empty($this->_uniqueKeys[$index])) {
+					$this->_uniqueKeys[$index] = [
+						'constraint' => $symbol,
+						'columns' => [$column]
+					];
+				} else {
+					$this->_uniqueKeys[$index]['columns'][] = $column;
+				}
+			break;
+
+			// Multiple foreign keys can exist
+			// Group by column
+			case self::CONSTRAINT_FOREIGN:
+				if (is_string($key)) {
+					$key = ['references' => $key];
+				}
+
+				if (empty($key['references'])) {
+					throw new Exception(sprintf('Foreign key for %s must reference an external table', $column));
+				}
+
+				$this->_foreignKeys[$column] = $key + [
+					'constraint' => $symbol,
+					'onUpdate' => false,
+					'onDelete' => false
+				];
+			break;
+
+			// Invalid constraint
+			default:
+				throw new Exception(sprintf('Invalid constraint type for %s', $column));
+			break;
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Add an index for a column. If $group is provided, allows for grouping of columns.
+	 *
+	 * @param string $column
+	 * @param string $group
+	 * @return \Titon\Model\Driver\Schema
+	 */
+	public function addIndex($column, $group = null) {
+		if (!is_string($group)) {
+			$group = $column;
+		}
+
+		$this->_indexes[$group][] = $column;
+
+		return $this;
+	}
+
+	/**
+	 * Return column options by name.
+	 *
+	 * @param string $name
+	 * @return array
+	 * @throws \Titon\Model\Exception
+	 */
+	public function getColumn($name) {
+		if ($this->hasColumn($name)) {
+			return $this->_columns[$name];
+		}
+
+		throw new Exception(sprintf('Table column %s does not exist', $name));
+	}
+
+	/**
+	 * Return all columns and their options.
+	 *
 	 * @return array
 	 */
 	public function getColumns() {
 		return $this->_columns;
 	}
 
+	/**
+	 * Return all foreign keys.
+	 *
+	 * @return array
+	 */
+	public function getForeignKeys() {
+		return $this->_foreignKeys;
+	}
+
+	/**
+	 * Return all indexes.
+	 *
+	 * @return array
+	 */
 	public function getIndexes() {
 		return $this->_indexes;
 	}
 
+	/**
+	 * Return the primary key.
+	 *
+	 * @return array
+	 */
 	public function getPrimaryKey() {
-
+		return $this->_primaryKey;
 	}
 
+	/**
+	 * Return the table name.
+	 *
+	 * @return string
+	 */
 	public function getTable() {
 		return $this->_table;
 	}
 
-	public function getUniqueKey() {
-
+	/**
+	 * Return all the unique keys.
+	 *
+	 * @return array
+	 */
+	public function getUniqueKeys() {
+		return $this->_uniqueKeys;
 	}
 
+	/**
+	 * Check if a column exists.
+	 *
+	 * @param string $column
+	 * @return bool
+	 */
 	public function hasColumn($column) {
 		return isset($this->_columns[$column]);
 	}

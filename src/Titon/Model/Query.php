@@ -8,9 +8,10 @@
 namespace Titon\Model;
 
 use Titon\Common\Registry;
+use Titon\Model\Driver\Schema;
 use Titon\Model\Model;
 use Titon\Model\Exception;
-use Titon\Model\Query\Clause;
+use Titon\Model\Query\Predicate;
 use \Closure;
 use \Serializable;
 use \JsonSerializable;
@@ -67,9 +68,9 @@ class Query implements Serializable, JsonSerializable {
 	protected $_groupBy = [];
 
 	/**
-	 * The having clause containing a list of parameters.
+	 * The having predicate containing a list of parameters.
 	 *
-	 * @type \Titon\Model\Query\Clause
+	 * @type \Titon\Model\Query\Predicate
 	 */
 	protected $_having;
 
@@ -103,6 +104,13 @@ class Query implements Serializable, JsonSerializable {
 	protected $_orderBy = [];
 
 	/**
+	 * Table schema used for complex queries.
+	 *
+	 * @type \Titon\Model\Driver\Schema
+	 */
+	protected $_schema;
+
+	/**
 	 * Additional sub-queries to execute, usually for join type data.
 	 *
 	 * @type \Titon\Model\Query[]
@@ -124,9 +132,9 @@ class Query implements Serializable, JsonSerializable {
 	protected $_type;
 
 	/**
-	 * The where clause containing a list of parameters.
+	 * The where predicate containing a list of parameters.
 	 *
-	 * @type \Titon\Model\Query\Clause
+	 * @type \Titon\Model\Query\Predicate
 	 */
 	protected $_where;
 
@@ -343,12 +351,12 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Return the having clause.
+	 * Return the having predicate.
 	 *
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function getHaving() {
-		return $this->_having ?: new Clause(Clause::ALSO);
+		return $this->_having ?: new Predicate(Predicate::ALSO);
 	}
 
 	/**
@@ -388,6 +396,15 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Return the schema.
+	 *
+	 * @return \Titon\Model\Driver\Schema
+	 */
+	public function getSchema() {
+		return $this->_schema;
+	}
+
+	/**
 	 * Return the sub-queries.
 	 *
 	 * @return \Titon\Model\Query[]
@@ -415,12 +432,12 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Return the where clause.
+	 * Return the where predicate.
 	 *
-	 * @return \Titon\Model\Query\Clause
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function getWhere() {
-		return $this->_where ?: new Clause(Clause::ALSO);
+		return $this->_where ?: new Predicate(Predicate::ALSO);
 	}
 
 	/**
@@ -442,7 +459,7 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Will create a new having clause using the AND conjunction.
+	 * Will create a new having predicate using the AND conjunction.
 	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
@@ -451,11 +468,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @throws \Titon\Model\Exception
 	 */
 	public function having($field, $value = null) {
-		if ($this->_having && $this->_having->getType() === Clause::EITHER) {
+		if ($this->_having && $this->_having->getType() === Predicate::EITHER) {
 			throw new Exception('Having clause already created using "OR" conjunction');
 		}
 
-		$this->_having = new Clause(Clause::ALSO);
+		$this->_having = new Predicate(Predicate::ALSO);
 
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
@@ -507,7 +524,7 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Will create a new having clause using the "OR" conjunction.
+	 * Will create a new having predicate using the "OR" conjunction.
 	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
@@ -516,11 +533,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @throws \Titon\Model\Exception
 	 */
 	public function orHaving($field, $value = null) {
-		if ($this->_having && $this->_having->getType() === Clause::ALSO) {
+		if ($this->_having && $this->_having->getType() === Predicate::ALSO) {
 			throw new Exception('Having clause already created using "AND" conjunction');
 		}
 
-		$this->_having = new Clause(Clause::EITHER);
+		$this->_having = new Predicate(Predicate::EITHER);
 
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
@@ -532,7 +549,7 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Will create a new where clause using the OR conjunction.
+	 * Will create a new where predicate using the OR conjunction.
 	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
@@ -541,11 +558,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @throws \Titon\Model\Exception
 	 */
 	public function orWhere($field, $value = null) {
-		if ($this->_where && $this->_where->getType() === Clause::ALSO) {
+		if ($this->_where && $this->_where->getType() === Predicate::ALSO) {
 			throw new Exception('Where clause already created using "AND" conjunction');
 		}
 
-		$this->_where = new Clause(Clause::EITHER);
+		$this->_where = new Predicate(Predicate::EITHER);
 
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);
@@ -567,6 +584,18 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Set the table schema.
+	 *
+	 * @param \Titon\Model\Driver\Schema $schema
+	 * @return \Titon\Model\Query
+	 */
+	public function schema(Schema $schema) {
+		$this->_schema = $schema;
+
+		return $this;
+	}
+
+	/**
 	 * Return a unique MD5 hash of the query.
 	 *
 	 * @return string
@@ -576,7 +605,7 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Will create a new where clause using the AND conjunction.
+	 * Will create a new where predicate using the AND conjunction.
 	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
@@ -585,11 +614,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @throws \Titon\Model\Exception
 	 */
 	public function where($field, $value = null) {
-		if ($this->_where && $this->_where->getType() === Clause::EITHER) {
+		if ($this->_where && $this->_where->getType() === Predicate::EITHER) {
 			throw new Exception('Where clause already created using "OR" conjunction');
 		}
 
-		$this->_where = new Clause(Clause::ALSO);
+		$this->_where = new Predicate(Predicate::ALSO);
 
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);

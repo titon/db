@@ -479,6 +479,8 @@ class Model extends Base {
 	/**
 	 * Return a schema object that represents the database table.
 	 *
+	 * TODO move to driver
+	 *
 	 * @return \Titon\Model\Driver\Schema
 	 */
 	public function getSchema() {
@@ -487,25 +489,33 @@ class Model extends Base {
 		}
 
 		// Manually defined columns
+		// Allows for full schema and key/index support
 		if (is_array($this->_schema)) {
 			$columns = $this->_schema;
 
 		// Inspect database for columns
+		// This approach should only be for validating columns and types
 		} else {
 			$fields = $this->query(Query::DESCRIBE)->fetchAll(false);
 			$columns = [];
 
-			// TODO type, length
-
 			foreach ($fields as $field) {
 				$column = [];
 				$column['null'] = ($field['Null'] === 'YES');
-				$column['default'] = $column['null'] ? null : $field['Default'];
+				$column['default'] = $field['Default'];
 
-				switch ($field['Key']) {
-					case 'PRI': $column['primary'] = true; break;
-					case 'UNI': $column['unique'] = true; break;
-					case 'MUL': $column['index'] = true; break;
+				if (preg_match('/([a-z]+)(?:\(([0-9]+)\))?/is', $field['Type'], $matches)) {
+					$column['type'] = $matches[1];
+
+					if (isset($matches[2])) {
+						$column['length'] = $matches[2];
+					}
+				}
+
+				switch (strtolower($field['Key'])) {
+					case 'pri': $column['primary'] = true; break;
+					case 'uni': $column['unique'] = true; break;
+					case 'mul': $column['index'] = true; break;
 				}
 
 				if ($field['Extra'] === 'auto_increment') {

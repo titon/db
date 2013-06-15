@@ -9,7 +9,7 @@ namespace Titon\Model\Driver;
 
 use Titon\Model\Query;
 use Titon\Model\Exception;
-use Titon\Model\Query\Clause;
+use Titon\Model\Query\Predicate;
 use Titon\Model\Query\Log;
 use Titon\Model\Query\Log\PdoLog;
 use Titon\Model\Query\Result\PdoResult;
@@ -272,11 +272,11 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			}
 		}
 
-		// Grab values from the where and having clauses
-		$resolveClause = function(Clause $clause) use (&$resolveClause, &$binds) {
-			foreach ($clause->getParams() as $param) {
-				if ($param instanceof Clause) {
-					$resolveClause($param);
+		// Grab values from the where and having predicate
+		$resolvePredicate = function(Predicate $predicate) use (&$resolvePredicate, &$binds) {
+			foreach ($predicate->getParams() as $param) {
+				if ($param instanceof Predicate) {
+					$resolvePredicate($param);
 
 				} else {
 					if (is_array($param['value'])) {
@@ -290,8 +290,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			}
 		};
 
-		$resolveClause($query->getWhere());
-		$resolveClause($query->getHaving());
+		$resolvePredicate($query->getWhere());
+		$resolvePredicate($query->getHaving());
 
 		return $binds;
 	}
