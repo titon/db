@@ -32,7 +32,7 @@ abstract class AbstractDriver extends Base implements Driver {
 	 */
 	protected $_config = [
 		'persistent' => true,
-		'encoding' => 'UTF-8',
+		'encoding' => 'utf8',
 		'timezone' => 'UTC',
 		'flags' => []
 	];
