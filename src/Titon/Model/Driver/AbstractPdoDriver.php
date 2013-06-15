@@ -99,6 +99,13 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	}
 
 	/**
+	 * {@inheritdoc}
+	 */
+	public function escape($value) {
+		return $this->getConnection()->quote($value, $this->resolveType($value));
+	}
+
+	/**
 	 * Return the database name.
 	 *
 	 * @return string

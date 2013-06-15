@@ -11,6 +11,7 @@ use Titon\Common\Registry;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Model;
 use Titon\Model\Exception;
+use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
 use \Closure;
 use \Serializable;
@@ -223,9 +224,8 @@ class Query implements Serializable, JsonSerializable {
 	 */
 	public function count() {
 		$this
-			->attribute('count', true)
-			->fields($this->getModel()->getPrimaryKey()) // Use FK to count on
-			->limit(0); // Remove the limit
+			->fields($this->func('COUNT', [$this->getModel()->getPrimaryKey() => Func::FIELD]))
+			->limit(0);
 
 		return $this->getModel()->count($this);
 	}
@@ -303,6 +303,21 @@ class Query implements Serializable, JsonSerializable {
 		$this->_table = (string) $table;
 
 		return $this;
+	}
+
+	/**
+	 * Instantiate a new database function.
+	 *
+	 * @param string $name
+	 * @param string|array $arguments
+	 * @param string $separator
+	 * @return \Titon\Model\Query\Func
+	 */
+	public function func($name, $arguments = [], $separator = ', ') {
+		$func = new Func($name, $arguments, $separator);
+		$func->setDriver($this->getModel()->getDriver());
+
+		return $func;
 	}
 
 	/**

@@ -39,6 +39,14 @@ interface Driver {
 	public function disconnect();
 
 	/**
+	 * Escape a value to be SQL valid.
+	 *
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	public function escape($value);
+
+	/**
 	 * Return the connection object.
 	 *
 	 * @return object

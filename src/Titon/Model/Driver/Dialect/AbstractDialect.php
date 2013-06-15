@@ -13,6 +13,7 @@ use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Exception;
 use Titon\Model\Query;
+use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
 use Titon\Utility\String;
 
@@ -47,10 +48,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'characterSet'	=> 'CHARACTER SET',
 		'comment'		=> 'COMMENT %s',
 		'constraint'	=> 'CONSTRAINT %s',
-		'count'			=> 'COUNT(%s)',
 		'defaultValue'	=> 'DEFAULT %s',
 		'engine'		=> 'ENGINE',
 		'foreignKey'	=> 'FOREIGN KEY (%s) REFERENCES %s(%s)',
+		'function'		=> '%s(%s)',
 		'groupBy'		=> 'GROUP BY %s',
 		'having'		=> 'HAVING %s',
 		'in'			=> '%s IN (%s)',
@@ -195,16 +196,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildSelect(Query $query) {
-		$attributes = $query->getAttributes();
-		$fields = $this->formatFields($query->getFields(), $query->getType());
-
-		if (!empty($attributes['count'])) {
-			$fields = sprintf($this->getClause('count'), $fields);
-		}
-
 		return $this->renderStatement($this->getStatement(Query::SELECT), [
 			'table' => $this->formatTable($query->getTable()),
-			'fields' => $fields,
+			'fields' => $this->formatFields($query->getFields(), $query->getType()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'groupBy' => $this->formatGroupBy($query->getGroupBy()),
 			'having' => $this->formatHaving($query->getHaving()),
@@ -343,7 +337,21 @@ abstract class AbstractDialect extends Base implements Dialect {
 			break;
 
 			case Query::SELECT:
-				return empty($fields) ? '*' : $this->quoteList($fields);
+				if (empty($fields)) {
+					return '*';
+				}
+
+				$columns = [];
+
+				foreach ($fields as $field) {
+					if ($field instanceof Func) {
+						$columns[] = $field->toString();
+					} else {
+						$columns[] = $this->quote($field);
+					}
+				}
+
+				return implode(', ', $columns);
 			break;
 
 			case Query::UPDATE:
