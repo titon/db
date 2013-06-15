@@ -40,24 +40,31 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @type array
 	 */
 	protected $_clauses = [
+		'autoIncrement'	=> 'AUTO_INCREMENT',
 		'and'			=> 'AND',
 		'between'		=> '%s BETWEEN ? AND ?',
 		'cascade'		=> 'CASCADE',
+		'characterSet'	=> 'CHARACTER SET',
+		'comment'		=> 'COMMENT %s',
 		'constraint'	=> 'CONSTRAINT %s',
 		'count'			=> 'COUNT(%s)',
+		'defaultValue'	=> 'DEFAULT %s',
+		'engine'		=> 'ENGINE',
 		'foreignKey'	=> 'FOREIGN KEY (%s) REFERENCES %s(%s)',
 		'groupBy'		=> 'GROUP BY %s',
 		'having'		=> 'HAVING %s',
 		'in'			=> '%s IN (%s)',
 		'indexKey'		=> 'KEY %s (%s)',
+		'isNull'		=> '%s IS NULL',
+		'isNotNull'		=> '%s IS NOT NULL',
 		'limit'			=> 'LIMIT %s',
 		'limitOffset'	=> 'LIMIT %s,%s',
 		'noAction'		=> 'NO ACTION',
 		'not'			=> '%s NOT ?',
 		'notBetween'	=> '%s NOT BETWEEN ? AND ?',
 		'notIn'			=> '%s NOT IN (%s)',
-		'notNull'		=> '%s IS NOT NULL',
-		'null'			=> '%s IS NULL',
+		'notNull'		=> 'NOT NULL',
+		'null'			=> 'NULL',
 		'onDelete'		=> 'ON DELETE %s',
 		'onUpdate'		=> 'ON UPDATE %s',
 		'or'			=> 'OR',
@@ -67,7 +74,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'setNull'		=> 'SET NULL',
 		'where'			=> 'WHERE %s',
 		'uniqueKey'		=> 'UNIQUE KEY %s (%s)',
-		'valueGroup'	=> '(%s)'
+		'unsigned'		=> 'UNSIGNED',
+		'valueGroup'	=> '(%s)',
+		'zerofill'		=> 'ZEROFILL'
 	];
 
 	/**
@@ -90,7 +99,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		Query::TRUNCATE		=> 'TRUNCATE {table}',
 		Query::DESCRIBE		=> 'DESCRIBE {table}',
 		Query::DROP_TABLE	=> 'DROP TABLE {table}',
-		Query::CREATE_TABLE	=> "CREATE TABLE {table} (\n{columns}{keys}\n) {params}"
+		Query::CREATE_TABLE	=> "CREATE TABLE {table} (\n{columns}{keys}\n) {options}"
 	];
 
 	/**
@@ -122,7 +131,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'table' => $this->formatTable($schema->getTable()),
 			'columns' => $this->formatColumns($schema),
 			'keys' => $this->formatTableKeys($schema),
-			'params' => '' // TODO
+			'options' => $this->formatTableOptions($query->getAttributes())
 		]);
 	}
 
@@ -291,18 +300,27 @@ abstract class AbstractDialect extends Base implements Dialect {
 			}
 
 			$output = [$this->quote($column), $type];
-			$output[] = $options['null'] ? 'NULL' : 'NOT NULL';
+
+			if (!empty($options['unsigned'])) {
+				$output[] = $this->getClause('unsigned');
+			}
+
+			if (!empty($options['zerofill'])) {
+				$output[] = $this->getClause('zerofill');
+			}
+
+			$output[] = $this->getClause($options['null'] ? 'null' : 'notNull');
 
 			if ($options['default']) {
-				$output[] = 'DEFAULT ' . $options['default'];
+				$output[] = sprintf($this->getClause('defaultValue'), $options['default']);
 			}
 
 			if ($options['ai']) {
-				$output[] = 'AUTO_INCREMENT';
+				$output[] = $this->getClause('autoIncrement');
 			}
 
 			if ($options['comment']) {
-				$output[] = sprintf("COMMENT '%s'", addslashes(substr($options['comment'], 0, 255)));
+				$output[] = sprintf($this->getClause('comment'), $this->getDriver()->getConnection()->quote(substr($options['comment'], 0, 255)));
 			}
 
 			$columns[] = implode(' ', $output);
@@ -475,6 +493,29 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Format the table options for a create table statement.
+	 *
+	 * @param array $attributes
+	 * @return string
+	 */
+	public function formatTableOptions(array $attributes) {
+		$output = [];
+		$connection = $this->getDriver()->getConnection();
+
+		if (!empty($attributes['engine'])) {
+			$output[] = $this->getClause('engine') . '=' . $attributes['engine'];
+		}
+
+		unset($attributes['engine']);
+
+		foreach ($attributes as $key => $value) {
+			$output[] = $this->getClause($key) . '=' . $connection->quote($value);
+		}
+
+		return implode(' ', $output);
 	}
 
 	/**

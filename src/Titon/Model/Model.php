@@ -105,6 +105,66 @@ class Model extends Base {
 	}
 
 	/**
+	 * Insert data into the database as a new record.
+	 * If any related data exists, insert new records after joining them to the original record.
+	 * Validate schema data and related data structure before inserting.
+	 *
+	 * // TODO atomic checks, transaction for related
+	 *
+	 * @param array $data
+	 * @return int The record ID on success, 0 on failure
+	 */
+	public function create(array $data) {
+		$data = $this->preSave($data);
+
+		if (!$data) {
+			return 0;
+		}
+
+		$this->_validateRelationData($data);
+
+		// Filter the data
+		$relatedData = $this->_extractRelationData($data);
+		$data = array_intersect_key($data, $this->getSchema()->getColumns());
+
+		// Insert the record
+		$count = $this->query(Query::INSERT)->fields($data)->save();
+
+		if (!$count) {
+			return 0;
+		}
+
+		$id = $this->getDriver()->getLastInsertID();
+		$this->data = $data;
+
+		// Upsert related data
+		$this->upsertRelations($id, $relatedData);
+
+		$this->postSave($id, true);
+
+		return $id;
+	}
+
+	/**
+	 * Create a database table based off the models schema.
+	 * The schema must be an array of column data.
+	 *
+	 * @param array $attributes
+	 * @return bool
+	 */
+	public function createTable(array $attributes = []) {
+		$attributes = $attributes + [
+			'engine' => 'InnoDB',
+			'characterSet' => $this->getDriver()->getEncoding()
+		];
+
+		return (bool) $this->query(Query::CREATE_TABLE)
+			->schema($this->getSchema())
+			->attribute($attributes)
+			->save();
+	}
+
+	/**
 	 * Delete a record by ID. If $cascade is true, delete all related records.
 	 *
 	 * @param int|array $id
@@ -494,7 +554,7 @@ class Model extends Base {
 			$columns = $this->_schema;
 
 		// Inspect database for columns
-		// This approach should only be for validating columns and types
+		// This approach should only be used for validating columns and types
 		} else {
 			$fields = $this->query(Query::DESCRIBE)->fetchAll(false);
 			$columns = [];
@@ -547,47 +607,6 @@ class Model extends Base {
 	 */
 	public function getTablePrefix() {
 		return $this->config->prefix;
-	}
-
-	/**
-	 * Insert data into the database as a new record.
-	 * If any related data exists, insert new records after joining them to the original record.
-	 * Validate schema data and related data structure before inserting.
-	 *
-	 * // TODO atomic checks, transaction for related
-	 *
-	 * @param array $data
-	 * @return int The record ID on success, 0 on failure
-	 */
-	public function insert(array $data) {
-		$data = $this->preSave($data);
-
-		if (!$data) {
-			return 0;
-		}
-
-		$this->_validateRelationData($data);
-
-		// Filter the data
-		$relatedData = $this->_extractRelationData($data);
-		$data = array_intersect_key($data, $this->getSchema()->getColumns());
-
-		// Insert the record
-		$count = $this->query(Query::INSERT)->fields($data)->save();
-
-		if (!$count) {
-			return 0;
-		}
-
-		$id = $this->getDriver()->getLastInsertID();
-		$this->data = $data;
-
-		// Upsert related data
-		$this->upsertRelations($id, $relatedData);
-
-		$this->postSave($id, true);
-
-		return $id;
 	}
 
 	/**
@@ -666,6 +685,16 @@ class Model extends Base {
 		$query->from($this->getTable());
 
 		return $query;
+	}
+
+	/**
+	 * Fetch a single record by ID.
+	 *
+	 * @param int $id
+	 * @return \Titon\Model\Entity
+	 */
+	public function read($id) {
+		return $this->select()->where($this->getPrimaryKey(), $id)->fetch();
 	}
 
 	/**
@@ -761,7 +790,7 @@ class Model extends Base {
 
 		// Or insert
 		} else {
-			$id = $this->insert($data);
+			$id = $this->create($data);
 		}
 
 		return $id;

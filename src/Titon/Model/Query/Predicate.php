@@ -24,8 +24,8 @@ class Predicate implements Serializable, JsonSerializable {
 	const EITHER = 'or';
 
 	// Special operators
-	const NULL = 'null';
-	const NOT_NULL = 'notNull';
+	const NULL = 'isNull';
+	const NOT_NULL = 'isNotNull';
 	const IN = 'in';
 	const NOT_IN = 'notIn';
 	const BETWEEN = 'between';
