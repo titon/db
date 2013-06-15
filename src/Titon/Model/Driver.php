@@ -96,6 +96,13 @@ interface Driver {
 	public function getStorage();
 
 	/**
+	 * Return an array of supported types and the class name that represents it.
+	 *
+	 * @return array
+	 */
+	public function getSupportedTypes();
+
+	/**
 	 * Return true if connected to the driver.
 	 *
 	 * @return bool

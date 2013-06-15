@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Dialect;
 
 use Titon\Common\Base;
+use Titon\Common\Registry;
 use Titon\Model\Driver;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
@@ -282,14 +283,26 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 *
 	 * @param \Titon\Model\Driver\Schema $schema
 	 * @return string
+	 * @throws \Titon\Model\Exception
 	 */
 	public function formatColumns(Schema $schema) {
 		$columns = [];
+		$types = $this->getDriver()->getSupportedTypes();
 
 		foreach ($schema->getColumns() as $column => $options) {
-			$type = strtoupper($options['type']);
+			$type = $options['type'];
 
-			if ($options['length']) {
+			if (empty($types[$type])) {
+				throw new Exception(sprintf('Unsupported data type %s for %s', $type, get_class($this->getDriver())));
+			}
+
+			/** @type \Titon\Model\Driver\Type $dataType */
+			$dataType = Registry::factory($types[$type]);
+
+			$type = strtoupper($dataType->getDriverType());
+			$options = $options + $dataType->getDefaultOptions();
+
+			if (!empty($options['length'])) {
 				$type .= '(' . $options['length'] . ')';
 			}
 
@@ -303,17 +316,17 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$output[] = $this->getClause('zerofill');
 			}
 
-			$output[] = $this->getClause($options['null'] ? 'null' : 'notNull');
+			$output[] = $this->getClause(empty($options['null']) ? 'notNull' : 'null');
 
-			if ($options['default']) {
+			if (!empty($options['default'])) {
 				$output[] = sprintf($this->getClause('defaultValue'), $options['default']);
 			}
 
-			if ($options['ai']) {
+			if (!empty($options['ai'])) {
 				$output[] = $this->getClause('autoIncrement');
 			}
 
-			if ($options['comment']) {
+			if (!empty($options['comment'])) {
 				$output[] = sprintf($this->getClause('comment'), $this->getDriver()->getConnection()->quote(substr($options['comment'], 0, 255)));
 			}
 

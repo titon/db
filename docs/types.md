@@ -17,7 +17,7 @@ No value means the driver doesn't support that type.
 tinyint			~
 smallint		~				~
 mediumint		~
-int				~				integer			integer
+int				integer			integer			integer
 bigint			~				~
 
 decimal			~				~
@@ -55,8 +55,7 @@ and the type used by each driver.
 				MySQL			PostgreSQL		SQLite
 
 smallint		smallint		smallint		integer
-mediumint		mediumint		integer			integer
-int				int				integer			integer
+int				integer			integer			integer
 bigint			bigint			bigint			integer
 
 decimal			decimal			decimal			real
@@ -70,7 +69,7 @@ time			time			time			text
 year			year(4)			smallint		text
 
 char			char			char			text
-varchar			varchar			varchar			text
+string			varchar			varchar			text
 
 blob			blob			bytea			blob
 text			text			text			text

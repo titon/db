@@ -86,7 +86,18 @@ class Schema {
 	 * Add a column to the table schema.
 	 *
 	 * @param string $column
-	 * @param array $options
+	 * @param array $options {
+	 * 		@type string $type		The column data type (one of Titon\Model\Driver\Type)
+	 * 		@type int $length		The column data length
+	 * 		@type mixed $default	The default value
+	 * 		@type string $comment	The comment
+	 * 		@type bool $null		Does the column allow nulls
+	 * 		@type bool $ai			Is this an auto incrementing column
+	 * 		@type mixed $index		Is this an index
+	 * 		@type mixed $primary	Is this a primary key
+	 * 		@type mixed $unique		Is this a unique key
+	 * 		@type mixed $foreign	Is this a foreign key
+	 * }
 	 * @return \Titon\Model\Driver\Schema
 	 */
 	public function addColumn($column, array $options) {
@@ -104,7 +115,7 @@ class Schema {
 			'foreign' => false		// [CONSTRAINT symbol] FOREIGN KEY (field) REFERENCES table(field) [ON DELETE CASCADE, etc]
 		];
 
-		$this->_columns[$column] = $options;
+		$this->_columns[$column] = array_filter($options);
 
 		if ($options['index']) {
 			$this->addIndex($column, $options['index']);

@@ -310,7 +310,10 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * @return int
 	 */
 	public function resolveType($value) {
-		if ($value === null) {
+		if ($value instanceof Type) {
+			return $value->getBindingType();
+
+		} else if ($value === null) {
 			$type = PDO::PARAM_NULL;
 
 		} else if (is_numeric($value)) {
