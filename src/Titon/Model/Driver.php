@@ -7,6 +7,7 @@
 
 namespace Titon\Model;
 
+use Psr\Log\LoggerInterface;
 use Titon\Cache\Storage;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Query;
@@ -80,6 +81,13 @@ interface Driver {
 	public function getLoggedQueries();
 
 	/**
+	 * Return the logger.
+	 *
+	 * @return \Psr\Log\LoggerInterface
+	 */
+	public function getLogger();
+
+	/**
 	 * Return the storage engine.
 	 *
 	 * @return \Titon\Cache\Storage
@@ -142,6 +150,14 @@ interface Driver {
 	 * @return \Titon\Model\Driver
 	 */
 	public function setDialect(Dialect $dialect);
+
+	/**
+	 * Set the logger for query logging.
+	 *
+	 * @param \Psr\Log\LoggerInterface $logger
+	 * @return \Titon\Model\Driver
+	 */
+	public function setLogger(LoggerInterface $logger);
 
 	/**
 	 * Set the storage engine for query caching.

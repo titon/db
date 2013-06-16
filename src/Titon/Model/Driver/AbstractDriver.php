@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver;
 
+use Psr\Log\LoggerInterface;
 use Titon\Common\Base;
 use Titon\Cache\Storage;
 use Titon\Model\Driver;
@@ -57,6 +58,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	 * @type \Titon\Model\Driver\Dialect
 	 */
 	protected $_dialect;
+
+	/**
+	 * Logger object instance.
+	 *
+	 * @type \Psr\Log\LoggerInterface
+	 */
+	protected $_logger;
 
 	/**
 	 * Logged query statements and bound parameters.
@@ -148,6 +156,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	/**
 	 * {@inheritdoc}
 	 */
+	public function getLogger() {
+		return $this->_logger;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
 	public function getStorage() {
 		return $this->_storage;
 	}
@@ -172,6 +187,11 @@ abstract class AbstractDriver extends Base implements Driver {
 	public function logQuery(Log $log) {
 		$this->_logs[] = $log;
 
+		// Cast the SQL to string and log it
+		if ($logger = $this->getLogger()) {
+			$logger->debug((string) $log);
+		}
+
 		return $this;
 	}
 
@@ -180,6 +200,15 @@ abstract class AbstractDriver extends Base implements Driver {
 	 */
 	public function setDialect(Dialect $dialect) {
 		$this->_dialect = $dialect;
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function setLogger(LoggerInterface $logger) {
+		$this->_logger = $logger;
 
 		return $this;
 	}
