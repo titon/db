@@ -1,7 +1,17 @@
 <?php
+/**
+ * @copyright	Copyright 2010-2013, The Titon Project
+ * @license		http://opensource.org/licenses/bsd-license.php
+ * @link		http://titon.io
+ */
 
 namespace Titon\Model\Driver\Type;
 
+/**
+ * Represents a "VARCHAR" data type.
+ *
+ * @package Titon\Model\Driver\Type
+ */
 class StringType extends CharType {
 
 	/**
