@@ -7,6 +7,8 @@
 
 namespace Titon\Model\Driver;
 
+use Titon\Model\Driver;
+
 /**
  * Represents a database column type.
  *
@@ -15,7 +17,6 @@ namespace Titon\Model\Driver;
 interface Type {
 
 	const INT = 'int';
-	const SMALLINT = 'smallint';
 	const BIGINT = 'bigint';
 	const FLOAT = 'float';
 	const DOUBLE = 'double';
@@ -29,6 +30,15 @@ interface Type {
 	const STRING = 'string';
 	const TEXT = 'text';
 	const BLOB = 'blob';
+
+	/**
+	 * Instantiate a new type object based off the column type and list of supported types.
+	 *
+	 * @param string $type
+	 * @param \Titon\Model\Driver $driver
+	 * @return \Titon\Model\Driver\Type
+	 */
+	public static function factory($type, Driver $driver);
 
 	/**
 	 * Convert the value after it leaves the database and enters the codebase.
@@ -51,13 +61,6 @@ interface Type {
 	 * @return array
 	 */
 	public function getDefaultOptions();
-
-	/**
-	 * Return the driver data type name for this type.
-	 *
-	 * @return string
-	 */
-	public function getDriverType();
 
 	/**
 	 * Return the type name.

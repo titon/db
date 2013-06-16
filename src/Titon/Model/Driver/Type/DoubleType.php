@@ -14,13 +14,6 @@ class DoubleType extends AbstractType {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getDriverType() {
-		return 'double';
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
 	public function getName() {
 		return self::DOUBLE;
 	}

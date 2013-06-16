@@ -155,29 +155,6 @@ abstract class AbstractDriver extends Base implements Driver {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getSupportedTypes() {
-		return [
-			Type::INT => 'Titon\Model\Driver\Type\IntType',
-			Type::SMALLINT => 'Titon\Model\Driver\Type\SmallintType',
-			Type::BIGINT => 'Titon\Model\Driver\Type\BigintType',
-			Type::FLOAT => 'Titon\Model\Driver\Type\FloatType',
-			Type::DOUBLE => 'Titon\Model\Driver\Type\DoubleType',
-			Type::DECIMAL => 'Titon\Model\Driver\Type\DecimalType',
-			Type::BOOLEAN => 'Titon\Model\Driver\Type\BooleanType',
-			Type::DATE => 'Titon\Model\Driver\Type\DateType',
-			Type::TIME => 'Titon\Model\Driver\Type\TimeType',
-			Type::DATETIME => 'Titon\Model\Driver\Type\DatetimeType',
-			Type::YEAR => 'Titon\Model\Driver\Type\YearType',
-			Type::CHAR => 'Titon\Model\Driver\Type\CharType',
-			Type::STRING => 'Titon\Model\Driver\Type\StringType',
-			Type::TEXT => 'Titon\Model\Driver\Type\TextType',
-			Type::BLOB => 'Titon\Model\Driver\Type\BlogType',
-		];
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
 	public function isConnected() {
 		return $this->_connected;
 	}

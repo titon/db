@@ -2,13 +2,13 @@
 
 namespace Titon\Model\Driver\Type;
 
-class Bigint extends IntType {
+class BigintType extends AbstractType {
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getDriverType() {
-		return 'bigint';
+	public function from($value) {
+		return (string) $value;
 	}
 
 	/**
@@ -16,6 +16,13 @@ class Bigint extends IntType {
 	 */
 	public function getName() {
 		return self::BIGINT;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function to($value) {
+		return (string) $value;
 	}
 
 }

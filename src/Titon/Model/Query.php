@@ -288,7 +288,7 @@ class Query implements Serializable, JsonSerializable {
 			$fields = $fields[0];
 		}
 
-		$this->_fields = array_unique($fields);
+		$this->_fields = $fields;
 
 		return $this;
 	}

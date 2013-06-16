@@ -100,7 +100,11 @@ class Schema {
 	 * }
 	 * @return \Titon\Model\Driver\Schema
 	 */
-	public function addColumn($column, array $options) {
+	public function addColumn($column, $options) {
+		if (is_string($options)) {
+			$options = ['type' => $options];
+		}
+
 		$options = $options + [
 			'field' => $column,
 			'type' => '',

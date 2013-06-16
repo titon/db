@@ -16,13 +16,6 @@ class TextType extends AbstractType {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getDriverType() {
-		return 'text';
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
 	public function getName() {
 		return self::TEXT;
 	}

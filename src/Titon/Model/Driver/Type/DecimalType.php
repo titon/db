@@ -14,13 +14,6 @@ class DecimalType extends FloatType {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getDriverType() {
-		return 'decimal';
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
 	public function getName() {
 		return self::DECIMAL;
 	}

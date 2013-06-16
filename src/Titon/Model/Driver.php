@@ -20,15 +20,6 @@ use Titon\Model\Query\Log;
 interface Driver {
 
 	/**
-	 * Build an SQL statement based off the current query parameters.
-	 * Binds any necessary values to the statement.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return mixed
-	 */
-	public function buildStatement(Query $query);
-
-	/**
 	 * Connect to the driver.
 	 */
 	public function connect();

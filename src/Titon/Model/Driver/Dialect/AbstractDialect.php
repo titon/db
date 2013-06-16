@@ -636,7 +636,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * {@inheritdoc}
 	 */
 	public function renderStatement($statement, array $params) {
-		return trim(String::insert($statement, $params, ['escape' => false])) . ';';
+		$statement = trim(String::insert($statement, $params, ['escape' => false])) . ';';
+
+		return $statement;
 	}
 
 	/**

@@ -23,13 +23,6 @@ class BooleanType extends AbstractType {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getDriverType() {
-		return 'boolean';
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
 	public function getName() {
 		return self::BOOLEAN;
 	}

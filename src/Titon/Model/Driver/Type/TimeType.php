@@ -10,26 +10,13 @@ class TimeType extends DateType {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getDriverType() {
-		return 'time';
-	}
+	public $format = 'H:i:s';
 
 	/**
 	 * {@inheritdoc}
 	 */
 	public function getName() {
 		return self::TIME;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function to($value) {
-		if ($value instanceof DateTime) {
-			return $value->format('H:i:s');
-		}
-
-		return date('H:i:s', Time::toUnix($value));
 	}
 
 }

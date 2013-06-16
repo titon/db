@@ -106,6 +106,12 @@ class PdoLog implements Log {
 		foreach ($this->getParams() as $param) {
 			if (!$param) {
 				$param = 0;
+			} else if (is_array($param)) {
+				$param = $param[0];
+			}
+
+			if (!is_numeric($param)) {
+				$param = "'" . $param . "'";
 			}
 
 			$statement = preg_replace('/\?/', (string) $param, $statement, 1);

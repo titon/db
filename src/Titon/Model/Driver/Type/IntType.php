@@ -23,13 +23,6 @@ class IntType extends AbstractType {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getDriverType() {
-		return 'integer';
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
 	public function getName() {
 		return self::INT;
 	}

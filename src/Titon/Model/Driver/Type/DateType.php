@@ -8,17 +8,17 @@ use \DateTime;
 class DateType extends AbstractType {
 
 	/**
-	 * {@inheritdoc}
+	 * The timestamp format to use.
+	 *
+	 * @type string
 	 */
-	public function getDefaultOptions() {
-		return ['null' => true, 'default' => null];
-	}
+	public $format = 'Y-m-d';
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getDriverType() {
-		return 'date';
+	public function getDefaultOptions() {
+		return ['null' => true, 'default' => null];
 	}
 
 	/**
@@ -33,10 +33,10 @@ class DateType extends AbstractType {
 	 */
 	public function to($value) {
 		if ($value instanceof DateTime) {
-			return $value->format('Y-m-d');
+			return $value->format($this->format);
 		}
 
-		return date('Y-m-d', Time::toUnix($value));
+		return date($this->format, Time::toUnix($value));
 	}
 
 }

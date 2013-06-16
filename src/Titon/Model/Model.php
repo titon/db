@@ -12,8 +12,9 @@ use Titon\Common\Registry;
 use Titon\Common\Traits\Attachable;
 use Titon\Common\Traits\Cacheable;
 use Titon\Common\Traits\Instanceable;
-use Titon\Model\Query;
 use Titon\Model\Driver\Schema;
+use Titon\Model\Driver\Type\AbstractType;
+use Titon\Model\Query;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
 
@@ -561,16 +562,20 @@ class Model extends Base {
 
 			foreach ($fields as $field) {
 				$column = [];
-				$column['null'] = ($field['Null'] === 'YES');
-				$column['default'] = $field['Default'];
 
 				if (preg_match('/([a-z]+)(?:\(([0-9]+)\))?/is', $field['Type'], $matches)) {
-					$column['type'] = $matches[1];
+					$column['type'] = strtolower($matches[1]);
 
 					if (isset($matches[2])) {
 						$column['length'] = $matches[2];
 					}
 				}
+
+				$dataType = AbstractType::factory($column['type'], $this->getDriver());
+
+				$column = $dataType->getDefaultOptions() + $column;
+				$column['null'] = ($field['Null'] === 'YES');
+				$column['default'] = $field['Default'];
 
 				switch (strtolower($field['Key'])) {
 					case 'pri': $column['primary'] = true; break;
