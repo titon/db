@@ -7,13 +7,14 @@
 
 namespace Titon\Model\Driver;
 
-use Titon\Model\Query;
 use Titon\Model\Exception;
+use Titon\Model\Driver\AbstractDriver;
+use Titon\Model\Driver\Type\AbstractType;
+use Titon\Model\Query;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Query\Log;
 use Titon\Model\Query\Log\PdoLog;
 use Titon\Model\Query\Result\PdoResult;
-use Titon\Model\Driver\AbstractDriver;
 use Titon\Utility\String;
 use \PDO;
 use \PDOStatement;
@@ -24,6 +25,7 @@ use \PDOStatement;
  * @link http://php.net/manual/en/pdo.drivers.php
  *
  * @package Titon\Model\Driver
+ * @method \PDO getConnection()
  */
 abstract class AbstractPdoDriver extends AbstractDriver {
 
@@ -71,15 +73,14 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			throw new Exception(sprintf('Query statement %s does not exist or has not been implemented', $type));
 		}
 
-		/** @type \PDOStatement $statement */
 		$statement = $this->getConnection()->prepare(call_user_func([$dialect, $method], $query));
-		$binds = $this->resolveBinds($query);
+		$params = $this->resolveParams($query);
 
-		foreach ($binds as $i => $value) {
-			$statement->bindValue($i + 1, $value, $this->resolveType($value));
+		foreach ($params as $i => $value) {
+			$statement->bindValue($i + 1, $value[0], $value[1]);
 		}
 
-		$statement->params = $binds;
+		$statement->params = $params;
 
 		return $statement;
 	}
@@ -268,19 +269,24 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * @param \Titon\Model\Query $query
 	 * @return array
 	 */
-	public function resolveBinds(Query $query) {
+	public function resolveParams(Query $query) {
 		$binds = [];
 		$type = $query->getType();
 
 		// Grab the values from insert and update queries
 		if ($type === Query::INSERT || $type === Query::UPDATE) {
-			foreach ($query->getFields() as $value) {
-				$binds[] = $value;
+			$schema = $query->getSchema()->getColumns();
+
+			foreach ($query->getFields() as $field => $value) {
+				$dataType = AbstractType::factory($schema[$field]['type'], $this);
+
+				$binds[] = [$dataType->to($value), $dataType->getBindingType()];
 			}
 		}
 
 		// Grab values from the where and having predicate
-		$resolvePredicate = function(Predicate $predicate) use (&$resolvePredicate, &$binds) {
+		$driver = $this;
+		$resolvePredicate = function(Predicate $predicate) use (&$resolvePredicate, &$binds, $driver) {
 			foreach ($predicate->getParams() as $param) {
 				if ($param instanceof Predicate) {
 					$resolvePredicate($param);
@@ -288,10 +294,10 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 				} else {
 					if (is_array($param['value'])) {
 						foreach ($param['value'] as $value) {
-							$binds[] = $value;
+							$binds[] = [$value, $driver->resolveType($value)];
 						}
 					} else {
-						$binds[] = $param['value'];
+						$binds[] = [$param['value'], $driver->resolveType($param['value'])];
 					}
 				}
 			}
@@ -310,15 +316,12 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * @return int
 	 */
 	public function resolveType($value) {
-		if ($value instanceof Type) {
-			return $value->getBindingType();
-
-		} else if ($value === null) {
+		if ($value === null) {
 			$type = PDO::PARAM_NULL;
 
 		} else if (is_numeric($value)) {
-			if (is_float($value) || is_float(floatval($value))) {
-				$type = PDO::PARAM_STR; // Floats use string type
+			if (is_float($value) || is_double($value)) {
+				$type = PDO::PARAM_STR; // Uses string type
 
 			} else {
 				$type = PDO::PARAM_INT;

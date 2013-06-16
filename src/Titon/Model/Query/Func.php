@@ -8,6 +8,7 @@
 namespace Titon\Model\Query;
 
 use Titon\Model\Driver;
+use Titon\Model\Traits\DriverAware;
 
 /**
  * The Func class represents an SQL function with optional arguments.
@@ -33,16 +34,10 @@ use Titon\Model\Driver;
  * @package Titon\Model\Query
  */
 class Func {
+	use DriverAware;
 
 	const FIELD = 'field';
 	const LITERAL = 'literal';
-
-	/**
-	 * Driver object instance.
-	 *
-	 * @type \Titon\Model\Driver
-	 */
-	protected $_driver;
 
 	/**
 	 * Name of the function.
@@ -120,15 +115,6 @@ class Func {
 	}
 
 	/**
-	 * Return the driver.
-	 *
-	 * @return \Titon\Model\Driver
-	 */
-	public function getDriver() {
-		return $this->_driver;
-	}
-
-	/**
 	 * Return the function name.
 	 *
 	 * @return string
@@ -175,18 +161,6 @@ class Func {
 	 */
 	public function getSeparator() {
 		return $this->_separator;
-	}
-
-	/**
-	 * Set the driver.
-	 *
-	 * @param \Titon\Model\Driver $driver
-	 * @return \Titon\Model\Query\Func
-	 */
-	public function setDriver(Driver $driver) {
-		$this->_driver = $driver;
-
-		return $this;
 	}
 
 	/**

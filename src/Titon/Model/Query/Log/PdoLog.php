@@ -7,43 +7,15 @@
 
 namespace Titon\Model\Query\Log;
 
-use Titon\Model\Query\Log;
+use \PDO;
 use \PDOStatement;
 
 /**
- * Provides query logging for PDO.
+ * Provides query logging for PDO. The log will accept the PDOStatement as an argument and introspect the values from it.
  *
  * @package Titon\Model\Query\Log
  */
-class PdoLog implements Log {
-
-	/**
-	 * Affected row count.
-	 *
-	 * @type int
-	 */
-	protected $_count = 0;
-
-	/**
-	 * Execution time in milliseconds.
-	 *
-	 * @type int
-	 */
-	protected $_time = 0;
-
-	/**
-	 * Bound parameters.
-	 *
-	 * @type array
-	 */
-	protected $_params = [];
-
-	/**
-	 * The SQL statement.
-	 *
-	 * @type string
-	 */
-	protected $_statement;
+class PdoLog extends AbstractLog {
 
 	/**
 	 * Introspect all query logging values from the PDOStatement.
@@ -64,57 +36,20 @@ class PdoLog implements Log {
 	}
 
 	/**
-	 * Return all logged values.
-	 *
-	 * @return string
-	 */
-	public function __toString() {
-		return sprintf('%s %s %s',
-			'[SQL] ' . $this->getStatement(),
-			'[TIME] ' . $this->getExecutionTime(),
-			'[COUNT] ' . $this->getRowCount()
-		);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getExecutionTime() {
-		return $this->_time;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getParams() {
-		return $this->_params;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getRowCount() {
-		return $this->_count;
-	}
-
-	/**
 	 * {@inheritdoc}
 	 */
 	public function getStatement() {
-		$statement = preg_replace("/ {2,}/", " ", $this->_statement); // Trim spaces
+		$statement = preg_replace("/ {2,}/", " ", parent::getStatement()); // Trim spaces
 
 		foreach ($this->getParams() as $param) {
-			if (!$param) {
-				$param = 0;
-			} else if (is_array($param)) {
-				$param = $param[0];
+			switch ($param[1]) {
+				case PDO::PARAM_NULL:	$value = 'null'; break;
+				case PDO::PARAM_INT:	$value = (int) $param[0]; break;
+				case PDO::PARAM_BOOL:	$value = (bool) $param[0]; break;
+				default: 				$value = "'" . (string) $param[0] . "'"; break;
 			}
 
-			if (!is_numeric($param)) {
-				$param = "'" . $param . "'";
-			}
-
-			$statement = preg_replace('/\?/', (string) $param, $statement, 1);
+			$statement = preg_replace('/\?/', $value, $statement, 1);
 		}
 
 		return $statement;

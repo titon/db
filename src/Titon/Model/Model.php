@@ -928,8 +928,21 @@ class Model extends Base {
 			return [];
 		}
 
-		// Apply relations before postFetch()
+		// Apply relations and type casting before postFetch()
+		$schema = $this->getSchema()->getColumns();
+		$isSelect = ($query->getType() === Query::SELECT);
+
 		foreach ($results as $i => $result) {
+
+			// Only type cast on results from a select query
+			if ($isSelect) {
+				foreach ($result as $field => $value) {
+					if (isset($schema[$field])) {
+						$result[$field] = AbstractType::factory($schema[$field]['type'], $this->getDriver())->from($value);
+					}
+				}
+			}
+
 			$results[$i] = $this->fetchRelations($query, $result, $wrap);
 		}
 

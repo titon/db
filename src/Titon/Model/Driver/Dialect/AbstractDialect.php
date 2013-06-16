@@ -12,10 +12,12 @@ use Titon\Common\Registry;
 use Titon\Model\Driver;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
+use Titon\Model\Driver\Type\AbstractType;
 use Titon\Model\Exception;
 use Titon\Model\Query;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
+use Titon\Model\Traits\DriverAware;
 use Titon\Utility\String;
 
 /**
@@ -24,6 +26,7 @@ use Titon\Utility\String;
  * @package Titon\Model\Driver\Dialect
  */
 abstract class AbstractDialect extends Base implements Dialect {
+	use DriverAware;
 
 	/**
 	 * Configuration.
@@ -80,13 +83,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'valueGroup'	=> '(%s)',
 		'zerofill'		=> 'ZEROFILL'
 	];
-
-	/**
-	 * The parent driver class.
-	 *
-	 * @type \Titon\Model\Driver
-	 */
-	protected $_driver;
 
 	/**
 	 * List of full SQL statements.
@@ -287,19 +283,11 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatColumns(Schema $schema) {
 		$columns = [];
-		$types = $this->getDriver()->getSupportedTypes();
 
 		foreach ($schema->getColumns() as $column => $options) {
 			$type = $options['type'];
+			$dataType = AbstractType::factory($type, $this->getDriver());
 
-			if (empty($types[$type])) {
-				throw new Exception(sprintf('Unsupported data type %s for %s', $type, get_class($this->getDriver())));
-			}
-
-			/** @type \Titon\Model\Driver\Type $dataType */
-			$dataType = Registry::factory($types[$type]);
-
-			$type = strtoupper($dataType->getDriverType());
 			$options = $options + $dataType->getDefaultOptions();
 
 			if (!empty($options['length'])) {
@@ -591,13 +579,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getDriver() {
-		return $this->_driver;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
 	public function getStatement($key) {
 		if (isset($this->_statements[$key])) {
 			return $this->_statements[$key];
@@ -639,15 +620,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 		$statement = trim(String::insert($statement, $params, ['escape' => false])) . ';';
 
 		return $statement;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function setDriver(Driver $driver) {
-		$this->_driver = $driver;
-
-		return $this;
 	}
 
 }
