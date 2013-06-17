@@ -6,7 +6,7 @@ php:
 
 before_script:
   - mysql -e 'CREATE DATABASE titon_test;'
-  - composer update
+  - composer selfupdate
   - composer install
 
 notifications:
