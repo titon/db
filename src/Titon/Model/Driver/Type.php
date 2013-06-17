@@ -18,6 +18,8 @@ interface Type {
 
 	const INT = 'int';
 	const BIGINT = 'bigint';
+	const SERIAL = 'serial';
+	const BINARY = 'binary';
 	const FLOAT = 'float';
 	const DOUBLE = 'double';
 	const DECIMAL = 'decimal';
