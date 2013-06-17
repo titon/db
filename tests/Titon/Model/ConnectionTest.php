@@ -7,7 +7,7 @@
 
 namespace Titon\Model;
 
-use Titon\Test\Stub\TestDriver;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -24,7 +24,7 @@ class ConnectionTest extends TestCase {
 		parent::setUp();
 
 		$this->object = new Connection();
-		$this->object->addDriver(new TestDriver('mysql', []));
+		$this->object->addDriver(new DriverStub('mysql', []));
 	}
 
 	/**
@@ -40,7 +40,7 @@ class ConnectionTest extends TestCase {
 			$this->assertTrue(true);
 		}
 
-		$this->object->addDriver(new TestDriver('foobar', []));
+		$this->object->addDriver(new DriverStub('foobar', []));
 		$this->assertInstanceOf('Titon\Model\Driver', $this->object->getDriver('foobar'));
 	}
 
@@ -50,7 +50,7 @@ class ConnectionTest extends TestCase {
 	public function testGetDrivers() {
 		$this->assertEquals(1, count($this->object->getDrivers()));
 
-		$this->object->addDriver(new TestDriver('foobar', []));
+		$this->object->addDriver(new DriverStub('foobar', []));
 		$this->assertEquals(2, count($this->object->getDrivers()));
 	}
 
