@@ -22,12 +22,14 @@ $loader->add('Titon\\Model', TEST_DIR);
 
 // Define database credentials
 $db = [
-	'database' => 'test',
-	'host' => 'localhost',
+	'database' => 'titon_test',
+	'host' => '127.0.0.1',
 	'user' => 'root',
 	'pass' => ''
 ];
 
 Titon\Common\Config::set('db', $db);
 
-Titon\Common\Registry::factory('Titon\Model\Connection')->addDriver(new DriverStub('default', $db));
+// Used by models
+Titon\Common\Registry::factory('Titon\Model\Connection')
+	->addDriver(new DriverStub('default', $db));
