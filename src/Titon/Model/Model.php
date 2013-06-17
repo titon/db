@@ -615,6 +615,16 @@ class Model extends Base {
 	}
 
 	/**
+	 * Check if the relation exists.
+	 *
+	 * @param string $alias
+	 * @return bool
+	 */
+	public function hasRelation($alias) {
+		return isset($this->_relations[$alias]);
+	}
+
+	/**
 	 * Callback called after a delete query.
 	 */
 	public function postDelete() {
