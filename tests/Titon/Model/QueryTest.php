@@ -8,6 +8,7 @@
 namespace Titon\Model;
 
 use Titon\Model\Query;
+use Titon\Model\Query\Predicate;
 use Titon\Test\Stub\Model\Profile;
 use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
@@ -43,6 +44,19 @@ class QueryTest extends TestCase {
 			'distinct' => true
 		]);
 		$this->assertEquals(['readonly' => false, 'distinct' => true], $this->object->getAttributes());
+	}
+
+	/**
+	 * Test that callbacks modify the query.
+	 */
+	public function testBindCallback() {
+		$this->assertEquals([], $this->object->getFields());
+
+		$this->object->bindCallback(function() {
+			$this->fields('id', 'created');
+		}, null);
+
+		$this->assertEquals(['id', 'created'], $this->object->getFields());
 	}
 
 	/**
@@ -94,12 +108,21 @@ class QueryTest extends TestCase {
 		$this->object->having('id', 1);
 		$this->assertEquals($expected, $this->object->getHaving()->getParams());
 
+		$this->assertEquals(Predicate::ALSO, $this->object->getHaving()->getType());
+
 		$expected['titlenotLike%Titon%'] = ['field' => 'title', 'value' => '%Titon%', 'op' => 'notLike'];
 
 		$this->object->having(function() {
 			$this->notLike('title', '%Titon%');
 		});
 		$this->assertEquals($expected, $this->object->getHaving()->getParams());
+
+		try {
+			$this->object->orHaving('id', 1);
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
 	}
 
 	/**
@@ -137,6 +160,58 @@ class QueryTest extends TestCase {
 	}
 
 	/**
+	 * Test that OR having clause returns params.
+	 */
+	public function testOrHaving() {
+		$expected = ['id=1' => ['field' => 'id', 'value' => 1, 'op' => '=']];
+
+		$this->object->orHaving('id', 1);
+		$this->assertEquals($expected, $this->object->getHaving()->getParams());
+
+		$this->assertEquals(Predicate::EITHER, $this->object->getHaving()->getType());
+
+		$expected['titlenotLike%Titon%'] = ['field' => 'title', 'value' => '%Titon%', 'op' => 'notLike'];
+
+		$this->object->orHaving(function() {
+			$this->notLike('title', '%Titon%');
+		});
+		$this->assertEquals($expected, $this->object->getHaving()->getParams());
+
+		try {
+			$this->object->having('id', 1);
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+	}
+
+	/**
+	 * Test that OR where clause returns params.
+	 */
+	public function testOrWhere() {
+		$expected = ['id=152' => ['field' => 'id', 'value' => 152, 'op' => '=']];
+
+		$this->object->orWhere('id', 152);
+		$this->assertEquals($expected, $this->object->getWhere()->getParams());
+
+		$this->assertEquals(Predicate::EITHER, $this->object->getWhere()->getType());
+
+		$expected['levelbetween1100'] = ['field' => 'level', 'value' => [1, 100], 'op' => 'between'];
+
+		$this->object->orWhere(function() {
+			$this->between('level', 1, 100);
+		});
+		$this->assertEquals($expected, $this->object->getWhere()->getParams());
+
+		try {
+			$this->object->where('id', 1);
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+	}
+
+	/**
 	 * Test that where clause returns params.
 	 */
 	public function testWhere() {
@@ -145,12 +220,21 @@ class QueryTest extends TestCase {
 		$this->object->where('id', 152);
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 
+		$this->assertEquals(Predicate::ALSO, $this->object->getWhere()->getType());
+
 		$expected['levelbetween1100'] = ['field' => 'level', 'value' => [1, 100], 'op' => 'between'];
 
 		$this->object->where(function() {
 			$this->between('level', 1, 100);
 		});
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
+
+		try {
+			$this->object->orWhere('id', 1);
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
 	}
 
 	/**
@@ -181,6 +265,18 @@ class QueryTest extends TestCase {
 		$query->from('profiles')->where('user_id', 1);
 
 		$this->assertEquals(['Profile' => $query], $this->object->getSubQueries());
+
+		// Test exceptions
+		try {
+			$query = new Query(Query::DELETE, new User());
+			$query->with('Profile', function() {
+
+			});
+
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
 	}
 
 }

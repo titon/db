@@ -683,6 +683,9 @@ class Query implements Serializable, JsonSerializable {
 		if ($query instanceof Query) {
 			$relatedQuery = $query;
 
+			if ($query->getType() !== self::SELECT) {
+				throw new Exception('Only select sub-queries are permitted for related data');
+			}
 		} else {
 			/** @type \Titon\Model\Query $relatedQuery */
 			$relatedQuery = $this->getModel()->getObject($alias)->select();
@@ -726,6 +729,10 @@ class Query implements Serializable, JsonSerializable {
 			$this->attribute($data['attributes']);
 		}
 
+		if ($data['cacheLength']) {
+			$this->cacheFor($data['cacheLength']);
+		}
+
 		if ($data['fields']) {
 			$this->fields($data['fields']);
 		}
@@ -767,11 +774,12 @@ class Query implements Serializable, JsonSerializable {
 	public function jsonSerialize() {
 		return [
 			'attributes' => $this->getAttributes(),
+			'cacheLength' => $this->getCacheLength(),
 			'fields' => $this->getFields(),
 			'groupBy' => $this->getGroupBy(),
 			'having' => $this->getHaving(),
 			'limit' => $this->getLimit(),
-			'model' => (string) $this->getModel(),
+			'model' => get_class($this->getModel()),
 			'offset' => $this->getOffset(),
 			'orderBy' => $this->getOrderBy(),
 			'subQueries' => $this->getSubQueries(),
