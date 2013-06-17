@@ -5,6 +5,8 @@
  * @link		http://titon.io
  */
 
+use Titon\Test\Stub\DriverStub;
+
 error_reporting(E_ALL | E_STRICT);
 
 define('TEST_DIR', __DIR__);
@@ -19,9 +21,13 @@ $loader = require VENDOR_DIR . '/autoload.php';
 $loader->add('Titon\\Model', TEST_DIR);
 
 // Define database credentials
-Titon\Common\Config::set('db', [
+$db = [
 	'database' => 'test',
 	'host' => 'localhost',
 	'user' => 'root',
 	'pass' => ''
-]);
+];
+
+Titon\Common\Config::set('db', $db);
+
+Titon\Common\Registry::factory('Titon\Model\Connection')->addDriver(new DriverStub('default', $db));

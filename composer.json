@@ -17,7 +17,7 @@
 		"titon/common": "*"
 	},
 	"require-dev": {
-		"titon/test": "*",
+		"titon/test": "dev-master",
 		"titon/cache": "*",
 		"psr/log": "*"
 	},

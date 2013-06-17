@@ -288,6 +288,10 @@ class Query implements Serializable, JsonSerializable {
 			$fields = $fields[0];
 		}
 
+		if ($this->getType() === self::SELECT) {
+			$fields = array_unique($fields);
+		}
+
 		$this->_fields = $fields;
 
 		return $this;
@@ -487,7 +491,9 @@ class Query implements Serializable, JsonSerializable {
 			throw new Exception('Having clause already created using "OR" conjunction');
 		}
 
-		$this->_having = new Predicate(Predicate::ALSO);
+		if (!$this->_having) {
+			$this->_having = new Predicate(Predicate::ALSO);
+		}
 
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
@@ -552,7 +558,9 @@ class Query implements Serializable, JsonSerializable {
 			throw new Exception('Having clause already created using "AND" conjunction');
 		}
 
-		$this->_having = new Predicate(Predicate::EITHER);
+		if (!$this->_having) {
+			$this->_having = new Predicate(Predicate::EITHER);
+		}
 
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
@@ -577,7 +585,9 @@ class Query implements Serializable, JsonSerializable {
 			throw new Exception('Where clause already created using "AND" conjunction');
 		}
 
-		$this->_where = new Predicate(Predicate::EITHER);
+		if (!$this->_where) {
+			$this->_where = new Predicate(Predicate::EITHER);
+		}
 
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);
@@ -633,7 +643,9 @@ class Query implements Serializable, JsonSerializable {
 			throw new Exception('Where clause already created using "OR" conjunction');
 		}
 
-		$this->_where = new Predicate(Predicate::ALSO);
+		if (!$this->_where) {
+			$this->_where = new Predicate(Predicate::ALSO);
+		}
 
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);

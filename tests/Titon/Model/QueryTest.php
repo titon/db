@@ -37,6 +37,12 @@ class QueryTest extends TestCase {
 
 		$this->object->attribute('readonly', true);
 		$this->assertEquals(['readonly' => true], $this->object->getAttributes());
+
+		$this->object->attribute([
+			'readonly' => false,
+			'distinct' => true
+		]);
+		$this->assertEquals(['readonly' => false, 'distinct' => true], $this->object->getAttributes());
 	}
 
 	/**
@@ -62,6 +68,13 @@ class QueryTest extends TestCase {
 	}
 
 	/**
+	 * Test that a function object is returned.
+	 */
+	public function testFunc() {
+		$this->assertInstanceOf('Titon\Model\Query\Func', $this->object->func('SUBSTRING', ['Foo', 1, 2]));
+	}
+
+	/**
 	 * Test getting and setting group by fields.
 	 */
 	public function testGroupBy() {
@@ -76,15 +89,15 @@ class QueryTest extends TestCase {
 	 * Test that having clause returns params.
 	 */
 	public function testHaving() {
-		$expected = [['field' => 'id', 'value' => 1, 'op' => '=']];
+		$expected = ['id=1' => ['field' => 'id', 'value' => 1, 'op' => '=']];
 
 		$this->object->having('id', 1);
 		$this->assertEquals($expected, $this->object->getHaving()->getParams());
 
-		$expected[] = ['field' => 'title', 'value' => '%Titon%', 'op' => 'NOT LIKE'];
+		$expected['titlenotLike%Titon%'] = ['field' => 'title', 'value' => '%Titon%', 'op' => 'notLike'];
 
 		$this->object->having(function() {
-			$this->also('title', '%Titon%', Query\Clause::NOT_LIKE);
+			$this->notLike('title', '%Titon%');
 		});
 		$this->assertEquals($expected, $this->object->getHaving()->getParams());
 	}
@@ -127,15 +140,15 @@ class QueryTest extends TestCase {
 	 * Test that where clause returns params.
 	 */
 	public function testWhere() {
-		$expected = [['field' => 'id', 'value' => 152, 'op' => '=']];
+		$expected = ['id=152' => ['field' => 'id', 'value' => 152, 'op' => '=']];
 
 		$this->object->where('id', 152);
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 
-		$expected[] = ['field' => 'level', 'value' => [1, 100], 'op' => 'BETWEEN'];
+		$expected['levelbetween1100'] = ['field' => 'level', 'value' => [1, 100], 'op' => 'between'];
 
 		$this->object->where(function() {
-			$this->also('level', [1, 100], Query\Clause::BETWEEN);
+			$this->between('level', 1, 100);
 		});
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 	}

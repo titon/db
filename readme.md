@@ -1,7 +1,7 @@
 # Model [![Build Status](https://travis-ci.org/titon/Model.png)](https://travis-ci.org/titon/Model) #
 
 The Titon model package provides a basic database abstraction layer and an object relational mapper.
-Requires the PDO extension for database connections.
+Requires the PDO extension for most database connections.
 
 ### Features ###
 
@@ -9,7 +9,7 @@ Requires the PDO extension for database connections.
 * `Relation` - Object relation mapper (ORM)
 * `Entity` - Single record of data
 * `Connection` - Driver manager
-* `Driver` - Interacts with a database or remote service
+* `Driver` - Interacts with a database or remote service (DBAL)
 	* `Dialect` - Driver specific SQL formatting
 	* `Type` - Data type mapping
 	* `Schema` - Table schema
