@@ -68,9 +68,13 @@ class Func {
 	 * @param string $separator
 	 */
 	public function __construct($name, $arguments = [], $separator = ', ') {
+		if (!is_array($arguments)) {
+			$arguments = [$arguments];
+		}
+
 		$this->_name = strtoupper($name);
 		$this->_separator = $separator;
-		$this->_arguments = (array) $arguments;
+		$this->_arguments = $arguments;
 	}
 
 	/**
@@ -144,8 +148,11 @@ class Func {
 			} else if ($type === self::LITERAL) {
 				// Do nothing
 
-			} else {
-				$arg = $this->getDriver()->escape($type);
+			} else if (is_string($arg)) {
+				$arg = $this->getDriver()->escape($arg);
+
+			} else if ($arg === null) {
+				$arg = 'null';
 			}
 
 			$arguments[] = $arg;
