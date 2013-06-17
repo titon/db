@@ -122,7 +122,7 @@ abstract class AbstractRelation extends Base implements Relation {
 	 * {@inheritdoc}
 	 */
 	public function setDependent($state) {
-		$this->config->dependent = $state;
+		$this->config->dependent = (bool) $state;
 
 		return $this;
 	}
