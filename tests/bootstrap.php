@@ -5,8 +5,6 @@
  * @link		http://titon.io
  */
 
-use Titon\Test\Stub\DriverStub;
-
 error_reporting(E_ALL | E_STRICT);
 
 define('TEST_DIR', __DIR__);
@@ -32,4 +30,4 @@ Titon\Common\Config::set('db', $db);
 
 // Used by models
 Titon\Common\Registry::factory('Titon\Model\Connection')
-	->addDriver(new DriverStub('default', $db));
+	->addDriver(new Titon\Test\Stub\DriverStub('default', $db));
