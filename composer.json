@@ -19,6 +19,7 @@
 	"require-dev": {
 		"titon/test": "dev-master",
 		"titon/cache": "*",
+		"titon/debug": "*",
 		"psr/log": "*"
 	},
 	"suggest": {

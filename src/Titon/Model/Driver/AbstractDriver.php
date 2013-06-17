@@ -113,7 +113,7 @@ abstract class AbstractDriver extends Base implements Driver {
 		$this->reset();
 
 		if ($this->isConnected()) {
-			unset($this->_connection);
+			$this->_connection = null;
 			$this->_connected = false;
 		}
 	}
