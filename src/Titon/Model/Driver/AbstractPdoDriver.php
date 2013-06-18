@@ -103,6 +103,10 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * {@inheritdoc}
 	 */
 	public function escape($value) {
+		if ($value === null) {
+			return null;
+		}
+
 		return $this->getConnection()->quote($value, $this->resolveType($value));
 	}
 
@@ -138,7 +142,10 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			} else {
 				$params[] = 'host=' . $this->getHost();
 				$params[] = 'port=' . $this->getPort();
-				$params[] = 'charset=' . $this->getEncoding();
+			}
+
+			if ($encoding = $this->getEncoding()) {
+				$params[] = 'charset=' . $encoding;
 			}
 
 			$dsn = $this->getDriver() . ':' . implode(';', $params);
@@ -275,7 +282,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 		// Grab the values from insert and update queries
 		if ($type === Query::INSERT || $type === Query::UPDATE) {
-			$schema = $query->getSchema()->getColumns();
+			$schema = $query->getModel()->getSchema()->getColumns();
 
 			foreach ($query->getFields() as $field => $value) {
 				$dataType = AbstractType::factory($schema[$field]['type'], $this);
