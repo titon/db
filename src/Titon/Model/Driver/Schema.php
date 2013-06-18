@@ -119,7 +119,9 @@ class Schema {
 			'foreign' => false		// [CONSTRAINT symbol] FOREIGN KEY (field) REFERENCES table(field) [ON DELETE CASCADE, etc]
 		];
 
-		$this->_columns[$column] = array_filter($options);
+		$this->_columns[$column] = array_filter($options, function($value) {
+			return ($value !== '' && $value !== false);
+		});
 
 		if ($options['index']) {
 			$this->addIndex($column, $options['index']);
