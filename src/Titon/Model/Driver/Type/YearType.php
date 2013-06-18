@@ -14,12 +14,19 @@ use Titon\Utility\Time;
  *
  * @package Titon\Model\Driver\Type
  */
-class YearType extends AbstractType {
+class YearType extends DateType {
 
 	/**
 	 * {@inheritdoc}
 	 */
 	public $format = 'Y';
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function from($value) {
+		return (int) $value;
+	}
 
 	/**
 	 * {@inheritdoc}

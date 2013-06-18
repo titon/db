@@ -20,7 +20,7 @@ class BinaryType extends AbstractType {
 	 * {@inheritdoc}
 	 */
 	public function from($value) {
-		return (binary) $value;
+		return pack('H*', base_convert($value, 2, 16));
 	}
 
 	/**
@@ -41,7 +41,11 @@ class BinaryType extends AbstractType {
 	 * {@inheritdoc}
 	 */
 	public function to($value) {
-		return (binary) $value;
+		if (preg_match('/^[01]+$/', $value)) {
+			return $value;
+		}
+
+		return base_convert(unpack('H*', (string) $value)[1], 16, 2);
 	}
 
 }
