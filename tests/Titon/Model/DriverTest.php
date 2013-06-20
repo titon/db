@@ -12,7 +12,7 @@ use Titon\Common\Config;
 use Titon\Debug\Logger;
 use Titon\Test\Stub\DialectStub;
 use Titon\Test\Stub\DriverStub;
-use Titon\Test\Stub\QueryLogStub;
+use Titon\Test\Stub\QueryResultStub;
 use Titon\Test\TestCase;
 
 /**
@@ -92,12 +92,12 @@ class DriverTest extends TestCase {
 	public function testLogging() {
 		$this->assertEquals([], $this->object->getLoggedQueries());
 
-		$log1 = new QueryLogStub('SELECT * FROM users');
+		$log1 = new QueryResultStub('SELECT * FROM users');
 		$this->object->logQuery($log1);
 
 		$this->assertEquals([$log1], $this->object->getLoggedQueries());
 
-		$log2 = new QueryLogStub('DELETE FROM users WHERE id = 1');
+		$log2 = new QueryResultStub('DELETE FROM users WHERE id = 1');
 		$this->object->logQuery($log2);
 
 		$this->assertEquals([$log1, $log2], $this->object->getLoggedQueries());

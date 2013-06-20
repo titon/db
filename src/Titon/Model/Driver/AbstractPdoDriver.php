@@ -12,8 +12,6 @@ use Titon\Model\Driver\AbstractDriver;
 use Titon\Model\Driver\Type\AbstractType;
 use Titon\Model\Query;
 use Titon\Model\Query\Predicate;
-use Titon\Model\Query\Log;
-use Titon\Model\Query\Log\PdoLog;
 use Titon\Model\Query\Result\PdoResult;
 use Titon\Utility\String;
 use \PDO;

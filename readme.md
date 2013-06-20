@@ -17,7 +17,6 @@ Requires the PDO extension for most database connections.
 	* `Func` - Database function builder
 	* `Predicate` - Advanced clause builder
 	* `Result` - Result set mapper
-	* `Log` - Query logging
 
 ### Dependencies ###
 
