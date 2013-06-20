@@ -214,7 +214,6 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	public function query($query) {
 		$storage = $this->getStorage();
 		$cacheLength = null;
-		$startTime = microtime();
 
 		// Check the cache first
 		if ($query instanceof Query) {
@@ -234,25 +233,18 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			}
 		}
 
-		// Execute query
+		// Prepare query
 		if ($query instanceof Query) {
-			$statement = $this->buildStatement($query);
-			$statement->execute();
-
+			$this->_statement = $this->buildStatement($query);
 		} else {
-			$statement = $this->getConnection()->query($query);
+			$this->_statement = $this->getConnection()->prepare($query);
 		}
 
-		// Log the statement
-		$statement->startTime = $startTime;
+		$result = new PdoResult($this->_statement);
 
-		$this->_statement = $statement;
-
-		$this->logQuery(new PdoLog($statement));
+		$this->logQuery($result);
 
 		// Return and cache result
-		$result = new PdoResult($statement);
-
 		if ($storage) {
 			$storage->set($cacheKey, $result, $cacheLength);
 		}

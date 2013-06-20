@@ -11,7 +11,7 @@ use Psr\Log\LoggerInterface;
 use Titon\Cache\Storage;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Query;
-use Titon\Model\Query\Log;
+use Titon\Model\Query\Result;
 
 /**
  * Represents a data source, whether a database, API, or other storage system.
@@ -123,12 +123,12 @@ interface Driver {
 	public function isPersistent();
 
 	/**
-	 * Logs a query statement.
+	 * Logs a query result.
 	 *
-	 * @param \Titon\Model\Query\Log $log
+	 * @param \Titon\Model\Query\Result $result
 	 * @return \Titon\Model\Driver
 	 */
-	public function logQuery(Log $log);
+	public function logQuery(Result $result);
 
 	/**
 	 * Query the driver for data records.

@@ -21,6 +21,13 @@ use Titon\Test\TestCase;
 class PdoDriverTest extends TestCase {
 
 	/**
+	 * Stub model.
+	 *
+	 * @type \Titon\Model\Model
+	 */
+	protected $model;
+
+	/**
 	 * This method is called before a test is executed.
 	 */
 	protected function setUp() {
@@ -36,6 +43,9 @@ class PdoDriverTest extends TestCase {
 	 * Disconnect just in case.
 	 */
 	protected function tearDown() {
+		parent::tearDown();
+
+		$this->unloadFixtures();
 		$this->object->disconnect();
 	}
 
@@ -43,7 +53,25 @@ class PdoDriverTest extends TestCase {
 	 * Test statement building.
 	 */
 	public function testBuildStatement() {
+		// Unsupported query
+		try {
+			$this->object->buildStatement(new Query('someType', $this->model));
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
 
+		// No params
+		$statement = $this->object->buildStatement((new Query(Query::SELECT, $this->model))->fields('id'));
+		$this->assertInstanceOf('PDOStatement', $statement);
+		$this->assertTrue(empty($statement->params));
+		$statement->closeCursor();
+
+		// With params
+		$statement = $this->object->buildStatement((new Query(Query::UPDATE, $this->model))->fields(['id' => 1]));
+		$this->assertInstanceOf('PDOStatement', $statement);
+		$this->assertFalse(empty($statement->params));
+		$statement->closeCursor();
 	}
 
 	/**
@@ -76,7 +104,34 @@ class PdoDriverTest extends TestCase {
 	 * Test query execution.
 	 */
 	public function testQuery() {
+		$this->loadFixtures('Users');
 
+		$query1 = (new Query(Query::SELECT, $this->model))->from('users');
+		$result = $this->object->query($query1);
+
+		$this->assertInstanceOf('Titon\Model\Query\Result', $result);
+
+		// Test before and after execute
+		$this->assertEquals(0, $result->getExecutionTime());
+		$this->assertEquals(0, $result->getRowCount());
+		$this->assertEquals(false, $result->hasExecuted());
+		$this->assertEquals(false, $result->isSuccessful());
+
+		$results = $result->fetchAll();
+
+		$this->assertEquals(5, count($results));
+		$this->assertNotEquals(0, $result->getExecutionTime());
+		$this->assertEquals(1, $result->getRowCount());
+		$this->assertEquals(true, $result->hasExecuted());
+		$this->assertEquals(true, $result->isSuccessful());
+
+		// Test with a string
+		$result = $this->object->query('DELETE FROM `users`');
+
+		$this->assertInstanceOf('Titon\Model\Query\Result', $result);
+
+		$this->assertEquals(0, $result->getRowCount());
+		$this->assertEquals(5, $result->save());
 	}
 
 	/**

@@ -11,7 +11,7 @@ use Psr\Log\LoggerInterface;
 use Titon\Common\Base;
 use Titon\Cache\Storage;
 use Titon\Model\Driver;
-use Titon\Model\Query\Log;
+use Titon\Model\Query\Result;
 use Titon\Utility\Hash;
 
 /**
@@ -69,7 +69,7 @@ abstract class AbstractDriver extends Base implements Driver {
 	/**
 	 * Logged query statements and bound parameters.
 	 *
-	 * @type array
+	 * @type \Titon\Model\Query\Result[]
 	 */
 	protected $_logs = [];
 
@@ -184,12 +184,12 @@ abstract class AbstractDriver extends Base implements Driver {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function logQuery(Log $log) {
-		$this->_logs[] = $log;
+	public function logQuery(Result $result) {
+		$this->_logs[] = $result;
 
 		// Cast the SQL to string and log it
 		if ($logger = $this->getLogger()) {
-			$logger->debug((string) $log);
+			$logger->debug((string) $result);
 		}
 
 		return $this;
