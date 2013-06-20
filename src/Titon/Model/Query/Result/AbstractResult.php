@@ -50,7 +50,7 @@ abstract class AbstractResult implements Result {
 	 * @return string
 	 */
 	public function __toString() {
-		return sprintf('%s %s %s',
+		return sprintf('%s %s %s %s',
 			'[SQL] ' . $this->getStatement(),
 			'[TIME] ' . $this->getExecutionTime(),
 			'[COUNT] ' . $this->getRowCount(),
