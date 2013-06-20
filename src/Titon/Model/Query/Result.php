@@ -8,7 +8,7 @@
 namespace Titon\Model\Query;
 
 /**
- * Handles the results of a query.
+ * Handles the result set and profiling of a query.
  *
  * @package Titon\Model\Query
  */

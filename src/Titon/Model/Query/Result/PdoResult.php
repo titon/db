@@ -12,7 +12,7 @@ use \PDO;
 use \PDOStatement;
 
 /**
- * The PdoResult handles the processing of a PDOStatement to return the correct results.
+ * Accepts a PDOStatement instance which is used for result fetching and query profiling.
  *
  * @package Titon\Model\Query\Result
  */

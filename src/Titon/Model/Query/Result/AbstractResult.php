@@ -10,7 +10,7 @@ namespace Titon\Model\Query\Result;
 use Titon\Model\Query\Result;
 
 /**
- * TODO
+ * Provides shared functionality for results.
  *
  * @package Titon\Model\Query\Result
  */
