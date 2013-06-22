@@ -102,7 +102,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 */
 	public function escape($value) {
 		if ($value === null) {
-			return null;
+			return 'NULL';
 		}
 
 		return $this->getConnection()->quote($value, $this->resolveType($value));

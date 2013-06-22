@@ -5,13 +5,15 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model;
+namespace Titon\Model\Driver;
 
-use PDO;
 use Titon\Common\Config;
+use Titon\Model\Query;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
+use \Exception;
+use \PDO;
 
 /**
  * Test class for Titon\Model\Driver\AbstractPdoDriver.
@@ -78,7 +80,7 @@ class PdoDriverTest extends TestCase {
 	 * Test value escaping and quoting.
 	 */
 	public function testEscape() {
-		$this->assertSame(null, $this->object->escape(null));
+		$this->assertSame('NULL', $this->object->escape(null));
 		$this->assertSame("'12345'", $this->object->escape(12345));
 		$this->assertSame("'67890'", $this->object->escape('67890'));
 		$this->assertSame("'666.25'", $this->object->escape(666.25));

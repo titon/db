@@ -27,8 +27,8 @@ use \JsonSerializable;
 class Query implements Serializable, JsonSerializable {
 
 	// Order directions
-	const ASC = 'ASC';
-	const DESC = 'DESC';
+	const ASC = 'asc';
+	const DESC = 'desc';
 
 	// Types
 	const INSERT = 'insert';
@@ -532,7 +532,7 @@ class Query implements Serializable, JsonSerializable {
 				$this->orderBy($key, $dir);
 			}
 		} else {
-			$direction = strtoupper($direction);
+			$direction = strtolower($direction);
 
 			if ($direction != self::ASC && $direction != self::DESC) {
 				throw new Exception(sprintf('Invalid order direction %s for field %s', $direction, $field));

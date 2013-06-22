@@ -47,12 +47,15 @@ abstract class AbstractDialect extends Base implements Dialect {
 	protected $_clauses = [
 		'autoIncrement'	=> 'AUTO_INCREMENT',
 		'and'			=> 'AND',
+		'asc'			=> 'ASC',
 		'between'		=> '%s BETWEEN ? AND ?',
 		'cascade'		=> 'CASCADE',
 		'characterSet'	=> 'CHARACTER SET',
 		'comment'		=> 'COMMENT %s',
 		'constraint'	=> 'CONSTRAINT %s',
+		'defaultComment'=> 'DEFAULT COMMENT',
 		'defaultValue'	=> 'DEFAULT %s',
+		'desc'			=> 'DESC',
 		'engine'		=> 'ENGINE',
 		'foreignKey'	=> 'FOREIGN KEY (%s) REFERENCES %s(%s)',
 		'function'		=> '%s(%s)',
@@ -62,12 +65,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'indexKey'		=> 'KEY %s (%s)',
 		'isNull'		=> '%s IS NULL',
 		'isNotNull'		=> '%s IS NOT NULL',
+		'like'			=> '%s LIKE ?',
 		'limit'			=> 'LIMIT %s',
 		'limitOffset'	=> 'LIMIT %s,%s',
 		'noAction'		=> 'NO ACTION',
 		'not'			=> '%s NOT ?',
 		'notBetween'	=> '%s NOT BETWEEN ? AND ?',
 		'notIn'			=> '%s NOT IN (%s)',
+		'notLike'		=> '%s NOT LIKE ?',
 		'notNull'		=> 'NOT NULL',
 		'null'			=> 'NULL',
 		'onDelete'		=> 'ON DELETE %s',
@@ -306,8 +311,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 			$output[] = $this->getClause(empty($options['null']) ? 'notNull' : 'null');
 
-			if (!empty($options['default'])) {
-				$output[] = sprintf($this->getClause('defaultValue'), $options['default']);
+			if (array_key_exists('default', $options) && $options['default'] !== '') {
+				$output[] = sprintf($this->getClause('defaultValue'), $this->getDriver()->escape($options['default']));
 			}
 
 			if (!empty($options['ai'])) {
@@ -315,7 +320,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			}
 
 			if (!empty($options['comment'])) {
-				$output[] = sprintf($this->getClause('comment'), $this->getDriver()->getConnection()->quote(substr($options['comment'], 0, 255)));
+				$output[] = sprintf($this->getClause('comment'), $this->getDriver()->escape(substr($options['comment'], 0, 255)));
 			}
 
 			$columns[] = implode(' ', $output);
@@ -427,7 +432,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			$output = [];
 
 			foreach ($orderBy as $field => $direction) {
-				$output[] = $this->quote($field) . ' ' . strtoupper($direction);
+				$output[] = $this->quote($field) . ' ' . $this->getClause($direction);
 			}
 
 			return sprintf($this->getClause('orderBy'), implode(', ', $output));
@@ -521,6 +526,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 		unset($attributes['engine']);
 
 		foreach ($attributes as $key => $value) {
+			if ($key === 'comment') {
+				$key = 'defaultComment';
+			}
+
 			$output[] = $this->getClause($key) . '=' . $connection->quote($value);
 		}
 
@@ -604,7 +613,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
-	 * Quote an array of identifiers.
+	 * Quote an array of identifiers and return as a string.
 	 *
 	 * @param array $values
 	 * @return string

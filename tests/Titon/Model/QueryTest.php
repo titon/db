@@ -143,13 +143,13 @@ class QueryTest extends TestCase {
 	 */
 	public function testOrderBy() {
 		$this->object->orderBy('id', 'asc');
-		$this->assertEquals(['id' => 'ASC'], $this->object->getOrderBy());
+		$this->assertEquals(['id' => 'asc'], $this->object->getOrderBy());
 
 		$this->object->orderBy([
 			'id' => 'DESC',
 			'created' => 'asc'
 		]);
-		$this->assertEquals(['id' => 'DESC', 'created' => 'ASC'], $this->object->getOrderBy());
+		$this->assertEquals(['id' => 'desc', 'created' => 'asc'], $this->object->getOrderBy());
 
 		try {
 			$this->object->orderBy('id', 'ascending');
