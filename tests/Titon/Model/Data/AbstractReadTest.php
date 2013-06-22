@@ -17,10 +17,8 @@ use \Exception;
 
 /**
  * Test class for database reading.
- *
- * @property \Titon\Model\Driver\Dialect\AbstractDialect $object
  */
-abstract class AbstractReadTest extends TestCase {
+class AbstractReadTest extends TestCase {
 
 	/**
 	 * Unload fixtures.
@@ -652,7 +650,7 @@ abstract class AbstractReadTest extends TestCase {
 		$actual = $book->select('id', 'name')
 			->where('series_id', 3)
 			->with('Series', function() {
-				$this->fields('name'); // Always include the ID
+				$this->fields('name');
 			})
 			->fetchAll();
 
@@ -662,8 +660,7 @@ abstract class AbstractReadTest extends TestCase {
 				'name' => 'The Fellowship of the Ring',
 				'series_id' => 3,
 				'Series' => new Entity([
-					'name' => 'The Lord of the Rings',
-					'id' => 3
+					'name' => 'The Lord of the Rings'
 				])
 			]),
 			new Entity([
@@ -671,8 +668,7 @@ abstract class AbstractReadTest extends TestCase {
 				'name' => 'The Two Towers',
 				'series_id' => 3,
 				'Series' => new Entity([
-					'name' => 'The Lord of the Rings',
-					'id' => 3
+					'name' => 'The Lord of the Rings'
 				])
 			]),
 			new Entity([
@@ -680,8 +676,7 @@ abstract class AbstractReadTest extends TestCase {
 				'name' => 'The Return of the King',
 				'series_id' => 3,
 				'Series' => new Entity([
-					'name' => 'The Lord of the Rings',
-					'id' => 3
+					'name' => 'The Lord of the Rings'
 				])
 			]),
 		], $actual);

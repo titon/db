@@ -70,9 +70,9 @@ class QueryTest extends TestCase {
 		$this->object->fields(['id', 'created'], true);
 		$this->assertEquals(['id', 'title', 'created'], $this->object->getFields());
 
-		// Override + include PK
+		// Override
 		$this->object->fields(['username', 'created']);
-		$this->assertEquals(['id', 'username', 'created'], $this->object->getFields());
+		$this->assertEquals(['username', 'created'], $this->object->getFields());
 
 		// Non-select
 		$query = new Query(Query::INSERT, new User());

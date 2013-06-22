@@ -363,21 +363,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return string[]
 	 */
 	public function getFields() {
-		$fields = $this->_fields;
-
-		// Always include the primary key
-		if ($fields && $this->getType() === self::SELECT) {
-			$pk = $this->getModel()->getPrimaryKey();
-			$attributes = $this->getAttributes();
-
-			// Don't merge on COUNTs
-			if (empty($attributes['count']) && !in_array($pk, $fields)) {
-				array_unshift($fields, $pk);
-				$fields = array_unique($fields);
-			}
-		}
-
-		return $fields;
+		return $this->_fields;
 	}
 
 	/**
@@ -741,8 +727,10 @@ class Query implements Serializable, JsonSerializable {
 		}
 
 		// Add foreign key to field list
-		if ($relation->getType() === Relation::MANY_TO_ONE) {
-			$this->fields([$relation->getForeignKey()], true);
+		if ($this->_fields) {
+			if ($relation->getType() === Relation::MANY_TO_ONE) {
+				$this->fields([$relation->getForeignKey()], true);
+			}
 		}
 
 		$this->_subQueries[$alias] = $relatedQuery;
