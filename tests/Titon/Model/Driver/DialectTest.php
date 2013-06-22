@@ -11,6 +11,7 @@ use Titon\Model\Query\Predicate;
 use Titon\Model\Query;
 use Titon\Test\Stub\DialectStub;
 use Titon\Test\Stub\DriverStub;
+use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
 use \Exception;
 
@@ -45,6 +46,168 @@ class DialectTest extends TestCase {
 		parent::tearDown();
 
 		$this->driver->disconnect();
+	}
+
+	/**
+	 * Test create table statement creation.
+	 */
+	public function testBuildCreateTable() {
+		$schema = new Schema('foobar');
+		$schema->addColumn('column', [
+			'type' => 'int',
+			'ai' => true
+		]);
+
+		$query = new Query(Query::CREATE_TABLE, new User());
+		$query->schema($schema);
+
+		$this->assertEquals("CREATE TABLE `foobar` (\n`column` int NOT NULL AUTO_INCREMENT\n);", $this->object->buildCreateTable($query));
+
+		$schema->addColumn('column', [
+			'type' => 'int',
+			'ai' => true,
+			'primary' => true
+		]);
+
+		$this->assertEquals("CREATE TABLE `foobar` (\n`column` int NOT NULL AUTO_INCREMENT,\nPRIMARY KEY (`column`)\n);", $this->object->buildCreateTable($query));
+
+		$schema->addColumn('column2', [
+			'type' => 'int',
+			'null' => true,
+			'index' => true
+		]);
+
+		$this->assertEquals("CREATE TABLE `foobar` (\n`column` int NOT NULL AUTO_INCREMENT,\n`column2` int NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n);", $this->object->buildCreateTable($query));
+
+		$query->attribute('engine', 'InnoDB');
+
+		$this->assertEquals("CREATE TABLE `foobar` (\n`column` int NOT NULL AUTO_INCREMENT,\n`column2` int NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n) ENGINE=InnoDB;", $this->object->buildCreateTable($query));
+	}
+
+	/**
+	 * Test delete statement creation.
+	 */
+	public function testBuildDelete() {
+		$query = new Query(Query::DELETE, new User());
+
+		$query->from('foobar');
+		$this->assertEquals('DELETE FROM `foobar`;', $this->object->buildDelete($query));
+
+		$query->limit(5);
+		$this->assertRegExp('/DELETE FROM `foobar`\s+LIMIT 5;/', $this->object->buildDelete($query));
+
+		$query->where('id', [1, 2, 3]);
+		$this->assertRegExp('/DELETE FROM `foobar`\s+WHERE `id` IN \(\?, \?, \?\)\s+LIMIT 5;/', $this->object->buildDelete($query));
+
+		$query->orderBy('id', 'asc');
+		$this->assertRegExp('/DELETE FROM `foobar`\s+WHERE `id` IN \(\?, \?, \?\)\s+ORDER BY `id` ASC\s+LIMIT 5;/', $this->object->buildDelete($query));
+	}
+
+	/**
+	 * Test describe statement creation.
+	 */
+	public function testBuildDescribe() {
+		$query = new Query(Query::DESCRIBE, new User());
+		$query->from('foobar');
+
+		$this->assertEquals('DESCRIBE `foobar`;', $this->object->buildDescribe($query));
+	}
+
+	/**
+	 * Test drop table statement creation.
+	 */
+	public function testBuildDropTable() {
+		$query = new Query(Query::DROP_TABLE, new User());
+		$query->from('foobar');
+
+		$this->assertEquals('DROP TABLE `foobar`;', $this->object->buildDropTable($query));
+	}
+
+	/**
+	 * Test insert statement creation.
+	 */
+	public function testBuildInsert() {
+		$query = new Query(Query::INSERT, new User());
+		$query->from('foobar')->fields([
+			'username' => 'miles'
+		]);
+
+		$this->assertEquals('INSERT INTO `foobar` (`username`) VALUES (?);', $this->object->buildInsert($query));
+
+		$query->fields([
+			'email' => 'email@domain.com',
+			'website' => 'http://titon.io'
+		]);
+
+		$this->assertEquals('INSERT INTO `foobar` (`email`, `website`) VALUES (?, ?);', $this->object->buildInsert($query));
+	}
+
+	/**
+	 * Test select statement creation.
+	 */
+	public function testBuildSelect() {
+		$query = new Query(Query::SELECT, new User());
+
+		$query->from('foobar');
+		$this->assertEquals('SELECT * FROM `foobar`;', $this->object->buildSelect($query));
+
+		$query->where('status', 1)->where(function() {
+			$this->gte('rank', 15);
+		});
+		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?;/', $this->object->buildSelect($query));
+
+		$query->orderBy('id', 'desc');
+		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+ORDER BY `id` DESC;/', $this->object->buildSelect($query));
+
+		$query->groupBy('rank', 'created');
+		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+ORDER BY `id` DESC;/', $this->object->buildSelect($query));
+
+		$query->limit(50, 10);
+		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+ORDER BY `id` DESC\s+LIMIT 10,50;/', $this->object->buildSelect($query));
+
+		$query->having(function() {
+			$this->gte('id', 100);
+		});
+		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 10,50;/', $this->object->buildSelect($query));
+
+		$query->fields('id', 'username', 'rank');
+		$this->assertRegExp('/SELECT `id`, `username`, `rank` FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 10,50;/', $this->object->buildSelect($query));
+	}
+
+	/**
+	 * Test truncate table statement creation.
+	 */
+	public function testBuildTruncate() {
+		$query = new Query(Query::TRUNCATE, new User());
+		$query->from('foobar');
+
+		$this->assertEquals('TRUNCATE `foobar`;', $this->object->buildTruncate($query));
+	}
+
+	/**
+	 * Test update statement creation.
+	 */
+	public function testBuildUpdate() {
+		$query = new Query(Query::UPDATE, new User());
+
+		$query->from('foobar');
+		$this->assertEquals('UPDATE `foobar` SET;', $this->object->buildUpdate($query));
+
+		$query->limit(15);
+		$this->assertRegExp('/UPDATE `foobar` SET\s+LIMIT 15;/', $this->object->buildUpdate($query));
+
+		$query->orderBy('username', 'desc');
+		$this->assertRegExp('/UPDATE `foobar` SET\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+
+		$query->fields([
+			'email' => 'email@domain.com',
+			'website' => 'http://titon.io'
+		]);
+		$this->assertRegExp('/UPDATE `foobar` SET `email` = \?, `website` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+
+		$query->where('status', 3);
+		$this->assertRegExp('/UPDATE `foobar` SET `email` = \?, `website` = \?\s+WHERE `status` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+
 	}
 
 	/**
