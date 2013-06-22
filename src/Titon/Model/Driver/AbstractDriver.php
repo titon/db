@@ -81,6 +81,13 @@ abstract class AbstractDriver extends Base implements Driver {
 	protected $_key;
 
 	/**
+	 * The last query result.
+	 *
+	 * @type \Titon\Model\Query\Result
+	 */
+	protected $_result;
+
+	/**
 	 * Storage engine instance.
 	 *
 	 * @type \Titon\Cache\Storage
@@ -193,6 +200,16 @@ abstract class AbstractDriver extends Base implements Driver {
 		}
 
 		return $this;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function reset() {
+		if ($this->_result) {
+			$this->_result->close();
+			$this->_result = null;
+		}
 	}
 
 	/**

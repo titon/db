@@ -41,10 +41,17 @@ class PdoResult extends AbstractResult implements Result {
 	/**
 	 * {@inheritdoc}
 	 */
+	public function close() {
+		return $this->_statement->closeCursor();
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
 	public function count() {
 		$count = (int) $this->_execute()->fetchColumn();
 
-		$this->_statement->closeCursor();
+		$this->close();
 
 		return $count;
 	}
@@ -55,7 +62,7 @@ class PdoResult extends AbstractResult implements Result {
 	public function fetch() {
 		$result = (array) $this->_execute()->fetch(PDO::FETCH_ASSOC);
 
-		$this->_statement->closeCursor();
+		$this->close();
 
 		return $result;
 	}
@@ -66,7 +73,7 @@ class PdoResult extends AbstractResult implements Result {
 	public function fetchAll() {
 		$results = (array) $this->_execute()->fetchAll(PDO::FETCH_ASSOC);
 
-		$this->_statement->closeCursor();
+		$this->close();
 
 		return $results;
 	}
@@ -95,7 +102,8 @@ class PdoResult extends AbstractResult implements Result {
 	 * {@inheritdoc}
 	 */
 	public function save() {
-		$this->_execute()->closeCursor();
+		$this->_execute();
+		$this->close();
 
 		return $this->_count;
 	}

@@ -51,13 +51,6 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	];
 
 	/**
-	 * The last queried PDOStatement.
-	 *
-	 * @type \PDOStatement
-	 */
-	protected $_statement;
-
-	/**
 	 * {@inheritdoc}
 	 *
 	 * @throws \Titon\Model\Exception
@@ -233,12 +226,12 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 		// Prepare query
 		if ($query instanceof Query) {
-			$this->_statement = $this->buildStatement($query);
+			$result = $this->buildStatement($query);
 		} else {
-			$this->_statement = $this->getConnection()->prepare($query);
+			$result = $this->getConnection()->prepare($query);
 		}
 
-		$result = new PdoResult($this->_statement);
+		$result = new PdoResult($result);
 
 		$this->logQuery($result);
 
@@ -247,17 +240,9 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			$storage->set($cacheKey, $result, $cacheLength);
 		}
 
-		return $result;
-	}
+		$this->_result = $result;
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function reset() {
-		if ($this->_statement instanceof PDOStatement) {
-			$this->_statement->closeCursor();
-			$this->_statement = null;
-		}
+		return $result;
 	}
 
 	/**

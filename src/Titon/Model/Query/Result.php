@@ -15,6 +15,13 @@ namespace Titon\Model\Query;
 interface Result {
 
 	/**
+	 * Close any open connection.
+	 *
+	 * @return bool
+	 */
+	public function close();
+
+	/**
 	 * Return a count for the number of results. This assumes COUNT() was used.
 	 *
 	 * @return int

@@ -497,7 +497,20 @@ class Model extends Base {
 	 * @return string
 	 */
 	public function getPrimaryKey() {
-		return $this->config->primaryKey;
+		return $this->cache(__METHOD__, function() {
+			$pk = $this->config->primaryKey;
+			$schema = $this->getSchema();
+
+			if ($schema->hasColumn($pk)) {
+				return $pk;
+			}
+
+			if ($pk = $schema->getPrimaryKey()) {
+				return $pk['columns'][0];
+			}
+
+			return 'id';
+		});
 	}
 
 	/**
@@ -530,7 +543,7 @@ class Model extends Base {
 
 		foreach ($this->_relations as $relation) {
 			if ($relation->getType() === $type) {
-				$relations[] = $relation;
+				$relations[$relation->getAlias()] = $relation;
 			}
 		}
 
@@ -591,7 +604,7 @@ class Model extends Base {
 			}
 		}
 
-		$this->_schema = new Schema($this->getTable(), $columns);
+		$this->setSchema(new Schema($this->getTable(), $columns));
 
 		return $this->_schema;
 	}
@@ -729,6 +742,18 @@ class Model extends Base {
 	 */
 	public function select() {
 		return $this->query(Query::SELECT)->fields(func_get_args());
+	}
+
+	/**
+	 * Set the schema for this model.
+	 *
+	 * @param \Titon\Model\Driver\Schema $schema
+	 * @return \Titon\Model\Model
+	 */
+	public function setSchema(Schema $schema) {
+		$this->_schema = $schema;
+
+		return $this;
 	}
 
 	/**
