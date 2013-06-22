@@ -291,7 +291,7 @@ class Query implements Serializable, JsonSerializable {
 		}
 
 		if ($merge) {
-			$fields = Hash::merge($this->_fields, $fields);
+			$fields = array_merge($this->_fields, $fields);
 		}
 
 		if ($this->getType() === self::SELECT) {
