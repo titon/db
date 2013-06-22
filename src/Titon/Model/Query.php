@@ -13,6 +13,7 @@ use Titon\Model\Model;
 use Titon\Model\Exception;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
+use Titon\Utility\Hash;
 use \Closure;
 use \Serializable;
 use \JsonSerializable;
@@ -224,6 +225,7 @@ class Query implements Serializable, JsonSerializable {
 	 */
 	public function count() {
 		$this
+			->attribute('count', true)
 			->fields($this->func('COUNT', [$this->getModel()->getPrimaryKey() => Func::FIELD]))
 			->limit(0);
 
@@ -278,18 +280,22 @@ class Query implements Serializable, JsonSerializable {
 	/**
 	 * Set the list of fields to return.
 	 *
-	 * @param string $field,...
+	 * @param string|array $fields
+	 * @param bool $merge
 	 * @return \Titon\Model\Query
 	 */
-	public function fields() {
-		$fields = func_get_args();
+	public function fields($fields, $merge = false) {
+		if (!is_array($fields)) {
+			$fields = func_get_args();
+			$merge = false;
+		}
 
-		if (is_array($fields[0])) {
-			$fields = $fields[0];
+		if ($merge) {
+			$fields = Hash::merge($this->_fields, $fields);
 		}
 
 		if ($this->getType() === self::SELECT) {
-			$fields = array_unique($fields);
+			$fields = array_values(array_unique($fields));
 		}
 
 		$this->_fields = $fields;
@@ -357,7 +363,21 @@ class Query implements Serializable, JsonSerializable {
 	 * @return string[]
 	 */
 	public function getFields() {
-		return $this->_fields;
+		$fields = $this->_fields;
+
+		// Always include the primary key
+		if ($fields && $this->getType() === self::SELECT) {
+			$pk = $this->getModel()->getPrimaryKey();
+			$attributes = $this->getAttributes();
+
+			// Don't merge on COUNTs
+			if (empty($attributes['count']) && !in_array($pk, $fields)) {
+				array_unshift($fields, $pk);
+				$fields = array_unique($fields);
+			}
+		}
+
+		return $fields;
 	}
 
 	/**
@@ -483,10 +503,11 @@ class Query implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
+	 * @param string $op
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception
 	 */
-	public function having($field, $value = null) {
+	public function having($field, $value = null, $op = '=') {
 		if ($this->_having && $this->_having->getType() === Predicate::EITHER) {
 			throw new Exception('Having clause already created using "OR" conjunction');
 		}
@@ -498,7 +519,7 @@ class Query implements Serializable, JsonSerializable {
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
 		} else {
-			$this->_having->eq($field, $value);
+			$this->_having->add($field, $value, $op);
 		}
 
 		return $this;
@@ -531,6 +552,13 @@ class Query implements Serializable, JsonSerializable {
 			foreach ($field as $key => $dir) {
 				$this->orderBy($key, $dir);
 			}
+
+		} else if ($field === 'RAND') {
+			$this->_orderBy[] = $this->func('RAND');
+
+		} else if ($field instanceof Func) {
+			$this->_orderBy[] = $field;
+
 		} else {
 			$direction = strtolower($direction);
 
@@ -550,10 +578,11 @@ class Query implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
+	 * @param string $op
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception
 	 */
-	public function orHaving($field, $value = null) {
+	public function orHaving($field, $value = null, $op = '=') {
 		if ($this->_having && $this->_having->getType() === Predicate::ALSO) {
 			throw new Exception('Having clause already created using "AND" conjunction');
 		}
@@ -565,7 +594,7 @@ class Query implements Serializable, JsonSerializable {
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
 		} else {
-			$this->_having->eq($field, $value);
+			$this->_having->add($field, $value, $op);
 		}
 
 		return $this;
@@ -577,10 +606,11 @@ class Query implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
+	 * @param string $op
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception
 	 */
-	public function orWhere($field, $value = null) {
+	public function orWhere($field, $value = null, $op = '=') {
 		if ($this->_where && $this->_where->getType() === Predicate::ALSO) {
 			throw new Exception('Where clause already created using "AND" conjunction');
 		}
@@ -592,7 +622,7 @@ class Query implements Serializable, JsonSerializable {
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);
 		} else {
-			$this->_where->eq($field, $value);
+			$this->_where->add($field, $value, $op);
 		}
 
 		return $this;
@@ -635,10 +665,11 @@ class Query implements Serializable, JsonSerializable {
 	 *
 	 * @param string $field
 	 * @param mixed $value
+	 * @param string $op
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception
 	 */
-	public function where($field, $value = null) {
+	public function where($field, $value = null, $op = '=') {
 		if ($this->_where && $this->_where->getType() === Predicate::EITHER) {
 			throw new Exception('Where clause already created using "OR" conjunction');
 		}
@@ -650,7 +681,7 @@ class Query implements Serializable, JsonSerializable {
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);
 		} else {
-			$this->_where->eq($field, $value);
+			$this->_where->add($field, $value, $op);
 		}
 
 		return $this;
@@ -699,6 +730,11 @@ class Query implements Serializable, JsonSerializable {
 			if ($query instanceof Closure) {
 				$relatedQuery->bindCallback($query, $relation);
 			}
+		}
+
+		// Add foreign key to field list
+		if ($relation->getType() === Relation::MANY_TO_ONE) {
+			$this->fields([$relation->getForeignKey()], true);
 		}
 
 		$this->_subQueries[$alias] = $relatedQuery;

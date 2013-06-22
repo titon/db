@@ -352,7 +352,7 @@ class Model extends Base {
 
 					if ($foreignValue) {
 						$result[$alias] = $newQuery
-							->where($relation->getForeignKey(), $foreignValue)
+							->where($relation->getRelatedForeignKey(), $foreignValue)
 							->limit(1)
 							->fetch($wrap);
 					} else {

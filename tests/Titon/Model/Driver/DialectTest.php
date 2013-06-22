@@ -368,6 +368,11 @@ class DialectTest extends TestCase {
 		$this->assertEquals('', $this->object->formatOrderBy([]));
 		$this->assertEquals('ORDER BY `id` ASC', $this->object->formatOrderBy(['id' => 'asc']));
 		$this->assertEquals('ORDER BY `id` ASC, `username` DESC', $this->object->formatOrderBy(['id' => 'asc', 'username' => 'desc']));
+
+		$func = new Query\Func('RAND');
+		$func->setDriver($this->object->getDriver());
+
+		$this->assertEquals('ORDER BY RAND()', $this->object->formatOrderBy([$func]));
 	}
 
 	/**

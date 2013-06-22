@@ -66,11 +66,22 @@ class QueryTest extends TestCase {
 		$this->object->fields('id', 'title', 'id');
 		$this->assertEquals(['id', 'title'], $this->object->getFields());
 
-		$this->object->fields(['id', 'created'], 'title');
-		$this->assertEquals(['id', 'created'], $this->object->getFields());
+		// Merge in
+		$this->object->fields(['id', 'created'], true);
+		$this->assertEquals(['id', 'title', 'created'], $this->object->getFields());
 
-		$this->object->fields(['id' => 1, 'title' => 'Titon']);
-		$this->assertEquals(['id' => 1, 'title' => 'Titon'], $this->object->getFields());
+		// Override + include PK
+		$this->object->fields(['username', 'created']);
+		$this->assertEquals(['id', 'username', 'created'], $this->object->getFields());
+
+		// Non-select
+		$query = new Query(Query::INSERT, new User());
+
+		$query->fields(['id' => 1, 'title' => 'Titon']);
+		$this->assertEquals(['id' => 1, 'title' => 'Titon'], $query->getFields());
+
+		$query->fields(['username' => 'miles'], true);
+		$this->assertEquals(['id' => 1, 'title' => 'Titon', 'username' => 'miles'], $query->getFields());
 	}
 
 	/**
@@ -123,6 +134,13 @@ class QueryTest extends TestCase {
 		} catch (Exception $e) {
 			$this->assertTrue(true);
 		}
+
+		// Custom operator
+		$this->object->having('size', 15, '!=');
+
+		$expected['size!=15'] = ['field' => 'size', 'value' => 15, 'op' => '!='];
+
+		$this->assertEquals($expected, $this->object->getHaving()->getParams());
 	}
 
 	/**
@@ -183,6 +201,13 @@ class QueryTest extends TestCase {
 		} catch (Exception $e) {
 			$this->assertTrue(true);
 		}
+
+		// Custom operator
+		$this->object->orHaving('size', 15, '>=');
+
+		$expected['size>=15'] = ['field' => 'size', 'value' => 15, 'op' => '>='];
+
+		$this->assertEquals($expected, $this->object->getHaving()->getParams());
 	}
 
 	/**
@@ -209,6 +234,12 @@ class QueryTest extends TestCase {
 		} catch (Exception $e) {
 			$this->assertTrue(true);
 		}
+
+		$this->object->orWhere('size', [1, 2], 'notIn');
+
+		$expected['sizenotIn12'] = ['field' => 'size', 'value' => [1, 2], 'op' => 'notIn'];
+
+		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 	}
 
 	/**
@@ -235,6 +266,13 @@ class QueryTest extends TestCase {
 		} catch (Exception $e) {
 			$this->assertTrue(true);
 		}
+
+		// Custom operator
+		$this->object->where('size', 25, '>');
+
+		$expected['size>25'] = ['field' => 'size', 'value' => 25, 'op' => '>'];
+
+		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 	}
 
 	/**

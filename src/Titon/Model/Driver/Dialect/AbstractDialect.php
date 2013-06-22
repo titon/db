@@ -432,7 +432,11 @@ abstract class AbstractDialect extends Base implements Dialect {
 			$output = [];
 
 			foreach ($orderBy as $field => $direction) {
-				$output[] = $this->quote($field) . ' ' . $this->getClause($direction);
+				if ($direction instanceof Func) {
+					$output[] = $direction->toString();;
+				} else {
+					$output[] = $this->quote($field) . ' ' . $this->getClause($direction);
+				}
 			}
 
 			return sprintf($this->getClause('orderBy'), implode(', ', $output));
