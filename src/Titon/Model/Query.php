@@ -507,7 +507,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception
 	 */
-	public function having($field, $value = null, $op = '=') {
+	public function having($field, $value = null, $op = null) {
 		if ($this->_having && $this->_having->getType() === Predicate::EITHER) {
 			throw new Exception('Having clause already created using "OR" conjunction');
 		}
@@ -518,8 +518,10 @@ class Query implements Serializable, JsonSerializable {
 
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
-		} else {
+		} else if ($op) {
 			$this->_having->add($field, $value, $op);
+		} else {
+			$this->_having->eq($field, $value);
 		}
 
 		return $this;
@@ -582,7 +584,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception
 	 */
-	public function orHaving($field, $value = null, $op = '=') {
+	public function orHaving($field, $value = null, $op = null) {
 		if ($this->_having && $this->_having->getType() === Predicate::ALSO) {
 			throw new Exception('Having clause already created using "AND" conjunction');
 		}
@@ -593,8 +595,10 @@ class Query implements Serializable, JsonSerializable {
 
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
-		} else {
+		} else if ($op) {
 			$this->_having->add($field, $value, $op);
+		} else {
+			$this->_having->eq($field, $value);
 		}
 
 		return $this;
@@ -610,7 +614,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception
 	 */
-	public function orWhere($field, $value = null, $op = '=') {
+	public function orWhere($field, $value = null, $op = null) {
 		if ($this->_where && $this->_where->getType() === Predicate::ALSO) {
 			throw new Exception('Where clause already created using "AND" conjunction');
 		}
@@ -621,8 +625,10 @@ class Query implements Serializable, JsonSerializable {
 
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);
-		} else {
+		} else if ($op) {
 			$this->_where->add($field, $value, $op);
+		} else {
+			$this->_where->eq($field, $value);
 		}
 
 		return $this;
@@ -669,7 +675,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception
 	 */
-	public function where($field, $value = null, $op = '=') {
+	public function where($field, $value = null, $op = null) {
 		if ($this->_where && $this->_where->getType() === Predicate::EITHER) {
 			throw new Exception('Where clause already created using "OR" conjunction');
 		}
@@ -680,8 +686,10 @@ class Query implements Serializable, JsonSerializable {
 
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);
-		} else {
+		} else if ($op) {
 			$this->_where->add($field, $value, $op);
+		} else {
+			$this->_where->eq($field, $value);
 		}
 
 		return $this;
