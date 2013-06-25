@@ -11,6 +11,7 @@ use Titon\Model\Entity;
 use Titon\Model\Query;
 use Titon\Test\Stub\Model\Book;
 use Titon\Test\Stub\Model\Series;
+use Titon\Test\Stub\Model\Stat;
 use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
 use \Exception;
@@ -377,31 +378,65 @@ class AbstractUpdateTest extends TestCase {
 	 * Test updating and reading casts types.
 	 */
 	public function testUpdateTypeCasting() {
-		$this->loadFixtures('Users');
+		$this->loadFixtures('Stats');
 
-		$user = new User();
+		$stat = new Stat();
 		$data = [
-			'country_id' => null, // cast to null
-			'username' => 'milesj',
-			'firstName' => 1336, // to string
-			'lastName' => 666, // to string
-			'age' => '30', // to int
+			'health' => '2000', // to int
+			'energy' => '300', // to int
+			'damage' => 145, // to float
+			'defense' => 60.25, // to double
+			'range' => '2', // to decimal
+			'isMelee' => null, // to boolean
 		];
 
-		$this->assertTrue($user->update(1, $data));
+		$this->assertTrue($stat->update(1, $data));
+
+		$expected = $stat->select()->where('id', 1)->fetch(false);
+		unset($expected['data']);
 
 		$this->assertSame([
 			'id' => 1,
-			'country_id' => null,
-			'username' => 'milesj',
-			'password' => '1Z5895jf72yL77h',
-			'email' => 'miles@email.com',
-			'firstName' => '1336',
-			'lastName' => '666',
-			'age' => 30,
-			'created' => '1988-02-26 21:22:34',
-			'modified' => null
-		], $user->select()->where('id', 1)->fetch(false));
+			'name' => 'Warrior',
+			'health' => 2000,
+			'energy' => 300,
+			'damage' => 145.0,
+			'defense' => 60.25,
+			'range' => 2.0,
+			'isMelee' => false
+		], $expected);
+	}
+
+	/**
+	 * Test updating blob data.
+	 */
+	public function testUpdateBlobData() {
+		$this->loadFixtures('Stats');
+
+		$handle = fopen(TEMP_DIR . '/blob.txt', 'rb');
+
+		$stat = new Stat();
+		$this->assertTrue($stat->update(1, [
+			'data' => $handle
+		]));
+
+		// Match row
+		$expected = $stat->select()->where('id', 1)->fetch(false);
+		$handle = $expected['data'];
+		$expected['data'] = stream_get_contents($handle, -1, 0);
+		fclose($handle);
+
+		$this->assertEquals([
+			'id' => 1,
+			'name' => 'Warrior',
+			'health' => 1500,
+			'energy' => 150,
+			'damage' => 125.25,
+			'defense' => 55.75,
+			'range' => 1.0,
+			'isMelee' => true,
+			'data' => 'This is loading from a file handle'
+		], $expected);
 	}
 
 }

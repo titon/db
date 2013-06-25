@@ -28,7 +28,7 @@ class BlobType extends AbstractType {
 		}
 
 		if (is_string($value)) {
-			$value = fopen('data://text/plain;base64,' . base64_encode($value), 'r');
+			$value = fopen('data://text/plain;base64,' . base64_encode($value), 'rb');
 		}
 
 		if (!is_resource($value)) {
@@ -57,7 +57,7 @@ class BlobType extends AbstractType {
 	 */
 	public function to($value) {
 		if (is_resource($value)) {
-			$contents = stream_get_contents($value);
+			$contents = stream_get_contents($value, -1, 0);
 			fclose($value);
 			$value = $contents;
 		}

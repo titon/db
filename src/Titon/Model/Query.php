@@ -817,10 +817,18 @@ class Query implements Serializable, JsonSerializable {
 	 * @return array
 	 */
 	public function jsonSerialize() {
+		$fields = $this->getFields();
+
+		foreach ($fields as $field => $value) {
+			if (is_resource($value)) {
+				$fields[$field] = stream_get_contents($value, -1, 0);
+			}
+		}
+
 		return [
 			'attributes' => $this->getAttributes(),
 			'cacheLength' => $this->getCacheLength(),
-			'fields' => $this->getFields(),
+			'fields' => $fields,
 			'groupBy' => $this->getGroupBy(),
 			'having' => $this->getHaving(),
 			'limit' => $this->getLimit(),
