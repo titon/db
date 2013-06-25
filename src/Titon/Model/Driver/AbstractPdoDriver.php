@@ -329,6 +329,9 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		if ($value === null) {
 			$type = PDO::PARAM_NULL;
 
+		} else if (is_resource($value)) {
+			$type = PDO::PARAM_LOB;
+
 		} else if (is_numeric($value)) {
 			if (is_float($value) || is_double($value)) {
 				$type = PDO::PARAM_STR; // Uses string type
