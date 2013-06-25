@@ -136,6 +136,8 @@ class Model extends Base {
 		}
 
 		$id = $this->getDriver()->getLastInsertID();
+		$data[$this->getPrimaryKey()] = $id;
+
 		$this->data = $data;
 
 		// Upsert related data
@@ -814,8 +816,9 @@ class Model extends Base {
 		// Check for an ID in the data
 		if (!$id && isset($data[$pk])) {
 			$id = $data[$pk];
-			unset($data[$pk]);
 		}
+
+		unset($data[$pk]);
 
 		// Check for record existence
 		if ($id) {
@@ -857,9 +860,13 @@ class Model extends Base {
 			}
 
 			$relation = $this->getRelation($alias);
-			$relatedModel = $this->getObject($alias);
 			$fk = $relation->getForeignKey();
 			$rfk = $relation->getRelatedForeignKey();
+
+			/** @type \Titon\Model\Model $relatedModel */
+			$relatedModel = $this->getObject($alias);
+			$pk = $this->getPrimaryKey();
+			$rpk = $relatedModel->getPrimaryKey();
 
 			switch ($relation->getType()) {
 				// Append the foreign key with the current ID
@@ -883,20 +890,39 @@ class Model extends Base {
 				case Relation::MANY_TO_MANY:
 					$junctionModel = Registry::factory($relation->getJunctionModel());
 					$junctionData = [$fk => $id];
+					$jpk = $junctionModel->getPrimaryKey();
 
 					foreach ($relatedData as &$habtmData) {
-						$foreign_id = $relatedModel->upsert($habtmData);
+
+						// Existing record by relation primary key
+						if (isset($habtmData[$rpk])) {
+							$foreign_id = $relatedModel->upsert($habtmData, $habtmData[$rpk]);
+
+						// Existing record by junction foreign key
+						} else if (isset($habtmData[$rfk])) {
+							$foreign_id = $habtmData[$rfk];
+
+						// New record
+						} else {
+							$foreign_id = $relatedModel->upsert($habtmData);
+							$habtmData = $relatedModel->data;
+						}
+
 						$junctionData[$rfk] = $foreign_id;
 
 						// Only create the record if it doesn't already exist
-						$exists = (bool) $junctionModel->select()
+						$exists = $junctionModel->select()
 							->where($fk, $id)
 							->where($rfk, $foreign_id)
-							->count();
+							->fetch(false);
 
 						if (!$exists) {
-							$junctionModel->upsert($junctionData);
+							$junctionData[$jpk] = $junctionModel->upsert($junctionData);
+						} else {
+							$junctionData = $jpk;
 						}
+
+						$habtmData['Junction'] = $junctionData;
 					}
 				break;
 
