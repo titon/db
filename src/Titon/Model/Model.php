@@ -16,6 +16,7 @@ use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
 use Titon\Model\Exception\InvalidRelationStructureException;
 use Titon\Model\Exception\MissingRelationException;
+use Titon\Model\Exception\QueryFailureException;
 use Titon\Model\Query;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
@@ -130,33 +131,45 @@ class Model extends Base {
 		$relatedData = $this->_extractRelationData($data);
 		$data = array_intersect_key($data, $this->getSchema()->getColumns());
 
+		// Prepare query
+		$query = $this->query(Query::INSERT)->fields($data);
+
 		// Insert the record using transactions
 		$driver = $this->getDriver();
-		$driver->startTransaction();
 
-		try {
-			$count = $this->query(Query::INSERT)->fields($data)->save();
+		if ($relatedData) {
+			if (!$driver->startTransaction()) {
+				throw new QueryFailureException('Failed to start database transaction');
+			}
 
-			if (!$count) {
+			try {
+				if (!$query->save()) {
+					throw new QueryFailureException(sprintf('Failed to create new %s record', get_class($this)));
+				}
+
+				$id = $driver->getLastInsertID();
+
+				$this->upsertRelations($id, $relatedData);
+
+				$driver->commitTransaction();
+
+			// Rollback and re-throw exception
+			} catch (Exception $e) {
+				$driver->rollbackTransaction();
+
+				throw $e;
+			}
+
+		// No transaction needed for single query
+		} else {
+			if (!$query->save()) {
 				return 0;
 			}
 
 			$id = $driver->getLastInsertID();
-			$data[$this->getPrimaryKey()] = $id;
-
-			$this->data = $data;
-
-			$this->upsertRelations($id, $relatedData);
-
-			$driver->commitTransaction();
-
-		// Rollback and re-throw exception
-		} catch (Exception $e) {
-			$driver->rollbackTransaction();
-
-			throw $e;
 		}
 
+		$this->data = $data + [$this->getPrimaryKey() => $id];
 		$this->postSave($id, true);
 
 		return $id;
@@ -196,32 +209,44 @@ class Model extends Base {
 			return false;
 		}
 
-		$driver = $this->getDriver();
-		$driver->startTransaction();
+		// Prepare query
+		$query = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id);
 
-		try {
-			$count = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id)->save();
+		// Use transactions for cascading
+		if ($cascade) {
+			$driver = $this->getDriver();
 
-			if (!$count) {
+			if (!$driver->startTransaction()) {
+				throw new QueryFailureException('Failed to start database transaction');
+			}
+
+			try {
+				if (!$query->save()) {
+					throw new QueryFailureException(sprintf('Failed to delete %s record with ID %s', get_class($this), $id));
+				}
+
+				$this->deleteDependents($id);
+
+				$driver->commitTransaction();
+
+			// Rollback and re-throw exception
+			} catch (Exception $e) {
+				$driver->rollbackTransaction();
+
+				throw $e;
+			}
+
+		// No transaction needed for single query
+		} else {
+			if (!$query->save()) {
 				return false;
 			}
-
-			if ($cascade) {
-				$this->deleteDependents($id);
-			}
-
-			$driver->commitTransaction();
-
-		// Rollback and re-throw exception
-		} catch (Exception $e) {
-			$driver->rollbackTransaction();
-
-			throw $e;
 		}
 
+		$this->data = [];
 		$this->postDelete();
 
-		return (bool) $count;
+		return true;
 	}
 
 	/**
@@ -809,33 +834,43 @@ class Model extends Base {
 		$relatedData = $this->_extractRelationData($data);
 		$data = array_intersect_key($data, $this->getSchema()->getColumns());
 
-		// Update the record using transactions
-		$driver = $this->getDriver();
-		$driver->startTransaction();
+		// Prepare the query
+		$query = $this->query(Query::UPDATE)
+			->fields($data)
+			->where($this->getPrimaryKey(), $id);
 
-		try {
-			$count = $this->query(Query::UPDATE)
-				->fields($data)
-				->where($this->getPrimaryKey(), $id)
-				->save();
+		// Update the records using transactions
+		if ($relatedData) {
+			$driver = $this->getDriver();
 
-			if (!$count) {
-				return false;
+			if (!$driver->startTransaction()) {
+				throw new QueryFailureException('Failed to start database transaction');
 			}
 
-			$this->data = $data;
+			try {
+				if (!$query->save()) {
+					throw new QueryFailureException(sprintf('Failed to update %s record with ID %s', get_class($this), $id));
+				}
 
-			$this->upsertRelations($id, $relatedData);
+				$this->upsertRelations($id, $relatedData);
 
-			$driver->commitTransaction();
+				$driver->commitTransaction();
 
-		// Rollback and re-throw exception
-		} catch (Exception $e) {
-			$driver->rollbackTransaction();
+			// Rollback and re-throw exception
+			} catch (Exception $e) {
+				$driver->rollbackTransaction();
 
-			throw $e;
+				throw $e;
+			}
+
+		// No transaction needed for single query
+		} else {
+			if (!$query->save()) {
+				return false;
+			}
 		}
 
+		$this->data = $data + [$this->getPrimaryKey() => $id];
 		$this->postSave($id);
 
 		return true;

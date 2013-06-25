@@ -51,6 +51,13 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	];
 
 	/**
+	 * Current nested transaction depth.
+	 *
+	 * @type int
+	 */
+	protected $_transactions = 0;
+
+	/**
 	 * {@inheritdoc}
 	 *
 	 * @throws \Titon\Model\Exception\UnsupportedQueryStatementException
@@ -84,7 +91,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 		$this->_connection = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->config->flags + [
 			PDO::ATTR_PERSISTENT => $this->isPersistent(),
-			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+			//PDO::ATTR_AUTOCOMMIT => false
 		]);
 
 		$this->_connected = true;
@@ -94,7 +102,15 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * {@inheritdoc}
 	 */
 	public function commitTransaction() {
-		return $this->getConnection()->commit();
+		if ($this->_transactions === 1) {
+			$status = $this->getConnection()->commit();
+		} else {
+			$status = true;
+		}
+
+		$this->_transactions--;
+
+		return $status;
 	}
 
 	/**
@@ -330,14 +346,33 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * {@inheritdoc}
 	 */
 	public function rollbackTransaction() {
-		return $this->getConnection()->rollBack();
+		if ($this->_transactions === 1) {
+			$status = $this->getConnection()->rollBack();
+
+			$this->_transactions = 0;
+
+		} else {
+			$status = true;
+
+			$this->_transactions--;
+		}
+
+		return $status;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
 	public function startTransaction() {
-		return $this->getConnection()->beginTransaction();
+		if (!$this->_transactions) {
+			$status = $this->getConnection()->beginTransaction();
+		} else {
+			$status = true;
+		}
+
+		$this->_transactions++;
+
+		return $status;
 	}
 
 }

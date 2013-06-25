@@ -44,7 +44,7 @@ class AbstractUpdateTest extends TestCase {
 	 * Test database record updating with one to one relations.
 	 */
 	public function testUpdateWithOneToOne() {
-		$this->loadFixtures('Users');
+		$this->loadFixtures(['Users', 'Profiles']);
 
 		$user = new User();
 		$data = [
