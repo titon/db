@@ -122,7 +122,11 @@ abstract class AbstractDriver extends Base implements Driver {
 		if ($this->isConnected()) {
 			$this->_connection = null;
 			$this->_connected = false;
+
+			return true;
 		}
+
+		return false;
 	}
 
 	/**

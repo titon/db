@@ -85,17 +85,22 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 	/**
 	 * Connect to the database using PDO.
+	 *
+	 * @return bool
 	 */
 	public function connect() {
-		$this->disconnect();
+		if ($this->isConnected()) {
+			return true;
+		}
 
 		$this->_connection = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->config->flags + [
 			PDO::ATTR_PERSISTENT => $this->isPersistent(),
-			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-			//PDO::ATTR_AUTOCOMMIT => false
+			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
 		]);
 
 		$this->_connected = true;
+
+		return true;
 	}
 
 	/**

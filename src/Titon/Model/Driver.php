@@ -22,6 +22,8 @@ interface Driver {
 
 	/**
 	 * Connect to the driver.
+	 *
+	 * @return bool
 	 */
 	public function connect();
 
@@ -34,6 +36,8 @@ interface Driver {
 
 	/**
 	 * Disconnect from the driver.
+	 *
+	 * @return bool
 	 */
 	public function disconnect();
 
