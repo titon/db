@@ -1111,6 +1111,10 @@ class Model extends Base {
 			// Only type cast on results from a select query
 			if ($isSelect) {
 				foreach ($result as $field => $value) {
+					if ($value === null) {
+						continue;
+					}
+
 					if (isset($schema[$field])) {
 						$result[$field] = AbstractType::factory($schema[$field]['type'], $this->getDriver())->from($value);
 					}

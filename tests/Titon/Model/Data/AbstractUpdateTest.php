@@ -7,6 +7,8 @@
 
 namespace Titon\Model\Data;
 
+use Titon\Model\Entity;
+use Titon\Model\Query;
 use Titon\Test\Stub\Model\Book;
 use Titon\Test\Stub\Model\Series;
 use Titon\Test\Stub\Model\User;
@@ -40,6 +42,19 @@ class AbstractUpdateTest extends TestCase {
 		];
 
 		$this->assertTrue($user->update(1, $data));
+
+		$this->assertEquals([
+			'id' => 1,
+			'country_id' => 3,
+			'username' => 'milesj',
+			'password' => '1Z5895jf72yL77h',
+			'email' => 'miles@email.com',
+			'firstName' => 'Miles',
+			'lastName' => 'Johnson',
+			'age' => 25,
+			'created' => '1988-02-26 21:22:34',
+			'modified' => null
+		], $user->select()->where('id', 1)->fetch(false));
 	}
 
 	/**
@@ -251,6 +266,142 @@ class AbstractUpdateTest extends TestCase {
 		} catch (Exception $e) {
 			$this->assertTrue(true);
 		}
+	}
+
+	/**
+	 * Test multiple record updates.
+	 */
+	public function testUpdateMultiple() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertEquals(4, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', 1, '!=')->save());
+
+		$this->assertEquals([
+			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
+			['id' => 2, 'country_id' => 1, 'username' => 'batman'],
+			['id' => 3, 'country_id' => 1, 'username' => 'superman'],
+			['id' => 4, 'country_id' => 1, 'username' => 'spiderman'],
+			['id' => 5, 'country_id' => 1, 'username' => 'wolverine'],
+		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+
+		// No where clause
+		$this->assertEquals(5, $user->query(Query::UPDATE)->fields(['country_id' => 2])->save());
+
+		$this->assertEquals([
+			['id' => 1, 'country_id' => 2, 'username' => 'miles'],
+			['id' => 2, 'country_id' => 2, 'username' => 'batman'],
+			['id' => 3, 'country_id' => 2, 'username' => 'superman'],
+			['id' => 4, 'country_id' => 2, 'username' => 'spiderman'],
+			['id' => 5, 'country_id' => 2, 'username' => 'wolverine'],
+		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+	}
+
+	/**
+	 * Test multiple record updates with a limit and offset applied.
+	 */
+	public function testUpdateMultipleWithLimit() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertEquals(2, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', 1, '!=')->limit(2)->save());
+
+		$this->assertEquals([
+			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
+			['id' => 2, 'country_id' => 1, 'username' => 'batman'],
+			['id' => 3, 'country_id' => 1, 'username' => 'superman'],
+			['id' => 4, 'country_id' => 5, 'username' => 'spiderman'],
+			['id' => 5, 'country_id' => 4, 'username' => 'wolverine'],
+		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+
+		// No where clause, offset ignored
+		$this->assertEquals(2, $user->query(Query::UPDATE)->fields(['country_id' => 5])->limit(2, 2)->save());
+
+		$this->assertEquals([
+			['id' => 1, 'country_id' => 5, 'username' => 'miles'],
+			['id' => 2, 'country_id' => 5, 'username' => 'batman'],
+			['id' => 3, 'country_id' => 1, 'username' => 'superman'],
+			['id' => 4, 'country_id' => 5, 'username' => 'spiderman'],
+			['id' => 5, 'country_id' => 4, 'username' => 'wolverine'],
+		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+	}
+
+	/**
+	 * Test multiple record updates with an order by applied.
+	 */
+	public function testUpdateMultipleWithOrderBy() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertEquals(2, $user->query(Query::UPDATE)
+			->fields(['country_id' => 6])
+			->orderBy('username', 'desc')
+			->limit(2)
+			->save());
+
+		$this->assertEquals([
+			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
+			['id' => 2, 'country_id' => 3, 'username' => 'batman'],
+			['id' => 3, 'country_id' => 6, 'username' => 'superman'], // changed
+			['id' => 4, 'country_id' => 5, 'username' => 'spiderman'],
+			['id' => 5, 'country_id' => 6, 'username' => 'wolverine'], // changed
+		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+	}
+
+	/**
+	 * Test multiple record updates with an order by applied.
+	 */
+	public function testUpdateMultipleWithConditions() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertEquals(3, $user->query(Query::UPDATE)
+			->fields(['country_id' => null])
+			->where('username', '%man%', 'like')
+			->save());
+
+		$this->assertEquals([
+			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
+			['id' => 2, 'country_id' => null, 'username' => 'batman'],
+			['id' => 3, 'country_id' => null, 'username' => 'superman'],
+			['id' => 4, 'country_id' => null, 'username' => 'spiderman'],
+			['id' => 5, 'country_id' => 4, 'username' => 'wolverine'],
+		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+	}
+
+	/**
+	 * Test updating and reading casts types.
+	 */
+	public function testUpdateTypeCasting() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+		$data = [
+			'country_id' => null, // cast to null
+			'username' => 'milesj',
+			'firstName' => 1336, // to string
+			'lastName' => 666, // to string
+			'age' => '30', // to int
+		];
+
+		$this->assertTrue($user->update(1, $data));
+
+		$this->assertSame([
+			'id' => 1,
+			'country_id' => null,
+			'username' => 'milesj',
+			'password' => '1Z5895jf72yL77h',
+			'email' => 'miles@email.com',
+			'firstName' => '1336',
+			'lastName' => '666',
+			'age' => 30,
+			'created' => '1988-02-26 21:22:34',
+			'modified' => null
+		], $user->select()->where('id', 1)->fetch(false));
 	}
 
 }

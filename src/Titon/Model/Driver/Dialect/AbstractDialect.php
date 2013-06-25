@@ -151,7 +151,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'table' => $this->formatTable($query->getTable()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset()),
+			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset(), $query->getType()),
 		]);
 	}
 
@@ -207,7 +207,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'groupBy' => $this->formatGroupBy($query->getGroupBy()),
 			'having' => $this->formatHaving($query->getHaving()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset()),
+			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset(), $query->getType()),
 		]);
 	}
 
@@ -235,7 +235,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'fields' => $this->formatFields($query->getFields(), $query->getType()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset()),
+			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset(), $query->getType()),
 		]);
 	}
 
@@ -408,11 +408,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 *
 	 * @param int $limit
 	 * @param int $offset
+	 * @param string $type
 	 * @return string
 	 */
-	public function formatLimit($limit, $offset = 0) {
+	public function formatLimit($limit, $offset = 0, $type = 'select') {
 		if ($limit) {
-			if ($offset) {
+			if ($offset && $type === Query::SELECT) {
 				return sprintf($this->getClause('limitOffset'), (int) $offset, (int) $limit);
 			}
 
