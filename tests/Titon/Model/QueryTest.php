@@ -157,6 +157,15 @@ class QueryTest extends TestCase {
 	}
 
 	/**
+	 * Test getting and setting of offset.
+	 */
+	public function testOffset() {
+		$this->assertEquals(0, $this->object->getOffset());
+		$this->object->offset(15);
+		$this->assertEquals(15, $this->object->getOffset());
+	}
+
+	/**
 	 * Test getting and setting of order by directions.
 	 */
 	public function testOrderBy() {

@@ -151,7 +151,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'table' => $this->formatTable($query->getTable()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset(), $query->getType()),
+			'limit' => $this->formatLimit($query->getLimit()),
 		]);
 	}
 
@@ -207,7 +207,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'groupBy' => $this->formatGroupBy($query->getGroupBy()),
 			'having' => $this->formatHaving($query->getHaving()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset(), $query->getType()),
+			'limit' => $this->formatLimitOffset($query->getLimit(), $query->getOffset()),
 		]);
 	}
 
@@ -235,7 +235,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'fields' => $this->formatFields($query->getFields(), $query->getType()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimit($query->getLimit(), $query->getOffset(), $query->getType()),
+			'limit' => $this->formatLimit($query->getLimit()),
 		]);
 	}
 
@@ -404,23 +404,32 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
-	 * Format the limit and offset.
+	 * Format the limit.
 	 *
 	 * @param int $limit
-	 * @param int $offset
-	 * @param string $type
 	 * @return string
 	 */
-	public function formatLimit($limit, $offset = 0, $type = 'select') {
+	public function formatLimit($limit) {
 		if ($limit) {
-			if ($offset && $type === Query::SELECT) {
-				return sprintf($this->getClause('limitOffset'), (int) $offset, (int) $limit);
-			}
-
 			return sprintf($this->getClause('limit'), (int) $limit);
 		}
 
 		return '';
+	}
+
+	/**
+	 * Format the limit and offset.
+	 *
+	 * @param int $limit
+	 * @param int $offset
+	 * @return string
+	 */
+	public function formatLimitOffset($limit, $offset = 0) {
+		if ($limit && $offset) {
+			return sprintf($this->getClause('limitOffset'), (int) $offset, (int) $limit);
+		}
+
+		return $this->formatLimit($limit);
 	}
 
 	/**

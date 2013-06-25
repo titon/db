@@ -353,12 +353,20 @@ class DialectTest extends TestCase {
 	}
 
 	/**
-	 * Test limit and offset is formatted.
+	 * Test limit is formatted.
 	 */
 	public function testFormatLimit() {
 		$this->assertEquals('', $this->object->formatLimit(0));
 		$this->assertEquals('LIMIT 5', $this->object->formatLimit(5));
-		$this->assertEquals('LIMIT 10,5', $this->object->formatLimit(5, 10));
+	}
+
+	/**
+	 * Test limit and offset is formatted.
+	 */
+	public function testFormatLimitOffset() {
+		$this->assertEquals('', $this->object->formatLimitOffset(0));
+		$this->assertEquals('LIMIT 5', $this->object->formatLimitOffset(5));
+		$this->assertEquals('LIMIT 10,5', $this->object->formatLimitOffset(5, 10));
 	}
 
 	/**

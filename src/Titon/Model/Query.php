@@ -523,6 +523,18 @@ class Query implements Serializable, JsonSerializable {
 	 */
 	public function limit($limit, $offset = 0) {
 		$this->_limit = (int) $limit;
+		$this->offset($offset);
+
+		return $this;
+	}
+
+	/**
+	 * Set the record offset.
+	 *
+	 * @param int $offset
+	 * @return \Titon\Model\Query
+	 */
+	public function offset($offset) {
 		$this->_offset = (int) $offset;
 
 		return $this;
