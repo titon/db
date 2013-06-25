@@ -7,15 +7,15 @@
 
 namespace Titon\Model\Driver;
 
-use Titon\Model\Exception;
 use Titon\Model\Driver\AbstractDriver;
 use Titon\Model\Driver\Type\AbstractType;
+use Titon\Model\Exception\InvalidQueryException;
+use Titon\Model\Exception\UnsupportedQueryStatementException;
 use Titon\Model\Query;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Query\Result\PdoResult;
 use Titon\Utility\String;
 use \PDO;
-use \PDOStatement;
 
 /**
  * Implements PDO based driver functionality.
@@ -53,7 +53,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	/**
 	 * {@inheritdoc}
 	 *
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\UnsupportedQueryStatementException
 	 */
 	public function buildStatement(Query $query) {
 		$type = $query->getType();
@@ -61,7 +61,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		$dialect = $this->getDialect();
 
 		if (!method_exists($dialect, $method)) {
-			throw new Exception(sprintf('Query statement %s does not exist or has not been implemented', $type));
+			throw new UnsupportedQueryStatementException(sprintf('Query statement %s does not exist or has not been implemented', $type));
 		}
 
 		$statement = $this->getConnection()->prepare(call_user_func([$dialect, $method], $query));
@@ -88,6 +88,13 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		]);
 
 		$this->_connected = true;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function commitTransaction() {
+		return $this->getConnection()->commit();
 	}
 
 	/**
@@ -200,7 +207,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	/**
 	 * {@inheritdoc}
 	 *
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\InvalidQueryException
 	 */
 	public function query($query) {
 		$storage = $this->getStorage();
@@ -215,7 +222,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			$cacheKey = 'SQL-' . md5($query);
 
 		} else {
-			throw new Exception('Query must be a raw SQL string or a Titon\Model\Query instance');
+			throw new InvalidQueryException('Query must be a raw SQL string or a Titon\Model\Query instance');
 		}
 
 		if ($storage) {
@@ -317,6 +324,20 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		}
 
 		return $type;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function rollbackTransaction() {
+		return $this->getConnection()->rollBack();
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function startTransaction() {
+		return $this->getConnection()->beginTransaction();
 	}
 
 }

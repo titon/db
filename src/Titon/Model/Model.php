@@ -14,9 +14,12 @@ use Titon\Common\Traits\Cacheable;
 use Titon\Common\Traits\Instanceable;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
+use Titon\Model\Exception\InvalidRelationStructureException;
+use Titon\Model\Exception\MissingRelationException;
 use Titon\Model\Query;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
+use \Exception;
 
 /**
  * Represents a database table.
@@ -110,10 +113,9 @@ class Model extends Base {
 	 * If any related data exists, insert new records after joining them to the original record.
 	 * Validate schema data and related data structure before inserting.
 	 *
-	 * // TODO atomic checks, transaction for related
-	 *
 	 * @param array $data
 	 * @return int The record ID on success, 0 on failure
+	 * @throws \Exception
 	 */
 	public function create(array $data) {
 		$data = $this->preSave($data);
@@ -128,20 +130,32 @@ class Model extends Base {
 		$relatedData = $this->_extractRelationData($data);
 		$data = array_intersect_key($data, $this->getSchema()->getColumns());
 
-		// Insert the record
-		$count = $this->query(Query::INSERT)->fields($data)->save();
+		// Insert the record using transactions
+		$driver = $this->getDriver();
+		$driver->startTransaction();
 
-		if (!$count) {
-			return 0;
+		try {
+			$count = $this->query(Query::INSERT)->fields($data)->save();
+
+			if (!$count) {
+				return 0;
+			}
+
+			$id = $driver->getLastInsertID();
+			$data[$this->getPrimaryKey()] = $id;
+
+			$this->data = $data;
+
+			$this->upsertRelations($id, $relatedData);
+
+			$driver->commitTransaction();
+
+		// Rollback and re-throw exception
+		} catch (Exception $e) {
+			$driver->rollbackTransaction();
+
+			throw $e;
 		}
-
-		$id = $this->getDriver()->getLastInsertID();
-		$data[$this->getPrimaryKey()] = $id;
-
-		$this->data = $data;
-
-		// Upsert related data
-		$this->upsertRelations($id, $relatedData);
 
 		$this->postSave($id, true);
 
@@ -173,6 +187,7 @@ class Model extends Base {
 	 * @param int|array $id
 	 * @param bool $cascade
 	 * @return bool
+	 * @throws \Exception
 	 */
 	public function delete($id, $cascade = true) {
 		$state = $this->preDelete($id, $cascade);
@@ -181,14 +196,27 @@ class Model extends Base {
 			return false;
 		}
 
-		$count = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id)->save();
+		$driver = $this->getDriver();
+		$driver->startTransaction();
 
-		if (!$count) {
-			return false;
-		}
+		try {
+			$count = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id)->save();
 
-		if ($cascade) {
-			$this->deleteDependents($id);
+			if (!$count) {
+				return false;
+			}
+
+			if ($cascade) {
+				$this->deleteDependents($id);
+			}
+
+			$driver->commitTransaction();
+
+		// Rollback and re-throw exception
+		} catch (Exception $e) {
+			$driver->rollbackTransaction();
+
+			throw $e;
 		}
 
 		$this->postDelete();
@@ -520,14 +548,14 @@ class Model extends Base {
 	 *
 	 * @param string $alias
 	 * @return \Titon\Model\Relation|\Titon\Model\Relation\ManyToMany
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\MissingRelationException
 	 */
 	public function getRelation($alias) {
 		if (isset($this->_relations[$alias])) {
 			return $this->_relations[$alias];
 		}
 
-		throw new Exception(sprintf('Model relation %s does not exist', $alias));
+		throw new MissingRelationException(sprintf('Model relation %s does not exist', $alias));
 	}
 
 	/**
@@ -759,15 +787,14 @@ class Model extends Base {
 	}
 
 	/**
-	 * Update a database record base on ID.
+	 * Update a database record based on ID.
 	 * If any related data exists, update those records after verifying required IDs.
 	 * Validate schema data and related data structure before updating.
-	 *
-	 * // TODO atomic checks, transaction for related
 	 *
 	 * @param int $id
 	 * @param array $data
 	 * @return bool
+	 * @throws \Exception
 	 */
 	public function update($id, array $data) {
 		$data = $this->preSave($data);
@@ -782,20 +809,32 @@ class Model extends Base {
 		$relatedData = $this->_extractRelationData($data);
 		$data = array_intersect_key($data, $this->getSchema()->getColumns());
 
-		// Update the record
-		$count = $this->query(Query::UPDATE)
-			->fields($data)
-			->where($this->getPrimaryKey(), $id)
-			->save();
+		// Update the record using transactions
+		$driver = $this->getDriver();
+		$driver->startTransaction();
 
-		if (!$count) {
-			return false;
+		try {
+			$count = $this->query(Query::UPDATE)
+				->fields($data)
+				->where($this->getPrimaryKey(), $id)
+				->save();
+
+			if (!$count) {
+				return false;
+			}
+
+			$this->data = $data;
+
+			$this->upsertRelations($id, $relatedData);
+
+			$driver->commitTransaction();
+
+		// Rollback and re-throw exception
+		} catch (Exception $e) {
+			$driver->rollbackTransaction();
+
+			throw $e;
 		}
-
-		$this->data = $data;
-
-		// Upsert related data
-		$this->upsertRelations($id, $relatedData);
 
 		$this->postSave($id);
 
@@ -1033,7 +1072,7 @@ class Model extends Base {
 	 * Will only validate the top-level dimensions.
 	 *
 	 * @param array $data
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\InvalidRelationStructureException
 	 */
 	protected function _validateRelationData(array $data) {
 		foreach ($this->getRelations() as $alias => $relation) {
@@ -1054,14 +1093,14 @@ class Model extends Base {
 				case Relation::ONE_TO_MANY:
 				case Relation::MANY_TO_MANY:
 					if (!Hash::isNumeric(array_keys($relatedData))) {
-						throw new Exception(sprintf('%s related data must be structured in a numerical multi-dimension array', $relation->getType()));
+						throw new InvalidRelationStructureException(sprintf('%s related data must be structured in a numerical multi-dimension array', $relation->getType()));
 					}
 				break;
 
 				// A single dimension of data
 				case Relation::ONE_TO_ONE:
 					if (Hash::isNumeric(array_keys($relatedData))) {
-						throw new Exception(sprintf('%s related data must be structured in a single-dimension array', $relation->getType()));
+						throw new InvalidRelationStructureException(sprintf('%s related data must be structured in a single-dimension array', $relation->getType()));
 					}
 				break;
 			}

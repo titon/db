@@ -26,6 +26,13 @@ interface Driver {
 	public function connect();
 
 	/**
+	 * Commit the buffered queries within the transaction.
+	 *
+	 * @return bool
+	 */
+	public function commitTransaction();
+
+	/**
 	 * Disconnect from the driver.
 	 */
 	public function disconnect();
@@ -144,6 +151,13 @@ interface Driver {
 	public function reset();
 
 	/**
+	 * Rollback the last transaction that failed.
+	 *
+	 * @return bool
+	 */
+	public function rollbackTransaction();
+
+	/**
 	 * Set the driver specific dialect.
 	 *
 	 * @param \Titon\Model\Driver\Dialect $dialect
@@ -166,5 +180,12 @@ interface Driver {
 	 * @return \Titon\Model\Driver
 	 */
 	public function setStorage(Storage $storage);
+
+	/**
+	 * Start the query transaction process.
+	 *
+	 * @return bool
+	 */
+	public function startTransaction();
 
 }
