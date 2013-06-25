@@ -33,7 +33,6 @@ Requires the PDO extension for most database connections.
 
 * Unit Testing
 * Behaviors
-* Transactions
 * Improved Operator Support
 * Fetch Neighbors/Threaded
 * Pagination
