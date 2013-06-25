@@ -136,7 +136,7 @@ class QueryTest extends TestCase {
 		}
 
 		// Custom operator
-		$this->object->having('size', 15, '!=');
+		$this->object->having('size', '!=', 15);
 
 		$expected['size!=15'] = ['field' => 'size', 'value' => 15, 'op' => '!='];
 
@@ -212,7 +212,7 @@ class QueryTest extends TestCase {
 		}
 
 		// Custom operator
-		$this->object->orHaving('size', 15, '>=');
+		$this->object->orHaving('size', '>=', 15);
 
 		$expected['size>=15'] = ['field' => 'size', 'value' => 15, 'op' => '>='];
 
@@ -244,7 +244,7 @@ class QueryTest extends TestCase {
 			$this->assertTrue(true);
 		}
 
-		$this->object->orWhere('size', [1, 2], 'notIn');
+		$this->object->orWhere('size', Predicate::NOT_IN, [1, 2]);
 
 		$expected['sizenotIn12'] = ['field' => 'size', 'value' => [1, 2], 'op' => 'notIn'];
 
@@ -277,7 +277,7 @@ class QueryTest extends TestCase {
 		}
 
 		// Custom operator
-		$this->object->where('size', 25, '>');
+		$this->object->where('size', '>', 25);
 
 		$expected['size>25'] = ['field' => 'size', 'value' => 25, 'op' => '>'];
 

@@ -277,7 +277,7 @@ class AbstractUpdateTest extends TestCase {
 
 		$user = new User();
 
-		$this->assertEquals(4, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', 1, '!=')->save());
+		$this->assertEquals(4, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', '!=', 1)->save());
 
 		$this->assertEquals([
 			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
@@ -307,7 +307,7 @@ class AbstractUpdateTest extends TestCase {
 
 		$user = new User();
 
-		$this->assertEquals(2, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', 1, '!=')->limit(2)->save());
+		$this->assertEquals(2, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', '!=', 1)->limit(2)->save());
 
 		$this->assertEquals([
 			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
@@ -362,7 +362,7 @@ class AbstractUpdateTest extends TestCase {
 
 		$this->assertEquals(3, $user->query(Query::UPDATE)
 			->fields(['country_id' => null])
-			->where('username', '%man%', 'like')
+			->where('username', 'like', '%man%')
 			->save());
 
 		$this->assertEquals([

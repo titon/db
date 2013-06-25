@@ -710,13 +710,13 @@ class AbstractReadTest extends TestCase {
 			new Entity(['id' => 5, 'name' => 'Horror']),
 			new Entity(['id' => 6, 'name' => 'Thriller']),
 			new Entity(['id' => 7, 'name' => 'Mystery'])
-		], $genre->select()->where('id', 5, '>=')->limit(3)->fetchAll());
+		], $genre->select()->where('id', '>=', 5)->limit(3)->fetchAll());
 
 		// Limit and offset
 		$this->assertEquals([
 			new Entity(['id' => 10, 'name' => 'Sci-fi']),
 			new Entity(['id' => 11, 'name' => 'Fiction'])
-		], $genre->select()->where('id', 7, '>=')->limit(3, 3)->fetchAll());
+		], $genre->select()->where('id', '>=', 7)->limit(3, 3)->fetchAll());
 	}
 
 	/**

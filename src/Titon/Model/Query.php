@@ -506,7 +506,7 @@ class Query implements Serializable, JsonSerializable {
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
 		} else if ($op) {
-			$this->_having->add($field, $value, $op);
+			$this->_having->add($field, $op, $value);
 		} else {
 			$this->_having->eq($field, $value);
 		}
@@ -595,7 +595,7 @@ class Query implements Serializable, JsonSerializable {
 		if ($field instanceof Closure) {
 			$this->_having->bindCallback($field);
 		} else if ($op) {
-			$this->_having->add($field, $value, $op);
+			$this->_having->add($field, $op, $value);
 		} else {
 			$this->_having->eq($field, $value);
 		}
@@ -625,7 +625,7 @@ class Query implements Serializable, JsonSerializable {
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);
 		} else if ($op) {
-			$this->_where->add($field, $value, $op);
+			$this->_where->add($field, $op, $value);
 		} else {
 			$this->_where->eq($field, $value);
 		}
@@ -686,7 +686,7 @@ class Query implements Serializable, JsonSerializable {
 		if ($field instanceof Closure) {
 			$this->_where->bindCallback($field);
 		} else if ($op) {
-			$this->_where->add($field, $value, $op);
+			$this->_where->add($field, $op, $value);
 		} else {
 			$this->_where->eq($field, $value);
 		}
