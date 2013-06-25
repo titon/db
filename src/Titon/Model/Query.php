@@ -9,8 +9,10 @@ namespace Titon\Model;
 
 use Titon\Common\Registry;
 use Titon\Model\Driver\Schema;
+use Titon\Model\Exception\ExistingPredicateException;
+use Titon\Model\Exception\InvalidArgumentException;
+use Titon\Model\Exception\InvalidRelationQueryException;
 use Titon\Model\Model;
-use Titon\Model\Exception;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
 use Titon\Utility\Hash;
@@ -145,7 +147,6 @@ class Query implements Serializable, JsonSerializable {
 	 *
 	 * @param int $type
 	 * @param \Titon\Model\Model $model
-	 * @throws \Titon\Model\Exception
 	 */
 	public function __construct($type, Model $model) {
 		$this->_type = $type;
@@ -491,11 +492,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @param mixed $value
 	 * @param string $op
 	 * @return \Titon\Model\Query
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\ExistingPredicateException
 	 */
 	public function having($field, $value = null, $op = null) {
 		if ($this->_having && $this->_having->getType() === Predicate::EITHER) {
-			throw new Exception('Having clause already created using "OR" conjunction');
+			throw new ExistingPredicateException('Having clause already created using "OR" conjunction');
 		}
 
 		if (!$this->_having) {
@@ -533,7 +534,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @param string|array $field
 	 * @param string $direction
 	 * @return \Titon\Model\Query
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\InvalidArgumentException
 	 */
 	public function orderBy($field, $direction = self::DESC) {
 		if (is_array($field)) {
@@ -551,7 +552,7 @@ class Query implements Serializable, JsonSerializable {
 			$direction = strtolower($direction);
 
 			if ($direction != self::ASC && $direction != self::DESC) {
-				throw new Exception(sprintf('Invalid order direction %s for field %s', $direction, $field));
+				throw new InvalidArgumentException(sprintf('Invalid order direction %s for field %s', $direction, $field));
 			}
 
 			$this->_orderBy[$field] = $direction;
@@ -568,11 +569,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @param mixed $value
 	 * @param string $op
 	 * @return \Titon\Model\Query
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\ExistingPredicateException
 	 */
 	public function orHaving($field, $value = null, $op = null) {
 		if ($this->_having && $this->_having->getType() === Predicate::ALSO) {
-			throw new Exception('Having clause already created using "AND" conjunction');
+			throw new ExistingPredicateException('Having clause already created using "AND" conjunction');
 		}
 
 		if (!$this->_having) {
@@ -598,11 +599,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @param mixed $value
 	 * @param string $op
 	 * @return \Titon\Model\Query
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\ExistingPredicateException
 	 */
 	public function orWhere($field, $value = null, $op = null) {
 		if ($this->_where && $this->_where->getType() === Predicate::ALSO) {
-			throw new Exception('Where clause already created using "AND" conjunction');
+			throw new ExistingPredicateException('Where clause already created using "AND" conjunction');
 		}
 
 		if (!$this->_where) {
@@ -659,11 +660,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @param mixed $value
 	 * @param string $op
 	 * @return \Titon\Model\Query
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\ExistingPredicateException
 	 */
 	public function where($field, $value = null, $op = null) {
 		if ($this->_where && $this->_where->getType() === Predicate::EITHER) {
-			throw new Exception('Where clause already created using "OR" conjunction');
+			throw new ExistingPredicateException('Where clause already created using "OR" conjunction');
 		}
 
 		if (!$this->_where) {
@@ -687,11 +688,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @param string|string[] $alias
 	 * @param \Titon\Model\Query|\Closure $query
 	 * @return \Titon\Model\Query
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\InvalidRelationQueryException
 	 */
 	public function with($alias, $query = null) {
 		if ($this->getType() !== self::SELECT) {
-			throw new Exception('Only select queries can join related data');
+			throw new InvalidRelationQueryException('Only select queries can join related data');
 		}
 
 		// Allow an array of aliases to easily be set
@@ -709,7 +710,7 @@ class Query implements Serializable, JsonSerializable {
 			$relatedQuery = $query;
 
 			if ($query->getType() !== self::SELECT) {
-				throw new Exception('Only select sub-queries are permitted for related data');
+				throw new InvalidRelationQueryException('Only select sub-queries are permitted for related data');
 			}
 		} else {
 			/** @type \Titon\Model\Query $relatedQuery */

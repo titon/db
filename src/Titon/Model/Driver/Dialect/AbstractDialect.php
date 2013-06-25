@@ -13,7 +13,9 @@ use Titon\Model\Driver;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
-use Titon\Model\Exception;
+use Titon\Model\Exception\InvalidSchemaException;
+use Titon\Model\Exception\MissingClauseException;
+use Titon\Model\Exception\MissingStatementException;
 use Titon\Model\Query;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
@@ -121,13 +123,13 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 *
 	 * @param \Titon\Model\Query $query
 	 * @return string
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\InvalidSchemaException
 	 */
 	public function buildCreateTable(Query $query) {
 		$schema = $query->getSchema();
 
 		if (!$schema) {
-			throw new Exception('Table creation requires a valid schema object');
+			throw new InvalidSchemaException('Table creation requires a valid schema object');
 		}
 
 		return $this->renderStatement($this->getStatement(Query::CREATE_TABLE), [
@@ -284,7 +286,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 *
 	 * @param \Titon\Model\Driver\Schema $schema
 	 * @return string
-	 * @throws \Titon\Model\Exception
 	 */
 	public function formatColumns(Schema $schema) {
 		$columns = [];
@@ -573,13 +574,15 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 	/**
 	 * {@inheritdoc}
+	 *
+	 * @throws \Titon\Model\Exception\MissingClauseException
 	 */
 	public function getClause($key) {
 		if (isset($this->_clauses[$key])) {
 			return $this->_clauses[$key];
 		}
 
-		throw new Exception(sprintf('Invalid clause %s', $key));
+		throw new MissingClauseException(sprintf('Invalid clause %s', $key));
 	}
 
 	/**
@@ -591,13 +594,15 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 	/**
 	 * {@inheritdoc}
+	 *
+	 * @throws \Titon\Model\Exception\MissingStatementException
 	 */
 	public function getStatement($key) {
 		if (isset($this->_statements[$key])) {
 			return $this->_statements[$key];
 		}
 
-		throw new Exception(sprintf('Invalid statement %s', $key));
+		throw new MissingStatementException(sprintf('Invalid statement %s', $key));
 	}
 
 	/**

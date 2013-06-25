@@ -5,13 +5,13 @@
  * @link		http://titon.io
  */
 
-namespace Titon\Model;
+namespace Titon\Model\Exception;
 
 /**
- * Exception for the model package.
+ * Exception thrown for a missing driver.
  *
- * @package Titon\Model
+ * @package Titon\Model\Exception
  */
-class Exception extends \Exception {
+class MissingDriverException extends \OutOfRangeException {
 
 }

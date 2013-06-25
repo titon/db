@@ -7,7 +7,7 @@
 
 namespace Titon\Model\Driver\Type;
 
-use Titon\Model\Exception;
+use Titon\Model\Exception\ConversionFailureException;
 use \PDO;
 
 /**
@@ -20,7 +20,7 @@ class BlobType extends AbstractType {
 	/**
 	 * {@inheritdoc}
 	 *
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\ConversionFailureException
 	 */
 	public function from($value) {
 		if ($value === null) {
@@ -32,7 +32,7 @@ class BlobType extends AbstractType {
 		}
 
 		if (!is_resource($value)) {
-			throw new Exception('Failed to convert value to a binary resource');
+			throw new ConversionFailureException('Failed to convert value to a binary resource');
 		}
 
 		return $value;

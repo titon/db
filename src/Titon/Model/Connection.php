@@ -7,7 +7,7 @@
 
 namespace Titon\Model;
 
-use Titon\Model\Exception;
+use Titon\Model\Exception\MissingDriverException;
 use Titon\Model\Driver;
 
 /**
@@ -41,14 +41,14 @@ class Connection {
 	 *
 	 * @param string $key
 	 * @return \Titon\Model\Driver
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\MissingDriverException
 	 */
 	public function getDriver($key) {
 		if (isset($this->_drivers[$key])) {
 			return $this->_drivers[$key];
 		}
 
-		throw new Exception(sprintf('Invalid driver %s', $key));
+		throw new MissingDriverException(sprintf('Invalid driver %s', $key));
 	}
 
 	/**

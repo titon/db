@@ -14,6 +14,7 @@ use Titon\Test\Stub\DialectStub;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\Stub\QueryResultStub;
 use Titon\Test\TestCase;
+use \Exception;
 
 /**
  * Test class for Titon\Model\Driver.

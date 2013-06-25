@@ -9,6 +9,7 @@ namespace Titon\Model;
 
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
+use \Exception;
 
 /**
  * Test class for Titon\Model\Connection.

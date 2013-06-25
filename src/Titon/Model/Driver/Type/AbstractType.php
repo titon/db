@@ -10,7 +10,7 @@ namespace Titon\Model\Driver\Type;
 use Titon\Common\Registry;
 use Titon\Model\Driver;
 use Titon\Model\Driver\Type;
-use Titon\Model\Exception;
+use Titon\Model\Exception\UnsupportedTypeException;
 use \PDO;
 
 /**
@@ -22,6 +22,8 @@ abstract class AbstractType implements Type {
 
 	/**
 	 * {@inheritdoc}
+	 *
+	 * @throws \Titon\Model\Exception\UnsupportedTypeException
 	 */
 	public static function factory($type, Driver $driver) {
 		$types = $driver->getSupportedTypes();
@@ -30,7 +32,7 @@ abstract class AbstractType implements Type {
 			return Registry::factory($types[$type]);
 		}
 
-		throw new Exception(sprintf('Unsupported data type %s', $type));
+		throw new UnsupportedTypeException(sprintf('Unsupported data type %s', $type));
 	}
 
 	/**

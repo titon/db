@@ -7,7 +7,8 @@
 
 namespace Titon\Model\Driver;
 
-use Titon\Model\Exception;
+use Titon\Model\Exception\InvalidArgumentException;
+use Titon\Model\Exception\MissingColumnException;
 
 /**
  * Represents a database table schema and provides mapping for columns, indexes, types and constraints.
@@ -175,7 +176,7 @@ class Schema {
 	 * @param string $column
 	 * @param string|array $key
 	 * @return \Titon\Model\Driver\Schema
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\InvalidArgumentException
 	 */
 	public function addConstraint($type, $column, $key = null) {
 		$symbol = '';
@@ -237,7 +238,7 @@ class Schema {
 				}
 
 				if (empty($key['references'])) {
-					throw new Exception(sprintf('Foreign key for %s must reference an external table', $column));
+					throw new InvalidArgumentException(sprintf('Foreign key for %s must reference an external table', $column));
 				}
 
 				$this->_foreignKeys[$column] = $key + [
@@ -249,7 +250,7 @@ class Schema {
 
 			// Invalid constraint
 			default:
-				throw new Exception(sprintf('Invalid constraint type for %s', $column));
+				throw new InvalidArgumentException(sprintf('Invalid constraint type for %s', $column));
 			break;
 		}
 
@@ -278,14 +279,14 @@ class Schema {
 	 *
 	 * @param string $name
 	 * @return array
-	 * @throws \Titon\Model\Exception
+	 * @throws \Titon\Model\Exception\MissingColumnException
 	 */
 	public function getColumn($name) {
 		if ($this->hasColumn($name)) {
 			return $this->_columns[$name];
 		}
 
-		throw new Exception(sprintf('Table column %s does not exist', $name));
+		throw new MissingColumnException(sprintf('Table column %s does not exist', $name));
 	}
 
 	/**

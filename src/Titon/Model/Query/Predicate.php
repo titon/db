@@ -7,7 +7,6 @@
 
 namespace Titon\Model\Query;
 
-use Titon\Model\Exception;
 use \Closure;
 use \Serializable;
 use \JsonSerializable;
@@ -65,7 +64,6 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @param mixed $value
 	 * @param string $op
 	 * @return \Titon\Model\Query\Predicate
-	 * @throws \Titon\Model\Exception
 	 */
 	public function add($field, $value, $op) {
 		$key = $field . $op . (is_array($value) ? implode('', $value) : $value);
