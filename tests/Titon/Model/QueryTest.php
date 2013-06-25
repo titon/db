@@ -302,7 +302,9 @@ class QueryTest extends TestCase {
 		$query = new Query(Query::SELECT, new Profile());
 		$query->from('profiles')->where('user_id', 1);
 
-		$this->assertEquals(['Profile' => $query], $this->object->getSubQueries());
+		$queries = $this->object->getSubQueries();
+
+		$this->assertEquals($query->jsonSerialize(), $queries['Profile']->jsonSerialize());
 
 		// Test exceptions
 		try {

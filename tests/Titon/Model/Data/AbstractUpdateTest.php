@@ -64,10 +64,18 @@ class AbstractUpdateTest extends TestCase {
 			'id' => 1,
 			'country_id' => 3,
 			'username' => 'milesj',
+			'password' => '',
+			'email' => '',
+			'firstName' => '',
+			'lastName' => '',
+			'age' => '',
+			'created' => '',
+			'modified' => '',
 			'Profile' => [
 				'id' => 4,
+				'user_id' => 1,
 				'lastLogin' => '2012-06-24 17:30:33',
-				'user_id' => 1
+				'currentLogin' => ''
 			]
 		], $user->data);
 
@@ -100,10 +108,18 @@ class AbstractUpdateTest extends TestCase {
 			'id' => 1,
 			'country_id' => 3,
 			'username' => 'miles',
+			'password' => '',
+			'email' => '',
+			'firstName' => '',
+			'lastName' => '',
+			'age' => '',
+			'created' => '',
+			'modified' => '',
 			'Profile' => [
-				'currentLogin' => '2012-06-24 17:30:33',
+				'id' => 6,
 				'user_id' => 1,
-				'id' => 6
+				'lastLogin' => '',
+				'currentLogin' => '2012-06-24 17:30:33',
 			]
 		], $user->data);
 	}
@@ -127,7 +143,16 @@ class AbstractUpdateTest extends TestCase {
 
 		$this->assertTrue($series->update(3, $data));
 
-		$this->assertEquals(['id' => 3] + $data, $series->data);
+		$this->assertEquals([
+			'id' => 3,
+			'author_id' => 3,
+			'name' => 'The Lord of the Rings (Updated)',
+			'Books' => [
+				['id' => 13, 'series_id' => 3, 'name' => 'The Fellowship of the Ring (Updated)', 'isbn' => '', 'released' => ''],
+				['id' => 14, 'series_id' => 3, 'name' => 'The Two Towers (Updated)', 'isbn' => '', 'released' => ''],
+				['id' => 15, 'series_id' => 3, 'name' => 'The Return of the King (Updated)', 'isbn' => '', 'released' => ''],
+			]
+		], $series->data);
 
 		// Should throw errors for invalid array structure
 		unset($data['Books']);
@@ -163,10 +188,12 @@ class AbstractUpdateTest extends TestCase {
 
 		$this->assertTrue($book->update(5, $data));
 
-		$data = [
+		$this->assertEquals([
 			'id' => 5,
 			'series_id' => 1,
 			'name' => 'A Dance with Dragons (Updated)',
+			'isbn' => '',
+			'released' => '',
 			'Genres' => [
 				[
 					'id' => 3,
@@ -180,7 +207,7 @@ class AbstractUpdateTest extends TestCase {
 					'id' => 12,
 					'name' => 'Epic-Horror',
 					'Junction' => [
-						'id' => 15,
+						'id' => 47,
 						'book_id' => 5,
 						'genre_id' => 12
 					]
@@ -194,9 +221,7 @@ class AbstractUpdateTest extends TestCase {
 					]
 				]
 			]
-		];
-
-		$this->assertEquals($data, $book->data);
+		], $book->data);
 
 		// Should throw errors for invalid array structure
 		unset($data['Genres']);

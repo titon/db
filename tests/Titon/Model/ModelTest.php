@@ -70,10 +70,8 @@ class ModelTest extends TestCase {
 	 * Test table creation.
 	 */
 	public function testCreateTable() {
-		$this->markTestSkipped('Not working currently');
-
 		$stub = new ModelStub();
-		$sql = sprintf("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'titon_test' AND table_name = '%s';", $this->object->getTable());
+		$sql = sprintf("SELECT COUNT(`table_name`) FROM information_schema.tables WHERE table_schema = 'titon_test' AND table_name = '%s';", $stub->getTable());
 
 		$this->assertEquals(0, $stub->getDriver()->query($sql)->count());
 

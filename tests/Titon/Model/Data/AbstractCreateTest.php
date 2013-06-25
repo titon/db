@@ -46,9 +46,18 @@ class AbstractCreateTest extends TestCase {
 
 		$this->assertEquals(6, $user->create($data));
 
-		$data['id'] = 6;
-
-		$this->assertArraysEqual($data, $user->data, true);
+		$this->assertEquals([
+			'id' => 6,
+			'country_id' => 1,
+			'username' => 'ironman',
+			'firstName' => 'Tony',
+			'lastName' => 'Stark',
+			'password' => '7NAks9193KAkjs1',
+			'email' => 'ironman@email.com',
+			'age' => 38,
+			'created' => '',
+			'modified' => ''
+		], $user->data);
 
 		// Trying again should throw a unique error on username
 		unset($data['id']);
@@ -83,11 +92,24 @@ class AbstractCreateTest extends TestCase {
 
 		$this->assertEquals(6, $user->create($data));
 
-		$data['id'] = 6;
-		$data['Profile']['user_id'] = 6;
-		$data['Profile']['id'] = 6;
-
-		$this->assertArraysEqual($data, $user->data, true);
+		$this->assertEquals([
+			'id' => 6,
+			'country_id' => 1,
+			'username' => 'ironman',
+			'firstName' => 'Tony',
+			'lastName' => 'Stark',
+			'password' => '7NAks9193KAkjs1',
+			'email' => 'ironman@email.com',
+			'age' => 38,
+			'created' => '',
+			'modified' => '',
+			'Profile' => [
+				'id' => 6,
+				'user_id' => 6,
+				'lastLogin' => '2012-06-24 17:30:33',
+				'currentLogin' => ''
+			]
+		], $user->data);
 
 		// Should throw errors for invalid array structure
 		unset($data['id'], $data['Profile']);
@@ -134,16 +156,26 @@ class AbstractCreateTest extends TestCase {
 
 		$this->assertEquals(4, $series->create($data));
 
-		$data['id'] = 4;
-		$new_id = 16;
-
-		foreach ($data['Books'] as &$book) {
-			$book['series_id'] = 4;
-			$book['id'] = $new_id;
-			$new_id++;
-		}
-
-		$this->assertArraysEqual($data, $series->data, true);
+		$this->assertEquals([
+			'id' => 4,
+			'author_id' => '',
+			'name' => 'A Series Of Unfortunate Events',
+			'Books' => [
+				['id' => 16, 'series_id' => 4, 'name' => 'The Bad Beginning', 'isbn' => '', 'released' => ''],
+				['id' => 17, 'series_id' => 4, 'name' => 'The Reptile Room', 'isbn' => '', 'released' => ''],
+				['id' => 18, 'series_id' => 4, 'name' => 'The Wide Window', 'isbn' => '', 'released' => ''],
+				['id' => 19, 'series_id' => 4, 'name' => 'The Miserable Mill', 'isbn' => '', 'released' => ''],
+				['id' => 20, 'series_id' => 4, 'name' => 'The Austere Academy', 'isbn' => '', 'released' => ''],
+				['id' => 21, 'series_id' => 4, 'name' => 'The Ersatz Elevator', 'isbn' => '', 'released' => ''],
+				['id' => 22, 'series_id' => 4, 'name' => 'The Vile Village', 'isbn' => '', 'released' => ''],
+				['id' => 23, 'series_id' => 4, 'name' => 'The Hostile Hospital', 'isbn' => '', 'released' => ''],
+				['id' => 24, 'series_id' => 4, 'name' => 'The Carnivorous Carnival', 'isbn' => '', 'released' => ''],
+				['id' => 25, 'series_id' => 4, 'name' => 'The Slippery Slope', 'isbn' => '', 'released' => ''],
+				['id' => 26, 'series_id' => 4, 'name' => 'The Grim Grotto', 'isbn' => '', 'released' => ''],
+				['id' => 27, 'series_id' => 4, 'name' => 'The Penultimate Peril', 'isbn' => '', 'released' => ''],
+				['id' => 28, 'series_id' => 4, 'name' => 'The End', 'isbn' => '', 'released' => ''],
+			]
+		], $series->data);
 
 		// Should throw errors for invalid array structure
 		unset($data['id'], $data['Books']);
@@ -164,8 +196,6 @@ class AbstractCreateTest extends TestCase {
 	 * Test row inserting with many to many relation data.
 	 */
 	public function testCreateWithManyToMany() {
-		$this->markTestIncomplete('Cannot finish to update() is tested');
-
 		$this->loadFixtures(['Genres', 'Books', 'BookGenres']);
 
 		$book = new Book();
@@ -185,21 +215,35 @@ class AbstractCreateTest extends TestCase {
 			'id' => 16,
 			'series_id' => 1,
 			'name' => 'The Winds of Winter',
+			'isbn' => '',
+			'released' => '',
 			'Genres' => [
 				[
 					'id' => 3,
-					'name' => 'Action-Adventure2',
-					'Junction' => ['book_id' => 16, 'genre_id' => 3, 'id' => 47]
+					'name' => 'Action-Adventure',
+					'Junction' => [
+						'book_id' => 16,
+						'genre_id' => 3,
+						'id' => 47
+					]
 				],
 				[
-					'name' => 'Epic-Horror',
 					'id' => 12,
-					'Junction' => ['book_id' => 16, 'genre_id' => 12, 'id' => 48]
+					'name' => 'Epic-Horror',
+					'Junction' => [
+						'book_id' => 16,
+						'genre_id' => 12,
+						'id' => 48
+					]
 				],
 				[
 					'id' => 8,
 					'name' => 'Fantasy',
-					'Junction' => ['book_id' => 16, 'genre_id' => 8, 'id' => 49]
+					'Junction' => [
+						'book_id' => 16,
+						'genre_id' => 8,
+						'id' => 49
+					]
 				]
 			]
 		], $book->data);

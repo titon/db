@@ -806,7 +806,16 @@ class Model extends Base {
 	 * @return \Titon\Model\Model
 	 */
 	public function setData(array $data) {
-		$this->data = Hash::merge($data, $this->data);
+		$base = [];
+
+		// Add empty values for missing fields
+		if ($schema = $this->getSchema()) {
+			$base = array_map(function() {
+				return '';
+			}, $schema->getColumns());
+		}
+
+		$this->data = Hash::merge($base, $this->data, $data);
 
 		return $this;
 	}
@@ -963,17 +972,22 @@ class Model extends Base {
 					if (!$relatedData[$rpk]) {
 						throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
 					}
+
+					$relatedData = $relatedModel->data;
 				break;
 
 				// Loop through and append the foreign key with the current ID
 				case Relation::ONE_TO_MANY:
-					foreach ($relatedData as &$hasManyData) {
+					foreach ($relatedData as $i => $hasManyData) {
 						$hasManyData[$rfk] = $id;
 						$hasManyData[$rpk] = $relatedModel->upsert($hasManyData);
 
 						if (!$hasManyData[$rpk]) {
 							throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
 						}
+
+						$hasManyData = $relatedModel->data;
+						$relatedData[$i] = $hasManyData;
 					}
 				break;
 
@@ -981,20 +995,17 @@ class Model extends Base {
 				// Use that foreign ID with the current ID and save in the junction table
 				case Relation::MANY_TO_MANY:
 					$junctionModel = Registry::factory($relation->getJunctionModel());
-					$junctionData = [$fk => $id];
 					$jpk = $junctionModel->getPrimaryKey();
 
-					foreach ($relatedData as &$habtmData) {
-
-						// Existing record by relation primary key
-						if (isset($habtmData[$rpk])) {
-							$foreign_id = $relatedModel->upsert($habtmData);
+					foreach ($relatedData as $i => $habtmData) {
+						$junctionData = [$fk => $id];
 
 						// Existing record by junction foreign key
-						} else if (isset($habtmData[$rfk])) {
+						if (isset($habtmData[$rfk])) {
 							$foreign_id = $habtmData[$rfk];
 							$habtmData = $relatedModel->select()->where($rpk, $foreign_id)->fetch(false);
 
+						// Existing record by relation primary key
 						// New record
 						} else {
 							$foreign_id = $relatedModel->upsert($habtmData);
@@ -1024,6 +1035,7 @@ class Model extends Base {
 						}
 
 						$habtmData['Junction'] = $junctionData;
+						$relatedData[$i] = $habtmData;
 					}
 				break;
 
