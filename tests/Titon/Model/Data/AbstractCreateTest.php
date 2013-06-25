@@ -48,7 +48,7 @@ class AbstractCreateTest extends TestCase {
 
 		$data['id'] = 6;
 
-		$this->assertEquals($data, $user->data);
+		$this->assertArraysEqual($data, $user->data, true);
 
 		// Trying again should throw a unique error on username
 		unset($data['id']);
@@ -85,8 +85,9 @@ class AbstractCreateTest extends TestCase {
 
 		$data['id'] = 6;
 		$data['Profile']['user_id'] = 6;
+		$data['Profile']['id'] = 6;
 
-		$this->assertEquals($data, $user->data);
+		$this->assertArraysEqual($data, $user->data, true);
 
 		// Should throw errors for invalid array structure
 		unset($data['id'], $data['Profile']);
@@ -134,12 +135,15 @@ class AbstractCreateTest extends TestCase {
 		$this->assertEquals(4, $series->create($data));
 
 		$data['id'] = 4;
+		$new_id = 16;
 
 		foreach ($data['Books'] as &$book) {
 			$book['series_id'] = 4;
+			$book['id'] = $new_id;
+			$new_id++;
 		}
 
-		$this->assertEquals($data, $series->data);
+		$this->assertArraysEqual($data, $series->data, true);
 
 		// Should throw errors for invalid array structure
 		unset($data['id'], $data['Books']);
@@ -178,9 +182,9 @@ class AbstractCreateTest extends TestCase {
 		$this->assertEquals(16, $book->create($data));
 
 		$this->assertEquals([
+			'id' => 16,
 			'series_id' => 1,
 			'name' => 'The Winds of Winter',
-			'id' => 16,
 			'Genres' => [
 				[
 					'id' => 3,

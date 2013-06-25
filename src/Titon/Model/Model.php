@@ -169,7 +169,7 @@ class Model extends Base {
 			$id = $driver->getLastInsertID();
 		}
 
-		$this->data = $data + [$this->getPrimaryKey() => $id];
+		$this->setData([$this->getPrimaryKey() => $id] + $data);
 		$this->postSave($id, true);
 
 		return $id;
@@ -800,6 +800,18 @@ class Model extends Base {
 	}
 
 	/**
+	 * Set and merge result data into the model.
+	 *
+	 * @param array $data
+	 * @return \Titon\Model\Model
+	 */
+	public function setData(array $data) {
+		$this->data = Hash::merge($data, $this->data);
+
+		return $this;
+	}
+
+	/**
 	 * Set the schema for this model.
 	 *
 	 * @param \Titon\Model\Driver\Schema $schema
@@ -870,7 +882,7 @@ class Model extends Base {
 			}
 		}
 
-		$this->data = $data + [$this->getPrimaryKey() => $id];
+		$this->setData([$this->getPrimaryKey() => $id] + $data);
 		$this->postSave($id);
 
 		return true;
@@ -946,16 +958,22 @@ class Model extends Base {
 				// Append the foreign key with the current ID
 				case Relation::ONE_TO_ONE:
 					$relatedData[$rfk] = $id;
+					$relatedData[$rpk] = $relatedModel->upsert($relatedData);
 
-					$relatedModel->upsert($relatedData);
+					if (!$relatedData[$rpk]) {
+						throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
+					}
 				break;
 
 				// Loop through and append the foreign key with the current ID
 				case Relation::ONE_TO_MANY:
 					foreach ($relatedData as &$hasManyData) {
 						$hasManyData[$rfk] = $id;
+						$hasManyData[$rpk] = $relatedModel->upsert($hasManyData);
 
-						$relatedModel->upsert($hasManyData);
+						if (!$hasManyData[$rpk]) {
+							throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
+						}
 					}
 				break;
 
@@ -970,11 +988,12 @@ class Model extends Base {
 
 						// Existing record by relation primary key
 						if (isset($habtmData[$rpk])) {
-							$foreign_id = $relatedModel->upsert($habtmData, $habtmData[$rpk]);
+							$foreign_id = $relatedModel->upsert($habtmData);
 
 						// Existing record by junction foreign key
 						} else if (isset($habtmData[$rfk])) {
 							$foreign_id = $habtmData[$rfk];
+							$habtmData = $relatedModel->select()->where($rpk, $foreign_id)->fetch(false);
 
 						// New record
 						} else {
@@ -982,9 +1001,13 @@ class Model extends Base {
 							$habtmData = $relatedModel->data;
 						}
 
+						if (!$foreign_id) {
+							throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
+						}
+
 						$junctionData[$rfk] = $foreign_id;
 
-						// Only create the record if it doesn't already exist
+						// Only create the record if the junction doesn't already exist
 						$exists = $junctionModel->select()
 							->where($fk, $id)
 							->where($rfk, $foreign_id)
@@ -992,8 +1015,12 @@ class Model extends Base {
 
 						if (!$exists) {
 							$junctionData[$jpk] = $junctionModel->upsert($junctionData);
+
+							if (!$junctionData[$jpk]) {
+								throw new QueryFailureException(sprintf('Failed to upsert %s junction data', $alias));
+							}
 						} else {
-							$junctionData = $jpk;
+							$junctionData = $exists;
 						}
 
 						$habtmData['Junction'] = $junctionData;
@@ -1006,7 +1033,7 @@ class Model extends Base {
 				break;
 			}
 
-			$this->data[$alias] = $relatedData;
+			$this->setData([$alias => $relatedData]);
 
 			$updated++;
 		}
@@ -1116,8 +1143,9 @@ class Model extends Base {
 			}
 
 			$relatedData = $data[$alias];
+			$type = $relation->getType();
 
-			switch ($relation->getType()) {
+			switch ($type) {
 				// Only child records can be validated
 				case Relation::MANY_TO_ONE:
 					continue;
@@ -1128,14 +1156,24 @@ class Model extends Base {
 				case Relation::ONE_TO_MANY:
 				case Relation::MANY_TO_MANY:
 					if (!Hash::isNumeric(array_keys($relatedData))) {
-						throw new InvalidRelationStructureException(sprintf('%s related data must be structured in a numerical multi-dimension array', $relation->getType()));
+						throw new InvalidRelationStructureException(sprintf('%s related data must be structured in a numerical multi-dimension array', $alias));
+					}
+
+					if ($type === Relation::MANY_TO_MANY) {
+						$isNotArray = Hash::some($relatedData, function($value) {
+							return !is_array($value);
+						});
+
+						if ($isNotArray) {
+							throw new InvalidRelationStructureException(sprintf('%s related data values must be structured arrays', $alias));
+						}
 					}
 				break;
 
 				// A single dimension of data
 				case Relation::ONE_TO_ONE:
 					if (Hash::isNumeric(array_keys($relatedData))) {
-						throw new InvalidRelationStructureException(sprintf('%s related data must be structured in a single-dimension array', $relation->getType()));
+						throw new InvalidRelationStructureException(sprintf('%s related data must be structured in a single-dimension array', $alias));
 					}
 				break;
 			}

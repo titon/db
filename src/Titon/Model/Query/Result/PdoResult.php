@@ -121,8 +121,15 @@ class PdoResult extends AbstractResult implements Result {
 		$startTime = microtime();
 
 		if ($this->_statement->execute()) {
-			if (preg_match('/^(update|insert|delete)/i', $this->_statement->queryString)) {
-				$this->_count = $this->_statement->rowCount();
+			if (preg_match('/^(update|insert|delete)/i', $this->_statement->queryString, $matches)) {
+				$count = $this->_statement->rowCount();
+
+				// If an update succeeds but no data changes, the row count will be 0, force it to 1
+				if (strtolower($matches[1]) === 'update') {
+					$this->_count = ($count == 0) ? 1 : $count;
+				} else {
+					$this->_count = $count;
+				}
 			} else {
 				$this->_count = 1;
 			}
