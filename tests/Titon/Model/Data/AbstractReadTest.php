@@ -665,6 +665,24 @@ class AbstractReadTest extends TestCase {
 	}
 
 	/**
+	 * Test row counting.
+	 */
+	public function testSelectCount() {
+		$this->loadFixtures('Books');
+
+		$book = new Book();
+
+		$query = $book->select();
+		$this->assertEquals(15, $query->count());
+
+		$query->where('series_id', 2);
+		$this->assertEquals(7, $query->count());
+
+		$query->where('name', 'like', '%prince%');
+		$this->assertEquals(1, $query->count());
+	}
+
+	/**
 	 * Test field filtering. Foreign keys and primary keys should always be present even if excluded.
 	 */
 	public function testFieldFiltering() {
@@ -826,6 +844,131 @@ class AbstractReadTest extends TestCase {
 			new Entity(['id' => 2, 'series_id' => 1, 'name' => 'A Clash of Kings']),
 			new Entity(['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones']),
 		], $book->select('id', 'series_id', 'name')->orderBy('RAND')->fetchAll());
+	}
+
+	/**
+	 * Test where predicates using AND conjunction.
+	 */
+	public function testWhereAnd() {
+		$this->loadFixtures('Stats');
+
+		$stat = new Stat();
+
+		$this->assertEquals([
+			[
+				'id' => 2,
+				'name' => 'Ranger',
+				'health' => 800,
+				'isMelee' => false
+			]
+		], $stat->select('id', 'name', 'health', 'isMelee')
+			->where('isMelee', false)
+			->where('health', '>=', 700)
+			->fetchAll(false));
+
+		$this->assertEquals([
+			[
+				'id' => 2,
+				'name' => 'Ranger',
+				'health' => 800,
+				'energy' => 335,
+				'range' => 6.75
+			], [
+				'id' => 3,
+				'name' => 'Mage',
+				'health' => 600,
+				'energy' => 600,
+				'range' => 8.33
+			]
+		], $stat->select('id', 'name', 'health', 'energy', 'range')
+			->where('health', '<', 1000)
+			->where('range', '>=', 5)
+			->where('energy', '!=', 0)
+			->fetchAll(false));
+
+		$this->assertEquals([
+			[
+				'id' => 1,
+				'name' => 'Warrior',
+				'health' => 1500,
+				'isMelee' => true,
+				'range' => 1
+			]
+		], $stat->select('id', 'name', 'health', 'isMelee', 'range')
+			->where(function() {
+				$this->gte('health', 500)->lte('range', 7)->eq('isMelee', true);
+			})->fetchAll(false));
+	}
+
+	/**
+	 * Test where predicates using OR conjunction.
+	 */
+	public function testWhereOr() {
+		$this->loadFixtures('Stats');
+
+		$stat = new Stat();
+
+		$this->assertEquals([
+			[
+				'id' => 1,
+				'name' => 'Warrior',
+				'health' => 1500,
+				'range' => 1
+			], [
+				'id' => 3,
+				'name' => 'Mage',
+				'health' => 600,
+				'range' => 8.33
+			]
+		], $stat->select('id', 'name', 'health', 'range')
+			->orWhere('health', '>', 1000)
+			->orWhere('range', '>', 7)
+			->fetchAll(false));
+
+		$this->assertEquals([
+			[
+				'id' => 1,
+				'name' => 'Warrior',
+				'damage' => 125.25,
+				'defense' => 55.75,
+				'range' => 1
+			], [
+				'id' => 2,
+				'name' => 'Ranger',
+				'damage' => 90.45,
+				'defense' => 30.5,
+				'range' => 6.75
+			], [
+				'id' => 3,
+				'name' => 'Mage',
+				'damage' => 55.84,
+				'defense' => 40.15,
+				'range' => 8.33
+			]
+		], $stat->select('id', 'name', 'damage', 'defense', 'range')
+			->orWhere(function() {
+				$this->gt('damage', 100)->gt('range', 5)->gt('defense', 50);
+			})
+			->fetchAll(false));
+	}
+
+	/**
+	 * Test nested where predicates.
+	 */
+	public function testWhereNested() {
+		$this->loadFixtures('Stats');
+
+		$stat = new Stat();
+
+		$this->assertEquals([
+			['id' => 3, 'name' => 'Mage']
+		], $stat->select('id', 'name')
+			->where(function() {
+				$this->eq('isMelee', false);
+				$this->either(function() {
+					$this->lte('health', 600)->lte('damage', 60);
+				});
+			})->fetchAll(false));
 	}
 
 }

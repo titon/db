@@ -76,6 +76,17 @@ abstract class AbstractUpdateTest extends TestCase {
 	}
 
 	/**
+	 * Test updating with empty data.
+	 */
+	public function testUpdateEmptyData() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertFalse($user->update(1, []));
+	}
+
+	/**
 	 * Test expressions in fields while updating.
 	 */
 	public function testUpdateExpressions() {

@@ -94,7 +94,7 @@ class Expr {
 	 * @return bool
 	 */
 	public function useValue() {
-		return ($this->getOperator() && $this->getValue());
+		return ($this->getOperator() !== null && $this->getValue() !== null);
 	}
 
 }
