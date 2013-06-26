@@ -7,7 +7,6 @@
 
 namespace Titon\Model\Data;
 
-use Titon\Model\Entity;
 use Titon\Model\Query;
 use Titon\Test\Stub\Model\Book;
 use Titon\Test\Stub\Model\Series;
@@ -59,7 +58,7 @@ class AbstractUpdateTest extends TestCase {
 	}
 
 	/**
-	 * Test basic database record updating.
+	 * Test database record updating of a record that doesn't exist.
 	 */
 	public function testUpdateNonexistingRecord() {
 		$this->loadFixtures('Users');
@@ -73,6 +72,25 @@ class AbstractUpdateTest extends TestCase {
 		$this->assertTrue($user->update(10, $data)); // Will execute successfully however
 
 		$this->assertEquals([], $user->select()->where('id', 10)->fetch(false)); // But it wont exist
+	}
+
+	/**
+	 * Test database record updating against unique columns.
+	 */
+	public function testUpdateUniqueColumn() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+		$data = [
+			'username' => 'batman' // name already exists
+		];
+
+		try {
+			$this->assertTrue($user->update(1, $data));
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
 	}
 
 	/**
@@ -389,6 +407,27 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 4, 'country_id' => null, 'username' => 'spiderman'],
 			['id' => 5, 'country_id' => 4, 'username' => 'wolverine'],
 		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+	}
+
+	/**
+	 * Test multiple record updates setting empty values.
+	 */
+	public function testUpdateMultipleEmptyValue() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertSame(5, $user->query(Query::UPDATE)
+			->fields(['firstName' => ''])
+			->save());
+
+		$this->assertEquals([
+			['id' => 1, 'username' => 'miles', 'firstName' => ''],
+			['id' => 2, 'username' => 'batman', 'firstName' => ''],
+			['id' => 3, 'username' => 'superman', 'firstName' => ''],
+			['id' => 4, 'username' => 'spiderman', 'firstName' => ''],
+			['id' => 5, 'username' => 'wolverine', 'firstName' => ''],
+		], $user->select('id', 'username', 'firstName')->fetchAll(false));
 	}
 
 	/**
