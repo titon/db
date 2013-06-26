@@ -241,49 +241,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
-	 * Format the predicate object by grouping nested predicates and parameters.
-	 *
-	 * @param \Titon\Model\Query\Predicate $predicate
-	 * @return string
-	 */
-	public function formatPredicate(Predicate $predicate) {
-		$output = [];
-
-		foreach ($predicate->getParams() as $param) {
-			if ($param instanceof Predicate) {
-				$output[] = sprintf($this->getClause('valueGroup'), $this->formatPredicate($param));
-
-			} else if ($param instanceof Expr) {
-				$field = $this->quote($param->getField());
-				$operator = $param->getOperator();
-
-				switch ($operator) {
-					case Expr::IN:
-					case Expr::NOT_IN:
-						$value = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($param->getValue()), '?')));
-					break;
-					case Expr::NOT:
-					case Expr::NULL:
-					case Expr::NOT_NULL:
-					case Expr::BETWEEN:
-					case Expr::NOT_BETWEEN:
-					case Expr::LIKE:
-					case Expr::NOT_LIKE:
-						$value = sprintf($this->getClause($operator), $field);
-					break;
-					default:
-						$value = sprintf('%s %s ?', $field, $operator);
-					break;
-				}
-
-				$output[] = $value;
-			}
-		}
-
-		return implode(' ' . $this->getClause($predicate->getType()) . ' ', $output);
-	}
-
-	/**
 	 * Format columns for a table schema.
 	 *
 	 * @param \Titon\Model\Driver\Schema $schema
@@ -354,7 +311,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 				foreach ($fields as $field) {
 					if ($field instanceof Func) {
-						$columns[] = $field->toString();
+						$columns[] = $this->formatFunction($field);
 					} else {
 						$columns[] = $this->quote($field);
 					}
@@ -375,6 +332,41 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Format a database function.
+	 *
+	 * @param \Titon\Model\Query\Func $func
+	 * @return string
+	 */
+	public function formatFunction(Func $func) {
+		$arguments = [];
+
+		foreach ($func->getArguments() as $arg) {
+			$type = $arg['type'];
+			$value = $arg['value'];
+
+			if ($value instanceof Func) {
+				$value = $this->formatFunction($value);
+
+			} else if ($type === Func::FIELD) {
+				$value = $this->quote($value);
+
+			} else if ($type === Func::LITERAL) {
+				// Do nothing
+
+			} else if (is_string($value) || $value === null) {
+				$value = $this->getDriver()->escape($value);
+			}
+
+			$arguments[] = $value;
+		}
+
+		return sprintf($this->getClause('function'),
+			$func->getName(),
+			implode($func->getSeparator(), $arguments)
+		);
 	}
 
 	/**
@@ -446,7 +438,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 			foreach ($orderBy as $field => $direction) {
 				if ($direction instanceof Func) {
-					$output[] = $direction->toString();;
+					$output[] = $this->formatFunction($direction);
 				} else {
 					$output[] = $this->quote($field) . ' ' . $this->getClause($direction);
 				}
@@ -456,6 +448,49 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Format the predicate object by grouping nested predicates and parameters.
+	 *
+	 * @param \Titon\Model\Query\Predicate $predicate
+	 * @return string
+	 */
+	public function formatPredicate(Predicate $predicate) {
+		$output = [];
+
+		foreach ($predicate->getParams() as $param) {
+			if ($param instanceof Predicate) {
+				$output[] = sprintf($this->getClause('valueGroup'), $this->formatPredicate($param));
+
+			} else if ($param instanceof Expr) {
+				$field = $this->quote($param->getField());
+				$operator = $param->getOperator();
+
+				switch ($operator) {
+					case Expr::IN:
+					case Expr::NOT_IN:
+						$value = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($param->getValue()), '?')));
+					break;
+					case Expr::NOT:
+					case Expr::NULL:
+					case Expr::NOT_NULL:
+					case Expr::BETWEEN:
+					case Expr::NOT_BETWEEN:
+					case Expr::LIKE:
+					case Expr::NOT_LIKE:
+						$value = sprintf($this->getClause($operator), $field);
+					break;
+					default:
+						$value = sprintf('%s %s ?', $field, $operator);
+					break;
+				}
+
+				$output[] = $value;
+			}
+		}
+
+		return implode(' ' . $this->getClause($predicate->getType()) . ' ', $output);
 	}
 
 	/**

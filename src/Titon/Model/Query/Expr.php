@@ -61,6 +61,18 @@ class Expr {
 	}
 
 	/**
+	 * Instantiate a new database expression.
+	 *
+	 * @param string $field
+	 * @param string $operator
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Expr
+	 */
+	public function expr($field, $operator = null, $value = null) {
+		return new Expr($field, $operator, $value);
+	}
+
+	/**
 	 * Return the field name.
 	 *
 	 * @return string
@@ -85,23 +97,6 @@ class Expr {
 	 */
 	public function getValue() {
 		return $this->_value;
-	}
-
-	/**
-	 * Return the expression formatted in the correct SQL structure.
-	 *
-	 * @return string
-	 */
-	public function toString() {
-		$field = $this->getField();
-		$operator = $this->getOperator();
-		$value = $this->getValue();
-
-		if ($operator && $value) {
-			return sprintf('%s %s %s', $field, $operator, $value);
-		}
-
-		return $field;
 	}
 
 }

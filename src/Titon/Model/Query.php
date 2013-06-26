@@ -253,7 +253,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @param mixed $value
 	 * @return \Titon\Model\Query\Expr
 	 */
-	public function expr($field, $operator = '=', $value = null) {
+	public function expr($field, $operator = null, $value = null) {
 		return new Expr($field, $operator, $value);
 	}
 
@@ -338,10 +338,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Func
 	 */
 	public function func($name, $arguments = [], $separator = ', ') {
-		$func = new Func($name, $arguments, $separator);
-		$func->setDriver($this->getModel()->getDriver());
-
-		return $func;
+		return new Func($name, $arguments, $separator);
 	}
 
 	/**

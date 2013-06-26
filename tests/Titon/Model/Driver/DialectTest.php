@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver;
 
+use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Query;
 use Titon\Test\Stub\DialectStub;
@@ -211,25 +212,6 @@ class DialectTest extends TestCase {
 	}
 
 	/**
-	 * Test nested predicates get parsed correctly.
-	 */
-	public function testFormatPredicate() {
-		$pred = new Predicate(Predicate::ALSO);
-		$pred->eq('id', 1)->gte('age', 12);
-
-		$this->assertEquals('`id` = ? AND `age` >= ?', $this->object->formatPredicate($pred));
-
-		$pred->either(function() {
-			$this->like('name', '%Titon%')->notLike('name', '%Symfony%');
-			$this->also(function() {
-				$this->eq('active', 1)->notEq('status', 2);
-			});
-		});
-
-		$this->assertEquals('`id` = ? AND `age` >= ? AND (`name` LIKE ? OR `name` NOT LIKE ? OR (`active` = ? AND `status` != ?))', $this->object->formatPredicate($pred));
-	}
-
-	/**
 	 * Test table column formatting builds according to the attributes defined.
 	 */
 	public function testFormatColumns() {
@@ -309,6 +291,40 @@ class DialectTest extends TestCase {
 	}
 
 	/**
+	 * Test that function formatting parses types.
+	 */
+	public function testFormatFunction() {
+		$func = new Func('SUBSTRING', ['TitonFramework', 5]);
+		$this->assertEquals("SUBSTRING('TitonFramework', 5)", $this->object->formatFunction($func));
+
+		$func = new Func('INSERT', ['Titon', 3, 5, 'Framework']);
+		$this->assertEquals("INSERT('Titon', 3, 5, 'Framework')", $this->object->formatFunction($func));
+
+		$func = new Func('CHAR', [77, 77.3, '77.3']);
+		$this->assertEquals("CHAR(77, 77.3, '77.3')", $this->object->formatFunction($func));
+
+		$func = new Func('CONCAT', ['Titon', null, 'Framework']);
+		$this->assertEquals("CONCAT('Titon', NULL, 'Framework')", $this->object->formatFunction($func));
+
+		$func = new Func('SUBSTRING', ['Titon', 'FROM -4 FOR 2' => Func::LITERAL], ' ');
+		$this->assertEquals("SUBSTRING('Titon' FROM -4 FOR 2)", $this->object->formatFunction($func));
+
+		$func = new Func('TRIM', ["TRAILING 'xyz' FROM 'barxxyz'" => Func::LITERAL]);
+		$this->assertEquals("TRIM(TRAILING 'xyz' FROM 'barxxyz')", $this->object->formatFunction($func));
+
+		$func = new Func('COUNT', ['id' => Func::FIELD]);
+		$this->assertEquals("COUNT(`id`)", $this->object->formatFunction($func));
+
+		$func1 = new Func('HEX', 255);
+		$func2 = new Func('CONV', [$func1, 16, 10]);
+		$this->assertEquals("CONV(HEX(255), 16, 10)", $this->object->formatFunction($func2));
+
+		$func1 = new Func('CHAR', ['0x65 USING utf8' => Func::LITERAL]);
+		$func2 = new Func('CHARSET', $func1);
+		$this->assertEquals("CHARSET(CHAR(0x65 USING utf8))", $this->object->formatFunction($func2));
+	}
+
+	/**
 	 * Test fields and values format depending on the query type.
 	 */
 	public function testFormatFields() {
@@ -321,8 +337,7 @@ class DialectTest extends TestCase {
 		$this->assertEquals('(`id`, `username`, `email`)', $this->object->formatFields($fields, Query::INSERT));
 		$this->assertEquals('`id` = ?, `username` = ?, `email` = ?', $this->object->formatFields($fields, Query::UPDATE));
 
-		$func = new Query\Func('SUM', ['id' => Query\Func::FIELD]);
-		$func->setDriver($this->object->getDriver());
+		$func = new Func('SUM', ['id' => Func::FIELD]);
 
 		$fields = array_keys($fields);
 		$fields[] = $func;
@@ -377,10 +392,28 @@ class DialectTest extends TestCase {
 		$this->assertEquals('ORDER BY `id` ASC', $this->object->formatOrderBy(['id' => 'asc']));
 		$this->assertEquals('ORDER BY `id` ASC, `username` DESC', $this->object->formatOrderBy(['id' => 'asc', 'username' => 'desc']));
 
-		$func = new Query\Func('RAND');
-		$func->setDriver($this->object->getDriver());
+		$func = new Func('RAND');
 
 		$this->assertEquals('ORDER BY RAND()', $this->object->formatOrderBy([$func]));
+	}
+
+	/**
+	 * Test nested predicates get parsed correctly.
+	 */
+	public function testFormatPredicate() {
+		$pred = new Predicate(Predicate::ALSO);
+		$pred->eq('id', 1)->gte('age', 12);
+
+		$this->assertEquals('`id` = ? AND `age` >= ?', $this->object->formatPredicate($pred));
+
+		$pred->either(function() {
+			$this->like('name', '%Titon%')->notLike('name', '%Symfony%');
+			$this->also(function() {
+				$this->eq('active', 1)->notEq('status', 2);
+			});
+		});
+
+		$this->assertEquals('`id` = ? AND `age` >= ? AND (`name` LIKE ? OR `name` NOT LIKE ? OR (`active` = ? AND `status` != ?))', $this->object->formatPredicate($pred));
 	}
 
 	/**

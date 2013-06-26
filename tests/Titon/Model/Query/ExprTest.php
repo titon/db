@@ -25,7 +25,6 @@ class ExprTest extends TestCase {
 		$this->assertEquals('column', $expr->getField());
 		$this->assertEquals('+', $expr->getOperator());
 		$this->assertEquals('5', $expr->getValue());
-		$this->assertEquals('column + 5', $expr->toString());
 	}
 
 }

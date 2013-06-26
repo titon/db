@@ -8,7 +8,6 @@
 namespace Titon\Model\Query;
 
 use Titon\Model\Driver;
-use Titon\Model\Traits\DriverAware;
 
 /**
  * The Func class represents an SQL function with optional arguments.
@@ -34,7 +33,6 @@ use Titon\Model\Traits\DriverAware;
  * @package Titon\Model\Query
  */
 class Func {
-	use DriverAware;
 
 	const FIELD = 'field';
 	const LITERAL = 'literal';
@@ -68,39 +66,24 @@ class Func {
 	 * @param string $separator
 	 */
 	public function __construct($name, $arguments = [], $separator = ', ') {
+		$this->_name = strtoupper($name);
+		$this->_separator = $separator;
+
 		if (!is_array($arguments)) {
 			$arguments = [$arguments];
 		}
 
-		$this->_name = strtoupper($name);
-		$this->_separator = $separator;
-		$this->_arguments = $arguments;
-	}
+		foreach ($arguments as $arg => $type) {
+			if (is_numeric($arg)) {
+				$arg = $type;
+				$type = null;
+			}
 
-	/**
-	 * Magic method for toString().
-	 *
-	 * @return string
-	 */
-	public function __toString() {
-		return $this->toString();
-	}
-
-	/**
-	 * Add an argument to the list.
-	 *
-	 * @param string $arg
-	 * @param mixed $type
-	 * @return \Titon\Model\Query\Func
-	 */
-	public function addArgument($arg, $type = null) {
-		if ($type) {
-			$this->_arguments[$arg] = $type;
-		} else {
-			$this->_arguments[] = $arg;
+			$this->_arguments[] = [
+				'type' => $type,
+				'value' => $arg
+			];
 		}
-
-		return $this;
 	}
 
 	/**
@@ -112,10 +95,7 @@ class Func {
 	 * @return \Titon\Model\Query\Func
 	 */
 	public function func($name, $arguments = [], $separator = ', ') {
-		$func = new Func($name, $arguments, $separator);
-		$func->setDriver($this->getDriver());
-
-		return $func;
+		return new Func($name, $arguments, $separator);
 	}
 
 	/**
@@ -129,36 +109,11 @@ class Func {
 
 	/**
 	 * Return the list of arguments.
-	 * Depending on the argument type, quote or escape the value.
 	 *
 	 * @return array
 	 */
 	public function getArguments() {
-		$arguments = [];
-
-		foreach ($this->_arguments as $arg => $type) {
-			if (is_numeric($arg)) {
-				$arg = $type;
-				$type = null;
-			}
-
-			if ($type === self::FIELD) {
-				$arg = $this->getDriver()->getDialect()->quote($arg);
-
-			} else if ($type === self::LITERAL) {
-				// Do nothing
-
-			} else if (is_string($arg)) {
-				$arg = $this->getDriver()->escape($arg);
-
-			} else if ($arg === null) {
-				$arg = 'null';
-			}
-
-			$arguments[] = $arg;
-		}
-
-		return $arguments;
+		return $this->_arguments;
 	}
 
 	/**
@@ -168,18 +123,6 @@ class Func {
 	 */
 	public function getSeparator() {
 		return $this->_separator;
-	}
-
-	/**
-	 * Return the function and arguments formatted in the correct SQL structure.
-	 *
-	 * @return string
-	 */
-	public function toString() {
-		return sprintf($this->getDriver()->getDialect()->getClause('function'),
-			$this->getName(),
-			implode($this->getSeparator(), $this->getArguments())
-		);
 	}
 
 }
