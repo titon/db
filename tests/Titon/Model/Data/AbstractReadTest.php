@@ -8,10 +8,12 @@
 namespace Titon\Model\Data;
 
 use Titon\Model\Entity;
+use Titon\Model\Query\Func;
 use Titon\Test\Stub\Model\Author;
 use Titon\Test\Stub\Model\Book;
 use Titon\Test\Stub\Model\Genre;
 use Titon\Test\Stub\Model\Series;
+use Titon\Test\Stub\Model\Stat;
 use Titon\Test\TestCase;
 use \Exception;
 
@@ -620,6 +622,46 @@ class AbstractReadTest extends TestCase {
 				]),
 			]
 		]), $actual);
+	}
+
+	/**
+	 * Test functions in select statements.
+	 */
+	public function testSelectFunctions() {
+		$this->loadFixtures('Stats');
+
+		$stat = new Stat();
+
+		// SUM
+		$query = $stat->select();
+		$query->fields([
+			$query->func('SUM', ['health' => Func::FIELD])->asAlias('sum')
+		]);
+
+		$this->assertEquals(['sum' => 2900], $query->fetch(false));
+
+		// SUBSTRING
+		$query = $stat->select();
+		$query->fields([
+			$query->func('SUBSTRING', ['name' => Func::FIELD, 1, 3])->asAlias('shortName')
+		]);
+
+		$this->assertEquals([
+			['shortName' => 'War'],
+			['shortName' => 'Ran'],
+			['shortName' => 'Mag'],
+		], $query->fetchAll(false));
+
+		// SUBSTRING as field in where
+		$query = $stat->select('id', 'name');
+		$query->where(
+			$query->func('SUBSTRING', ['name' => Func::FIELD, -3]),
+			'ior'
+		);
+
+		$this->assertEquals([
+			['id' => 1, 'name' => 'Warrior']
+		], $query->fetchAll(false));
 	}
 
 	/**

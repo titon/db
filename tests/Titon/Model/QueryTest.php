@@ -238,7 +238,7 @@ class QueryTest extends TestCase {
 
 		$this->assertEquals(Predicate::EITHER, $this->object->getWhere()->getType());
 
-		$expected['levelbetween1100'] = new Expr('level', 'between', [1, 100]);
+		$expected['levelbetween[1,100]'] = new Expr('level', 'between', [1, 100]);
 
 		$this->object->orWhere(function() {
 			$this->between('level', 1, 100);
@@ -254,7 +254,7 @@ class QueryTest extends TestCase {
 
 		$this->object->orWhere('size', Expr::NOT_IN, [1, 2]);
 
-		$expected['sizenotIn12'] = new Expr('size', 'notIn', [1, 2]);
+		$expected['sizenotIn[1,2]'] = new Expr('size', 'notIn', [1, 2]);
 
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 	}
@@ -270,7 +270,7 @@ class QueryTest extends TestCase {
 
 		$this->assertEquals(Predicate::ALSO, $this->object->getWhere()->getType());
 
-		$expected['levelbetween1100'] = new Expr('level', 'between', [1, 100]);
+		$expected['levelbetween[1,100]'] = new Expr('level', 'between', [1, 100]);
 
 		$this->object->where(function() {
 			$this->between('level', 1, 100);

@@ -59,7 +59,7 @@ class PredicateTest extends TestCase {
 	public function testBetween() {
 		$this->object->between('size', 100, 500);
 		$this->assertEquals([
-			'sizebetween100500' => new Expr('size', 'between', [100, 500])
+			'sizebetween[100,500]' => new Expr('size', 'between', [100, 500])
 		], $this->object->getParams());
 	}
 
@@ -88,7 +88,7 @@ class PredicateTest extends TestCase {
 		$this->assertEquals($expected, $this->object->getParams());
 
 		$this->object->eq('category', [5, 10, 15]);
-		$expected['categoryin51015'] = new Expr('category', 'in', [5, 10, 15]);
+		$expected['categoryin[5,10,15]'] = new Expr('category', 'in', [5, 10, 15]);
 
 		$this->assertEquals($expected, $this->object->getParams());
 
@@ -124,7 +124,7 @@ class PredicateTest extends TestCase {
 	public function testIn() {
 		$this->object->in('color', ['red', 'green', 'blue']);
 		$this->assertEquals([
-			'colorinredgreenblue' => new Expr('color', 'in', ['red', 'green', 'blue'])
+			'colorin["red","green","blue"]' => new Expr('color', 'in', ['red', 'green', 'blue'])
 		], $this->object->getParams());
 	}
 
@@ -176,7 +176,7 @@ class PredicateTest extends TestCase {
 	public function testNotBetween() {
 		$this->object->notBetween('size', 123, 124);
 		$this->assertEquals([
-			'sizenotBetween123124' => new Expr('size', 'notBetween', [123, 124])
+			'sizenotBetween[123,124]' => new Expr('size', 'notBetween', [123, 124])
 		], $this->object->getParams());
 	}
 
@@ -192,7 +192,7 @@ class PredicateTest extends TestCase {
 		$this->assertEquals($expected, $this->object->getParams());
 
 		$this->object->notEq('category', [5, 10, 15]);
-		$expected['categorynotIn51015'] = new Expr('category', 'notIn', [5, 10, 15]);
+		$expected['categorynotIn[5,10,15]'] = new Expr('category', 'notIn', [5, 10, 15]);
 
 		$this->assertEquals($expected, $this->object->getParams());
 
@@ -208,7 +208,7 @@ class PredicateTest extends TestCase {
 	public function testNotIn() {
 		$this->object->notIn('color', ['red', 'green', 'blue']);
 		$this->assertEquals([
-			'colornotInredgreenblue' => new Expr('color', 'notIn', ['red', 'green', 'blue'])
+			'colornotIn["red","green","blue"]' => new Expr('color', 'notIn', ['red', 'green', 'blue'])
 		], $this->object->getParams());
 	}
 

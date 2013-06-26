@@ -50,6 +50,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	protected $_clauses = [
 		'autoIncrement'	=> 'AUTO_INCREMENT',
 		'and'			=> 'AND',
+		'as'			=> '%s AS %s',
 		'asc'			=> 'ASC',
 		'between'		=> '%s BETWEEN ? AND ?',
 		'cascade'		=> 'CASCADE',
@@ -384,10 +385,16 @@ abstract class AbstractDialect extends Base implements Dialect {
 			$arguments[] = $value;
 		}
 
-		return sprintf($this->getClause('function'),
+		$output = sprintf($this->getClause('function'),
 			$func->getName(),
 			implode($func->getSeparator(), $arguments)
 		);
+
+		if ($alias = $func->getAlias()) {
+			$output = sprintf($this->getClause('as'), $output, $this->quote($alias));
+		}
+
+		return $output;
 	}
 
 	/**
@@ -485,26 +492,35 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$output[] = sprintf($this->getClause('valueGroup'), $this->formatPredicate($param));
 
 			} else if ($param instanceof Expr) {
-				$field = $this->quote($param->getField());
+				$field = $param->getField();
 				$operator = $param->getOperator();
 
-				switch ($operator) {
-					case Expr::IN:
-					case Expr::NOT_IN:
-						$value = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($param->getValue()), '?')));
-					break;
-					case Expr::NOT:
-					case Expr::NULL:
-					case Expr::NOT_NULL:
-					case Expr::BETWEEN:
-					case Expr::NOT_BETWEEN:
-					case Expr::LIKE:
-					case Expr::NOT_LIKE:
-						$value = sprintf($this->getClause($operator), $field);
-					break;
-					default:
-						$value = sprintf('%s %s ?', $field, $operator);
-					break;
+				// Function instead of field
+				if ($field instanceof Func) {
+					$value = sprintf('%s %s ?', $this->formatFunction($field), $operator);
+
+				// Regular clause
+				} else {
+					$field = $this->quote($field);
+
+					switch ($operator) {
+						case Expr::IN:
+						case Expr::NOT_IN:
+							$value = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($param->getValue()), '?')));
+						break;
+						case Expr::NOT:
+						case Expr::NULL:
+						case Expr::NOT_NULL:
+						case Expr::BETWEEN:
+						case Expr::NOT_BETWEEN:
+						case Expr::LIKE:
+						case Expr::NOT_LIKE:
+							$value = sprintf($this->getClause($operator), $field);
+						break;
+						default:
+							$value = sprintf('%s %s ?', $field, $operator);
+						break;
+					}
 				}
 
 				$output[] = $value;

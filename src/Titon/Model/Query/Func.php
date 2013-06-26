@@ -40,11 +40,11 @@ class Func {
 	const LITERAL = 'literal';
 
 	/**
-	 * Name of the function.
+	 * Column alias name.
 	 *
 	 * @type string
 	 */
-	protected $_name;
+	protected $_alias;
 
 	/**
 	 * List of function arguments.
@@ -52,6 +52,13 @@ class Func {
 	 * @type array
 	 */
 	protected $_arguments = [];
+
+	/**
+	 * Name of the function.
+	 *
+	 * @type string
+	 */
+	protected $_name;
 
 	/**
 	 * Separator between arguments.
@@ -86,6 +93,27 @@ class Func {
 				'value' => $arg
 			];
 		}
+	}
+
+	/**
+	 * Set the alias name.
+	 *
+	 * @param string $alias
+	 * @return \Titon\Model\Query\Func
+	 */
+	public function asAlias($alias) {
+		$this->_alias = $alias;
+
+		return $this;
+	}
+
+	/**
+	 * Return the alias name.
+	 *
+	 * @return string
+	 */
+	public function getAlias() {
+		return $this->_alias;
 	}
 
 	/**

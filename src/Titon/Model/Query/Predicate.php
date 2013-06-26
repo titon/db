@@ -55,7 +55,17 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function add($field, $value, $op) {
-		$key = $field . $op . (is_array($value) ? implode('', $value) : $value);
+		if ($field instanceof Func) {
+			$key = $field->getName() . $op;
+		} else {
+			$key = $field . $op;
+		}
+
+		if (is_array($value)) {
+			$key .= json_encode($value);
+		} else {
+			$key .= $value;
+		}
 
 		$this->_params[$key] = new Expr($field, $op, $value);
 

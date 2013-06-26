@@ -337,6 +337,9 @@ class DialectTest extends TestCase {
 		$func = new Func('SUBSTRING', ['TitonFramework', 5]);
 		$this->assertEquals("SUBSTRING('TitonFramework', 5)", $this->object->formatFunction($func));
 
+		$func->asAlias('column');
+		$this->assertEquals("SUBSTRING('TitonFramework', 5) AS `column`", $this->object->formatFunction($func));
+
 		$func = new Func('INSERT', ['Titon', 3, 5, 'Framework']);
 		$this->assertEquals("INSERT('Titon', 3, 5, 'Framework')", $this->object->formatFunction($func));
 
