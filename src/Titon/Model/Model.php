@@ -128,8 +128,7 @@ class Model extends Base {
 		$this->_validateRelationData($data);
 
 		// Filter the data
-		$relatedData = $this->_extractRelationData($data);
-		$data = array_intersect_key($data, $this->getSchema()->getColumns());
+		$relatedData = $this->_filterData($data);
 
 		// Prepare query
 		$query = $this->query(Query::INSERT)->fields($data);
@@ -852,8 +851,7 @@ class Model extends Base {
 		$this->_validateRelationData($data);
 
 		// Filter the data
-		$relatedData = $this->_extractRelationData($data);
-		$data = array_intersect_key($data, $this->getSchema()->getColumns());
+		$relatedData = $this->_filterData($data);
 
 		// Prepare the query
 		$query = $this->query(Query::UPDATE)
@@ -869,7 +867,9 @@ class Model extends Base {
 			}
 
 			try {
-				if (!$query->save()) {
+				$count = $query->save();
+
+				if ($count === false) {
 					throw new QueryFailureException(sprintf('Failed to update %s record with ID %s', get_class($this), $id));
 				}
 
@@ -886,7 +886,9 @@ class Model extends Base {
 
 		// No transaction needed for single query
 		} else {
-			if (!$query->save()) {
+			$count = $query->save();
+
+			if ($count === false) {
 				return false;
 			}
 		}
@@ -1054,26 +1056,6 @@ class Model extends Base {
 	}
 
 	/**
-	 * Extract related model data from an array of complex data.
-	 *
-	 * @param array $data
-	 * @return array
-	 */
-	protected function _extractRelationData(array &$data) {
-		$aliases = array_keys($this->getRelations());
-		$related = [];
-
-		foreach ($aliases as $alias) {
-			if (isset($data[$alias])) {
-				$related[$alias] = $data[$alias];
-				unset($data[$alias]);
-			}
-		}
-
-		return $related;
-	}
-
-	/**
 	 * All-in-one method for fetching results from a query.
 	 * Before the query is executed, the preFetch() method is called.
 	 * After the query is executed, relations will be fetched, and then postFetch() will be called.
@@ -1143,6 +1125,31 @@ class Model extends Base {
 		}
 
 		return $results;
+	}
+
+	/**
+	 * Extract related model data from an array of complex data.
+	 * Filter out non-schema columns from the data.
+	 *
+	 * @param array $data
+	 * @return array
+	 */
+	protected function _filterData(array &$data) {
+		$aliases = array_keys($this->getRelations());
+		$related = [];
+
+		foreach ($aliases as $alias) {
+			if (isset($data[$alias])) {
+				$related[$alias] = $data[$alias];
+				unset($data[$alias]);
+			}
+		}
+
+		if ($schema = $this->getSchema()) {
+			$data = array_intersect_key($data, $schema->getColumns());
+		}
+
+		return $related;
 	}
 
 	/**

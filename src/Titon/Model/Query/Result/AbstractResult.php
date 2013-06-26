@@ -17,7 +17,7 @@ use Titon\Model\Query\Result;
 abstract class AbstractResult implements Result {
 
 	/**
-	 * Affected row count or successful query.
+	 * Affected row count.
 	 *
 	 * @type int
 	 */
@@ -36,6 +36,13 @@ abstract class AbstractResult implements Result {
 	 * @type array
 	 */
 	protected $_params = [];
+
+	/**
+	 * Was the query execution successful.
+	 *
+	 * @type bool
+	 */
+	protected $_success = false;
 
 	/**
 	 * Execution time in milliseconds.
@@ -90,7 +97,7 @@ abstract class AbstractResult implements Result {
 	 * {@inheritdoc}
 	 */
 	public function isSuccessful() {
-		return (bool) $this->getRowCount();
+		return $this->_success;
 	}
 
 }

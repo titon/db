@@ -59,6 +59,23 @@ class AbstractUpdateTest extends TestCase {
 	}
 
 	/**
+	 * Test basic database record updating.
+	 */
+	public function testUpdateNonexistingRecord() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+		$data = [
+			'id' => 10,
+			'username' => 'foobar'
+		];
+
+		$this->assertTrue($user->update(10, $data)); // Will execute successfully however
+
+		$this->assertEquals([], $user->select()->where('id', 10)->fetch(false)); // But it wont exist
+	}
+
+	/**
 	 * Test database record updating with one to one relations.
 	 */
 	public function testUpdateWithOneToOne() {
@@ -277,7 +294,7 @@ class AbstractUpdateTest extends TestCase {
 
 		$user = new User();
 
-		$this->assertEquals(4, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', '!=', 1)->save());
+		$this->assertSame(4, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', '!=', 1)->save());
 
 		$this->assertEquals([
 			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
@@ -288,7 +305,7 @@ class AbstractUpdateTest extends TestCase {
 		], $user->select('id', 'country_id', 'username')->fetchAll(false));
 
 		// No where clause
-		$this->assertEquals(5, $user->query(Query::UPDATE)->fields(['country_id' => 2])->save());
+		$this->assertSame(5, $user->query(Query::UPDATE)->fields(['country_id' => 2])->save());
 
 		$this->assertEquals([
 			['id' => 1, 'country_id' => 2, 'username' => 'miles'],
@@ -307,7 +324,7 @@ class AbstractUpdateTest extends TestCase {
 
 		$user = new User();
 
-		$this->assertEquals(2, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', '!=', 1)->limit(2)->save());
+		$this->assertSame(2, $user->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', '!=', 1)->limit(2)->save());
 
 		$this->assertEquals([
 			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
@@ -318,7 +335,7 @@ class AbstractUpdateTest extends TestCase {
 		], $user->select('id', 'country_id', 'username')->fetchAll(false));
 
 		// No where clause, offset ignored
-		$this->assertEquals(2, $user->query(Query::UPDATE)->fields(['country_id' => 5])->limit(2, 2)->save());
+		$this->assertSame(2, $user->query(Query::UPDATE)->fields(['country_id' => 5])->limit(2, 2)->save());
 
 		$this->assertEquals([
 			['id' => 1, 'country_id' => 5, 'username' => 'miles'],
@@ -337,7 +354,7 @@ class AbstractUpdateTest extends TestCase {
 
 		$user = new User();
 
-		$this->assertEquals(2, $user->query(Query::UPDATE)
+		$this->assertSame(2, $user->query(Query::UPDATE)
 			->fields(['country_id' => 6])
 			->orderBy('username', 'desc')
 			->limit(2)
@@ -360,7 +377,7 @@ class AbstractUpdateTest extends TestCase {
 
 		$user = new User();
 
-		$this->assertEquals(3, $user->query(Query::UPDATE)
+		$this->assertSame(3, $user->query(Query::UPDATE)
 			->fields(['country_id' => null])
 			->where('username', 'like', '%man%')
 			->save());

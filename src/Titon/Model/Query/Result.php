@@ -29,6 +29,13 @@ interface Result {
 	public function count();
 
 	/**
+	 * Execute the query and log the affected rows and execution time.
+	 *
+	 * @return \Titon\Model\Query\Result
+	 */
+	public function execute();
+
+	/**
 	 * Return the first row in the results.
 	 *
 	 * @return array
@@ -85,7 +92,7 @@ interface Result {
 	public function isSuccessful();
 
 	/**
-	 * Return the affected row count or a boolean if successful.
+	 * Return the affected row count or a boolean if not successful.
 	 *
 	 * @return int
 	 */
