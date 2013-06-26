@@ -17,6 +17,7 @@ use Titon\Model\Exception\InvalidSchemaException;
 use Titon\Model\Exception\MissingClauseException;
 use Titon\Model\Exception\MissingStatementException;
 use Titon\Model\Query;
+use Titon\Model\Query\Expr;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Traits\DriverAware;
@@ -252,25 +253,26 @@ abstract class AbstractDialect extends Base implements Dialect {
 			if ($param instanceof Predicate) {
 				$output[] = sprintf($this->getClause('valueGroup'), $this->formatPredicate($param));
 
-			} else {
-				$field = $this->quote($param['field']);
+			} else if ($param instanceof Expr) {
+				$field = $this->quote($param->getField());
+				$operator = $param->getOperator();
 
-				switch ($param['op']) {
-					case Predicate::IN:
-					case Predicate::NOT_IN:
-						$value = sprintf($this->getClause($param['op']), $field, implode(', ', array_fill(0, count($param['value']), '?')));
+				switch ($operator) {
+					case Expr::IN:
+					case Expr::NOT_IN:
+						$value = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($param->getValue()), '?')));
 					break;
-					case Predicate::NOT:
-					case Predicate::NULL:
-					case Predicate::NOT_NULL:
-					case Predicate::BETWEEN:
-					case Predicate::NOT_BETWEEN:
-					case Predicate::LIKE:
-					case Predicate::NOT_LIKE:
-						$value = sprintf($this->getClause($param['op']), $field);
+					case Expr::NOT:
+					case Expr::NULL:
+					case Expr::NOT_NULL:
+					case Expr::BETWEEN:
+					case Expr::NOT_BETWEEN:
+					case Expr::LIKE:
+					case Expr::NOT_LIKE:
+						$value = sprintf($this->getClause($operator), $field);
 					break;
 					default:
-						$value = sprintf('%s %s ?', $field, $param['op']);
+						$value = sprintf('%s %s ?', $field, $operator);
 					break;
 				}
 

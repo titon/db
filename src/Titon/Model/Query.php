@@ -13,6 +13,7 @@ use Titon\Model\Exception\ExistingPredicateException;
 use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Exception\InvalidRelationQueryException;
 use Titon\Model\Model;
+use Titon\Model\Query\Expr;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
 use Titon\Utility\Hash;
@@ -242,6 +243,18 @@ class Query implements Serializable, JsonSerializable {
 		$this->attribute('distinct', true);
 
 		return $this;
+	}
+
+	/**
+	 * Instantiate a new database expression.
+	 *
+	 * @param string $field
+	 * @param string $operator
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Expr
+	 */
+	public function expr($field, $operator = '=', $value = null) {
+		return new Expr($field, $operator, $value);
 	}
 
 	/**

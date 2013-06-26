@@ -8,6 +8,7 @@
 namespace Titon\Model;
 
 use Titon\Model\Query;
+use Titon\Model\Query\Expr;
 use Titon\Model\Query\Predicate;
 use Titon\Test\Stub\Model\Profile;
 use Titon\Test\Stub\Model\User;
@@ -57,6 +58,13 @@ class QueryTest extends TestCase {
 		}, null);
 
 		$this->assertEquals(['id', 'created'], $this->object->getFields());
+	}
+
+	/**
+	 * Test that an expression object is returned.
+	 */
+	public function testExpr() {
+		$this->assertInstanceOf('Titon\Model\Query\Expr', $this->object->expr('column', '+', 5));
 	}
 
 	/**
@@ -114,14 +122,14 @@ class QueryTest extends TestCase {
 	 * Test that having clause returns params.
 	 */
 	public function testHaving() {
-		$expected = ['id=1' => ['field' => 'id', 'value' => 1, 'op' => '=']];
+		$expected = ['id=1' => new Expr('id', '=', 1)];
 
 		$this->object->having('id', 1);
 		$this->assertEquals($expected, $this->object->getHaving()->getParams());
 
 		$this->assertEquals(Predicate::ALSO, $this->object->getHaving()->getType());
 
-		$expected['titlenotLike%Titon%'] = ['field' => 'title', 'value' => '%Titon%', 'op' => 'notLike'];
+		$expected['titlenotLike%Titon%'] = new Expr('title', 'notLike', '%Titon%');
 
 		$this->object->having(function() {
 			$this->notLike('title', '%Titon%');
@@ -138,7 +146,7 @@ class QueryTest extends TestCase {
 		// Custom operator
 		$this->object->having('size', '!=', 15);
 
-		$expected['size!=15'] = ['field' => 'size', 'value' => 15, 'op' => '!='];
+		$expected['size!=15'] = new Expr('size', '!=', 15);
 
 		$this->assertEquals($expected, $this->object->getHaving()->getParams());
 	}
@@ -190,14 +198,14 @@ class QueryTest extends TestCase {
 	 * Test that OR having clause returns params.
 	 */
 	public function testOrHaving() {
-		$expected = ['id=1' => ['field' => 'id', 'value' => 1, 'op' => '=']];
+		$expected = ['id=1' => new Expr('id', '=', 1)];
 
 		$this->object->orHaving('id', 1);
 		$this->assertEquals($expected, $this->object->getHaving()->getParams());
 
 		$this->assertEquals(Predicate::EITHER, $this->object->getHaving()->getType());
 
-		$expected['titlenotLike%Titon%'] = ['field' => 'title', 'value' => '%Titon%', 'op' => 'notLike'];
+		$expected['titlenotLike%Titon%'] = new Expr('title', 'notLike', '%Titon%');
 
 		$this->object->orHaving(function() {
 			$this->notLike('title', '%Titon%');
@@ -214,7 +222,7 @@ class QueryTest extends TestCase {
 		// Custom operator
 		$this->object->orHaving('size', '>=', 15);
 
-		$expected['size>=15'] = ['field' => 'size', 'value' => 15, 'op' => '>='];
+		$expected['size>=15'] = new Expr('size', '>=', 15);
 
 		$this->assertEquals($expected, $this->object->getHaving()->getParams());
 	}
@@ -223,14 +231,14 @@ class QueryTest extends TestCase {
 	 * Test that OR where clause returns params.
 	 */
 	public function testOrWhere() {
-		$expected = ['id=152' => ['field' => 'id', 'value' => 152, 'op' => '=']];
+		$expected = ['id=152' => new Expr('id', '=', 152)];
 
 		$this->object->orWhere('id', 152);
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 
 		$this->assertEquals(Predicate::EITHER, $this->object->getWhere()->getType());
 
-		$expected['levelbetween1100'] = ['field' => 'level', 'value' => [1, 100], 'op' => 'between'];
+		$expected['levelbetween1100'] = new Expr('level', 'between', [1, 100]);
 
 		$this->object->orWhere(function() {
 			$this->between('level', 1, 100);
@@ -244,9 +252,9 @@ class QueryTest extends TestCase {
 			$this->assertTrue(true);
 		}
 
-		$this->object->orWhere('size', Predicate::NOT_IN, [1, 2]);
+		$this->object->orWhere('size', Expr::NOT_IN, [1, 2]);
 
-		$expected['sizenotIn12'] = ['field' => 'size', 'value' => [1, 2], 'op' => 'notIn'];
+		$expected['sizenotIn12'] = new Expr('size', 'notIn', [1, 2]);
 
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 	}
@@ -255,14 +263,14 @@ class QueryTest extends TestCase {
 	 * Test that where clause returns params.
 	 */
 	public function testWhere() {
-		$expected = ['id=152' => ['field' => 'id', 'value' => 152, 'op' => '=']];
+		$expected = ['id=152' => new Expr('id', '=', 152)];
 
 		$this->object->where('id', 152);
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 
 		$this->assertEquals(Predicate::ALSO, $this->object->getWhere()->getType());
 
-		$expected['levelbetween1100'] = ['field' => 'level', 'value' => [1, 100], 'op' => 'between'];
+		$expected['levelbetween1100'] = new Expr('level', 'between', [1, 100]);
 
 		$this->object->where(function() {
 			$this->between('level', 1, 100);
@@ -279,7 +287,7 @@ class QueryTest extends TestCase {
 		// Custom operator
 		$this->object->where('size', '>', 25);
 
-		$expected['size>25'] = ['field' => 'size', 'value' => 25, 'op' => '>'];
+		$expected['size>25'] = new Expr('size', '>', 25);
 
 		$this->assertEquals($expected, $this->object->getWhere()->getParams());
 	}

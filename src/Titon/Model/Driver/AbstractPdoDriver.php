@@ -12,6 +12,7 @@ use Titon\Model\Driver\Type\AbstractType;
 use Titon\Model\Exception\InvalidQueryException;
 use Titon\Model\Exception\UnsupportedQueryStatementException;
 use Titon\Model\Query;
+use Titon\Model\Query\Expr;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Query\Result\PdoResult;
 use Titon\Utility\String;
@@ -306,13 +307,15 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 				if ($param instanceof Predicate) {
 					$resolvePredicate($param);
 
-				} else {
-					if (is_array($param['value'])) {
-						foreach ($param['value'] as $value) {
+				} else if ($param instanceof Expr) {
+					$values = $param->getValue();
+
+					if (is_array($values)) {
+						foreach ($values as $value) {
 							$binds[] = [$value, $driver->resolveType($value)];
 						}
 					} else {
-						$binds[] = [$param['value'], $driver->resolveType($param['value'])];
+						$binds[] = [$values, $driver->resolveType($values)];
 					}
 				}
 			}

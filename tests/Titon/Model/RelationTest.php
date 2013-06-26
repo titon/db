@@ -7,6 +7,7 @@
 
 namespace Titon\Model;
 
+use Titon\Model\Query\Expr;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
@@ -92,7 +93,7 @@ class RelationTest extends TestCase {
 		$query->bindCallback($this->object->getConditions(), $this->object);
 
 		$this->assertEquals([
-			'status=1' => ['field' => 'status', 'value' => 1, 'op' => '=']
+			'status=1' => new Expr('status', '=', 1)
 		], $query->getWhere()->getParams());
 	}
 

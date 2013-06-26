@@ -31,12 +31,12 @@ class PredicateTest extends TestCase {
 	 */
 	public function testAdd() {
 		$this->object->add('id', 1, '=');
-		$expected = ['id=1' => ['field' => 'id', 'value' => 1, 'op' => '=']];
+		$expected = ['id=1' => new Expr('id', '=', 1)];
 		$this->assertEquals($expected, $this->object->getParams());
 
 		$this->object->add('id', 1, '='); // no dupes
 		$this->object->add('name', 'Titon', 'like');
-		$expected['namelikeTiton'] = ['field' => 'name', 'value' => 'Titon', 'op' => 'like'];
+		$expected['namelikeTiton'] = new Expr('name', 'like', 'Titon');
 		$this->assertEquals($expected, $this->object->getParams());
 	}
 
@@ -59,7 +59,7 @@ class PredicateTest extends TestCase {
 	public function testBetween() {
 		$this->object->between('size', 100, 500);
 		$this->assertEquals([
-			'sizebetween100500' => ['field' => 'size', 'value' => [100, 500], 'op' => 'between']
+			'sizebetween100500' => new Expr('size', 'between', [100, 500])
 		], $this->object->getParams());
 	}
 
@@ -82,18 +82,18 @@ class PredicateTest extends TestCase {
 	public function testEq() {
 		$this->object->eq('id', 1);
 		$expected = [
-			'id=1' => ['field' => 'id', 'value' => 1, 'op' => '=']
+			'id=1' => new Expr('id', '=', 1)
 		];
 
 		$this->assertEquals($expected, $this->object->getParams());
 
 		$this->object->eq('category', [5, 10, 15]);
-		$expected['categoryin51015'] = ['field' => 'category', 'value' => [5, 10, 15], 'op' => 'in'];
+		$expected['categoryin51015'] = new Expr('category', 'in', [5, 10, 15]);
 
 		$this->assertEquals($expected, $this->object->getParams());
 
 		$this->object->eq('name', null);
-		$expected['nameisNull'] = ['field' => 'name', 'value' => null, 'op' => 'isNull'];
+		$expected['nameisNull'] = new Expr('name', 'isNull', null);
 
 		$this->assertEquals($expected, $this->object->getParams());
 	}
@@ -104,7 +104,7 @@ class PredicateTest extends TestCase {
 	public function testGte() {
 		$this->object->gte('size', 250);
 		$this->assertEquals([
-			'size>=250' => ['field' => 'size', 'value' => 250, 'op' => '>=']
+			'size>=250' => new Expr('size', '>=', 250)
 		], $this->object->getParams());
 	}
 
@@ -114,7 +114,7 @@ class PredicateTest extends TestCase {
 	public function testGt() {
 		$this->object->gt('size', 666);
 		$this->assertEquals([
-			'size>666' => ['field' => 'size', 'value' => 666, 'op' => '>']
+			'size>666' => new Expr('size', '>', 666)
 		], $this->object->getParams());
 	}
 
@@ -124,7 +124,7 @@ class PredicateTest extends TestCase {
 	public function testIn() {
 		$this->object->in('color', ['red', 'green', 'blue']);
 		$this->assertEquals([
-			'colorinredgreenblue' => ['field' => 'color', 'value' => ['red', 'green', 'blue'], 'op' => 'in']
+			'colorinredgreenblue' => new Expr('color', 'in', ['red', 'green', 'blue'])
 		], $this->object->getParams());
 	}
 
@@ -135,8 +135,8 @@ class PredicateTest extends TestCase {
 		$this->object->like('name', 'Titon%');
 		$this->object->like('name', '%Titon%');
 		$this->assertEquals([
-			'namelikeTiton%' => ['field' => 'name', 'value' => 'Titon%', 'op' => 'like'],
-			'namelike%Titon%' => ['field' => 'name', 'value' => '%Titon%', 'op' => 'like']
+			'namelikeTiton%' => new Expr('name', 'like', 'Titon%'),
+			'namelike%Titon%' => new Expr('name', 'like', '%Titon%')
 		], $this->object->getParams());
 	}
 
@@ -146,7 +146,7 @@ class PredicateTest extends TestCase {
 	public function testLte() {
 		$this->object->lte('size', 1337);
 		$this->assertEquals([
-			'size<=1337' => ['field' => 'size', 'value' => 1337, 'op' => '<=']
+			'size<=1337' => new Expr('size', '<=', 1337)
 		], $this->object->getParams());
 	}
 
@@ -156,7 +156,7 @@ class PredicateTest extends TestCase {
 	public function testLt() {
 		$this->object->lt('size', 1234);
 		$this->assertEquals([
-			'size<1234' => ['field' => 'size', 'value' => 1234, 'op' => '<']
+			'size<1234' => new Expr('size', '<', 1234)
 		], $this->object->getParams());
 	}
 
@@ -166,7 +166,7 @@ class PredicateTest extends TestCase {
 	public function testNot() {
 		$this->object->not('color', 'black');
 		$this->assertEquals([
-			'colornotblack' => ['field' => 'color', 'value' => 'black', 'op' => 'not']
+			'colornotblack' => new Expr('color', 'not', 'black')
 		], $this->object->getParams());
 	}
 
@@ -176,7 +176,7 @@ class PredicateTest extends TestCase {
 	public function testNotBetween() {
 		$this->object->notBetween('size', 123, 124);
 		$this->assertEquals([
-			'sizenotBetween123124' => ['field' => 'size', 'value' => [123, 124], 'op' => 'notBetween']
+			'sizenotBetween123124' => new Expr('size', 'notBetween', [123, 124])
 		], $this->object->getParams());
 	}
 
@@ -186,18 +186,18 @@ class PredicateTest extends TestCase {
 	public function testNotEq() {
 		$this->object->notEq('id', 1);
 		$expected = [
-			'id!=1' => ['field' => 'id', 'value' => 1, 'op' => '!=']
+			'id!=1' => new Expr('id', '!=', 1)
 		];
 
 		$this->assertEquals($expected, $this->object->getParams());
 
 		$this->object->notEq('category', [5, 10, 15]);
-		$expected['categorynotIn51015'] = ['field' => 'category', 'value' => [5, 10, 15], 'op' => 'notIn'];
+		$expected['categorynotIn51015'] = new Expr('category', 'notIn', [5, 10, 15]);
 
 		$this->assertEquals($expected, $this->object->getParams());
 
 		$this->object->notEq('name', null);
-		$expected['nameisNotNull'] = ['field' => 'name', 'value' => null, 'op' => 'isNotNull'];
+		$expected['nameisNotNull'] = new Expr('name', 'isNotNull', null);
 
 		$this->assertEquals($expected, $this->object->getParams());
 	}
@@ -208,7 +208,7 @@ class PredicateTest extends TestCase {
 	public function testNotIn() {
 		$this->object->notIn('color', ['red', 'green', 'blue']);
 		$this->assertEquals([
-			'colornotInredgreenblue' => ['field' => 'color', 'value' => ['red', 'green', 'blue'], 'op' => 'notIn']
+			'colornotInredgreenblue' => new Expr('color', 'notIn', ['red', 'green', 'blue'])
 		], $this->object->getParams());
 	}
 
@@ -219,8 +219,8 @@ class PredicateTest extends TestCase {
 		$this->object->notLike('name', 'Titon%');
 		$this->object->notLike('name', '%Titon%');
 		$this->assertEquals([
-			'namenotLikeTiton%' => ['field' => 'name', 'value' => 'Titon%', 'op' => 'notLike'],
-			'namenotLike%Titon%' => ['field' => 'name', 'value' => '%Titon%', 'op' => 'notLike']
+			'namenotLikeTiton%' => new Expr('name', 'notLike', 'Titon%'),
+			'namenotLike%Titon%' => new Expr('name', 'notLike', '%Titon%')
 		], $this->object->getParams());
 	}
 
@@ -230,7 +230,7 @@ class PredicateTest extends TestCase {
 	public function testNotNull() {
 		$this->object->notNull('title');
 		$this->assertEquals([
-			'titleisNotNull' => ['field' => 'title', 'value' => null, 'op' => 'isNotNull']
+			'titleisNotNull' => new Expr('title', 'isNotNull', null)
 		], $this->object->getParams());
 	}
 
@@ -240,7 +240,7 @@ class PredicateTest extends TestCase {
 	public function testNull() {
 		$this->object->null('title');
 		$this->assertEquals([
-			'titleisNull' => ['field' => 'title', 'value' => null, 'op' => 'isNull']
+			'titleisNull' => new Expr('title', 'isNull', null)
 		], $this->object->getParams());
 	}
 
