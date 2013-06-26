@@ -8,6 +8,7 @@
 namespace Titon\Model\Query;
 
 use Titon\Model\Driver;
+use Titon\Model\Traits\FuncAware;
 
 /**
  * The Func class represents an SQL function with optional arguments.
@@ -33,6 +34,7 @@ use Titon\Model\Driver;
  * @package Titon\Model\Query
  */
 class Func {
+	use FuncAware;
 
 	const FIELD = 'field';
 	const LITERAL = 'literal';
@@ -84,18 +86,6 @@ class Func {
 				'value' => $arg
 			];
 		}
-	}
-
-	/**
-	 * Instantiate a new database function.
-	 *
-	 * @param string $name
-	 * @param string|array $arguments
-	 * @param string $separator
-	 * @return \Titon\Model\Query\Func
-	 */
-	public function func($name, $arguments = [], $separator = ', ') {
-		return new Func($name, $arguments, $separator);
 	}
 
 	/**

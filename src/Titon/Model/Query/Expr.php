@@ -7,7 +7,7 @@
 
 namespace Titon\Model\Query;
 
-use Titon\Model\Driver;
+use Titon\Model\Traits\ExprAware;
 
 /**
  * The Expr class represents a mathematical or logical expression that can be calculated depending on context.
@@ -15,6 +15,7 @@ use Titon\Model\Driver;
  * @package Titon\Model\Query
  */
 class Expr {
+	use ExprAware;
 
 	const NOT = 'not';
 	const NULL = 'isNull';
@@ -58,18 +59,6 @@ class Expr {
 		$this->_field = $field;
 		$this->_operator = $operator;
 		$this->_value = $value;
-	}
-
-	/**
-	 * Instantiate a new database expression.
-	 *
-	 * @param string $field
-	 * @param string $operator
-	 * @param mixed $value
-	 * @return \Titon\Model\Query\Expr
-	 */
-	public function expr($field, $operator = null, $value = null) {
-		return new Expr($field, $operator, $value);
 	}
 
 	/**

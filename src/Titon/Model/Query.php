@@ -16,6 +16,8 @@ use Titon\Model\Model;
 use Titon\Model\Query\Expr;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
+use Titon\Model\Traits\ExprAware;
+use Titon\Model\Traits\FuncAware;
 use Titon\Utility\Hash;
 use \Closure;
 use \Serializable;
@@ -29,6 +31,7 @@ use \JsonSerializable;
  * @package Titon\Model
  */
 class Query implements Serializable, JsonSerializable {
+	use ExprAware, FuncAware;
 
 	// Order directions
 	const ASC = 'asc';
@@ -246,18 +249,6 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Instantiate a new database expression.
-	 *
-	 * @param string $field
-	 * @param string $operator
-	 * @param mixed $value
-	 * @return \Titon\Model\Query\Expr
-	 */
-	public function expr($field, $operator = null, $value = null) {
-		return new Expr($field, $operator, $value);
-	}
-
-	/**
 	 * Pass the query to the model to interact with the database.
 	 * Return the first record from the results.
 	 *
@@ -327,18 +318,6 @@ class Query implements Serializable, JsonSerializable {
 		$this->_table = (string) $table;
 
 		return $this;
-	}
-
-	/**
-	 * Instantiate a new database function.
-	 *
-	 * @param string $name
-	 * @param string|array $arguments
-	 * @param string $separator
-	 * @return \Titon\Model\Query\Func
-	 */
-	public function func($name, $arguments = [], $separator = ', ') {
-		return new Func($name, $arguments, $separator);
 	}
 
 	/**
