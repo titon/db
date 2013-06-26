@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver;
 
+use Titon\Model\Query\Expr;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Query;
@@ -291,6 +292,45 @@ class DialectTest extends TestCase {
 	}
 
 	/**
+	 * Test expressions are built.
+	 */
+	public function testFormatExpression() {
+		$expr = new Expr('column', '+', 5);
+		$this->assertEquals('`column` + ?', $this->object->formatExpression($expr));
+
+		$expr = new Expr('column', null, 5);
+		$this->assertEquals('`column`', $this->object->formatExpression($expr));
+
+		$expr = new Expr('column', '+');
+		$this->assertEquals('`column`', $this->object->formatExpression($expr));
+
+		$expr = new Expr('column');
+		$this->assertEquals('`column`', $this->object->formatExpression($expr));
+	}
+
+	/**
+	 * Test fields and values format depending on the query type.
+	 */
+	public function testFormatFields() {
+		$fields = [
+			'id' => 1,
+			'username' => 'miles',
+			'email' => 'email@domain.com'
+		];
+
+		$this->assertEquals('(`id`, `username`, `email`)', $this->object->formatFields($fields, Query::INSERT));
+		$this->assertEquals('`id` = ?, `username` = ?, `email` = ?', $this->object->formatFields($fields, Query::UPDATE));
+
+		$func = new Func('SUM', ['id' => Func::FIELD]);
+
+		$fields = array_keys($fields);
+		$fields[] = $func;
+
+		$this->assertEquals('`id`, `username`, `email`, SUM(`id`)', $this->object->formatFields($fields, Query::SELECT));
+		$this->assertEquals('*', $this->object->formatFields([], Query::SELECT));
+	}
+
+	/**
 	 * Test that function formatting parses types.
 	 */
 	public function testFormatFunction() {
@@ -322,28 +362,6 @@ class DialectTest extends TestCase {
 		$func1 = new Func('CHAR', ['0x65 USING utf8' => Func::LITERAL]);
 		$func2 = new Func('CHARSET', $func1);
 		$this->assertEquals("CHARSET(CHAR(0x65 USING utf8))", $this->object->formatFunction($func2));
-	}
-
-	/**
-	 * Test fields and values format depending on the query type.
-	 */
-	public function testFormatFields() {
-		$fields = [
-			'id' => 1,
-			'username' => 'miles',
-			'email' => 'email@domain.com'
-		];
-
-		$this->assertEquals('(`id`, `username`, `email`)', $this->object->formatFields($fields, Query::INSERT));
-		$this->assertEquals('`id` = ?, `username` = ?, `email` = ?', $this->object->formatFields($fields, Query::UPDATE));
-
-		$func = new Func('SUM', ['id' => Func::FIELD]);
-
-		$fields = array_keys($fields);
-		$fields[] = $func;
-
-		$this->assertEquals('`id`, `username`, `email`, SUM(`id`)', $this->object->formatFields($fields, Query::SELECT));
-		$this->assertEquals('*', $this->object->formatFields([], Query::SELECT));
 	}
 
 	/**

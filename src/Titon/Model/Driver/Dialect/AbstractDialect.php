@@ -60,6 +60,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'defaultValue'	=> 'DEFAULT %s',
 		'desc'			=> 'DESC',
 		'engine'		=> 'ENGINE',
+		'expression'	=> '%s %s ?',
 		'foreignKey'	=> 'FOREIGN KEY (%s) REFERENCES %s(%s)',
 		'function'		=> '%s(%s)',
 		'groupBy'		=> 'GROUP BY %s',
@@ -290,6 +291,22 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
+	 * Format database expressions.
+	 *
+	 * @param \Titon\Model\Query\Expr $expr
+	 * @return string
+	 */
+	public function formatExpression(Expr $expr) {
+		$field = $this->quote($expr->getField());
+
+		if ($expr->useValue()) {
+			return sprintf($this->getClause('expression'), $field, $expr->getOperator());
+		}
+
+		return $field;
+	}
+
+	/**
 	 * Format the fields structure depending on the type of query.
 	 *
 	 * @param array $fields
@@ -324,7 +341,11 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$values = [];
 
 				foreach ($fields as $key => $value) {
-					$values[] = $this->quote($key) . ' = ?';
+					if ($value instanceof Expr) {
+						$values[] = $this->quote($key) . ' = ' . $this->formatExpression($value);
+					} else {
+						$values[] = $this->quote($key) . ' = ?';
+					}
 				}
 
 				return implode(', ', $values);

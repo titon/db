@@ -54,7 +54,7 @@ class Expr {
 	 * @param string $operator
 	 * @param mixed $value
 	 */
-	public function __construct($field, $operator = '=', $value = null) {
+	public function __construct($field, $operator = null, $value = null) {
 		$this->_field = $field;
 		$this->_operator = $operator;
 		$this->_value = $value;
@@ -97,6 +97,15 @@ class Expr {
 	 */
 	public function getValue() {
 		return $this->_value;
+	}
+
+	/**
+	 * Return true if the value should be used for binds.
+	 *
+	 * @return bool
+	 */
+	public function useValue() {
+		return ($this->getOperator() && $this->getValue());
 	}
 
 }

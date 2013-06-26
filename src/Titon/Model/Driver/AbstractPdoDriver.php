@@ -314,7 +314,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 						foreach ($values as $value) {
 							$binds[] = [$value, $driver->resolveType($value)];
 						}
-					} else {
+					} else if ($param->useValue()) {
 						$binds[] = [$values, $driver->resolveType($values)];
 					}
 				}
