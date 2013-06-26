@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Data;
 
+use DateTime;
 use Titon\Model\Query;
 use Titon\Test\Stub\Model\Book;
 use Titon\Test\Stub\Model\Series;
@@ -18,7 +19,7 @@ use \Exception;
 /**
  * Test class for database updating.
  */
-class AbstractUpdateTest extends TestCase {
+abstract class AbstractUpdateTest extends TestCase {
 
 	/**
 	 * Unload fixtures.
@@ -60,7 +61,7 @@ class AbstractUpdateTest extends TestCase {
 	/**
 	 * Test database record updating of a record that doesn't exist.
 	 */
-	public function testUpdateNonexistingRecord() {
+	public function testUpdateNonExistingRecord() {
 		$this->loadFixtures('Users');
 
 		$user = new User();
@@ -72,6 +73,43 @@ class AbstractUpdateTest extends TestCase {
 		$this->assertTrue($user->update(10, $data)); // Will execute successfully however
 
 		$this->assertEquals([], $user->select()->where('id', 10)->fetch(false)); // But it wont exist
+	}
+
+	/**
+	 * Test expressions in fields while updating.
+	 */
+	public function testUpdateExpressions() {
+		$this->loadFixtures('Stats');
+
+		$stat = new Stat();
+
+		$this->assertEquals([
+			['id' => 1, 'name' => 'Warrior', 'health' => 1500],
+			['id' => 2, 'name' => 'Ranger', 'health' => 800],
+			['id' => 3, 'name' => 'Mage', 'health' => 600],
+		], $stat->select('id', 'name', 'health')->fetchAll(false));
+
+		$query = $stat->query(Query::UPDATE);
+		$query->fields(['health' => $query->expr('health', '+', 75)]);
+
+		$this->assertEquals(3, $query->save());
+
+		$this->assertEquals([
+			['id' => 1, 'name' => 'Warrior', 'health' => 1575],
+			['id' => 2, 'name' => 'Ranger', 'health' => 875],
+			['id' => 3, 'name' => 'Mage', 'health' => 675],
+		], $stat->select('id', 'name', 'health')->fetchAll(false));
+
+		// Single record
+		$this->assertTrue($stat->update(2, [
+			'health' => new Query\Expr('health', '-', 125)
+		]));
+
+		$this->assertEquals([
+			['id' => 1, 'name' => 'Warrior', 'health' => 1575],
+			['id' => 2, 'name' => 'Ranger', 'health' => 750],
+			['id' => 3, 'name' => 'Mage', 'health' => 675],
+		], $stat->select('id', 'name', 'health')->fetchAll(false));
 	}
 
 	/**
@@ -466,7 +504,7 @@ class AbstractUpdateTest extends TestCase {
 	/**
 	 * Test updating blob data.
 	 */
-	public function testUpdateBlobData() {
+	public function testUpdateBlob() {
 		$this->loadFixtures('Stats');
 
 		$handle = fopen(TEMP_DIR . '/blob.txt', 'rb');
@@ -493,6 +531,48 @@ class AbstractUpdateTest extends TestCase {
 			'isMelee' => true,
 			'data' => 'This is loading from a file handle'
 		], $expected);
+	}
+
+	/**
+	 * Test updating nulls.
+	 */
+	public function testUpdateNull() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+		$data = [
+			'created' => null, // allowed to be null
+			'modified' => date('Y-m-d H:i:s') // null to string
+		];
+
+		$this->assertTrue($user->update(1, $data));
+
+		$this->assertSame($data, $user->select('created', 'modified')->where('id', 1)->fetch(false));
+	}
+
+	/**
+	 * Test dates in different formats.
+	 */
+	public function testUpdateDates() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		// Integer
+		$time = time();
+		$this->assertTrue($user->update(1, ['created' => $time]));
+		$this->assertSame(['created' => date('Y-m-d H:i:s', $time)], $user->select('created')->where('id', 1)->fetch(false));
+
+		// String
+		$time = date('Y-m-d H:i:s', strtotime('+1 week'));
+		$this->assertTrue($user->update(1, ['created' => $time]));
+		$this->assertSame(['created' => $time], $user->select('created')->where('id', 1)->fetch(false));
+
+		// Object
+		$time = new DateTime();
+		$time->modify('+2 days');
+		$this->assertTrue($user->update(1, ['created' => $time]));
+		$this->assertSame(['created' => $time->format('Y-m-d H:i:s')], $user->select('created')->where('id', 1)->fetch(false));
 	}
 
 }

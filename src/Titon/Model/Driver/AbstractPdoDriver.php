@@ -289,12 +289,18 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			$schema = $query->getModel()->getSchema()->getColumns();
 
 			foreach ($query->getFields() as $field => $value) {
-				$dataType = AbstractType::factory($schema[$field]['type'], $this);
+
+				// Don't convert expressions
+				if ($value instanceof Expr) {
+					$binds[] = [$value->getValue(), $this->resolveType($value->getValue())];
 
 				// Don't convert null values
-				if ($value === null) {
+				} else if ($value === null) {
 					$binds[] = [null, PDO::PARAM_NULL];
+
 				} else {
+					$dataType = AbstractType::factory($schema[$field]['type'], $this);
+
 					$binds[] = [$dataType->to($value), $dataType->getBindingType()];
 				}
 			}
