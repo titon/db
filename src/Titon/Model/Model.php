@@ -68,6 +68,13 @@ class Model extends Base {
 	];
 
 	/**
+	 * Driver instance.
+	 *
+	 * @type \Titon\Model\Driver
+	 */
+	protected $_driver;
+
+	/**
 	 * Model to model relationships.
 	 *
 	 * @type \Titon\Model\Relation[]
@@ -199,6 +206,7 @@ class Model extends Base {
 	 * @param int|array $id
 	 * @param bool $cascade
 	 * @return bool
+	 * @throws \Titon\Model\Exception\QueryFailureException
 	 * @throws \Exception
 	 */
 	public function delete($id, $cascade = true) {
@@ -221,10 +229,14 @@ class Model extends Base {
 
 			try {
 				if (!$query->save()) {
+					if (is_array($id)) {
+						$id = implode(', ', $id);
+					}
+
 					throw new QueryFailureException(sprintf('Failed to delete %s record with ID %s', get_class($this), $id));
 				}
 
-				$this->deleteDependents($id);
+				$this->deleteDependents($id, $cascade);
 
 				$driver->commitTransaction();
 
@@ -253,66 +265,75 @@ class Model extends Base {
 	 * Will return a count of how many dependent records were deleted.
 	 *
 	 * @param int $id
+	 * @param bool $cascade
 	 * @return int
+	 * @throws \Titon\Model\Exception\QueryFailureException
+	 * @throws \Exception
 	 */
-	public function deleteDependents($id) {
+	public function deleteDependents($id, $cascade = true) {
 		$count = 0;
+		$driver = $this->getDriver();
 
-		foreach ($this->getRelations() as $alias => $relation) {
-			if (!$relation->isDependent()) {
-				continue;
+		if (!$driver->startTransaction()) {
+			throw new QueryFailureException('Failed to start database transaction');
+		}
+
+		try {
+			foreach ($this->getRelations() as $alias => $relation) {
+				if (!$relation->isDependent()) {
+					continue;
+				}
+
+				/** @type \Titon\Model\Model $relatedModel */
+				$relatedModel = $this->getObject($alias);
+
+				switch ($relation->getType()) {
+					case Relation::ONE_TO_ONE:
+					case Relation::ONE_TO_MANY:
+						$results = [];
+
+						// Fetch IDs before deletion
+						// Only delete if relations exist
+						if ($cascade && $relatedModel->hasRelations()) {
+							$results = $relatedModel
+								->select($relatedModel->getPrimaryKey())
+								->where($relation->getRelatedForeignKey(), $id)
+								->fetchAll(false);
+						}
+
+						// Delete all records at once
+						$count += $relatedModel
+							->query(Query::DELETE)
+							->where($relation->getRelatedForeignKey(), $id)
+							->save();
+
+						// Loop through the records and cascade delete dependents
+						if ($results) {
+							$relatedModel->deleteDependents(Hash::pluck($results, $relatedModel->getPrimaryKey()), $cascade);
+						}
+					break;
+
+					case Relation::MANY_TO_MANY:
+						/** @type \Titon\Model\Model $junctionModel */
+						$junctionModel = Registry::factory($relation->getJunctionModel());
+
+						// Only delete the junction records
+						// The related records should stay
+						$count += $junctionModel
+							->query(Query::DELETE)
+							->where($relation->getForeignKey(), $id)
+							->save();
+					break;
+				}
 			}
 
-			/** @type \Titon\Model\Model $relatedModel */
-			$relatedModel = $this->getObject($alias);
-			$primaryKey = $relatedModel->getPrimaryKey();
-			$results = [];
+			$driver->commitTransaction();
 
-			switch ($relation->getType()) {
-				case Relation::ONE_TO_ONE:
-				case Relation::ONE_TO_MANY:
-					$results = $relatedModel
-						->select($primaryKey)
-						->where($relation->getRelatedForeignKey(), $id)
-						->fetchAll(false);
+		// Rollback and re-throw exception
+		} catch (Exception $e) {
+			$driver->rollbackTransaction();
 
-					// Delete all the records
-					$count += $relatedModel
-						->query(Query::DELETE)
-						->where($relation->getRelatedForeignKey(), $id)
-						->save();
-				break;
-
-				case Relation::MANY_TO_MANY:
-					$junctionModel = Registry::factory($relation->getJunctionModel());
-					$junctionResults = $junctionModel
-						->select()
-						->where($relation->getForeignKey(), $id)
-						->fetchAll(false);
-
-					if (!$junctionResults) {
-						continue;
-					}
-
-					$lookupIds = Hash::pluck($junctionResults, $relation->getRelatedForeignKey());
-
-					$results = $relatedModel
-						->select($primaryKey)
-						->where($primaryKey, $lookupIds)
-						->fetchAll(false);
-
-					// Delete junction records
-					$junctionModel->delete(Hash::pluck($junctionResults, $junctionModel->getPrimaryKey()), false);
-
-					// Delete all the records
-					$count += $relatedModel->delete($lookupIds, false);
-				break;
-			}
-
-			// Loop through the records and cascade delete
-			foreach ($results as $result) {
-				$count += $relatedModel->deleteDependents($result[$primaryKey]);
-			}
+			throw $e;
 		}
 
 		return $count;
@@ -528,10 +549,15 @@ class Model extends Base {
 	 * @return \Titon\Model\Driver
 	 */
 	public function getDriver() {
+		if ($this->_driver) {
+			return $this->_driver;
+		}
 
 		/** @type \Titon\Model\Driver $driver */
 		$driver = Registry::factory('Titon\Model\Connection')->getDriver($this->getConnection());
 		$driver->connect();
+
+		$this->_driver = $driver;
 
 		return $driver;
 	}
@@ -689,6 +715,15 @@ class Model extends Base {
 	 */
 	public function hasRelation($alias) {
 		return isset($this->_relations[$alias]);
+	}
+
+	/**
+	 * Check if any relation has been set.
+	 *
+	 * @return bool
+	 */
+	public function hasRelations() {
+		return (count($this->_relations) > 0);
 	}
 
 	/**
@@ -943,6 +978,7 @@ class Model extends Base {
 	 * @param int $id
 	 * @param array $data
 	 * @return int
+	 * @throws \Titon\Model\Exception\QueryFailureException
 	 */
 	public function upsertRelations($id, array $data) {
 		$updated = 0;
