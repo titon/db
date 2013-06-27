@@ -13,6 +13,7 @@ use Titon\Model\Driver;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
+use Titon\Model\Exception\InvalidQueryException;
 use Titon\Model\Exception\InvalidSchemaException;
 use Titon\Model\Exception\MissingClauseException;
 use Titon\Model\Exception\MissingStatementException;
@@ -313,10 +314,15 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @param array $fields
 	 * @param int $type
 	 * @return string
+	 * @throws \Titon\Model\Exception\InvalidQueryException
 	 */
 	public function formatFields(array $fields, $type) {
 		switch ($type) {
 			case Query::INSERT:
+				if (empty($fields)) {
+					throw new InvalidQueryException('Missing field data for insert query');
+				}
+
 				return '(' . $this->quoteList(array_keys($fields)) . ')';
 			break;
 
@@ -339,6 +345,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 			break;
 
 			case Query::UPDATE:
+				if (empty($fields)) {
+					throw new InvalidQueryException('Missing field data for update query');
+				}
+
 				$values = [];
 
 				foreach ($fields as $key => $value) {
@@ -535,8 +545,13 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 *
 	 * @param string $table
 	 * @return string
+	 * @throws \Titon\Model\Exception\InvalidQueryException
 	 */
 	public function formatTable($table) {
+		if (!$table) {
+			throw new InvalidQueryException('Missing table for query');
+		}
+
 		return $this->quote($table);
 	}
 

@@ -192,14 +192,32 @@ class DialectTest extends TestCase {
 	public function testBuildUpdate() {
 		$query = new Query(Query::UPDATE, new User());
 
+		// No fields
+		try {
+			$this->object->buildUpdate($query);
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+
+		$query->fields(['username' => 'miles']);
+
+		// No table
+		try {
+			$this->object->buildUpdate($query);
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+
 		$query->from('foobar');
-		$this->assertEquals('UPDATE `foobar` SET;', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE `foobar` SET `username` = \?;/', $this->object->buildUpdate($query));
 
 		$query->limit(15);
-		$this->assertRegExp('/UPDATE `foobar` SET\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE `foobar` SET `username` = \?\s+LIMIT 15;/', $this->object->buildUpdate($query));
 
 		$query->orderBy('username', 'desc');
-		$this->assertRegExp('/UPDATE `foobar` SET\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE `foobar` SET `username` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
 
 		$query->fields([
 			'email' => 'email@domain.com',

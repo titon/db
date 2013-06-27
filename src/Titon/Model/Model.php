@@ -123,6 +123,7 @@ class Model extends Base {
 	 *
 	 * @param array $data
 	 * @return int The record ID on success, 0 on failure
+	 * @throws \Titon\Model\Exception\QueryFailureException
 	 * @throws \Exception
 	 */
 	public function create(array $data) {
@@ -229,11 +230,7 @@ class Model extends Base {
 
 			try {
 				if (!$query->save()) {
-					if (is_array($id)) {
-						$id = implode(', ', $id);
-					}
-
-					throw new QueryFailureException(sprintf('Failed to delete %s record with ID %s', get_class($this), $id));
+					throw new QueryFailureException(sprintf('Failed to delete %s record with ID %s', get_class($this), implode(', ', (array) $id)));
 				}
 
 				$this->deleteDependents($id, $cascade);
@@ -264,7 +261,7 @@ class Model extends Base {
 	 * Loop through all model relations and delete dependent records using the ID as a base.
 	 * Will return a count of how many dependent records were deleted.
 	 *
-	 * @param int $id
+	 * @param int|array $id
 	 * @param bool $cascade
 	 * @return int
 	 * @throws \Titon\Model\Exception\QueryFailureException
@@ -309,7 +306,7 @@ class Model extends Base {
 
 						// Loop through the records and cascade delete dependents
 						if ($results) {
-							$relatedModel->deleteDependents(Hash::pluck($results, $relatedModel->getPrimaryKey()), $cascade);
+							$count += $relatedModel->deleteDependents(Hash::pluck($results, $relatedModel->getPrimaryKey()), $cascade);
 						}
 					break;
 

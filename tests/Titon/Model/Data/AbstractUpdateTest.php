@@ -19,7 +19,7 @@ use \Exception;
 /**
  * Test class for database updating.
  */
-abstract class AbstractUpdateTest extends TestCase {
+class AbstractUpdateTest extends TestCase {
 
 	/**
 	 * Unload fixtures.
@@ -84,6 +84,18 @@ abstract class AbstractUpdateTest extends TestCase {
 		$user = new User();
 
 		$this->assertFalse($user->update(1, []));
+
+		// Relation without data
+		try {
+			$user->update(1, [
+				'Profile' => [
+					'lastLogin' => time()
+				]
+			]);
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
 	}
 
 	/**

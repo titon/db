@@ -64,13 +64,13 @@ class PdoDriverTest extends TestCase {
 		}
 
 		// No params
-		$statement = $this->object->buildStatement((new Query(Query::SELECT, $this->model))->fields('id'));
+		$statement = $this->object->buildStatement((new Query(Query::SELECT, $this->model))->fields('id')->from('foobar'));
 		$this->assertInstanceOf('PDOStatement', $statement);
 		$this->assertTrue(empty($statement->params));
 		$statement->closeCursor();
 
 		// With params
-		$statement = $this->object->buildStatement((new Query(Query::UPDATE, $this->model))->fields(['id' => 1]));
+		$statement = $this->object->buildStatement((new Query(Query::UPDATE, $this->model))->fields(['id' => 1])->from('foobar'));
 		$this->assertInstanceOf('PDOStatement', $statement);
 		$this->assertFalse(empty($statement->params));
 		$statement->closeCursor();

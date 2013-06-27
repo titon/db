@@ -249,4 +249,27 @@ class AbstractCreateTest extends TestCase {
 		], $book->data);
 	}
 
+	/**
+	 * Test that create fails with empty data.
+	 */
+	public function testCreateEmptyData() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertSame(0, $user->create([]));
+
+		// Relation without data
+		try {
+			$this->assertSame(0, $user->create([
+				'Profile' => [
+					'lastLogin' => time()
+				]
+			]));
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+	}
+
 }
