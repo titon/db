@@ -237,8 +237,7 @@ class AbstractCreateTest extends TestCase {
 					]
 				],
 				[
-					'id' => 8,
-					'name' => 'Fantasy',
+					// Data isn't set when using foreign keys
 					'Junction' => [
 						'book_id' => 16,
 						'genre_id' => 8,

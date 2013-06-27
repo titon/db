@@ -976,116 +976,140 @@ class Model extends Base {
 	 * @param array $data
 	 * @return int
 	 * @throws \Titon\Model\Exception\QueryFailureException
+	 * @throws \Exception
 	 */
 	public function upsertRelations($id, array $data) {
-		$updated = 0;
+		$upserted = 0;
+		$driver = $this->getDriver();
 
 		if (!$data) {
-			return $updated;
+			return $upserted;
 		}
 
-		foreach ($data as $alias => $relatedData) {
-			if (empty($data[$alias])) {
-				continue;
-			}
+		if (!$driver->startTransaction()) {
+			throw new QueryFailureException('Failed to start database transaction');
+		}
 
-			$relation = $this->getRelation($alias);
-			$fk = $relation->getForeignKey();
-			$rfk = $relation->getRelatedForeignKey();
-
-			/** @type \Titon\Model\Model $relatedModel */
-			$relatedModel = $this->getObject($alias);
-			$pk = $this->getPrimaryKey();
-			$rpk = $relatedModel->getPrimaryKey();
-
-			switch ($relation->getType()) {
-				// Append the foreign key with the current ID
-				case Relation::ONE_TO_ONE:
-					$relatedData[$rfk] = $id;
-					$relatedData[$rpk] = $relatedModel->upsert($relatedData);
-
-					if (!$relatedData[$rpk]) {
-						throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
-					}
-
-					$relatedData = $relatedModel->data;
-				break;
-
-				// Loop through and append the foreign key with the current ID
-				case Relation::ONE_TO_MANY:
-					foreach ($relatedData as $i => $hasManyData) {
-						$hasManyData[$rfk] = $id;
-						$hasManyData[$rpk] = $relatedModel->upsert($hasManyData);
-
-						if (!$hasManyData[$rpk]) {
-							throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
-						}
-
-						$hasManyData = $relatedModel->data;
-						$relatedData[$i] = $hasManyData;
-					}
-				break;
-
-				// Loop through each set of data and upsert to gather an ID
-				// Use that foreign ID with the current ID and save in the junction table
-				case Relation::MANY_TO_MANY:
-					$junctionModel = Registry::factory($relation->getJunctionModel());
-					$jpk = $junctionModel->getPrimaryKey();
-
-					foreach ($relatedData as $i => $habtmData) {
-						$junctionData = [$fk => $id];
-
-						// Existing record by junction foreign key
-						if (isset($habtmData[$rfk])) {
-							$foreign_id = $habtmData[$rfk];
-							$habtmData = $relatedModel->select()->where($rpk, $foreign_id)->fetch(false);
-
-						// Existing record by relation primary key
-						// New record
-						} else {
-							$foreign_id = $relatedModel->upsert($habtmData);
-							$habtmData = $relatedModel->data;
-						}
-
-						if (!$foreign_id) {
-							throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
-						}
-
-						$junctionData[$rfk] = $foreign_id;
-
-						// Only create the record if the junction doesn't already exist
-						$exists = $junctionModel->select()
-							->where($fk, $id)
-							->where($rfk, $foreign_id)
-							->fetch(false);
-
-						if (!$exists) {
-							$junctionData[$jpk] = $junctionModel->upsert($junctionData);
-
-							if (!$junctionData[$jpk]) {
-								throw new QueryFailureException(sprintf('Failed to upsert %s junction data', $alias));
-							}
-						} else {
-							$junctionData = $exists;
-						}
-
-						$habtmData['Junction'] = $junctionData;
-						$relatedData[$i] = $habtmData;
-					}
-				break;
-
-				// Can not save belongs to relations
-				case Relation::MANY_TO_ONE:
+		try {
+			foreach ($data as $alias => $relatedData) {
+				if (empty($data[$alias])) {
 					continue;
-				break;
+				}
+
+				$relation = $this->getRelation($alias);
+				$fk = $relation->getForeignKey();
+				$rfk = $relation->getRelatedForeignKey();
+
+				/** @type \Titon\Model\Model $relatedModel */
+				$relatedModel = $this->getObject($alias);
+				$pk = $this->getPrimaryKey();
+				$rpk = $relatedModel->getPrimaryKey();
+
+				switch ($relation->getType()) {
+					// Append the foreign key with the current ID
+					case Relation::ONE_TO_ONE:
+						$relatedData[$rfk] = $id;
+						$relatedData[$rpk] = $relatedModel->upsert($relatedData);
+
+						if (!$relatedData[$rpk]) {
+							throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
+						}
+
+						$relatedData = $relatedModel->data;
+
+						$upserted++;
+					break;
+
+					// Loop through and append the foreign key with the current ID
+					case Relation::ONE_TO_MANY:
+						foreach ($relatedData as $i => $hasManyData) {
+							$hasManyData[$rfk] = $id;
+							$hasManyData[$rpk] = $relatedModel->upsert($hasManyData);
+
+							if (!$hasManyData[$rpk]) {
+								throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
+							}
+
+							$hasManyData = $relatedModel->data;
+							$relatedData[$i] = $hasManyData;
+
+							$upserted++;
+						}
+					break;
+
+					// Loop through each set of data and upsert to gather an ID
+					// Use that foreign ID with the current ID and save in the junction table
+					case Relation::MANY_TO_MANY:
+						$junctionModel = Registry::factory($relation->getJunctionModel());
+						$jpk = $junctionModel->getPrimaryKey();
+
+						foreach ($relatedData as $i => $habtmData) {
+							$junctionData = [$fk => $id];
+
+							// Existing record by junction foreign key
+							if (isset($habtmData[$rfk])) {
+								$foreign_id = $habtmData[$rfk];
+								unset($habtmData[$rfk]);
+
+								if ($habtmData) {
+									$foreign_id = $relatedModel->upsert($habtmData, $foreign_id);
+								}
+
+							// Existing record by relation primary key
+							// New record
+							} else {
+								$foreign_id = $relatedModel->upsert($habtmData);
+								$habtmData = $relatedModel->data;
+							}
+
+							if (!$foreign_id) {
+								throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
+							}
+
+							$junctionData[$rfk] = $foreign_id;
+
+							// Only create the record if the junction doesn't already exist
+							$exists = $junctionModel->select()
+								->where($fk, $id)
+								->where($rfk, $foreign_id)
+								->fetch(false);
+
+							if (!$exists) {
+								$junctionData[$jpk] = $junctionModel->upsert($junctionData);
+
+								if (!$junctionData[$jpk]) {
+									throw new QueryFailureException(sprintf('Failed to upsert %s junction data', $alias));
+								}
+							} else {
+								$junctionData = $exists;
+							}
+
+							$habtmData['Junction'] = $junctionData;
+							$relatedData[$i] = $habtmData;
+
+							$upserted++;
+						}
+					break;
+
+					// Can not save belongs to relations
+					case Relation::MANY_TO_ONE:
+						continue;
+					break;
+				}
+
+				$this->setData([$alias => $relatedData]);
 			}
 
-			$this->setData([$alias => $relatedData]);
+			$driver->commitTransaction();
 
-			$updated++;
+		// Rollback and re-throw exception
+		} catch (Exception $e) {
+			$driver->rollbackTransaction();
+
+			throw $e;
 		}
 
-		return $updated;
+		return $upserted;
 	}
 
 	/**

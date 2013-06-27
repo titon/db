@@ -319,13 +319,12 @@ class AbstractUpdateTest extends TestCase {
 					'id' => 12,
 					'name' => 'Epic-Horror',
 					'Junction' => [
-						'id' => 47,
 						'book_id' => 5,
-						'genre_id' => 12
+						'genre_id' => 12,
+						'id' => 47
 					]
 				], [
-					'id' => 8,
-					'name' => 'Fantasy',
+					// Data isn't set when using foreign keys
 					'Junction' => [
 						'id' => 14,
 						'book_id' => 5,
