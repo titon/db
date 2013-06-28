@@ -145,9 +145,10 @@ interface Driver {
 	 * Query the driver for data records.
 	 *
 	 * @param \Titon\Model\Query|string $query
+	 * @param array $params
 	 * @return \Titon\Model\Query\Result
 	 */
-	public function query($query);
+	public function query($query, array $params = []);
 
 	/**
 	 * Reset the driver for the next query.

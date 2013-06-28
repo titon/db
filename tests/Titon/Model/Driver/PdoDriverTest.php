@@ -63,16 +63,8 @@ class PdoDriverTest extends TestCase {
 			$this->assertTrue(true);
 		}
 
-		// No params
 		$statement = $this->object->buildStatement((new Query(Query::SELECT, $this->model))->fields('id')->from('foobar'));
 		$this->assertInstanceOf('PDOStatement', $statement);
-		$this->assertTrue(empty($statement->params));
-		$statement->closeCursor();
-
-		// With params
-		$statement = $this->object->buildStatement((new Query(Query::UPDATE, $this->model))->fields(['id' => 1])->from('foobar'));
-		$this->assertInstanceOf('PDOStatement', $statement);
-		$this->assertFalse(empty($statement->params));
 		$statement->closeCursor();
 	}
 
@@ -127,13 +119,21 @@ class PdoDriverTest extends TestCase {
 		$this->assertEquals(true, $result->hasExecuted());
 		$this->assertEquals(true, $result->isSuccessful());
 
+		// Test with params
+		$result = $this->object->query('DELETE FROM `users` WHERE `country_id` = ?', [1]);
+
+		$this->assertInstanceOf('Titon\Model\Query\Result', $result);
+
+		$this->assertEquals(0, $result->getRowCount());
+		$this->assertEquals(1, $result->save());
+
 		// Test with a string
 		$result = $this->object->query('DELETE FROM `users`');
 
 		$this->assertInstanceOf('Titon\Model\Query\Result', $result);
 
 		$this->assertEquals(0, $result->getRowCount());
-		$this->assertEquals(5, $result->save());
+		$this->assertEquals(4, $result->save());
 	}
 
 	/**

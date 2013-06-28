@@ -72,16 +72,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			throw new UnsupportedQueryStatementException(sprintf('Query statement %s does not exist or has not been implemented', $type));
 		}
 
-		$statement = $this->getConnection()->prepare(call_user_func([$dialect, $method], $query));
-		$params = $this->resolveParams($query);
-
-		foreach ($params as $i => $value) {
-			$statement->bindValue($i + 1, $value[0], $value[1]);
-		}
-
-		$statement->params = $params;
-
-		return $statement;
+		return $this->getConnection()->prepare(call_user_func([$dialect, $method], $query));
 	}
 
 	/**
@@ -231,7 +222,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 *
 	 * @throws \Titon\Model\Exception\InvalidQueryException
 	 */
-	public function query($query) {
+	public function query($query, array $params = []) {
 		$storage = $this->getStorage();
 		$cacheLength = null;
 
@@ -253,14 +244,28 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			}
 		}
 
-		// Prepare query
+		// Prepare query and binds
 		if ($query instanceof Query) {
-			$result = $this->buildStatement($query);
+			$statement = $this->buildStatement($query);
+			$binds = $this->resolveParams($query);
+
 		} else {
-			$result = $this->getConnection()->prepare($query);
+			$statement = $this->getConnection()->prepare($query);
+			$binds = [];
+
+			foreach ($params as $value) {
+				$binds[] = [$value, $this->resolveType($value)];
+			}
 		}
 
-		$result = new PdoResult($result);
+		foreach ($binds as $i => $value) {
+			$statement->bindValue($i + 1, $value[0], $value[1]);
+		}
+
+		$statement->params = $binds;
+
+		// Gather result
+		$result = new PdoResult($statement);
 
 		$this->logQuery($result);
 
