@@ -13,6 +13,7 @@ use Titon\Model\Query;
 use Titon\Test\Stub\Model\Author;
 use Titon\Test\Stub\Model\Book;
 use Titon\Test\Stub\Model\Genre;
+use Titon\Test\Stub\Model\Order;
 use Titon\Test\Stub\Model\Series;
 use Titon\Test\Stub\Model\Stat;
 use Titon\Test\Stub\Model\User;
@@ -1054,6 +1055,114 @@ class AbstractReadTest extends TestCase {
 			})->fetchAll(false));
 	}
 
-	// http://www.mysqltutorial.org/mysql-having.aspx
+	/**
+	 * Test having predicates using AND conjunction.
+	 */
+	public function testHavingAnd() {
+		$this->loadFixtures('Orders');
+
+		$order = new Order();
+		$query = $order->select();
+		$query
+			->fields([
+				'id', 'user_id', 'quantity', 'status', 'shipped',
+				$query->func('SUM', ['quantity' => 'field'])->asAlias('qty'),
+				$query->func('COUNT', ['user_id' => 'field'])->asAlias('count')
+			])
+			->groupBy('user_id');
+
+		$this->assertEquals([
+			['id' => 1, 'user_id' => 1, 'quantity' => 15, 'status' => 'pending', 'shipped' => null, 'qty' => 97, 'count' => 5],
+			['id' => 2, 'user_id' => 2, 'quantity' => 33, 'status' => 'pending', 'shipped' => null, 'qty' => 77, 'count' => 5],
+			['id' => 3, 'user_id' => 3, 'quantity' => 4, 'status' => 'pending', 'shipped' => null, 'qty' => 90, 'count' => 7],
+			['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7],
+			['id' => 5, 'user_id' => 5, 'quantity' => 29, 'status' => 'pending', 'shipped' => null, 'qty' => 112, 'count' => 6],
+		], $query->fetchAll(false));
+
+		$query->having('qty', '>', 100);
+
+		$this->assertEquals([
+			['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7],
+			['id' => 5, 'user_id' => 5, 'quantity' => 29, 'status' => 'pending', 'shipped' => null, 'qty' => 112, 'count' => 6],
+		], $query->fetchAll(false));
+
+		$query->having('count', '>', 6);
+
+		$this->assertEquals([
+			['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7]
+		], $query->fetchAll(false));
+	}
+
+	/**
+	 * Test having predicates using AND conjunction.
+	 */
+	public function testHavingOr() {
+		$this->loadFixtures('Orders');
+
+		$order = new Order();
+		$query = $order->select();
+		$query
+			->fields([
+				'id', 'user_id', 'quantity', 'status', 'shipped',
+				$query->func('SUM', ['quantity' => 'field'])->asAlias('qty'),
+				$query->func('COUNT', ['user_id' => 'field'])->asAlias('count')
+			])
+			->groupBy('user_id');
+
+		$this->assertEquals([
+			['id' => 1, 'user_id' => 1, 'quantity' => 15, 'status' => 'pending', 'shipped' => null, 'qty' => 97, 'count' => 5],
+			['id' => 2, 'user_id' => 2, 'quantity' => 33, 'status' => 'pending', 'shipped' => null, 'qty' => 77, 'count' => 5],
+			['id' => 3, 'user_id' => 3, 'quantity' => 4, 'status' => 'pending', 'shipped' => null, 'qty' => 90, 'count' => 7],
+			['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7],
+			['id' => 5, 'user_id' => 5, 'quantity' => 29, 'status' => 'pending', 'shipped' => null, 'qty' => 112, 'count' => 6],
+		], $query->fetchAll(false));
+
+		$query->orHaving('qty', '<=', 90);
+
+		$this->assertEquals([
+			['id' => 2, 'user_id' => 2, 'quantity' => 33, 'status' => 'pending', 'shipped' => null, 'qty' => 77, 'count' => 5],
+			['id' => 3, 'user_id' => 3, 'quantity' => 4, 'status' => 'pending', 'shipped' => null, 'qty' => 90, 'count' => 7],
+		], $query->fetchAll(false));
+
+		$query->orHaving('count', '>=', 6);
+
+		$this->assertEquals([
+			['id' => 2, 'user_id' => 2, 'quantity' => 33, 'status' => 'pending', 'shipped' => null, 'qty' => 77, 'count' => 5],
+			['id' => 3, 'user_id' => 3, 'quantity' => 4, 'status' => 'pending', 'shipped' => null, 'qty' => 90, 'count' => 7],
+			['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7],
+			['id' => 5, 'user_id' => 5, 'quantity' => 29, 'status' => 'pending', 'shipped' => null, 'qty' => 112, 'count' => 6],
+		], $query->fetchAll(false));
+	}
+
+	/**
+	 * Test nested having predicates.
+	 */
+	public function testHavingNested() {
+		$this->loadFixtures('Orders');
+
+		$order = new Order();
+		$query = $order->select();
+		$query
+			->fields([
+				'id', 'user_id', 'quantity', 'status', 'shipped',
+				$query->func('SUM', ['quantity' => 'field'])->asAlias('qty'),
+				$query->func('COUNT', ['user_id' => 'field'])->asAlias('count')
+			])
+			->where('status', '!=', 'pending')
+			->groupBy('user_id')
+			->having(function() {
+				$this->between('qty', 40, 50);
+				$this->either(function() {
+					$this->eq('status', 'shipped');
+					$this->eq('status', 'delivered');
+				});
+			});
+
+		$this->assertEquals([
+			['id' => 21, 'user_id' => 1, 'quantity' => 17, 'status' => 'delivered', 'shipped' => '2013-05-27 12:33:02', 'qty' => 49, 'count' => 3],
+			['id' => 17, 'user_id' => 2, 'quantity' => 26, 'status' => 'shipped', 'shipped' => '2013-06-28 12:33:02', 'qty' => 41, 'count' => 2],
+			['id' => 19, 'user_id' => 4, 'quantity' => 20, 'status' => 'delivered', 'shipped' => '2013-06-30 12:33:02', 'qty' => 40, 'count' => 3],
+		], $query->fetchAll(false));
+	}
 
 }
