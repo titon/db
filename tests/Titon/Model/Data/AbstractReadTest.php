@@ -9,11 +9,13 @@ namespace Titon\Model\Data;
 
 use Titon\Model\Entity;
 use Titon\Model\Query\Func;
+use Titon\Model\Query;
 use Titon\Test\Stub\Model\Author;
 use Titon\Test\Stub\Model\Book;
 use Titon\Test\Stub\Model\Genre;
 use Titon\Test\Stub\Model\Series;
 use Titon\Test\Stub\Model\Stat;
+use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
 use \Exception;
 
@@ -683,6 +685,87 @@ class AbstractReadTest extends TestCase {
 	}
 
 	/**
+	 * Test LIKE and NOT LIKE clauses.
+	 */
+	public function testSelectLike() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertEquals([
+			['id' => 2, 'username' => 'batman'],
+			['id' => 4, 'username' => 'spiderman'],
+			['id' => 3, 'username' => 'superman'],
+		], $user->select('id', 'username')->where('username', 'like', '%man%')->fetchAll(false));
+
+		$this->assertEquals([
+			['id' => 1, 'username' => 'miles'],
+			['id' => 5, 'username' => 'wolverine']
+		], $user->select('id', 'username')->where('username', 'notLike', '%man%')->fetchAll(false));
+	}
+
+	/**
+	 * Test IN and NOT IN clauses.
+	 */
+	public function testSelectIn() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertEquals([
+			['id' => 1, 'username' => 'miles'],
+			['id' => 3, 'username' => 'superman'],
+		], $user->select('id', 'username')->where('id', 'in', [1, 3, 10])->fetchAll(false)); // use fake 10
+
+		$this->assertEquals([
+			['id' => 2, 'username' => 'batman'],
+			['id' => 4, 'username' => 'spiderman'],
+			['id' => 5, 'username' => 'wolverine']
+		], $user->select('id', 'username')->where('id', 'notIn', [1, 3, 10])->fetchAll(false));
+	}
+
+	/**
+	 * Test BETWEEN and NOT BETWEEN clauses.
+	 */
+	public function testSelectBetween() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertEquals([
+			['id' => 2, 'username' => 'batman'],
+			['id' => 3, 'username' => 'superman'],
+		], $user->select('id', 'username')->where('age', 'between', [30, 45])->fetchAll(false));
+
+		$this->assertEquals([
+			['id' => 1, 'username' => 'miles'],
+			['id' => 4, 'username' => 'spiderman'],
+			['id' => 5, 'username' => 'wolverine']
+		], $user->select('id', 'username')->where('age', 'notBetween', [30, 45])->fetchAll(false));
+	}
+
+	/**
+	 * Test IS NULL and NOT NULL clauses.
+	 */
+	public function testSelectNull() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+		$user->query(Query::UPDATE)->fields(['created' => null])->where('country_id', 1)->save();
+
+		$this->assertEquals([
+			['id' => 1, 'username' => 'miles']
+		], $user->select('id', 'username')->where('created', 'isNull', null)->fetchAll(false));
+
+		$this->assertEquals([
+			['id' => 2, 'username' => 'batman'],
+			['id' => 3, 'username' => 'superman'],
+			['id' => 4, 'username' => 'spiderman'],
+			['id' => 5, 'username' => 'wolverine']
+		], $user->select('id', 'username')->where('created', 'isNotNull', null)->fetchAll(false));
+	}
+
+	/**
 	 * Test field filtering. Foreign keys and primary keys should always be present even if excluded.
 	 */
 	public function testFieldFiltering() {
@@ -970,5 +1053,7 @@ class AbstractReadTest extends TestCase {
 				});
 			})->fetchAll(false));
 	}
+
+	// http://www.mysqltutorial.org/mysql-having.aspx
 
 }

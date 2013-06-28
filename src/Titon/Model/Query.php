@@ -478,12 +478,12 @@ class Query implements Serializable, JsonSerializable {
 	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
-	 * @param mixed $value
 	 * @param string $op
+	 * @param mixed $value
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception\ExistingPredicateException
 	 */
-	public function having($field, $value = null, $op = null) {
+	public function having($field, $op = null, $value = null) {
 		if ($this->_having && $this->_having->getType() === Predicate::EITHER) {
 			throw new ExistingPredicateException('Having clause already created using "OR" conjunction');
 		}
@@ -492,15 +492,7 @@ class Query implements Serializable, JsonSerializable {
 			$this->_having = new Predicate(Predicate::ALSO);
 		}
 
-		if ($field instanceof Closure) {
-			$this->_having->bindCallback($field);
-
-		} else if ($op !== null) {
-			$this->_having->add($field, $op, $value);
-
-		} else {
-			$this->_having->eq($field, $value);
-		}
+		$this->_modifyPredicate($this->_having, $field, $op, $value);
 
 		return $this;
 	}
@@ -569,12 +561,12 @@ class Query implements Serializable, JsonSerializable {
 	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
-	 * @param mixed $value
 	 * @param string $op
+	 * @param mixed $value
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception\ExistingPredicateException
 	 */
-	public function orHaving($field, $value = null, $op = null) {
+	public function orHaving($field, $op = null, $value = null) {
 		if ($this->_having && $this->_having->getType() === Predicate::ALSO) {
 			throw new ExistingPredicateException('Having clause already created using "AND" conjunction');
 		}
@@ -583,15 +575,7 @@ class Query implements Serializable, JsonSerializable {
 			$this->_having = new Predicate(Predicate::EITHER);
 		}
 
-		if ($field instanceof Closure) {
-			$this->_having->bindCallback($field);
-
-		} else if ($op !== null) {
-			$this->_having->add($field, $op, $value);
-
-		} else {
-			$this->_having->eq($field, $value);
-		}
+		$this->_modifyPredicate($this->_having, $field, $op, $value);
 
 		return $this;
 	}
@@ -601,12 +585,12 @@ class Query implements Serializable, JsonSerializable {
 	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
-	 * @param mixed $value
 	 * @param string $op
+	 * @param mixed $value
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception\ExistingPredicateException
 	 */
-	public function orWhere($field, $value = null, $op = null) {
+	public function orWhere($field, $op = null, $value = null) {
 		if ($this->_where && $this->_where->getType() === Predicate::ALSO) {
 			throw new ExistingPredicateException('Where clause already created using "AND" conjunction');
 		}
@@ -615,15 +599,7 @@ class Query implements Serializable, JsonSerializable {
 			$this->_where = new Predicate(Predicate::EITHER);
 		}
 
-		if ($field instanceof Closure) {
-			$this->_where->bindCallback($field);
-
-		} else if ($op !== null) {
-			$this->_where->add($field, $op, $value);
-
-		} else {
-			$this->_where->eq($field, $value);
-		}
+		$this->_modifyPredicate($this->_where, $field, $op, $value);
 
 		return $this;
 	}
@@ -664,12 +640,12 @@ class Query implements Serializable, JsonSerializable {
 	 * Secondly allows for simple params to be added.
 	 *
 	 * @param string $field
-	 * @param mixed $value
 	 * @param string $op
+	 * @param mixed $value
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception\ExistingPredicateException
 	 */
-	public function where($field, $value = null, $op = null) {
+	public function where($field, $op = null, $value = null) {
 		if ($this->_where && $this->_where->getType() === Predicate::EITHER) {
 			throw new ExistingPredicateException('Where clause already created using "OR" conjunction');
 		}
@@ -678,15 +654,7 @@ class Query implements Serializable, JsonSerializable {
 			$this->_where = new Predicate(Predicate::ALSO);
 		}
 
-		if ($field instanceof Closure) {
-			$this->_where->bindCallback($field);
-
-		} else if ($op !== null) {
-			$this->_where->add($field, $op, $value);
-
-		} else {
-			$this->_where->eq($field, $value);
-		}
+		$this->_modifyPredicate($this->_where, $field, $op, $value);
 
 		return $this;
 	}
@@ -837,6 +805,26 @@ class Query implements Serializable, JsonSerializable {
 			'type' => $this->getType(),
 			'where' => $this->getWhere()
 		];
+	}
+
+	/**
+	 * Modify a predicate by adding additional clauses.
+	 *
+	 * @param \Titon\Model\Query\Predicate $predicate
+	 * @param string $field
+	 * @param mixed $op
+	 * @param mixed $value
+	 */
+	protected function _modifyPredicate(Predicate $predicate, $field, $op, $value) {
+		if ($field instanceof Closure) {
+			$predicate->bindCallback($field);
+
+		} else if ($value !== null || in_array($op, [Expr::NULL, Expr::NOT_NULL])) {
+			$predicate->add($field, $op, $value);
+
+		} else {
+			$predicate->eq($field, $op);
+		}
 	}
 
 }

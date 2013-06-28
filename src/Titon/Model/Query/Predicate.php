@@ -50,11 +50,11 @@ class Predicate implements Serializable, JsonSerializable {
 	 * Set the primary predicate type if it has not been set.
 	 *
 	 * @param string $field
-	 * @param mixed $value
 	 * @param string $op
+	 * @param mixed $value
 	 * @return \Titon\Model\Query\Predicate
 	 */
-	public function add($field, $value, $op) {
+	public function add($field, $op, $value) {
 		if ($field instanceof Func) {
 			$key = $field->getName() . $op;
 		} else {
@@ -96,7 +96,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function between($field, $start, $end) {
-		$this->add($field, [$start, $end], Expr::BETWEEN);
+		$this->add($field, Expr::BETWEEN, [$start, $end]);
 
 		return $this;
 	}
@@ -141,7 +141,7 @@ class Predicate implements Serializable, JsonSerializable {
 			$this->null($field);
 
 		} else {
-			$this->add($field, $value, '=');
+			$this->add($field, '=', $value);
 		}
 
 		return $this;
@@ -173,7 +173,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function gt($field, $value) {
-		$this->add($field, $value, '>');
+		$this->add($field, '>', $value);
 
 		return $this;
 	}
@@ -186,7 +186,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function gte($field, $value) {
-		$this->add($field, $value, '>=');
+		$this->add($field, '>=', $value);
 
 		return $this;
 	}
@@ -199,7 +199,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function in($field, $value) {
-		$this->add($field, (array) $value, Expr::IN);
+		$this->add($field, Expr::IN, (array) $value);
 
 		return $this;
 	}
@@ -212,7 +212,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function like($field, $value) {
-		$this->add($field, $value, Expr::LIKE);
+		$this->add($field, Expr::LIKE, $value);
 
 		return $this;
 	}
@@ -225,7 +225,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function lt($field, $value) {
-		$this->add($field, $value, '<');
+		$this->add($field, '<', $value);
 
 		return $this;
 	}
@@ -238,7 +238,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function lte($field, $value) {
-		$this->add($field, $value, '<=');
+		$this->add($field, '<=', $value);
 
 		return $this;
 	}
@@ -251,7 +251,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function not($field, $value) {
-		$this->add($field, $value, Expr::NOT);
+		$this->add($field, Expr::NOT, $value);
 
 		return $this;
 	}
@@ -265,7 +265,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function notBetween($field, $start, $end) {
-		$this->add($field, [$start, $end], Expr::NOT_BETWEEN);
+		$this->add($field, Expr::NOT_BETWEEN, [$start, $end]);
 
 		return $this;
 	}
@@ -285,7 +285,7 @@ class Predicate implements Serializable, JsonSerializable {
 			$this->notNull($field);
 
 		} else {
-			$this->add($field, $value, '!=');
+			$this->add($field, '!=', $value);
 		}
 
 		return $this;
@@ -299,7 +299,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function notIn($field, $value) {
-		$this->add($field, (array) $value, Expr::NOT_IN);
+		$this->add($field, Expr::NOT_IN, (array) $value);
 
 		return $this;
 	}
@@ -312,7 +312,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function notLike($field, $value) {
-		$this->add($field, $value, Expr::NOT_LIKE);
+		$this->add($field, Expr::NOT_LIKE, $value);
 
 		return $this;
 	}
@@ -324,7 +324,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function notNull($field) {
-		$this->add($field, null, Expr::NOT_NULL);
+		$this->add($field, Expr::NOT_NULL, null);
 
 		return $this;
 	}
@@ -336,7 +336,7 @@ class Predicate implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function null($field) {
-		$this->add($field, null, Expr::NULL);
+		$this->add($field, Expr::NULL, null);
 
 		return $this;
 	}

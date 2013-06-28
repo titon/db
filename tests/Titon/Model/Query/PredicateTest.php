@@ -30,12 +30,12 @@ class PredicateTest extends TestCase {
 	 * Test adding params.
 	 */
 	public function testAdd() {
-		$this->object->add('id', 1, '=');
+		$this->object->add('id', '=', 1);
 		$expected = ['id=1' => new Expr('id', '=', 1)];
 		$this->assertEquals($expected, $this->object->getParams());
 
-		$this->object->add('id', 1, '='); // no dupes
-		$this->object->add('name', 'Titon', 'like');
+		$this->object->add('id', '=', 1); // no dupes
+		$this->object->add('name', 'like', 'Titon');
 		$expected['namelikeTiton'] = new Expr('name', 'like', 'Titon');
 		$this->assertEquals($expected, $this->object->getParams());
 	}
