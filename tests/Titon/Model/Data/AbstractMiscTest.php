@@ -8,6 +8,7 @@
 namespace Titon\Model\Data;
 
 use Titon\Model\Query;
+use Titon\Model\Query\SubQuery;
 use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
 use \Exception;
@@ -177,6 +178,35 @@ class AbstractMiscTest extends TestCase {
 		}
 
 		$this->assertEquals($data, $user->select()->with('Profile')->where('id', 1)->fetch(false));
+	}
+
+	/**
+	 * Test that sub-queries return results.
+	 */
+	public function testSubQueries() {
+		$this->loadFixtures(['Users', 'Profiles', 'Countries']);
+
+		$user = new User();
+
+		// ANY filter
+		$query = $user->select('id', 'country_id', 'username');
+		$query->where('country_id', '=', $query->subQuery('id')->from('countries')->withFilter(SubQuery::ANY));
+
+		$this->assertEquals([
+			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
+			['id' => 2, 'country_id' => 3, 'username' => 'batman'],
+			['id' => 3, 'country_id' => 2, 'username' => 'superman'],
+			['id' => 4, 'country_id' => 5, 'username' => 'spiderman'],
+			['id' => 5, 'country_id' => 4, 'username' => 'wolverine'],
+		], $query->fetchAll(false));
+
+		// Single record
+		$query = $user->select('id', 'country_id', 'username');
+		$query->where('country_id', '=', $query->subQuery('id')->from('countries')->where('iso', 'USA'));
+
+		$this->assertEquals([
+			['id' => 1, 'country_id' => 1, 'username' => 'miles']
+		], $query->fetchAll(false));
 	}
 
 }

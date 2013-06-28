@@ -21,6 +21,7 @@ use Titon\Model\Query;
 use Titon\Model\Query\Expr;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
+use Titon\Model\Query\SubQuery;
 use Titon\Model\Traits\DriverAware;
 use Titon\Utility\String;
 
@@ -50,7 +51,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	protected $_clauses = [
 		'autoIncrement'	=> 'AUTO_INCREMENT',
+		'all'			=> 'ALL',
 		'and'			=> 'AND',
+		'any'			=> 'ANY',
 		'as'			=> '%s AS %s',
 		'asc'			=> 'ASC',
 		'between'		=> '%s BETWEEN ? AND ?',
@@ -62,6 +65,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'defaultValue'	=> 'DEFAULT %s',
 		'desc'			=> 'DESC',
 		'engine'		=> 'ENGINE',
+		'exists'		=> 'EXISTS',
 		'expression'	=> '%s %s ?',
 		'foreignKey'	=> 'FOREIGN KEY (%s) REFERENCES %s(%s)',
 		'function'		=> '%s(%s)',
@@ -77,6 +81,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'noAction'		=> 'NO ACTION',
 		'not'			=> '%s NOT ?',
 		'notBetween'	=> '%s NOT BETWEEN ? AND ?',
+		'notExists'		=> 'NOT EXISTS',
 		'notIn'			=> '%s NOT IN (%s)',
 		'notLike'		=> '%s NOT LIKE ?',
 		'notNull'		=> 'NOT NULL',
@@ -91,6 +96,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'restrict'		=> 'RESTRICT',
 		'rlike'			=> '%s REGEXP ?',
 		'setNull'		=> 'SET NULL',
+		'some'			=> 'SOME',
+		'subQuery'		=> '(%s)',
 		'where'			=> 'WHERE %s',
 		'xor'			=> 'XOR',
 		'uniqueKey'		=> 'UNIQUE KEY %s (%s)',
@@ -246,6 +253,26 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
+	 * Build a sub-query.
+	 *
+	 * @param \Titon\Model\Query\SubQuery $query
+	 * @return string
+	 */
+	public function buildSubQuery(SubQuery $query) {
+		$output = sprintf($this->getClause('subQuery'), trim($this->buildSelect($query), ';'));
+
+		if ($alias = $query->getAlias()) {
+			$output = sprintf($this->getClause('as'), $output, $this->quote($alias));
+		}
+
+		if ($filter = $query->getFilter()) {
+			$output = $this->getClause($filter) . ' ' . $output;
+		}
+
+		return $output;
+	}
+
+	/**
 	 * Build the TRUNCATE query.
 	 *
 	 * @param \Titon\Model\Query $query
@@ -367,6 +394,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 				foreach ($fields as $field) {
 					if ($field instanceof Func) {
 						$columns[] = $this->formatFunction($field);
+
+					} else if ($field instanceof Query) {
+						$columns[] = $this->buildSubQuery($field);
+
 					} else {
 						$columns[] = $this->quote($field);
 					}
@@ -412,6 +443,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 			if ($value instanceof Func) {
 				$value = $this->formatFunction($value);
+
+			} else if ($value instanceof Query) {
+				$value = $this->buildSubQuery($value);
 
 			} else if ($type === Func::FIELD) {
 				$value = $this->quote($value);
@@ -535,10 +569,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 			} else if ($param instanceof Expr) {
 				$field = $param->getField();
 				$operator = $param->getOperator();
+				$value = $param->getValue();
+				$isSubQuery = ($value instanceof Query);
 
 				// Function instead of field
 				if ($field instanceof Func) {
-					$value = sprintf($this->getClause('expression'), $this->formatFunction($field), $operator);
+					$clause = sprintf($this->getClause('expression'), $this->formatFunction($field), $operator);
 
 				// Regular clause
 				} else {
@@ -547,7 +583,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 					switch ($operator) {
 						case Expr::IN:
 						case Expr::NOT_IN:
-							$value = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($param->getValue()), '?')));
+							if ($isSubQuery) {
+								$clause = sprintf($this->getClause($operator), $field, '?');
+								$clause = str_replace(['(', ')'], '', $clause);
+							} else {
+								$clause = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($value), '?')));
+							}
 						break;
 						case Expr::NULL:
 						case Expr::NOT_NULL:
@@ -558,15 +599,27 @@ abstract class AbstractDialect extends Base implements Dialect {
 						case Expr::REGEXP:
 						case Expr::NOT_REGEXP:
 						case Expr::RLIKE;
-							$value = sprintf($this->getClause($operator), $field);
+							$clause = sprintf($this->getClause($operator), $field);
 						break;
 						default:
-							$value = sprintf($this->getClause('expression'), $field, $operator);
+							$clause = sprintf($this->getClause('expression'), $field, $operator);
 						break;
+					}
+
+					// Replace ? with sub-query statement
+					if ($isSubQuery) {
+
+						// EXISTS and NOT EXISTS doesn't have a field or operator
+						if (in_array($value->getFilter(), [SubQuery::EXISTS, SubQuery::NOT_EXISTS])) {
+							$clause = $this->buildSubQuery($value);
+
+						} else {
+							$clause = str_replace('?', $this->buildSubQuery($value), $clause);
+						}
 					}
 				}
 
-				$output[] = $value;
+				$output[] = $clause;
 			}
 		}
 

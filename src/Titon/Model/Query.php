@@ -16,6 +16,7 @@ use Titon\Model\Model;
 use Titon\Model\Query\Expr;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
+use Titon\Model\Query\SubQuery;
 use Titon\Model\Traits\ExprAware;
 use Titon\Model\Traits\FuncAware;
 use Titon\Utility\Hash;
@@ -593,6 +594,18 @@ class Query implements Serializable, JsonSerializable {
 		$this->_schema = $schema;
 
 		return $this;
+	}
+
+	/**
+	 * Instantiate a new query object that will be used for sub-queries.
+	 *
+	 * @return \Titon\Model\Query\SubQuery
+	 */
+	public function subQuery() {
+		$query = new SubQuery(Query::SELECT, $this->getModel());
+		$query->fields(func_get_args());
+
+		return $query;
 	}
 
 	/**

@@ -243,7 +243,55 @@ class DialectTest extends TestCase {
 
 		$query->where('status', 3);
 		$this->assertRegExp('/UPDATE `foobar` SET `email` = \?, `website` = \?\s+WHERE `status` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+	}
 
+	/**
+	 * Test sub-query creation.
+	 */
+	public function testBuildSubQuery() {
+		// In fields
+		$query = new Query(Query::SELECT, new User());
+		$query->from('users')->fields($query->subQuery('id')->from('profiles'));
+
+		$this->assertRegExp('/SELECT \(SELECT `id` FROM `profiles`\) FROM `users`;/', $this->object->buildSelect($query));
+
+		// In fields with alias
+		$query = new Query(Query::SELECT, new User());
+		$query->from('users')->fields($query->subQuery('id')->from('profiles')->asAlias('column'));
+
+		$this->assertRegExp('/SELECT \(SELECT `id` FROM `profiles`\) AS `column` FROM `users`;/', $this->object->buildSelect($query));
+
+		// In function in fields
+		$query = new Query(Query::SELECT, new User());
+		$query->from('users')->fields(
+			$query->func('UPPER', [$query->subQuery('id')->from('profiles')])
+		);
+
+		$this->assertRegExp('/SELECT UPPER\(\(SELECT `id` FROM `profiles`\)\) FROM `users`;/', $this->object->buildSelect($query));
+
+		// In where clause w/ function
+		$query = new Query(Query::SELECT, new User());
+		$query->from('users')->where('column1', $query->subQuery($query->func('MAX', ['column2' => 'field']))->from('profiles'));
+
+		$this->assertRegExp('/SELECT \* FROM `users`\s+WHERE `column1` = \(SELECT MAX\(`column2`\) FROM `profiles`\);/', $this->object->buildSelect($query));
+
+		// In where clause w/ SOME filter
+		$query = new Query(Query::SELECT, new User());
+		$query->from('users')->where('column1', $query->subQuery('column2')->from('profiles')->withFilter('some'));
+
+		$this->assertRegExp('/SELECT \* FROM `users`\s+WHERE `column1` = SOME \(SELECT `column2` FROM `profiles`\);/', $this->object->buildSelect($query));
+
+		// In where clause using IN operator
+		$query = new Query(Query::SELECT, new User());
+		$query->from('users')->where('column1', 'in', $query->subQuery('column2')->from('profiles'));
+
+		$this->assertRegExp('/SELECT \* FROM `users`\s+WHERE `column1` IN \(SELECT `column2` FROM `profiles`\);/', $this->object->buildSelect($query));
+
+		// In where clause using EXISTS operator
+		$query = new Query(Query::SELECT, new User());
+		$query->from('users')->where('column1', $query->subQuery('column2')->from('profiles')->withFilter('exists'));
+
+		$this->assertRegExp('/SELECT \* FROM `users`\s+WHERE EXISTS \(SELECT `column2` FROM `profiles`\);/', $this->object->buildSelect($query));
 	}
 
 	/**

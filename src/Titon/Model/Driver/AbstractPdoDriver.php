@@ -15,6 +15,7 @@ use Titon\Model\Query;
 use Titon\Model\Query\Expr;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Query\Result\PdoResult;
+use Titon\Model\Query\SubQuery;
 use Titon\Utility\String;
 use \PDO;
 
@@ -347,6 +348,11 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 						foreach ($values as $value) {
 							$binds[] = [$value, $driver->resolveType($value)];
 						}
+
+					} else if ($values instanceof SubQuery) {
+						$resolvePredicate($values->getWhere());
+						$resolvePredicate($values->getHaving());
+
 					} else if ($param->useValue()) {
 						$binds[] = [$values, $driver->resolveType($values)];
 					}
