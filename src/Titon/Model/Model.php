@@ -775,7 +775,7 @@ class Model extends Base {
 	 * @return mixed
 	 */
 	public function preFetch(Query $query, $fetchType) {
-		return;
+		return true;
 	}
 
 	/**
@@ -1135,14 +1135,19 @@ class Model extends Base {
 		$result = $this->preFetch($query, $fetchType);
 
 		// Use the return of preFetch() if applicable
-		if (is_array($result)) {
-			return $result;
-
-		} else if (!$result) {
+		if (!$result) {
 			return [];
 		}
 
-		$results = $this->getDriver()->query($query)->fetchAll();
+		if (is_array($result)) {
+			$results = $result;
+
+			if (!isset($results[0])) {
+				$results = [$results];
+			}
+		} else {
+			$results = $this->getDriver()->query($query)->fetchAll();
+		}
 
 		if (!$results) {
 			return [];

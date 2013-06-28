@@ -7,7 +7,9 @@
 
 namespace Titon\Model\Data;
 
-use Titon\Test\Stub\Model\UserCallbacks;
+use Titon\Test\Stub\Model\UserDeleteCallbacks;
+use Titon\Test\Stub\Model\UserFetchCallbacks;
+use Titon\Test\Stub\Model\UserSaveCallbacks;
 use Titon\Test\TestCase;
 
 /**
@@ -30,7 +32,7 @@ class AbstractCallbackTest extends TestCase {
 	public function testPreDelete() {
 		$this->loadFixtures(['Users', 'Profiles']);
 
-		$user = new UserCallbacks();
+		$user = new UserDeleteCallbacks();
 
 		// Do not delete by exiting early in callback
 		$this->assertFalse($user->delete(1));
@@ -60,7 +62,7 @@ class AbstractCallbackTest extends TestCase {
 	public function testPostDelete() {
 		$this->loadFixtures(['Users', 'Profiles']);
 
-		$user = new UserCallbacks();
+		$user = new UserDeleteCallbacks();
 
 		// postDelete wont be called because delete failed
 		$this->assertFalse($user->delete(1));
@@ -77,7 +79,7 @@ class AbstractCallbackTest extends TestCase {
 	public function testPreSave() {
 		$this->loadFixtures(['Users', 'Profiles']);
 
-		$user = new UserCallbacks();
+		$user = new UserSaveCallbacks();
 
 		// Wont save because callback exited early
 		$this->assertFalse($user->update(1, ['username' => 'foo']));
@@ -105,7 +107,7 @@ class AbstractCallbackTest extends TestCase {
 	public function testPostSave() {
 		$this->loadFixtures(['Users', 'Profiles']);
 
-		$user = new UserCallbacks();
+		$user = new UserSaveCallbacks();
 
 		// postSave wont be called because save failed
 		$this->assertFalse($user->update(1, ['username' => 'foo']));
@@ -126,13 +128,13 @@ class AbstractCallbackTest extends TestCase {
 	public function testPreFetch() {
 		$this->loadFixtures(['Users', 'Profiles']);
 
-		$user = new UserCallbacks();
+		$user = new UserFetchCallbacks();
 
 		// Exit early for list fetches
 		$this->assertEquals([], $user->select()->fetchList());
 
 		// Return custom data for fetch
-		$this->assertEquals(['foo' => 'bar'], $user->select()->fetch());
+		$this->assertEquals(['custom' => 'data'], $user->select()->fetch(false));
 
 		// Modify fields for fetch all
 		$this->assertEquals([
@@ -150,7 +152,8 @@ class AbstractCallbackTest extends TestCase {
 	public function testPostFetch() {
 		$this->loadFixtures(['Users', 'Profiles']);
 
-		$user = new UserCallbacks();
+		$user = new UserFetchCallbacks();
+		$user->testApply = true;
 
 		// Modify results after fetch
 		$this->assertEquals([
