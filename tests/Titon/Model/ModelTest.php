@@ -8,6 +8,7 @@
 namespace Titon\Model;
 
 use Titon\Model\Relation\OneToOne;
+use Titon\Test\Stub\BehaviorStub;
 use Titon\Test\Stub\Model\User;
 use Titon\Test\Stub\ModelStub;
 use Titon\Test\TestCase;
@@ -36,6 +37,18 @@ class ModelTest extends TestCase {
 		parent::tearDown();
 
 		$this->unloadFixtures();
+	}
+
+	/**
+	 * Test model behavior management.
+	 */
+	public function testAddHasBehaviors() {
+		$stub = new ModelStub();
+
+		$this->assertFalse($stub->hasBehavior('Stub'));
+
+		$stub->addBehavior(new BehaviorStub());
+		$this->assertTrue($stub->hasBehavior('Stub'));
 	}
 
 	/**
@@ -241,6 +254,25 @@ class ModelTest extends TestCase {
 
 		// No results
 		$this->assertEquals([], $this->object->query(Query::SELECT)->where('country_id', 15)->fetchList());
+	}
+
+	/**
+	 * Test behavior fetching.
+	 */
+	public function testGetBehaviors() {
+		try {
+			$this->object->getBehavior('Stub');
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+
+		$this->object->addBehavior(new BehaviorStub());
+		$this->assertInstanceOf('Titon\Model\Behavior', $this->object->getBehavior('Stub'));
+
+		$this->assertEquals([
+			'Stub' => $this->object->getBehavior('Stub')
+		], $this->object->getBehaviors());
 	}
 
 	/**

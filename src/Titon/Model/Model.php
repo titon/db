@@ -16,11 +16,13 @@ use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
 use Titon\Model\Exception\InvalidQueryException;
 use Titon\Model\Exception\InvalidRelationStructureException;
+use Titon\Model\Exception\MissingBehaviorException;
 use Titon\Model\Exception\MissingRelationException;
 use Titon\Model\Exception\QueryFailureException;
 use Titon\Model\Query;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
+use Titon\Utility\Loader;
 use \Exception;
 use \Closure;
 
@@ -47,6 +49,13 @@ class Model extends Base {
 	 * @type array
 	 */
 	public $data = [];
+
+	/**
+	 * List of attached behaviors.
+	 *
+	 * @type \Titon\Model\Behavior[]
+	 */
+	protected $_behaviors = [];
 
 	/**
 	 * Configuration.
@@ -91,6 +100,18 @@ class Model extends Base {
 	protected $_schema;
 
 	/**
+	 * Add a behavior.
+	 *
+	 * @param \Titon\Model\Behavior $behavior
+	 * @return \Titon\Model\Behavior
+	 */
+	public function addBehavior(Behavior $behavior) {
+		$this->_behaviors[$behavior->getAlias()] = $behavior;
+
+		return $behavior;
+	}
+
+	/**
 	 * Add a relation between another model.
 	 *
 	 * @param \Titon\Model\Relation $relation
@@ -129,7 +150,7 @@ class Model extends Base {
 	 * @throws \Exception
 	 */
 	public function create(array $data) {
-		$data = $this->preSave(null, $data);
+		$data = $this->_triggerPreSave(null, $data);
 
 		if (!$data) {
 			return 0;
@@ -179,7 +200,7 @@ class Model extends Base {
 		}
 
 		$this->setData([$this->getPrimaryKey() => $id] + $data);
-		$this->postSave($id, true);
+		$this->_triggerPostSave($id, true);
 
 		return $id;
 	}
@@ -520,6 +541,30 @@ class Model extends Base {
 	}
 
 	/**
+	 * Return a behavior by alias.
+	 *
+	 * @param string $alias
+	 * @return \Titon\Model\Behavior
+	 * @throws \Titon\Model\Exception\MissingBehaviorException
+	 */
+	public function getBehavior($alias) {
+		if ($this->hasBehavior($alias)) {
+			return $this->_behaviors[$alias];
+		}
+
+		throw new MissingBehaviorException(sprintf('Behavior %s does not exist', $alias));
+	}
+
+	/**
+	 * Return all behaviors.
+	 *
+	 * @return \Titon\Model\Behavior[]
+	 */
+	public function getBehaviors() {
+		return $this->_behaviors;
+	}
+
+	/**
 	 * Return the connection driver key.
 	 *
 	 * @return string
@@ -606,7 +651,7 @@ class Model extends Base {
 	 * @throws \Titon\Model\Exception\MissingRelationException
 	 */
 	public function getRelation($alias) {
-		if (isset($this->_relations[$alias])) {
+		if ($this->hasRelation($alias)) {
 			return $this->_relations[$alias];
 		}
 
@@ -710,6 +755,25 @@ class Model extends Base {
 	 */
 	public function getTablePrefix() {
 		return $this->config->prefix;
+	}
+
+	/**
+	 * Check if the behavior exists.
+	 *
+	 * @param string $alias
+	 * @return bool
+	 */
+	public function hasBehavior($alias) {
+		return isset($this->_behaviors[$alias]);
+	}
+
+	/**
+	 * Check if any behavior has been set.
+	 *
+	 * @return bool
+	 */
+	public function hasBehaviors() {
+		return (count($this->_behaviors) > 0);
 	}
 
 	/**
@@ -1139,7 +1203,7 @@ class Model extends Base {
 	 * @throws \Exception
 	 */
 	protected function _processDelete(Query $query, $id, $cascade) {
-		$state = $this->preDelete($id, $cascade);
+		$state = $this->_triggerPreDelete($id, $cascade);
 
 		if (!$state) {
 			return 0;
@@ -1181,7 +1245,7 @@ class Model extends Base {
 		}
 
 		$this->data = [];
-		$this->postDelete($id);
+		$this->_triggerPostDelete($id);
 
 		return $count;
 	}
@@ -1202,7 +1266,7 @@ class Model extends Base {
 	 * @return array|\Titon\Model\Entity|\Titon\Model\Entity[]
 	 */
 	protected function _processFetch(Query $query, $fetchType, $wrap) {
-		$result = $this->preFetch($query, $fetchType);
+		$result = $this->_triggerPreFetch($query, $fetchType);
 
 		// Use the return of preFetch() if applicable
 		if (!$result) {
@@ -1245,7 +1309,7 @@ class Model extends Base {
 			$results[$i] = $this->fetchRelations($query, $result, $wrap);
 		}
 
-		$results = $this->postFetch($results, $fetchType);
+		$results = $this->_triggerPostFetch($results, $fetchType);
 
 		$this->data = $results;
 
@@ -1280,7 +1344,7 @@ class Model extends Base {
 	 * @throws \Exception
 	 */
 	protected function _processUpdate(Query $query, $id, array $data) {
-		$data = $this->preSave($id, $data);
+		$data = $this->_triggerPreSave($id, $data);
 
 		if (!$data) {
 			return 0;
@@ -1330,9 +1394,144 @@ class Model extends Base {
 		}
 
 		$this->setData([$this->getPrimaryKey() => $id] + $data);
-		$this->postSave($id);
+		$this->_triggerPostSave($id, false);
 
 		return $count;
+	}
+
+	/**
+	 * Triggers the "postDelete" callback on the model and behaviors.
+	 *
+	 * @param int|int[] $id
+	 */
+	protected function _triggerPostDelete($id) {
+		$this->postDelete($id);
+
+		foreach ($this->getBehaviors() as $behavior) {
+			if (method_exists($behavior, 'postDelete')) {
+				$behavior->postDelete($id);
+			}
+		}
+	}
+
+	/**
+	 * Triggers the "postFetch" callback on the model and behaviors.
+	 * Will use the response of each callback to modify the results.
+	 *
+	 * @param array $results
+	 * @param string $fetchType
+	 * @return array
+	 */
+	protected function _triggerPostFetch(array $results, $fetchType) {
+		$results = $this->postFetch($results, $fetchType);
+
+		foreach ($this->getBehaviors() as $behavior) {
+			if (method_exists($behavior, 'postFetch')) {
+				$results = $behavior->postFetch($results, $fetchType);
+			}
+		}
+
+		return $results;
+	}
+
+	/**
+	 * Triggers the "postSave" callback on the model and behaviors.
+	 *
+	 * @param int|int[] $id
+	 * @param bool $created
+	 */
+	protected function _triggerPostSave($id, $created) {
+		$this->postSave($id, $created);
+
+		foreach ($this->getBehaviors() as $behavior) {
+			if (method_exists($behavior, 'postSave')) {
+				$behavior->postSave($id, $created);
+			}
+		}
+	}
+
+	/**
+	 * Triggers the "preDelete" callback on the model and behaviors.
+	 * Exit early if a falsey value is returned from teh callback.
+	 *
+	 * @param int|int[] $id
+	 * @param bool $cascade
+	 * @return mixed
+	 */
+	protected function _triggerPreDelete($id, &$cascade) {
+		$state = $this->preDelete($id, $cascade);
+
+		if (!$state) {
+			return false;
+		}
+
+		foreach ($this->getBehaviors() as $behavior) {
+			if (!method_exists($behavior, 'preDelete')) {
+				$state = $behavior->preDelete($id, $cascade);
+
+				if (!$state) {
+					return false;
+				}
+			}
+		}
+
+		return $state;
+	}
+
+	/**
+	 * Triggers the "preFetch" callback on the model and behaviors.
+	 * Exit early if a falsey value is returned from teh callback.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @param string $fetchType
+	 * @return mixed
+	 */
+	protected function _triggerPreFetch(Query $query, $fetchType) {
+		$state = $this->preFetch($query, $fetchType);
+
+		if (!$state) {
+			return false;
+		}
+
+		foreach ($this->getBehaviors() as $behavior) {
+			if (!method_exists($behavior, 'preFetch')) {
+				$state = $behavior->preFetch($query, $fetchType);
+
+				if (!$state) {
+					return false;
+				}
+			}
+		}
+
+		return $state;
+	}
+
+	/**
+	 * Triggers the "preSave" callback on the model and behaviors.
+	 * Exit early if a falsey value is returned from teh callback.
+	 *
+	 * @param int|int[] $id
+	 * @param array $data
+	 * @return mixed
+	 */
+	protected function _triggerPreSave($id, array $data) {
+		$data = $this->preSave($id, $data);
+
+		if (!$data) {
+			return false;
+		}
+
+		foreach ($this->getBehaviors() as $behavior) {
+			if (method_exists($behavior, 'preSave')) {
+				$data = $behavior->preSave($id, $data);
+
+				if (!$data) {
+					return false;
+				}
+			}
+		}
+
+		return $data;
 	}
 
 	/**
