@@ -410,7 +410,7 @@ class Model extends Base {
 	 * @return array
 	 */
 	public function fetchRelations(Query $query, array $result, $wrap = true) {
-		$queries = $query->getSubQueries();
+		$queries = $query->getRelationQueries();
 
 		if (!$queries) {
 			return $result;

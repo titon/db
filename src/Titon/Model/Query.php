@@ -113,18 +113,18 @@ class Query implements Serializable, JsonSerializable {
 	protected $_orderBy = [];
 
 	/**
+	 * Additional queries to execute for relational data.
+	 *
+	 * @type \Titon\Model\Query[]
+	 */
+	protected $_relationQueries = [];
+
+	/**
 	 * Table schema used for complex queries.
 	 *
 	 * @type \Titon\Model\Driver\Schema
 	 */
 	protected $_schema;
-
-	/**
-	 * Additional sub-queries to execute, usually for join type data.
-	 *
-	 * @type \Titon\Model\Query[]
-	 */
-	protected $_subQueries = [];
 
 	/**
 	 * The database table.
@@ -415,21 +415,21 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Return the relation queries.
+	 *
+	 * @return \Titon\Model\Query[]
+	 */
+	public function getRelationQueries() {
+		return $this->_relationQueries;
+	}
+
+	/**
 	 * Return the schema.
 	 *
 	 * @return \Titon\Model\Driver\Schema
 	 */
 	public function getSchema() {
 		return $this->_schema;
-	}
-
-	/**
-	 * Return the sub-queries.
-	 *
-	 * @return \Titon\Model\Query[]
-	 */
-	public function getSubQueries() {
-		return $this->_subQueries;
 	}
 
 	/**
@@ -668,7 +668,7 @@ class Query implements Serializable, JsonSerializable {
 			}
 		}
 
-		$this->_subQueries[$alias] = $relatedQuery;
+		$this->_relationQueries[$alias] = $relatedQuery;
 
 		return $this;
 	}
@@ -752,8 +752,8 @@ class Query implements Serializable, JsonSerializable {
 			$this->_where = $data['where'];
 		}
 
-		if ($data['subQueries']) {
-			$this->_subQueries = $data['subQueries'];
+		if ($data['relationQueries']) {
+			$this->_relationQueries = $data['relationQueries'];
 		}
 	}
 
@@ -781,7 +781,7 @@ class Query implements Serializable, JsonSerializable {
 			'model' => get_class($this->getModel()),
 			'offset' => $this->getOffset(),
 			'orderBy' => $this->getOrderBy(),
-			'subQueries' => $this->getSubQueries(),
+			'relationQueries' => $this->getRelationQueries(),
 			'table' => $this->getTable(),
 			'type' => $this->getType(),
 			'where' => $this->getWhere()
@@ -804,7 +804,7 @@ class Query implements Serializable, JsonSerializable {
 			$predicate = new Predicate($type);
 
 		} else if ($predicate->getType() !== $type) {
-			throw new ExistingPredicateException(sprintf('Clause already created using "%s" conjunction', $predicate));
+			throw new ExistingPredicateException(sprintf('Predicate clause already created using "%s" conjunction', $predicate));
 		}
 
 		if ($field instanceof Closure) {

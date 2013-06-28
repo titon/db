@@ -319,7 +319,7 @@ class QueryTest extends TestCase {
 		$query = new Query(Query::SELECT, new Profile());
 		$query->from('profiles')->where('user_id', 1);
 
-		$queries = $this->object->getSubQueries();
+		$queries = $this->object->getRelationQueries();
 
 		$this->assertEquals($query->jsonSerialize(), $queries['Profile']->jsonSerialize());
 
