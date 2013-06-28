@@ -14,6 +14,7 @@ use Titon\Common\Traits\Cacheable;
 use Titon\Common\Traits\Instanceable;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
+use Titon\Model\Exception\InvalidQueryException;
 use Titon\Model\Exception\InvalidRelationStructureException;
 use Titon\Model\Exception\MissingRelationException;
 use Titon\Model\Exception\QueryFailureException;
@@ -21,6 +22,7 @@ use Titon\Model\Query;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
 use \Exception;
+use \Closure;
 
 /**
  * Represents a database table.
@@ -189,7 +191,7 @@ class Model extends Base {
 	 *
 	 * @param array $data Multi-dimensional array of records
 	 * @param bool $hasPk If true will allow primary key fields, else will remove them
-	 * @return bool
+	 * @return int The count of records inserted
 	 */
 	public function createMany(array $data, $hasPk = false) {
 		$records = [];
@@ -206,7 +208,7 @@ class Model extends Base {
 			$records[] = $record;
 		}
 
-		return (bool) $this->query(Query::MULTI_INSERT)->fields($records)->save();
+		return $this->query(Query::MULTI_INSERT)->fields($records)->save();
 	}
 
 	/**
@@ -229,59 +231,16 @@ class Model extends Base {
 	}
 
 	/**
-	 * Delete a record by ID. If $cascade is true, delete all related records.
+	 * Delete a record by ID.
 	 *
 	 * @param int|array $id
-	 * @param bool $cascade
-	 * @return bool
-	 * @throws \Titon\Model\Exception\QueryFailureException
-	 * @throws \Exception
+	 * @param bool $cascade Will delete related records if true
+	 * @return int The count of records deleted
 	 */
 	public function delete($id, $cascade = true) {
-		$state = $this->preDelete($id, $cascade);
-
-		if (!$state) {
-			return false;
-		}
-
-		// Prepare query
 		$query = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id);
 
-		// Use transactions for cascading
-		if ($cascade) {
-			$driver = $this->getDriver();
-
-			if (!$driver->startTransaction()) {
-				throw new QueryFailureException('Failed to start database transaction');
-			}
-
-			try {
-				if (!$query->save()) {
-					throw new QueryFailureException(sprintf('Failed to delete %s record with ID %s', get_class($this), implode(', ', (array) $id)));
-				}
-
-				$this->deleteDependents($id, $cascade);
-
-				$driver->commitTransaction();
-
-			// Rollback and re-throw exception
-			} catch (Exception $e) {
-				$driver->rollbackTransaction();
-
-				throw $e;
-			}
-
-		// No transaction needed for single query
-		} else {
-			if (!$query->save()) {
-				return false;
-			}
-		}
-
-		$this->data = [];
-		$this->postDelete($id);
-
-		return true;
+		return $this->_processDelete($query, $id, $cascade);
 	}
 
 	/**
@@ -289,8 +248,8 @@ class Model extends Base {
 	 * Will return a count of how many dependent records were deleted.
 	 *
 	 * @param int|array $id
-	 * @param bool $cascade
-	 * @return int
+	 * @param bool $cascade Will delete related records if true
+	 * @return int The count of records deleted
 	 * @throws \Titon\Model\Exception\QueryFailureException
 	 * @throws \Exception
 	 */
@@ -364,6 +323,28 @@ class Model extends Base {
 	}
 
 	/**
+	 * Delete multiple records with conditions.
+	 *
+	 * @param \Closure $conditions
+	 * @param bool $cascade Will delete related records if true
+	 * @return int The count of records deleted
+	 */
+	public function deleteMany(Closure $conditions, $cascade = true) {
+		$pk = $this->getPrimaryKey();
+		$ids = $this->select($pk)->bindCallback($conditions)->fetchList($pk, $pk);
+		$query = $this->query(Query::DELETE)->bindCallback($conditions);
+
+		// Validate that this won't delete all records
+		$where = $query->getWhere()->getParams();
+
+		if (empty($where)) {
+			throw new InvalidQueryException('No where clause detected, will not delete all records');
+		}
+
+		return $this->_processDelete($query, $ids, $cascade);
+	}
+
+	/**
 	 * Check if a record with an ID exists.
 	 *
 	 * @param int $id
@@ -381,7 +362,7 @@ class Model extends Base {
 	 * @return \Titon\Model\Entity|array
 	 */
 	public function fetch(Query $query, $wrap = true) {
-		return $this->_fetchResults($query, __FUNCTION__, $wrap);
+		return $this->_processFetch($query, __FUNCTION__, $wrap);
 	}
 
 	/**
@@ -392,7 +373,7 @@ class Model extends Base {
 	 * @return \Titon\Model\Entity[]|array
 	 */
 	public function fetchAll(Query $query, $wrap = true) {
-		return $this->_fetchResults($query, __FUNCTION__, $wrap);
+		return $this->_processFetch($query, __FUNCTION__, $wrap);
 	}
 
 	/**
@@ -404,7 +385,7 @@ class Model extends Base {
 	 * @return array
 	 */
 	public function fetchList(Query $query, $key = null, $value = null) {
-		$results = $this->_fetchResults($query, __FUNCTION__, false);
+		$results = $this->_processFetch($query, __FUNCTION__, false);
 
 		$key = $key ?: $this->getPrimaryKey();
 		$value = $value ?: $this->getDisplayField();
@@ -753,7 +734,7 @@ class Model extends Base {
 	/**
 	 * Callback called after a delete query.
 	 *
-	 * @param int $id
+	 * @param int|int[] $id
 	 */
 	public function postDelete($id) {
 		return;
@@ -773,7 +754,7 @@ class Model extends Base {
 	/**
 	 * Callback called after an insert or update query.
 	 *
-	 * @param int $id The last insert ID
+	 * @param int|int[] $id The last insert ID
 	 * @param bool $created If the record was created
 	 */
 	public function postSave($id, $created = false) {
@@ -785,7 +766,7 @@ class Model extends Base {
 	 * Modify cascading by overwriting the value.
 	 * Return a falsey value to stop the process.
 	 *
-	 * @param int $id
+	 * @param int|int[] $id
 	 * @param bool $cascade
 	 * @return mixed
 	 */
@@ -809,7 +790,7 @@ class Model extends Base {
 	 * Callback called before an insert or update query.
 	 * Return a falsey value to stop the process.
 	 *
-	 * @param int $id
+	 * @param int|int[] $id
 	 * @param array $data
 	 * @return mixed
 	 */
@@ -1135,6 +1116,109 @@ class Model extends Base {
 	}
 
 	/**
+	 * Extract related model data from an array of complex data.
+	 * Filter out non-schema columns from the data.
+	 *
+	 * @param array $data
+	 * @return array
+	 */
+	protected function _filterData(array &$data) {
+		$aliases = array_keys($this->getRelations());
+		$related = [];
+
+		foreach ($aliases as $alias) {
+			if (isset($data[$alias])) {
+				$related[$alias] = $data[$alias];
+				unset($data[$alias]);
+			}
+		}
+
+		if ($schema = $this->getSchema()) {
+			$data = array_intersect_key($data, $schema->getColumns());
+		}
+
+		return $related;
+	}
+
+	/**
+	 * Map the schema with empty fields.
+	 *
+	 * @return array
+	 */
+	protected function _mapDefaults() {
+		$defaults = [];
+
+		if ($schema = $this->getSchema()) {
+			foreach ($schema->getColumns() as $column => $data) {
+				$defaults[$column] = array_key_exists('default', $data) ? $data['default'] : '';
+			}
+		}
+
+		return $defaults;
+	}
+
+	/**
+	 * Primary method that handles the processing of delete queries.
+	 * Will wrap all delete queries in a transaction call.
+	 * Will delete related data if $cascade is true.
+	 * Triggers callbacks before and after.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @param int|int[] $id
+	 * @param bool $cascade
+	 * @return int The count of records deleted
+	 * @throws \Titon\Model\Exception\QueryFailureException
+	 * @throws \Exception
+	 */
+	protected function _processDelete(Query $query, $id, $cascade) {
+		$state = $this->preDelete($id, $cascade);
+
+		if (!$state) {
+			return 0;
+		}
+
+		// Use transactions for cascading
+		if ($cascade) {
+			$driver = $this->getDriver();
+
+			if (!$driver->startTransaction()) {
+				throw new QueryFailureException('Failed to start database transaction');
+			}
+
+			try {
+				$count = $query->save();
+
+				if ($count === false) {
+					throw new QueryFailureException(sprintf('Failed to delete %s record with ID %s', get_class($this), implode(', ', (array) $id)));
+				}
+
+				$this->deleteDependents($id, $cascade);
+
+				$driver->commitTransaction();
+
+			// Rollback and re-throw exception
+			} catch (Exception $e) {
+				$driver->rollbackTransaction();
+
+				throw $e;
+			}
+
+		// No transaction needed for single query
+		} else {
+			$count = $query->save();
+
+			if ($count === false) {
+				return 0;
+			}
+		}
+
+		$this->data = [];
+		$this->postDelete($id);
+
+		return $count;
+	}
+
+	/**
 	 * All-in-one method for fetching results from a query.
 	 * Before the query is executed, the preFetch() method is called.
 	 * After the query is executed, relations will be fetched, and then postFetch() will be called.
@@ -1149,7 +1233,7 @@ class Model extends Base {
 	 * @param bool $wrap
 	 * @return array|\Titon\Model\Entity|\Titon\Model\Entity[]
 	 */
-	protected function _fetchResults(Query $query, $fetchType, $wrap) {
+	protected function _processFetch(Query $query, $fetchType, $wrap) {
 		$result = $this->preFetch($query, $fetchType);
 
 		// Use the return of preFetch() if applicable
@@ -1212,48 +1296,6 @@ class Model extends Base {
 		}
 
 		return $results;
-	}
-
-	/**
-	 * Extract related model data from an array of complex data.
-	 * Filter out non-schema columns from the data.
-	 *
-	 * @param array $data
-	 * @return array
-	 */
-	protected function _filterData(array &$data) {
-		$aliases = array_keys($this->getRelations());
-		$related = [];
-
-		foreach ($aliases as $alias) {
-			if (isset($data[$alias])) {
-				$related[$alias] = $data[$alias];
-				unset($data[$alias]);
-			}
-		}
-
-		if ($schema = $this->getSchema()) {
-			$data = array_intersect_key($data, $schema->getColumns());
-		}
-
-		return $related;
-	}
-
-	/**
-	 * Map the schema with empty fields.
-	 *
-	 * @return array
-	 */
-	protected function _mapDefaults() {
-		$defaults = [];
-
-		if ($schema = $this->getSchema()) {
-			foreach ($schema->getColumns() as $column => $data) {
-				$defaults[$column] = array_key_exists('default', $data) ? $data['default'] : '';
-			}
-		}
-
-		return $defaults;
 	}
 
 	/**

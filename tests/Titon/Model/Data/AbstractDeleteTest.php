@@ -38,9 +38,7 @@ class AbstractDeleteTest extends TestCase {
 		$user = new User();
 
 		$this->assertTrue($user->exists(1));
-
-		$user->delete(1, false);
-
+		$this->assertSame(1, $user->delete(1, false));
 		$this->assertFalse($user->exists(1));
 	}
 
@@ -274,6 +272,29 @@ class AbstractDeleteTest extends TestCase {
 
 		$this->assertFalse($user->exists(2));
 		$this->assertTrue($user->Profile->exists(5));
+	}
+
+	/**
+	 * Test multiple deletion through conditions.
+	 */
+	public function testDeleteMany() {
+		$this->loadFixtures(['Users', 'Profiles']);
+
+		$user = new User();
+
+		// Throws exceptions if no conditions applied
+		try {
+			$user->deleteMany(function() {
+				// Nothing
+			});
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+
+		$this->assertEquals(3, $user->deleteMany(function() {
+			$this->where('age', '>', 30);
+		}));
 	}
 
 }

@@ -283,7 +283,7 @@ class AbstractCreateTest extends TestCase {
 
 		$this->assertEquals(0, $user->select()->count());
 
-		$this->assertTrue($user->createMany([
+		$this->assertEquals(5, $user->createMany([
 			['country_id' => 1, 'username' => 'miles', 'firstName' => 'Miles', 'lastName' => 'Johnson', 'password' => '1Z5895jf72yL77h', 'email' => 'miles@email.com', 'age' => 25, 'created' => '1988-02-26 21:22:34'],
 			['country_id' => 3, 'username' => 'batman', 'firstName' => 'Bruce', 'lastName' => 'Wayne', 'created' => '1960-05-11 21:22:34'],
 			['country_id' => 2, 'username' => 'superman', 'email' => 'superman@email.com', 'age' => 33, 'created' => '1970-09-18 21:22:34'],

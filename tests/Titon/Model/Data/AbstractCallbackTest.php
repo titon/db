@@ -35,13 +35,13 @@ class AbstractCallbackTest extends TestCase {
 		$user = new UserDeleteCallbacks();
 
 		// Do not delete by exiting early in callback
-		$this->assertFalse($user->delete(1));
+		$this->assertEquals(0, $user->delete(1));
 
 		// Disable cascading through callback
 		$this->assertTrue($user->exists(3));
 		$this->assertTrue($user->Profile->exists(2));
 
-		$this->assertTrue($user->delete(3));
+		$this->assertEquals(1, $user->delete(3));
 
 		$this->assertFalse($user->exists(3));
 		$this->assertTrue($user->Profile->exists(2));
@@ -50,7 +50,7 @@ class AbstractCallbackTest extends TestCase {
 		$this->assertTrue($user->exists(5));
 		$this->assertTrue($user->Profile->exists(3));
 
-		$this->assertTrue($user->delete(5));
+		$this->assertEquals(1, $user->delete(5));
 
 		$this->assertFalse($user->exists(5));
 		$this->assertFalse($user->Profile->exists(3));
@@ -65,11 +65,11 @@ class AbstractCallbackTest extends TestCase {
 		$user = new UserDeleteCallbacks();
 
 		// postDelete wont be called because delete failed
-		$this->assertFalse($user->delete(1));
+		$this->assertEquals(0, $user->delete(1));
 		$this->assertEquals([], $user->data);
 
 		// Data will be set because delete was successful
-		$this->assertTrue($user->delete(5));
+		$this->assertEquals(1, $user->delete(5));
 		$this->assertEquals(['id' => 5], $user->data);
 	}
 
