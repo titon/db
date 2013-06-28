@@ -67,22 +67,6 @@ class ModelTest extends TestCase {
 	}
 
 	/**
-	 * Test table creation.
-	 */
-	public function testCreateTable() {
-		$stub = new ModelStub();
-		$sql = sprintf("SELECT COUNT(`table_name`) FROM information_schema.tables WHERE table_schema = 'titon_test' AND table_name = '%s';", $stub->getTable());
-
-		$this->assertEquals(0, $stub->getDriver()->query($sql)->count());
-
-		$stub->createTable();
-
-		$this->assertEquals(1, $stub->getDriver()->query($sql)->count());
-
-		$stub->query(Query::DROP_TABLE)->save();
-	}
-
-	/**
 	 * Test record existence.
 	 */
 	public function testExists() {
