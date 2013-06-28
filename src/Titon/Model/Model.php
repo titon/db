@@ -150,59 +150,7 @@ class Model extends Base {
 	 * @throws \Exception
 	 */
 	public function create(array $data) {
-		$data = $this->_triggerPreSave(null, $data);
-
-		if (!$data) {
-			return 0;
-		}
-
-		$this->_validateRelationData($data);
-
-		// Filter the data
-		$relatedData = $this->_filterData($data);
-
-		// Prepare query
-		$query = $this->query(Query::INSERT)->fields($data);
-
-		// Insert the record using transactions
-		$driver = $this->getDriver();
-
-		if ($relatedData) {
-			if (!$driver->startTransaction()) {
-				throw new QueryFailureException('Failed to start database transaction');
-			}
-
-			try {
-				if (!$query->save()) {
-					throw new QueryFailureException(sprintf('Failed to create new %s record', get_class($this)));
-				}
-
-				$id = $driver->getLastInsertID();
-
-				$this->upsertRelations($id, $relatedData);
-
-				$driver->commitTransaction();
-
-			// Rollback and re-throw exception
-			} catch (Exception $e) {
-				$driver->rollbackTransaction();
-
-				throw $e;
-			}
-
-		// No transaction needed for single query
-		} else {
-			if (!$query->save()) {
-				return 0;
-			}
-
-			$id = $driver->getLastInsertID();
-		}
-
-		$this->setData([$this->getPrimaryKey() => $id] + $data);
-		$this->_triggerPostSave($id, true);
-
-		return $id;
+		return $this->_processSave($this->query(Query::INSERT), null, $data);
 	}
 
 	/**
@@ -349,6 +297,7 @@ class Model extends Base {
 	 * @param \Closure $conditions
 	 * @param bool $cascade Will delete related records if true
 	 * @return int The count of records deleted
+	 * @throws \Titon\Model\Exception\InvalidQueryException
 	 */
 	public function deleteMany(Closure $conditions, $cascade = true) {
 		$pk = $this->getPrimaryKey();
@@ -881,10 +830,11 @@ class Model extends Base {
 	 * Fetch a single record by ID.
 	 *
 	 * @param int $id
-	 * @return \Titon\Model\Entity
+	 * @param bool $wrap
+	 * @return \Titon\Model\Entity|array
 	 */
-	public function read($id) {
-		return $this->select()->where($this->getPrimaryKey(), $id)->fetch();
+	public function read($id, $wrap = true) {
+		return $this->select()->where($this->getPrimaryKey(), $id)->fetch($wrap);
 	}
 
 	/**
@@ -940,7 +890,7 @@ class Model extends Base {
 	public function update($id, array $data) {
 		$query = $this->query(Query::UPDATE)->where($this->getPrimaryKey(), $id);
 
-		return $this->_processUpdate($query, $id, $data);
+		return $this->_processSave($query, $id, $data);
 	}
 
 	/**
@@ -963,7 +913,7 @@ class Model extends Base {
 			throw new InvalidQueryException('No where clause detected, will not update all records');
 		}
 
-		return $this->_processUpdate($query, null, $data);
+		return $this->_processSave($query, $ids, $data);
 	}
 
 	/**
@@ -1343,8 +1293,9 @@ class Model extends Base {
 	 * @throws \Titon\Model\Exception\QueryFailureException
 	 * @throws \Exception
 	 */
-	protected function _processUpdate(Query $query, $id, array $data) {
+	protected function _processSave(Query $query, $id, array $data) {
 		$data = $this->_triggerPreSave($id, $data);
+		$isCreate = !$id;
 
 		if (!$data) {
 			return 0;
@@ -1359,9 +1310,9 @@ class Model extends Base {
 		$query->fields($data);
 
 		// Update the records using transactions
-		if ($relatedData) {
-			$driver = $this->getDriver();
+		$driver = $this->getDriver();
 
+		if ($relatedData) {
 			if (!$driver->startTransaction()) {
 				throw new QueryFailureException('Failed to start database transaction');
 			}
@@ -1371,6 +1322,10 @@ class Model extends Base {
 
 				if ($count === false) {
 					throw new QueryFailureException(sprintf('Failed to update %s record with ID %s', get_class($this), $id));
+				}
+
+				if ($isCreate) {
+					$id = $driver->getLastInsertID();
 				}
 
 				$this->upsertRelations($id, $relatedData);
@@ -1391,10 +1346,21 @@ class Model extends Base {
 			if ($count === false) {
 				return 0;
 			}
+
+			if ($isCreate) {
+				$id = $driver->getLastInsertID();
+			}
 		}
 
-		$this->setData([$this->getPrimaryKey() => $id] + $data);
-		$this->_triggerPostSave($id, false);
+		if (!is_array($id)) {
+			$this->setData([$this->getPrimaryKey() => $id] + $data);
+		}
+
+		$this->_triggerPostSave($id, $isCreate);
+
+		if ($isCreate) {
+			return $id;
+		}
 
 		return $count;
 	}
