@@ -42,7 +42,7 @@ class AbstractUpdateTest extends TestCase {
 			'username' => 'milesj'
 		];
 
-		$this->assertTrue($user->update(1, $data));
+		$this->assertEquals(1, $user->update(1, $data));
 
 		$this->assertEquals([
 			'id' => 1,
@@ -70,9 +70,7 @@ class AbstractUpdateTest extends TestCase {
 			'username' => 'foobar'
 		];
 
-		$this->assertTrue($user->update(10, $data)); // Will execute successfully however
-
-		$this->assertEquals([], $user->select()->where('id', 10)->fetch(false)); // But it wont exist
+		$this->assertEquals(0, $user->update(10, $data));
 	}
 
 	/**
@@ -83,7 +81,7 @@ class AbstractUpdateTest extends TestCase {
 
 		$user = new User();
 
-		$this->assertFalse($user->update(1, []));
+		$this->assertEquals(0, $user->update(1, []));
 
 		// Relation without data
 		try {
@@ -124,7 +122,7 @@ class AbstractUpdateTest extends TestCase {
 		], $stat->select('id', 'name', 'health')->fetchAll(false));
 
 		// Single record
-		$this->assertTrue($stat->update(2, [
+		$this->assertEquals(1, $stat->update(2, [
 			'health' => new Query\Expr('health', '-', 125)
 		]));
 
@@ -147,7 +145,7 @@ class AbstractUpdateTest extends TestCase {
 		];
 
 		try {
-			$this->assertTrue($user->update(1, $data));
+			$this->assertEquals(1, $user->update(1, $data));
 			$this->assertTrue(false);
 		} catch (Exception $e) {
 			$this->assertTrue(true);
@@ -170,7 +168,7 @@ class AbstractUpdateTest extends TestCase {
 			]
 		];
 
-		$this->assertTrue($user->update(1, $data));
+		$this->assertEquals(1, $user->update(1, $data));
 
 		$this->assertEquals([
 			'id' => 1,
@@ -199,7 +197,7 @@ class AbstractUpdateTest extends TestCase {
 		];
 
 		try {
-			$this->assertTrue($user->update(1, $data));
+			$this->assertEquals(1, $user->update(1, $data));
 			$this->assertTrue(false);
 		} catch (Exception $e) {
 			$this->assertTrue(true);
@@ -214,7 +212,7 @@ class AbstractUpdateTest extends TestCase {
 			]
 		];
 
-		$this->assertTrue($user->update(1, $data));
+		$this->assertEquals(1, $user->update(1, $data));
 
 		$this->assertEquals([
 			'id' => 1,
@@ -253,7 +251,7 @@ class AbstractUpdateTest extends TestCase {
 			]
 		];
 
-		$this->assertTrue($series->update(3, $data));
+		$this->assertEquals(1, $series->update(3, $data));
 
 		$this->assertEquals([
 			'id' => 3,
@@ -274,7 +272,7 @@ class AbstractUpdateTest extends TestCase {
 		]; // Non numeric array
 
 		try {
-			$this->assertTrue($series->update(3, $data));
+			$series->update(3, $data);
 			$this->assertTrue(false);
 		} catch (Exception $e) {
 			$this->assertTrue(true);
@@ -298,7 +296,7 @@ class AbstractUpdateTest extends TestCase {
 			]
 		];
 
-		$this->assertTrue($book->update(5, $data));
+		$this->assertEquals(1, $book->update(5, $data));
 
 		$this->assertEquals([
 			'id' => 5,
@@ -506,7 +504,7 @@ class AbstractUpdateTest extends TestCase {
 			'isMelee' => null, // to boolean
 		];
 
-		$this->assertTrue($stat->update(1, $data));
+		$this->assertEquals(1, $stat->update(1, $data));
 
 		$expected = $stat->select()->where('id', 1)->fetch(false);
 		unset($expected['data']);
@@ -532,7 +530,8 @@ class AbstractUpdateTest extends TestCase {
 		$handle = fopen(TEMP_DIR . '/blob.txt', 'rb');
 
 		$stat = new Stat();
-		$this->assertTrue($stat->update(1, [
+
+		$this->assertEquals(1, $stat->update(1, [
 			'data' => $handle
 		]));
 
@@ -567,7 +566,7 @@ class AbstractUpdateTest extends TestCase {
 			'modified' => date('Y-m-d H:i:s') // null to string
 		];
 
-		$this->assertTrue($user->update(1, $data));
+		$this->assertEquals(1, $user->update(1, $data));
 
 		$this->assertSame($data, $user->select('created', 'modified')->where('id', 1)->fetch(false));
 	}
@@ -582,19 +581,43 @@ class AbstractUpdateTest extends TestCase {
 
 		// Integer
 		$time = time();
-		$this->assertTrue($user->update(1, ['created' => $time]));
+		$this->assertEquals(1, $user->update(1, ['created' => $time]));
 		$this->assertSame(['created' => date('Y-m-d H:i:s', $time)], $user->select('created')->where('id', 1)->fetch(false));
 
 		// String
 		$time = date('Y-m-d H:i:s', strtotime('+1 week'));
-		$this->assertTrue($user->update(1, ['created' => $time]));
+		$this->assertEquals(1, $user->update(1, ['created' => $time]));
 		$this->assertSame(['created' => $time], $user->select('created')->where('id', 1)->fetch(false));
 
 		// Object
 		$time = new DateTime();
 		$time->modify('+2 days');
-		$this->assertTrue($user->update(1, ['created' => $time]));
+		$this->assertEquals(1, $user->update(1, ['created' => $time]));
 		$this->assertSame(['created' => $time->format('Y-m-d H:i:s')], $user->select('created')->where('id', 1)->fetch(false));
+	}
+
+	/**
+	 * Test multiple update with conditions.
+	 */
+	public function testUpdateMany() {
+		$this->loadFixtures(['Users', 'Profiles']);
+
+		$user = new User();
+		$data = ['country_id' => null];
+
+		// Throws exceptions if no conditions applied
+		try {
+			$user->updateMany($data, function() {
+				// Nothing
+			});
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+
+		$this->assertEquals(3, $user->updateMany($data, function() {
+			$this->where('age', '>', 30);
+		}));
 	}
 
 }

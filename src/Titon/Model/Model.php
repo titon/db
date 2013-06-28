@@ -233,7 +233,7 @@ class Model extends Base {
 	/**
 	 * Delete a record by ID.
 	 *
-	 * @param int|array $id
+	 * @param int|int[] $id
 	 * @param bool $cascade Will delete related records if true
 	 * @return int The count of records deleted
 	 */
@@ -247,7 +247,7 @@ class Model extends Base {
 	 * Loop through all model relations and delete dependent records using the ID as a base.
 	 * Will return a count of how many dependent records were deleted.
 	 *
-	 * @param int|array $id
+	 * @param int|int[] $id
 	 * @param bool $cascade Will delete related records if true
 	 * @return int The count of records deleted
 	 * @throws \Titon\Model\Exception\QueryFailureException
@@ -754,7 +754,7 @@ class Model extends Base {
 	/**
 	 * Callback called after an insert or update query.
 	 *
-	 * @param int|int[] $id The last insert ID
+	 * @param int|int[] $id
 	 * @param bool $created If the record was created
 	 */
 	public function postSave($id, $created = false) {
@@ -868,70 +868,38 @@ class Model extends Base {
 
 	/**
 	 * Update a database record based on ID.
-	 * If any related data exists, update those records after verifying required IDs.
-	 * Validate schema data and related data structure before updating.
 	 *
 	 * @param int $id
 	 * @param array $data
-	 * @return bool
-	 * @throws \Exception
+	 * @return int The count of records updated
 	 */
 	public function update($id, array $data) {
-		$data = $this->preSave($id, $data);
+		$query = $this->query(Query::UPDATE)->where($this->getPrimaryKey(), $id);
 
-		if (!$data) {
-			return false;
+		return $this->_processUpdate($query, $id, $data);
+	}
+
+	/**
+	 * Update multiple records with conditions.
+	 *
+	 * @param array $data
+	 * @param \Closure $conditions
+	 * @return int The count of records updated
+	 * @throws \Titon\Model\Exception\InvalidQueryException
+	 */
+	public function updateMany(array $data, Closure $conditions) {
+		$pk = $this->getPrimaryKey();
+		$ids = $this->select($pk)->bindCallback($conditions)->fetchList($pk, $pk);
+		$query = $this->query(Query::UPDATE)->bindCallback($conditions);
+
+		// Validate that this won't update all records
+		$where = $query->getWhere()->getParams();
+
+		if (empty($where)) {
+			throw new InvalidQueryException('No where clause detected, will not update all records');
 		}
 
-		$this->_validateRelationData($data);
-
-		// Filter the data
-		$relatedData = $this->_filterData($data);
-
-		// Prepare the query
-		$query = $this->query(Query::UPDATE)
-			->fields($data)
-			->where($this->getPrimaryKey(), $id);
-
-		// Update the records using transactions
-		if ($relatedData) {
-			$driver = $this->getDriver();
-
-			if (!$driver->startTransaction()) {
-				throw new QueryFailureException('Failed to start database transaction');
-			}
-
-			try {
-				$count = $query->save();
-
-				if ($count === false) {
-					throw new QueryFailureException(sprintf('Failed to update %s record with ID %s', get_class($this), $id));
-				}
-
-				$this->upsertRelations($id, $relatedData);
-
-				$driver->commitTransaction();
-
-			// Rollback and re-throw exception
-			} catch (Exception $e) {
-				$driver->rollbackTransaction();
-
-				throw $e;
-			}
-
-		// No transaction needed for single query
-		} else {
-			$count = $query->save();
-
-			if ($count === false) {
-				return false;
-			}
-		}
-
-		$this->setData([$this->getPrimaryKey() => $id] + $data);
-		$this->postSave($id);
-
-		return true;
+		return $this->_processUpdate($query, null, $data);
 	}
 
 	/**
@@ -959,7 +927,7 @@ class Model extends Base {
 
 		// Either update
 		if ($update) {
-			if (!$this->update($id, $data)) {
+			if ($this->update($id, $data) === false) {
 				return 0;
 			}
 
@@ -1296,6 +1264,75 @@ class Model extends Base {
 		}
 
 		return $results;
+	}
+
+	/**
+	 * Primary method that handles the processing of update queries.
+	 * Will wrap all delete queries in a transaction call.
+	 * If any related data exists, update those records after verifying required IDs.
+	 * Validate schema data and related data structure before updating.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @param int|int[] $id
+	 * @param array $data
+	 * @return int The count of records updated
+	 * @throws \Titon\Model\Exception\QueryFailureException
+	 * @throws \Exception
+	 */
+	protected function _processUpdate(Query $query, $id, array $data) {
+		$data = $this->preSave($id, $data);
+
+		if (!$data) {
+			return 0;
+		}
+
+		$this->_validateRelationData($data);
+
+		// Filter the data
+		$relatedData = $this->_filterData($data);
+
+		// Set the data
+		$query->fields($data);
+
+		// Update the records using transactions
+		if ($relatedData) {
+			$driver = $this->getDriver();
+
+			if (!$driver->startTransaction()) {
+				throw new QueryFailureException('Failed to start database transaction');
+			}
+
+			try {
+				$count = $query->save();
+
+				if ($count === false) {
+					throw new QueryFailureException(sprintf('Failed to update %s record with ID %s', get_class($this), $id));
+				}
+
+				$this->upsertRelations($id, $relatedData);
+
+				$driver->commitTransaction();
+
+			// Rollback and re-throw exception
+			} catch (Exception $e) {
+				$driver->rollbackTransaction();
+
+				throw $e;
+			}
+
+		// No transaction needed for single query
+		} else {
+			$count = $query->save();
+
+			if ($count === false) {
+				return 0;
+			}
+		}
+
+		$this->setData([$this->getPrimaryKey() => $id] + $data);
+		$this->postSave($id);
+
+		return $count;
 	}
 
 	/**

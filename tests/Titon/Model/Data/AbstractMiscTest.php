@@ -103,7 +103,7 @@ class AbstractMiscTest extends TestCase {
 		// Update user and profile
 		$time = time();
 
-		$this->assertTrue($user->update(1, [
+		$this->assertEquals(1, $user->update(1, [
 			'modified' => $time,
 			'Profile' => [
 				'id' => 4,

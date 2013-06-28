@@ -82,7 +82,7 @@ class AbstractCallbackTest extends TestCase {
 		$user = new UserSaveCallbacks();
 
 		// Wont save because callback exited early
-		$this->assertFalse($user->update(1, ['username' => 'foo']));
+		$this->assertEquals(0, $user->update(1, ['username' => 'foo']));
 
 		// Create
 		$this->assertEquals(6, $user->create(['username' => 'foo']));
@@ -93,7 +93,7 @@ class AbstractCallbackTest extends TestCase {
 		], $user->select('id', 'username', 'firstName')->where('id', 6)->fetch(false));
 
 		// Update
-		$this->assertTrue($user->update(5, ['username' => 'bar']));
+		$this->assertEquals(1, $user->update(5, ['username' => 'bar']));
 		$this->assertEquals([
 			'id' => 5,
 			'username' => 'bar',
@@ -110,7 +110,7 @@ class AbstractCallbackTest extends TestCase {
 		$user = new UserSaveCallbacks();
 
 		// postSave wont be called because save failed
-		$this->assertFalse($user->update(1, ['username' => 'foo']));
+		$this->assertEquals(0, $user->update(1, ['username' => 'foo']));
 		$this->assertEquals([], $user->data);
 
 		// Create
@@ -118,7 +118,7 @@ class AbstractCallbackTest extends TestCase {
 		$this->assertEquals(['id' => 6, 'created' => true], $user->data);
 
 		// Update
-		$this->assertTrue($user->update(5, ['username' => 'bar']));
+		$this->assertEquals(1, $user->update(5, ['username' => 'bar']));
 		$this->assertEquals(['id' => 5, 'created' => false], $user->data);
 	}
 
