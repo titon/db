@@ -225,27 +225,31 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 */
 	public function query($query, array $params = []) {
 		$storage = $this->getStorage();
+		$cacheKey = null;
 		$cacheLength = null;
 
-		// Check the cache first
+		// Determine cache key and lengths
 		if ($query instanceof Query) {
 			$cacheKey = $query->getCacheKey();
 			$cacheLength = $query->getCacheLength();
 
-		} else if (is_string($query)) {
-			$cacheKey = 'SQL-' . md5($query);
-
-		} else {
+		} else if (!is_string($query)) {
 			throw new InvalidQueryException('Query must be a raw SQL string or a Titon\Model\Query instance');
 		}
 
-		if ($storage) {
-			if ($cache = $storage->get($cacheKey)) {
-				return $cache;
+		// Use the storage engine first
+		if ($cacheKey) {
+			if ($storage && $storage->has($cacheKey)) {
+				return $storage->get($cacheKey);
+
+			// Fallback to driver cache
+			// This is used to cache duplicate queries
+			} else if ($this->hasCache($cacheKey)) {
+				return $this->getCache($cacheKey);
 			}
 		}
 
-		// Prepare query and binds
+		// Prepare statement and bind parameters
 		if ($query instanceof Query) {
 			$statement = $this->buildStatement($query);
 			$binds = $this->resolveParams($query);
@@ -265,19 +269,21 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 		$statement->params = $binds;
 
-		// Gather result
-		$result = new PdoResult($statement);
+		// Gather and log result
+		$this->_result = new PdoResult($statement);
 
-		$this->logQuery($result);
+		$this->logQuery($this->_result);
 
 		// Return and cache result
-		if ($storage) {
-			$storage->set($cacheKey, $result, $cacheLength);
+		if ($cacheKey) {
+			if ($storage) {
+				$storage->set($cacheKey, $this->_result, $cacheLength);
+			} else {
+				$this->setCache($cacheKey, $this->_result);
+			}
 		}
 
-		$this->_result = $result;
-
-		return $result;
+		return $this->_result;
 	}
 
 	/**

@@ -390,6 +390,7 @@ class Model extends Base {
 			$newQuery = clone $subQuery;
 			$relation = $this->getRelation($alias);
 			$relatedModel = $this->getObject($alias);
+			$relatedClass = get_class($relatedModel);
 
 			switch ($relation->getType()) {
 
@@ -403,6 +404,7 @@ class Model extends Base {
 					if ($foreignValue) {
 						$result[$alias] = $newQuery
 							->where($relation->getRelatedForeignKey(), $foreignValue)
+							->cache([$relatedClass, 'fetchOneToOne', $foreignValue])
 							->limit(1)
 							->fetch($wrap);
 					} else {
@@ -420,6 +422,7 @@ class Model extends Base {
 					if ($foreignValue) {
 						$result[$alias] = $newQuery
 							->where($relation->getRelatedForeignKey(), $foreignValue)
+							->cache([$relatedClass, 'fetchOneToMany', $foreignValue])
 							->fetchAll($wrap);
 					} else {
 						$result[$alias] = [];
@@ -436,6 +439,7 @@ class Model extends Base {
 					if ($foreignValue) {
 						$result[$alias] = $newQuery
 							->where($relatedModel->getPrimaryKey(), $foreignValue)
+							->cache([$relatedClass, 'manyToOne', $foreignValue])
 							->limit(1)
 							->fetch($wrap);
 					} else {
@@ -459,6 +463,7 @@ class Model extends Base {
 					$junctionResults = $junctionModel
 						->select()
 						->where($relation->getForeignKey(), $foreignValue)
+						->cache([get_class($junctionModel), 'manyToMany', $foreignValue])
 						->fetchAll(false);
 
 					if (!$junctionResults) {
@@ -466,8 +471,10 @@ class Model extends Base {
 						continue;
 					}
 
+					$lookupIDs = Hash::pluck($junctionResults, $relation->getRelatedForeignKey());
 					$m2mResults = $newQuery
-						->where($relatedModel->getPrimaryKey(), Hash::pluck($junctionResults, $relation->getRelatedForeignKey()))
+						->where($relatedModel->getPrimaryKey(), $lookupIDs)
+						->cache([$relatedClass, 'manyToMany', $lookupIDs])
 						->fetchAll($wrap);
 
 					// Include the junction data
@@ -941,6 +948,8 @@ class Model extends Base {
 
 		// Either update
 		if ($update) {
+
+			// Do false check since updating can return 0 rows affected
 			if ($this->update($id, $data) === false) {
 				return 0;
 			}
@@ -1271,6 +1280,9 @@ class Model extends Base {
 				$results[$i] = new $entity($result);
 			}
 		}
+
+		// Reset the driver local cache
+		$this->getDriver()->reset();
 
 		// Return early for single records
 		if ($fetchType === 'fetch') {

@@ -9,6 +9,7 @@ namespace Titon\Model\Driver;
 
 use Psr\Log\LoggerInterface;
 use Titon\Common\Base;
+use Titon\Common\Traits\Cacheable;
 use Titon\Cache\Storage;
 use Titon\Model\Driver;
 use Titon\Model\Query\Result;
@@ -20,6 +21,7 @@ use Titon\Utility\Hash;
  * @package Titon\Model\Driver
  */
 abstract class AbstractDriver extends Base implements Driver {
+	use Cacheable;
 
 	/**
 	 * Configuration.
@@ -214,6 +216,9 @@ abstract class AbstractDriver extends Base implements Driver {
 			$this->_result->close();
 			$this->_result = null;
 		}
+
+		// Clear the cache
+		$this->flushCache();
 	}
 
 	/**

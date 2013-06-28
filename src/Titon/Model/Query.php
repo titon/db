@@ -57,11 +57,18 @@ class Query implements Serializable, JsonSerializable {
 	protected $_attributes = [];
 
 	/**
+	 * Unique cache key for this query.
+	 *
+	 * @type mixed
+	 */
+	protected $_cacheKey;
+
+	/**
 	 * How long to cache the query for.
 	 *
 	 * @type mixed
 	 */
-	protected $_cacheLength = null;
+	protected $_cacheLength;
 
 	/**
 	 * The fields to query for. An empty array will query all fields.
@@ -216,12 +223,18 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Set the cache duration length.
+	 * Set the cache key and duration length.
 	 *
+	 * @param mixed $key
 	 * @param mixed $expires
 	 * @return \Titon\Model\Query
 	 */
-	public function cacheFor($expires) {
+	public function cache($key, $expires = null) {
+		if ($this->getType() !== self::SELECT) {
+			return $this;
+		}
+
+		$this->_cacheKey = $key;
 		$this->_cacheLength = $expires;
 
 		return $this;
@@ -340,7 +353,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return string
 	 */
 	public function getCacheKey() {
-		return get_class($this) . '-' . $this->toString();
+		return $this->_cacheKey;
 	}
 
 	/**
