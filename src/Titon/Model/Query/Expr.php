@@ -25,6 +25,8 @@ class Expr {
 	const NOT_BETWEEN = 'notBetween';
 	const LIKE = 'like';
 	const NOT_LIKE = 'notLike';
+	const REGEXP = 'regexp';
+	const NOT_REGEXP = 'notRegexp';
 
 	/**
 	 * Field name.

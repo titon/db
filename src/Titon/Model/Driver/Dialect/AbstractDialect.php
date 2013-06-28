@@ -80,12 +80,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'notIn'			=> '%s NOT IN (%s)',
 		'notLike'		=> '%s NOT LIKE ?',
 		'notNull'		=> 'NOT NULL',
+		'notRegexp'		=> '%s NOT REGEXP ?',
 		'null'			=> 'NULL',
 		'onDelete'		=> 'ON DELETE %s',
 		'onUpdate'		=> 'ON UPDATE %s',
 		'or'			=> 'OR',
 		'orderBy'		=> 'ORDER BY %s',
 		'primaryKey'	=> 'PRIMARY KEY (%s)',
+		'regexp'		=> '%s REGEXP ?',
 		'restrict'		=> 'RESTRICT',
 		'setNull'		=> 'SET NULL',
 		'where'			=> 'WHERE %s',
@@ -524,6 +526,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 						case Expr::NOT_BETWEEN:
 						case Expr::LIKE:
 						case Expr::NOT_LIKE:
+						case Expr::REGEXP:
+						case Expr::NOT_REGEXP:
 							$value = sprintf($this->getClause($operator), $field);
 						break;
 						default:

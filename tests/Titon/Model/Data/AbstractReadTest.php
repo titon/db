@@ -706,6 +706,26 @@ class AbstractReadTest extends TestCase {
 	}
 
 	/**
+	 * Test REGEXP and NOT REGEXP clauses.
+	 */
+	public function testSelectRegexp() {
+		$this->loadFixtures('Users');
+
+		$user = new User();
+
+		$this->assertEquals([
+			['id' => 2, 'username' => 'batman'],
+			['id' => 4, 'username' => 'spiderman'],
+			['id' => 3, 'username' => 'superman'],
+		], $user->select('id', 'username')->where('username', 'regexp', 'man$')->fetchAll(false));
+
+		$this->assertEquals([
+			['id' => 1, 'username' => 'miles'],
+			['id' => 5, 'username' => 'wolverine']
+		], $user->select('id', 'username')->where('username', 'notRegexp', 'man$')->fetchAll(false));
+	}
+
+	/**
 	 * Test IN and NOT IN clauses.
 	 */
 	public function testSelectIn() {
