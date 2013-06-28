@@ -89,6 +89,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'primaryKey'	=> 'PRIMARY KEY (%s)',
 		'regexp'		=> '%s REGEXP ?',
 		'restrict'		=> 'RESTRICT',
+		'rlike'			=> '%s REGEXP ?',
 		'setNull'		=> 'SET NULL',
 		'where'			=> 'WHERE %s',
 		'uniqueKey'		=> 'UNIQUE KEY %s (%s)',
@@ -528,6 +529,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 						case Expr::NOT_LIKE:
 						case Expr::REGEXP:
 						case Expr::NOT_REGEXP:
+						case Expr::RLIKE;
 							$value = sprintf($this->getClause($operator), $field);
 						break;
 						default:

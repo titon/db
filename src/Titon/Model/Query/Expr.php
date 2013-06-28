@@ -27,6 +27,7 @@ class Expr {
 	const NOT_LIKE = 'notLike';
 	const REGEXP = 'regexp';
 	const NOT_REGEXP = 'notRegexp';
+	const RLIKE = 'rlike';
 
 	/**
 	 * Field name.
