@@ -127,7 +127,7 @@ class Model extends Base {
 	 * @throws \Exception
 	 */
 	public function create(array $data) {
-		$data = $this->preSave($data);
+		$data = $this->preSave(null, $data);
 
 		if (!$data) {
 			return 0;
@@ -252,7 +252,7 @@ class Model extends Base {
 		}
 
 		$this->data = [];
-		$this->postDelete();
+		$this->postDelete($id);
 
 		return true;
 	}
@@ -725,8 +725,10 @@ class Model extends Base {
 
 	/**
 	 * Callback called after a delete query.
+	 *
+	 * @param int $id
 	 */
-	public function postDelete() {
+	public function postDelete($id) {
 		return;
 	}
 
@@ -753,13 +755,14 @@ class Model extends Base {
 
 	/**
 	 * Callback called before a delete query.
+	 * Modify cascading by overwriting the value.
 	 * Return a falsey value to stop the process.
 	 *
 	 * @param int $id
 	 * @param bool $cascade
 	 * @return mixed
 	 */
-	public function preDelete($id, $cascade) {
+	public function preDelete($id, &$cascade) {
 		return true;
 	}
 
@@ -779,10 +782,11 @@ class Model extends Base {
 	 * Callback called before an insert or update query.
 	 * Return a falsey value to stop the process.
 	 *
+	 * @param int $id
 	 * @param array $data
 	 * @return mixed
 	 */
-	public function preSave(array $data) {
+	public function preSave($id, array $data) {
 		return $data;
 	}
 
@@ -874,7 +878,7 @@ class Model extends Base {
 	 * @throws \Exception
 	 */
 	public function update($id, array $data) {
-		$data = $this->preSave($data);
+		$data = $this->preSave($id, $data);
 
 		if (!$data) {
 			return false;
@@ -1131,8 +1135,11 @@ class Model extends Base {
 		$result = $this->preFetch($query, $fetchType);
 
 		// Use the return of preFetch() if applicable
-		if ($result) {
+		if (is_array($result)) {
 			return $result;
+
+		} else if (!$result) {
+			return [];
 		}
 
 		$results = $this->getDriver()->query($query)->fetchAll();
