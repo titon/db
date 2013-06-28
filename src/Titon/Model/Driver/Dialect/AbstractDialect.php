@@ -202,6 +202,32 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
+	 * Build the INSERT query with multiple record support.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return string
+	 */
+	public function buildMultiInsert(Query $query) {
+		$values = [];
+		$fields = [];
+		$type = $query->getType();
+
+		foreach ($query->getFields() as $record) {
+			if (!$fields) {
+				$fields = $this->formatFields($record, $type);
+			}
+
+			$values[] = $this->formatValues($record, $type);
+		}
+
+		return $this->renderStatement($this->getStatement(Query::INSERT), [
+			'table' => $this->formatTable($query->getTable()),
+			'fields' => $fields,
+			'values' => implode(', ', $values),
+		]);
+	}
+
+	/**
 	 * Build the SELECT query.
 	 *
 	 * @param \Titon\Model\Query $query
@@ -323,6 +349,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	public function formatFields(array $fields, $type) {
 		switch ($type) {
 			case Query::INSERT:
+			case Query::MULTI_INSERT:
 				if (empty($fields)) {
 					throw new InvalidQueryException('Missing field data for insert query');
 				}
@@ -650,6 +677,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	public function formatValues(array $fields, $type) {
 		switch ($type) {
 			case Query::INSERT:
+			case Query::MULTI_INSERT:
 				return sprintf($this->getClause('valueGroup'), implode(', ', array_fill(0, count($fields), '?')));
 			break;
 		}

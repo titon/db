@@ -39,6 +39,7 @@ class Query implements Serializable, JsonSerializable {
 
 	// Types
 	const INSERT = 'insert';
+	const MULTI_INSERT = 'multiInsert';
 	const SELECT = 'select';
 	const UPDATE = 'update';
 	const DELETE = 'delete';

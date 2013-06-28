@@ -275,6 +275,35 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	}
 
 	/**
+	 * Resolve the bind value and the PDO binding type.
+	 *
+	 * @param string $field
+	 * @param mixed $value
+	 * @param array $schema
+	 * @return array
+	 */
+	public function resolveBind($field, $value, array $schema = []) {
+
+		// Don't convert expressions
+		if ($value instanceof Expr) {
+			return [$value->getValue(), $this->resolveType($value->getValue())];
+
+		// Don't convert null values
+		} else if ($value === null) {
+			return [null, PDO::PARAM_NULL];
+
+		// Type cast using schema
+		} else if (isset($schema[$field]['type'])) {
+			$dataType = AbstractType::factory($schema[$field]['type'], $this);
+
+			return [$dataType->to($value), $dataType->getBindingType()];
+		}
+
+		// Return scalar type
+		return [$value, $this->resolveType($value)];
+	}
+
+	/**
 	 * Resolve the list of values that will be required for PDO statement binding.
 	 *
 	 * @param \Titon\Model\Query $query
@@ -283,25 +312,18 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	public function resolveParams(Query $query) {
 		$binds = [];
 		$type = $query->getType();
+		$schema = $query->getModel()->getSchema()->getColumns();
 
 		// Grab the values from insert and update queries
 		if ($type === Query::INSERT || $type === Query::UPDATE) {
-			$schema = $query->getModel()->getSchema()->getColumns();
-
 			foreach ($query->getFields() as $field => $value) {
+				$binds[] = $this->resolveBind($field, $value, $schema);
+			}
 
-				// Don't convert expressions
-				if ($value instanceof Expr) {
-					$binds[] = [$value->getValue(), $this->resolveType($value->getValue())];
-
-				// Don't convert null values
-				} else if ($value === null) {
-					$binds[] = [null, PDO::PARAM_NULL];
-
-				} else {
-					$dataType = AbstractType::factory($schema[$field]['type'], $this);
-
-					$binds[] = [$dataType->to($value), $dataType->getBindingType()];
+		} else if ($type === Query::MULTI_INSERT) {
+			foreach ($query->getFields() as $record) {
+				foreach ($record as $field => $value) {
+					$binds[] = $this->resolveBind($field, $value, $schema);
 				}
 			}
 		}

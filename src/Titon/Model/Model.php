@@ -183,6 +183,33 @@ class Model extends Base {
 	}
 
 	/**
+	 * Insert multiple records into the database using a single query.
+	 * Missing fields will be added with an empty value or the schema default value.
+	 * Does not support callbacks or transactions.
+	 *
+	 * @param array $data Multi-dimensional array of records
+	 * @param bool $hasPk If true will allow primary key fields, else will remove them
+	 * @return bool
+	 */
+	public function createMany(array $data, $hasPk = false) {
+		$records = [];
+		$defaults = $this->_mapDefaults();
+		$pk = $this->getPrimaryKey();
+
+		foreach ($data as $record) {
+			$record = Hash::merge($defaults, $record);
+
+			if (!$hasPk) {
+				unset($record[$pk]);
+			}
+
+			$records[] = $record;
+		}
+
+		return (bool) $this->query(Query::MULTI_INSERT)->fields($records)->save();
+	}
+
+	/**
 	 * Create a database table based off the models schema.
 	 * The schema must be an array of column data.
 	 *
@@ -841,16 +868,7 @@ class Model extends Base {
 	 * @return \Titon\Model\Model
 	 */
 	public function setData(array $data) {
-		$base = [];
-
-		// Add empty values for missing fields
-		if ($schema = $this->getSchema()) {
-			$base = array_map(function() {
-				return '';
-			}, $schema->getColumns());
-		}
-
-		$this->data = Hash::merge($base, $this->data, $data);
+		$this->data = Hash::merge($this->_mapDefaults(), $this->data, $data);
 
 		return $this;
 	}
@@ -1219,6 +1237,23 @@ class Model extends Base {
 		}
 
 		return $related;
+	}
+
+	/**
+	 * Map the schema with empty fields.
+	 *
+	 * @return array
+	 */
+	protected function _mapDefaults() {
+		$defaults = [];
+
+		if ($schema = $this->getSchema()) {
+			foreach ($schema->getColumns() as $column => $data) {
+				$defaults[$column] = array_key_exists('default', $data) ? $data['default'] : '';
+			}
+		}
+
+		return $defaults;
 	}
 
 	/**

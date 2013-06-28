@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Data;
 
+use Titon\Model\Query;
 use Titon\Test\Stub\Model\Book;
 use Titon\Test\Stub\Model\Series;
 use Titon\Test\Stub\Model\User;
@@ -269,6 +270,30 @@ class AbstractCreateTest extends TestCase {
 		} catch (Exception $e) {
 			$this->assertTrue(true);
 		}
+	}
+
+	/**
+	 * Test inserting multiple records with a single statement.
+	 */
+	public function testCreateMany() {
+		// Dont load fixtures
+
+		$user = new User();
+		$user->createTable();
+
+		$this->assertEquals(0, $user->select()->count());
+
+		$this->assertTrue($user->createMany([
+			['country_id' => 1, 'username' => 'miles', 'firstName' => 'Miles', 'lastName' => 'Johnson', 'password' => '1Z5895jf72yL77h', 'email' => 'miles@email.com', 'age' => 25, 'created' => '1988-02-26 21:22:34'],
+			['country_id' => 3, 'username' => 'batman', 'firstName' => 'Bruce', 'lastName' => 'Wayne', 'created' => '1960-05-11 21:22:34'],
+			['country_id' => 2, 'username' => 'superman', 'email' => 'superman@email.com', 'age' => 33, 'created' => '1970-09-18 21:22:34'],
+			['country_id' => 5, 'username' => 'spiderman', 'firstName' => 'Peter', 'lastName' => 'Parker', 'password' => '1Z5895jf72yL77h', 'email' => 'spiderman@email.com', 'age' => 22, 'created' => '1990-01-05 21:22:34'],
+			['country_id' => 4, 'username' => 'wolverine', 'password' => '1Z5895jf72yL77h', 'email' => 'wolverine@email.com'],
+		]));
+
+		$this->assertEquals(5, $user->select()->count());
+
+		$user->query(Query::DROP_TABLE)->save();
 	}
 
 }

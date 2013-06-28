@@ -145,6 +145,22 @@ class DialectTest extends TestCase {
 	}
 
 	/**
+	 * Test multi insert statement creation.
+	 */
+	public function testBuildMultiInsert() {
+		$query = new Query(Query::MULTI_INSERT, new User());
+		$query->from('foobar')->fields([
+			['username' => 'miles', 'firstName' => 'Miles', 'lastName' => 'Johnson'],
+			['username' => 'batman', 'firstName' => 'Bruce', 'lastName' => 'Wayne'],
+			['username' => 'superman', 'firstName' => 'Clark', 'lastName' => 'Kent'],
+			['username' => 'spiderman', 'firstName' => 'Peter', 'lastName' => 'Parker'],
+			['username' => 'wolverine', 'firstName' => 'Logan', 'lastName' => ''],
+		]);
+
+		$this->assertEquals('INSERT INTO `foobar` (`username`, `firstName`, `lastName`) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?);', $this->object->buildMultiInsert($query));
+	}
+
+	/**
 	 * Test select statement creation.
 	 */
 	public function testBuildSelect() {
