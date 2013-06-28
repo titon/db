@@ -118,7 +118,7 @@ class PdoResult extends AbstractResult implements Result {
 
 		foreach ($this->getParams() as $param) {
 			switch ($param[1]) {
-				case PDO::PARAM_NULL:	$value = 'null'; break;
+				case PDO::PARAM_NULL:	$value = 'NULL'; break;
 				case PDO::PARAM_INT:
 				case PDO::PARAM_BOOL:	$value = (int) $param[0]; break;
 				default: 				$value = "'" . (string) $param[0] . "'"; break;

@@ -31,8 +31,6 @@ Requires the PDO extension for most database connections.
 
 ### To Do ###
 
-* Unit Testing
 * Behaviors
-* Improved Operator Support
 * Fetch Neighbors/Threaded
 * Pagination
