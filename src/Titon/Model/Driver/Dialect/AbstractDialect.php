@@ -92,6 +92,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'rlike'			=> '%s REGEXP ?',
 		'setNull'		=> 'SET NULL',
 		'where'			=> 'WHERE %s',
+		'xor'			=> 'XOR',
 		'uniqueKey'		=> 'UNIQUE KEY %s (%s)',
 		'unsigned'		=> 'UNSIGNED',
 		'valueGroup'	=> '(%s)',

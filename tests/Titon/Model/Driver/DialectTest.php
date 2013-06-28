@@ -453,6 +453,11 @@ class DialectTest extends TestCase {
 		});
 
 		$this->assertEquals('`id` = ? AND `age` >= ? AND (`name` LIKE ? OR `name` NOT LIKE ? OR (`active` = ? AND `status` != ?))', $this->object->formatPredicate($pred));
+
+		$pred = new Predicate(Predicate::MAYBE);
+		$pred->eq('id', 1)->gte('age', 12);
+
+		$this->assertEquals('`id` = ? XOR `age` >= ?', $this->object->formatPredicate($pred));
 	}
 
 	/**

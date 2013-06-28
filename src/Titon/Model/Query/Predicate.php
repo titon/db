@@ -244,6 +244,21 @@ class Predicate implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Generate a new sub-grouped XOR predicate.
+	 *
+	 * @param \Closure $callback
+	 * @return \Titon\Model\Query\Predicate
+	 */
+	public function maybe(Closure $callback) {
+		$predicate = new Predicate(self::MAYBE);
+		$predicate->bindCallback($callback);
+
+		$this->_params[] = $predicate;
+
+		return $this;
+	}
+
+	/**
 	 * Adds a not between range "NOT BETWEEN" expression.
 	 *
 	 * @param string $field
