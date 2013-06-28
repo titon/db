@@ -1494,7 +1494,7 @@ class Model extends Base {
 		}
 
 		foreach ($this->getBehaviors() as $behavior) {
-			if (!method_exists($behavior, 'preFetch')) {
+			if (method_exists($behavior, 'preFetch')) {
 				$state = $behavior->preFetch($query, $fetchType);
 
 				if (!$state) {
