@@ -507,7 +507,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 				// Function instead of field
 				if ($field instanceof Func) {
-					$value = sprintf('%s %s ?', $this->formatFunction($field), $operator);
+					$value = sprintf($this->getClause('expression'), $this->formatFunction($field), $operator);
 
 				// Regular clause
 				} else {
@@ -518,7 +518,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 						case Expr::NOT_IN:
 							$value = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($param->getValue()), '?')));
 						break;
-						case Expr::NOT:
 						case Expr::NULL:
 						case Expr::NOT_NULL:
 						case Expr::BETWEEN:
@@ -528,7 +527,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 							$value = sprintf($this->getClause($operator), $field);
 						break;
 						default:
-							$value = sprintf('%s %s ?', $field, $operator);
+							$value = sprintf($this->getClause('expression'), $field, $operator);
 						break;
 					}
 				}
@@ -621,20 +620,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatTableOptions(array $attributes) {
 		$output = [];
-		$connection = $this->getDriver()->getConnection();
-
-		if (!empty($attributes['engine'])) {
-			$output[] = $this->getClause('engine') . '=' . $attributes['engine'];
-		}
-
-		unset($attributes['engine']);
 
 		foreach ($attributes as $key => $value) {
-			if ($key === 'comment') {
+			if ($key === 'comment' || $key === 'defaultComment') {
 				$key = 'defaultComment';
+				$value = $this->getDriver()->getConnection()->quote($value);
 			}
 
-			$output[] = $this->getClause($key) . '=' . $connection->quote($value);
+			$output[] = $this->getClause($key) . '=' . $value;
 		}
 
 		return implode(' ', $output);

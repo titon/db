@@ -161,16 +161,6 @@ class PredicateTest extends TestCase {
 	}
 
 	/**
-	 * Test not clause.
-	 */
-	public function testNot() {
-		$this->object->not('color', 'black');
-		$this->assertEquals([
-			'colornotblack' => new Expr('color', 'not', 'black')
-		], $this->object->getParams());
-	}
-
-	/**
 	 * Test not between clause.
 	 */
 	public function testNotBetween() {

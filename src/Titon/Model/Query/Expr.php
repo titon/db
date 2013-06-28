@@ -17,7 +17,6 @@ use Titon\Model\Traits\ExprAware;
 class Expr {
 	use ExprAware;
 
-	const NOT = 'not';
 	const NULL = 'isNull';
 	const NOT_NULL = 'isNotNull';
 	const IN = 'in';

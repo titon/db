@@ -244,19 +244,6 @@ class Predicate implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Adds a not "NOT" expression.
-	 *
-	 * @param string $field
-	 * @param mixed $value
-	 * @return \Titon\Model\Query\Predicate
-	 */
-	public function not($field, $value) {
-		$this->add($field, Expr::NOT, $value);
-
-		return $this;
-	}
-
-	/**
 	 * Adds a not between range "NOT BETWEEN" expression.
 	 *
 	 * @param string $field

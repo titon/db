@@ -516,10 +516,10 @@ class DialectTest extends TestCase {
 		$this->assertEquals("DEFAULT COMMENT='Another comment'", $this->object->formatTableOptions($options));
 
 		$options['characterSet'] = 'utf8';
-		$this->assertEquals("DEFAULT COMMENT='Another comment' CHARACTER SET='utf8'", $this->object->formatTableOptions($options));
+		$this->assertEquals("DEFAULT COMMENT='Another comment' CHARACTER SET=utf8", $this->object->formatTableOptions($options));
 
 		$options['engine'] = 'MyISAM';
-		$this->assertEquals("ENGINE=MyISAM DEFAULT COMMENT='Another comment' CHARACTER SET='utf8'", $this->object->formatTableOptions($options));
+		$this->assertEquals("DEFAULT COMMENT='Another comment' CHARACTER SET=utf8 ENGINE=MyISAM", $this->object->formatTableOptions($options));
 	}
 
 	/**
