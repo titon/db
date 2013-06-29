@@ -255,17 +255,6 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
-	 * Turn on distinct query statement.
-	 *
-	 * @return \Titon\Model\Query
-	 */
-	public function distinct() {
-		$this->attribute('distinct', true);
-
-		return $this;
-	}
-
-	/**
 	 * Pass the query to the model to interact with the database.
 	 * Return the first record from the results.
 	 *

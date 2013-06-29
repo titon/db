@@ -111,6 +111,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'sqlNoCache'		=> 'SQL_NO_CACHE',
 		'sqlSmallResult'	=> 'SQL_SMALL_RESULT',
 		'subQuery'			=> '(%s)',
+		'temporary'			=> 'TEMPORARY',
 		'where'				=> 'WHERE %s',
 		'xor'				=> 'XOR',
 		'uniqueKey'			=> 'UNIQUE KEY %s (%s)',
@@ -131,8 +132,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 		Query::DELETE		=> 'DELETE {a.priority} {a.quick} {a.ignore} FROM {table} {where} {orderBy} {limit}',
 		Query::TRUNCATE		=> 'TRUNCATE {table}',
 		Query::DESCRIBE		=> 'DESCRIBE {table}',
-		Query::DROP_TABLE	=> 'DROP TABLE {table}',
-		Query::CREATE_TABLE	=> "CREATE TABLE {table} (\n{columns}{keys}\n) {options}"
+		Query::DROP_TABLE	=> 'DROP {a.temporary} TABLE IF EXISTS {table}',
+		Query::CREATE_TABLE	=> "CREATE {a.temporary} TABLE IF NOT EXISTS {table} (\n{columns}{keys}\n) {options}"
 	];
 
 	/**
@@ -146,7 +147,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'ignore' => false
 		],
 		Query::SELECT => [
-			'distinct' => '',
+			'distinct' => false,
 			'priority' => '',
 			'optimize' => '',
 			'cache' => ''
@@ -159,6 +160,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'priority' => '',
 			'quick' => false,
 			'ignore' => false
+		],
+		Query::DROP_TABLE => [
+			'temporary' => false
+		],
+		Query::CREATE_TABLE => [
+			'temporary' => false
 		],
 	];
 
@@ -187,12 +194,23 @@ abstract class AbstractDialect extends Base implements Dialect {
 			throw new InvalidSchemaException('Table creation requires a valid schema object');
 		}
 
-		return $this->renderStatement($this->getStatement(Query::CREATE_TABLE), [
+		$attributes = $query->getAttributes();
+		$actual = [];
+
+		if (isset($attributes['temporary'])) {
+			$actual['temporary'] = $attributes['temporary'];
+			unset($attributes['temporary']);
+		}
+
+		$params = $this->renderAttributes($actual + $this->getAttributes(Query::CREATE_TABLE));
+		$params = $params + [
 			'table' => $this->formatTable($schema->getTable()),
 			'columns' => $this->formatColumns($schema),
 			'keys' => $this->formatTableKeys($schema),
-			'options' => $this->formatTableOptions($query->getAttributes())
-		]);
+			'options' => $this->formatTableOptions($attributes)
+		];
+
+		return $this->renderStatement($this->getStatement(Query::CREATE_TABLE), $params);
 	}
 
 	/**
@@ -232,9 +250,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildDropTable(Query $query) {
-		return $this->renderStatement($this->getStatement(Query::DROP_TABLE), [
+		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DROP_TABLE));
+		$params = $params + [
 			'table' => $this->formatTable($query->getTable())
-		]);
+		];
+
+		return $this->renderStatement($this->getStatement(Query::DROP_TABLE), $params);
 	}
 
 	/**

@@ -63,7 +63,7 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::CREATE_TABLE, new User());
 		$query->schema($schema);
 
-		$this->assertEquals("CREATE TABLE `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT\n);", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT\n);", $this->object->buildCreateTable($query));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -71,7 +71,7 @@ class DialectTest extends TestCase {
 			'primary' => true
 		]);
 
-		$this->assertEquals("CREATE TABLE `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\nPRIMARY KEY (`column`)\n);", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\nPRIMARY KEY (`column`)\n);", $this->object->buildCreateTable($query));
 
 		$schema->addColumn('column2', [
 			'type' => 'int',
@@ -79,11 +79,24 @@ class DialectTest extends TestCase {
 			'index' => true
 		]);
 
-		$this->assertEquals("CREATE TABLE `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n);", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n);", $this->object->buildCreateTable($query));
 
 		$query->attribute('engine', 'InnoDB');
 
-		$this->assertEquals("CREATE TABLE `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n) ENGINE=InnoDB;", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n) ENGINE=InnoDB;", $this->object->buildCreateTable($query));
+
+		// Attributes
+		$schema = new Schema('foobar');
+		$schema->addColumn('column', [
+			'type' => 'int',
+			'ai' => true
+		]);
+
+		$query = new Query(Query::CREATE_TABLE, new User());
+		$query->schema($schema)->attribute('temporary', true);
+
+		$this->assertEquals("CREATE TEMPORARY TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT\n);", $this->object->buildCreateTable($query));
+
 	}
 
 	/**
@@ -131,7 +144,10 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::DROP_TABLE, new User());
 		$query->from('foobar');
 
-		$this->assertEquals('DROP TABLE `foobar`;', $this->object->buildDropTable($query));
+		$this->assertRegExp('/DROP\s+TABLE IF EXISTS `foobar`;/', $this->object->buildDropTable($query));
+
+		$query->attribute('temporary', true);
+		$this->assertRegExp('/DROP TEMPORARY TABLE IF EXISTS `foobar`;/', $this->object->buildDropTable($query));
 	}
 
 	/**
