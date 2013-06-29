@@ -39,7 +39,7 @@ class TimestampableBehaviorTest extends TestCase {
 	 * Test created timestamp is appended.
 	 */
 	public function testOnCreate() {
-		$this->loadFixtures('users');
+		$this->loadFixtures('Users');
 
 		$id = $this->object->create(['username' => 'foo']);
 
@@ -66,7 +66,7 @@ class TimestampableBehaviorTest extends TestCase {
 	 * Test updated timestamp is appended.
 	 */
 	public function testOnUpdated() {
-		$this->loadFixtures('users');
+		$this->loadFixtures('Users');
 
 		$this->object->update(1, ['username' => 'foo']);
 
