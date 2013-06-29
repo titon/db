@@ -12,6 +12,7 @@ use Titon\Common\Registry;
 use Titon\Common\Traits\Attachable;
 use Titon\Common\Traits\Cacheable;
 use Titon\Common\Traits\Instanceable;
+use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
 use Titon\Model\Exception\InvalidQueryException;
@@ -191,8 +192,8 @@ class Model extends Base {
 	public function createTable(array $options = [], $temporary = false) {
 		$schema = $this->getSchema();
 		$schema->addOptions($options + [
-			'engine' => 'InnoDB',
-			'characterSet' => $this->getDriver()->getEncoding()
+			Dialect::ENGINE => 'InnoDB',
+			Dialect::CHARACTER_SET => $this->getDriver()->getEncoding()
 		]);
 
 		return (bool) $this->query(Query::CREATE_TABLE)

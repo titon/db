@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Query;
 
+use Titon\Model\Driver\Dialect;
 use \Closure;
 use \Serializable;
 use \JsonSerializable;
@@ -18,9 +19,9 @@ use \JsonSerializable;
  */
 class Predicate implements Serializable, JsonSerializable {
 
-	const ALSO = 'and';
-	const EITHER = 'or';
-	const MAYBE = 'xor';
+	const ALSO = Dialect::ALSO;
+	const EITHER = Dialect::EITHER;
+	const MAYBE = Dialect::MAYBE;
 
 	/**
 	 * Type of predicate, either AND or OR.

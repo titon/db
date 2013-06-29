@@ -17,6 +17,7 @@ use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Exception\InvalidQueryException;
 use Titon\Model\Exception\InvalidSchemaException;
 use Titon\Model\Exception\MissingClauseException;
+use Titon\Model\Exception\MissingKeywordException;
 use Titon\Model\Exception\MissingStatementException;
 use Titon\Model\Query;
 use Titon\Model\Query\Expr;
@@ -46,98 +47,105 @@ abstract class AbstractDialect extends Base implements Dialect {
 	];
 
 	/**
-	 * List of query component clauses.
+	 * List of component clauses.
 	 *
 	 * @type array
 	 */
 	protected $_clauses = [
-		'autoIncrement'		=> 'AUTO_INCREMENT',
-		'all'				=> 'ALL',
-		'and'				=> 'AND',
-		'any'				=> 'ANY',
-		'as'				=> '%s AS %s',
-		'asc'				=> 'ASC',
-		'avgRowLength'		=> 'AVG_ROW_LENGTH',
-		'between'			=> '%s BETWEEN ? AND ?',
-		'cascade'			=> 'CASCADE',
-		'charset'			=> 'CHARACTER SET %s',
-		'characterSet'		=> 'CHARACTER SET',
-		'checksum'			=> 'CHECKSUM',
-		'collate'			=> 'COLLATE',
-		'collation'			=> 'COLLATE %s',
-		'comment'			=> 'COMMENT %s',
-		'connection'		=> 'CONNECTION',
-		'constraint'		=> 'CONSTRAINT %s',
-		'dataDirectory'		=> 'DATA DIRECTORY',
-		'defaultCharacterSet' => 'DEFAULT CHARACTER SET',
-		'defaultComment'	=> 'DEFAULT COMMENT',
-		'defaultValue'		=> 'DEFAULT %s',
-		'delayed'			=> 'DELAYED',
-		'delayKeyWrite'		=> 'DELAY_KEY_WRITE',
-		'desc'				=> 'DESC',
-		'distinct'			=> 'DISTINCT',
-		'distinctRow'		=> 'DISTINCTROW',
-		'engine'			=> 'ENGINE',
-		'exists'			=> 'EXISTS',
-		'expression'		=> '%s %s ?',
-		'foreignKey'		=> 'FOREIGN KEY (%s) REFERENCES %s(%s)',
-		'function'			=> '%s(%s)',
-		'groupBy'			=> 'GROUP BY %s',
-		'having'			=> 'HAVING %s',
-		'highPriority'		=> 'HIGH_PRIORITY',
-		'ignore'			=> 'IGNORE',
-		'in'				=> '%s IN (%s)',
-		'indexDirectory'	=> 'INDEX DIRECTORY',
-		'indexKey'			=> 'KEY %s (%s)',
-		'insertMethod'		=> 'INSERT_METHOD',
-		'isNull'			=> '%s IS NULL',
-		'isNotNull'			=> '%s IS NOT NULL',
-		'keyBlockSize'		=> 'KEY_BLOCK_SIZE',
-		'like'				=> '%s LIKE ?',
-		'limit'				=> 'LIMIT %s',
-		'limitOffset'		=> 'LIMIT %s OFFSET %s',
-		'lowPriority'		=> 'LOW_PRIORITY',
-		'maxRows'			=> 'MAX_ROWS',
-		'minRows'			=> 'MIN_ROWS',
-		'noAction'			=> 'NO ACTION',
-		'not'				=> '%s NOT ?',
-		'notBetween'		=> '%s NOT BETWEEN ? AND ?',
-		'notExists'			=> 'NOT EXISTS',
-		'notIn'				=> '%s NOT IN (%s)',
-		'notLike'			=> '%s NOT LIKE ?',
-		'notNull'			=> 'NOT NULL',
-		'notRegexp'			=> '%s NOT REGEXP ?',
-		'null'				=> 'NULL',
-		'onDelete'			=> 'ON DELETE %s',
-		'onUpdate'			=> 'ON UPDATE %s',
-		'or'				=> 'OR',
-		'orderBy'			=> 'ORDER BY %s',
-		'packKeys'			=> 'PACK_KEYS',
-		'password'			=> 'PASSWORD',
-		'primaryKey'		=> 'PRIMARY KEY (%s)',
-		'quick'				=> 'QUICK',
-		'regexp'			=> '%s REGEXP ?',
-		'restrict'			=> 'RESTRICT',
-		'rlike'				=> '%s REGEXP ?',
-		'rowFormat'			=> 'ROW_FORMAT',
-		'setNull'			=> 'SET NULL',
-		'some'				=> 'SOME',
-		'sqlBigResult'		=> 'SQL_BIG_RESULT',
-		'sqlBufferResult'	=> 'SQL_BUFFER_RESULT',
-		'sqlCache'			=> 'SQL_CACHE',
-		'sqlNoCache'		=> 'SQL_NO_CACHE',
-		'sqlSmallResult'	=> 'SQL_SMALL_RESULT',
-		'statsAutoRecalc'	=> 'STATS_AUTO_RECALC',
-		'statsPersistent'	=> 'STATS_PERSISTENT',
-		'subQuery'			=> '(%s)',
-		'temporary'			=> 'TEMPORARY',
-		'where'				=> 'WHERE %s',
-		'xor'				=> 'XOR',
-		'uniqueKey'			=> 'UNIQUE KEY %s (%s)',
-		'union'				=> 'UNION',
-		'unsigned'			=> 'UNSIGNED',
-		'valueGroup'		=> '(%s)',
-		'zerofill'			=> 'ZEROFILL'
+		self::AS_ALIAS				=> '%s AS %s',
+		self::BETWEEN				=> '%s BETWEEN ? AND ?',
+		self::CHARACTER_SET			=> 'CHARACTER SET %s',
+		self::COLLATE				=> 'COLLATE %s',
+		self::COMMENT				=> 'COMMENT %s',
+		self::CONSTRAINT			=> 'CONSTRAINT %s',
+		self::DEFAULT_TO			=> 'DEFAULT %s',
+		self::EXPRESSION			=> '%s %s ?',
+		self::FOREIGN_KEY			=> 'FOREIGN KEY (%s) REFERENCES %s(%s)',
+		self::FUNC					=> '%s(%s)',
+		self::GROUP					=> '(%s)',
+		self::GROUP_BY				=> 'GROUP BY %s',
+		self::HAVING				=> 'HAVING %s',
+		self::IN					=> '%s IN (%s)',
+		self::INDEX					=> 'KEY %s (%s)',
+		self::IS_NULL				=> '%s IS NULL',
+		self::IS_NOT_NULL			=> '%s IS NOT NULL',
+		self::LIKE					=> '%s LIKE ?',
+		self::LIMIT					=> 'LIMIT %s',
+		self::LIMIT_OFFSET			=> 'LIMIT %s OFFSET %s',
+		self::NOT_BETWEEN			=> '%s NOT BETWEEN ? AND ?',
+		self::NOT_IN				=> '%s NOT IN (%s)',
+		self::NOT_LIKE				=> '%s NOT LIKE ?',
+		self::NOT_REGEXP			=> '%s NOT REGEXP ?',
+		self::ON_DELETE				=> 'ON DELETE %s',
+		self::ON_UPDATE				=> 'ON UPDATE %s',
+		self::ORDER_BY				=> 'ORDER BY %s',
+		self::PRIMARY_KEY			=> 'PRIMARY KEY (%s)',
+		self::REGEXP				=> '%s REGEXP ?',
+		self::RLIKE					=> '%s REGEXP ?',
+		self::SUB_QUERY				=> '(%s)',
+		self::WHERE					=> 'WHERE %s',
+		self::UNIQUE_KEY			=> 'UNIQUE KEY %s (%s)',
+	];
+
+	/**
+	 * List of keywords.
+	 *
+	 * @type array
+	 */
+	protected $_keywords = [
+		self::ALL					=> 'ALL',
+		self::ALSO					=> 'AND',
+		self::ANY					=> 'ANY',
+		self::ASC					=> 'ASC',
+		self::AUTO_INCREMENT		=> 'AUTO_INCREMENT',
+		self::AVG_ROW_LENGTH		=> 'AVG_ROW_LENGTH',
+		self::BIG_RESULT			=> 'SQL_BIG_RESULT',
+		self::BUFFER_RESULT			=> 'SQL_BUFFER_RESULT',
+		self::CACHE					=> 'SQL_CACHE',
+		self::CASCADE				=> 'CASCADE',
+		self::CHARACTER_SET			=> 'CHARACTER SET',
+		self::CHECKSUM				=> 'CHECKSUM',
+		self::COLLATE				=> 'COLLATE',
+		self::CONNECTION			=> 'CONNECTION',
+		self::DATA_DIRECTORY		=> 'DATA DIRECTORY',
+		self::DEFAULT_CHARACTER_SET	=> 'DEFAULT CHARACTER SET',
+		self::DEFAULT_COMMENT		=> 'DEFAULT COMMENT',
+		self::DELAYED				=> 'DELAYED',
+		self::DELAY_KEY_WRITE		=> 'DELAY_KEY_WRITE',
+		self::DESC					=> 'DESC',
+		self::DISTINCT				=> 'DISTINCT',
+		self::DISTINCT_ROW			=> 'DISTINCTROW',
+		self::EITHER				=> 'OR',
+		self::ENGINE				=> 'ENGINE',
+		self::EXISTS				=> 'EXISTS',
+		self::HIGH_PRIORITY			=> 'HIGH_PRIORITY',
+		self::IGNORE				=> 'IGNORE',
+		self::INDEX_DIRECTORY		=> 'INDEX DIRECTORY',
+		self::INSERT_METHOD			=> 'INSERT_METHOD',
+		self::KEY_BLOCK_SIZE		=> 'KEY_BLOCK_SIZE',
+		self::LOW_PRIORITY			=> 'LOW_PRIORITY',
+		self::MAX_ROWS				=> 'MAX_ROWS',
+		self::MAYBE					=> 'XOR',
+		self::MIN_ROWS				=> 'MIN_ROWS',
+		self::NO_ACTION				=> 'NO ACTION',
+		self::NO_CACHE				=> 'SQL_NO_CACHE',
+		self::NOT_EXISTS			=> 'NOT EXISTS',
+		self::NOT_NULL				=> 'NOT NULL',
+		self::NULL					=> 'NULL',
+		self::PACK_KEYS				=> 'PACK_KEYS',
+		self::PASSWORD				=> 'PASSWORD',
+		self::QUICK					=> 'QUICK',
+		self::RESTRICT				=> 'RESTRICT',
+		self::ROW_FORMAT			=> 'ROW_FORMAT',
+		self::SET_NULL				=> 'SET NULL',
+		self::SMALL_RESULT			=> 'SQL_SMALL_RESULT',
+		self::SOME					=> 'SOME',
+		self::STATS_AUTO_RECALC		=> 'STATS_AUTO_RECALC',
+		self::STATS_PERSISTENT		=> 'STATS_PERSISTENT',
+		self::TEMPORARY				=> 'TEMPORARY',
+		self::UNION					=> 'UNION',
+		self::UNSIGNED				=> 'UNSIGNED',
+		self::ZEROFILL				=> 'ZEROFILL'
 	];
 
 	/**
@@ -351,7 +359,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		if ($filter = $query->getFilter()) {
-			$output = $this->getClause($filter) . ' ' . $output;
+			$output = $this->getKeyword($filter) . ' ' . $output;
 		}
 
 		return $output;
@@ -410,33 +418,33 @@ abstract class AbstractDialect extends Base implements Dialect {
 			$output = [$this->quote($column), strtoupper($type)];
 
 			if (!empty($options['unsigned'])) {
-				$output[] = $this->getClause('unsigned');
+				$output[] = $this->getKeyword(self::UNSIGNED);
 			}
 
 			if (!empty($options['zerofill'])) {
-				$output[] = $this->getClause('zerofill');
+				$output[] = $this->getKeyword(self::ZEROFILL);
 			}
 
 			if (!empty($options['charset'])) {
-				$output[] = sprintf($this->getClause('charset'), $options['charset']);
+				$output[] = sprintf($this->getClause(self::CHARACTER_SET), $options['charset']);
 			}
 
 			if (!empty($options['collation'])) {
-				$output[] = sprintf($this->getClause('collation'), $options['collation']);
+				$output[] = sprintf($this->getClause(self::COLLATE), $options['collation']);
 			}
 
-			$output[] = $this->getClause(empty($options['null']) ? 'notNull' : 'null');
+			$output[] = $this->getKeyword(empty($options['null']) ? self::NOT_NULL : self::NULL);
 
 			if (array_key_exists('default', $options) && $options['default'] !== '') {
-				$output[] = sprintf($this->getClause('defaultValue'), $this->getDriver()->escape($options['default']));
+				$output[] = sprintf($this->getClause(self::DEFAULT_TO), $this->getDriver()->escape($options['default']));
 			}
 
 			if (!empty($options['ai'])) {
-				$output[] = $this->getClause('autoIncrement');
+				$output[] = $this->getKeyword(self::AUTO_INCREMENT);
 			}
 
 			if (!empty($options['comment'])) {
-				$output[] = sprintf($this->getClause('comment'), $this->getDriver()->escape(substr($options['comment'], 0, 255)));
+				$output[] = sprintf($this->getClause(self::COMMENT), $this->getDriver()->escape(substr($options['comment'], 0, 255)));
 			}
 
 			$columns[] = implode(' ', $output);
@@ -455,7 +463,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		$field = $this->quote($expr->getField());
 
 		if ($expr->useValue()) {
-			return sprintf($this->getClause('expression'), $field, $expr->getOperator());
+			return sprintf($this->getClause(self::EXPRESSION), $field, $expr->getOperator());
 		}
 
 		return $field;
@@ -556,13 +564,13 @@ abstract class AbstractDialect extends Base implements Dialect {
 			$arguments[] = $value;
 		}
 
-		$output = sprintf($this->getClause('function'),
+		$output = sprintf($this->getClause(self::FUNC),
 			$func->getName(),
 			implode($func->getSeparator(), $arguments)
 		);
 
 		if ($alias = $func->getAlias()) {
-			$output = sprintf($this->getClause('as'), $output, $this->quote($alias));
+			$output = sprintf($this->getClause(self::AS_ALIAS), $output, $this->quote($alias));
 		}
 
 		return $output;
@@ -576,7 +584,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatGroupBy(array $groupBy) {
 		if ($groupBy) {
-			return sprintf($this->getClause('groupBy'), $this->quoteList($groupBy));
+			return sprintf($this->getClause(self::GROUP_BY), $this->quoteList($groupBy));
 		}
 
 		return '';
@@ -590,7 +598,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatHaving(Predicate $having) {
 		if ($having->getParams()) {
-			return sprintf($this->getClause('having'), $this->formatPredicate($having));
+			return sprintf($this->getClause(self::HAVING), $this->formatPredicate($having));
 		}
 
 		return '';
@@ -604,7 +612,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatLimit($limit) {
 		if ($limit) {
-			return sprintf($this->getClause('limit'), (int) $limit);
+			return sprintf($this->getClause(self::LIMIT), (int) $limit);
 		}
 
 		return '';
@@ -619,7 +627,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatLimitOffset($limit, $offset = 0) {
 		if ($limit && $offset) {
-			return sprintf($this->getClause('limitOffset'), (int) $limit, (int) $offset);
+			return sprintf($this->getClause(self::LIMIT_OFFSET), (int) $limit, (int) $offset);
 		}
 
 		return $this->formatLimit($limit);
@@ -639,11 +647,11 @@ abstract class AbstractDialect extends Base implements Dialect {
 				if ($direction instanceof Func) {
 					$output[] = $this->formatFunction($direction);
 				} else {
-					$output[] = $this->quote($field) . ' ' . $this->getClause($direction);
+					$output[] = $this->quote($field) . ' ' . $this->getKeyword($direction);
 				}
 			}
 
-			return sprintf($this->getClause('orderBy'), implode(', ', $output));
+			return sprintf($this->getClause(self::ORDER_BY), implode(', ', $output));
 		}
 
 		return '';
@@ -660,7 +668,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 		foreach ($predicate->getParams() as $param) {
 			if ($param instanceof Predicate) {
-				$output[] = sprintf($this->getClause('valueGroup'), $this->formatPredicate($param));
+				$output[] = sprintf($this->getClause(self::GROUP), $this->formatPredicate($param));
 
 			} else if ($param instanceof Expr) {
 				$field = $param->getField();
@@ -670,7 +678,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 				// Function instead of field
 				if ($field instanceof Func) {
-					$clause = sprintf($this->getClause('expression'), $this->formatFunction($field), $operator);
+					$clause = sprintf($this->getClause(self::EXPRESSION), $this->formatFunction($field), $operator);
 
 				// Regular clause
 				} else {
@@ -698,7 +706,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 							$clause = sprintf($this->getClause($operator), $field);
 						break;
 						default:
-							$clause = sprintf($this->getClause('expression'), $field, $operator);
+							$clause = sprintf($this->getClause(self::EXPRESSION), $field, $operator);
 						break;
 					}
 
@@ -719,7 +727,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			}
 		}
 
-		return implode(' ' . $this->getClause($predicate->getType()) . ' ', $output);
+		return implode(' ' . $this->getKeyword($predicate->getType()) . ' ', $output);
 	}
 
 	/**
@@ -745,10 +753,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatTableKeys(Schema $schema) {
 		$keys = [];
-		$constraint = $this->getClause('constraint');
+		$constraint = $this->getClause(self::CONSTRAINT);
 
 		if ($primary = $schema->getPrimaryKey()) {
-			$key = sprintf($this->getClause('primaryKey'), $this->quoteList($primary['columns']));
+			$key = sprintf($this->getClause(self::PRIMARY_KEY), $this->quoteList($primary['columns']));
 
 			if ($primary['constraint']) {
 				$key = sprintf($constraint, $this->quote($primary['constraint'])) . ' ' . $key;
@@ -758,7 +766,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		foreach ($schema->getUniqueKeys() as $index => $unique) {
-			$key = sprintf($this->getClause('uniqueKey'), $this->quote($index), $this->quoteList($unique['columns']));
+			$key = sprintf($this->getClause(self::UNIQUE_KEY), $this->quote($index), $this->quoteList($unique['columns']));
 
 			if ($unique['constraint']) {
 				$key = sprintf($constraint, $this->quote($unique['constraint'])) . ' ' . $key;
@@ -769,7 +777,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 		foreach ($schema->getForeignKeys() as $column => $foreign) {
 			$ref = explode('.', $foreign['references']);
-			$key = sprintf($this->getClause('foreignKey'), $this->quote($column), $this->quote($ref[0]), $this->quote($ref[1]));
+			$key = sprintf($this->getClause(self::FOREIGN_KEY), $this->quote($column), $this->quote($ref[0]), $this->quote($ref[1]));
 
 			if ($foreign['constraint']) {
 				$key = sprintf($constraint, $this->quote($foreign['constraint'])) . ' ' . $key;
@@ -777,7 +785,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 			foreach (['onDelete', 'onUpdate'] as $action) {
 				if ($foreign[$action]) {
-					$key .= ' ' . sprintf($this->getClause($action), $this->getClause($foreign[$action]));
+					$key .= ' ' . sprintf($this->getClause($action), $this->getKeyword($foreign[$action]));
 				}
 			}
 
@@ -785,7 +793,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		foreach ($schema->getIndexes() as $index => $columns) {
-			$keys[] = sprintf($this->getClause('indexKey'), $this->quote($index), $this->quoteList($columns));
+			$keys[] = sprintf($this->getClause(self::INDEX), $this->quote($index), $this->quoteList($columns));
 		}
 
 		if ($keys) {
@@ -809,7 +817,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$value = $this->getDriver()->getConnection()->quote($value);
 			}
 
-			$output[] = $this->getClause($key) . '=' . $value;
+			$output[] = $this->getKeyword($key) . '=' . $value;
 		}
 
 		return implode(' ', $output);
@@ -826,7 +834,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		switch ($type) {
 			case Query::INSERT:
 			case Query::MULTI_INSERT:
-				return sprintf($this->getClause('valueGroup'), implode(', ', array_fill(0, count($fields), '?')));
+				return sprintf($this->getClause(self::GROUP), implode(', ', array_fill(0, count($fields), '?')));
 			break;
 		}
 
@@ -841,7 +849,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatWhere(Predicate $where) {
 		if ($where->getParams()) {
-			return sprintf($this->getClause('where'), $this->formatPredicate($where));
+			return sprintf($this->getClause(self::WHERE), $this->formatPredicate($where));
 		}
 
 		return '';
@@ -870,7 +878,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			return $this->_clauses[$key];
 		}
 
-		throw new MissingClauseException(sprintf('Invalid clause %s', $key));
+		throw new MissingClauseException(sprintf('Missing clause %s', $key));
 	}
 
 	/**
@@ -878,6 +886,26 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function getClauses() {
 		return $this->_clauses;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 *
+	 * @throws \Titon\Model\Exception\MissingKeywordException
+	 */
+	public function getKeyword($key) {
+		if (isset($this->_keywords[$key])) {
+			return $this->_keywords[$key];
+		}
+
+		throw new MissingKeywordException(sprintf('Missing keyword %s', $key));
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getKeywords() {
+		return $this->_keywords;
 	}
 
 	/**
@@ -930,10 +958,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 			if ($clause) {
 				if (is_string($clause)) {
-					$value = $this->getClause($clause);
+					$value = $this->getKeyword($clause);
 
 				} else if ($clause === true) {
-					$value = $this->getClause($key);
+					$value = $this->getKeyword($key);
 				}
 			}
 

@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Query;
 
+use Titon\Model\Driver\Dialect;
 use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Query;
 
@@ -18,11 +19,11 @@ use Titon\Model\Query;
  */
 class SubQuery extends Query {
 
-	const ALL = 'all';
-	const ANY = 'any';
-	const SOME = 'some';
-	const EXISTS = 'exists';
-	const NOT_EXISTS = 'notExists';
+	const ALL = Dialect::ALL;
+	const ANY = Dialect::ANY;
+	const SOME = Dialect::SOME;
+	const EXISTS = Dialect::EXISTS;
+	const NOT_EXISTS = Dialect::NOT_EXISTS;
 
 	/**
 	 * Column alias name.

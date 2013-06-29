@@ -8,6 +8,7 @@
 namespace Titon\Model;
 
 use Titon\Common\Registry;
+use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Exception\ExistingPredicateException;
 use Titon\Model\Exception\InvalidArgumentException;
@@ -35,8 +36,8 @@ class Query implements Serializable, JsonSerializable {
 	use ExprAware, FuncAware;
 
 	// Order directions
-	const ASC = 'asc';
-	const DESC = 'desc';
+	const ASC = Dialect::ASC;
+	const DESC = Dialect::DESC;
 
 	// Types
 	const INSERT = 'insert';

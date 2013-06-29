@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Query;
 
+use Titon\Model\Driver\Dialect;
 use Titon\Model\Traits\ExprAware;
 
 /**
@@ -17,17 +18,17 @@ use Titon\Model\Traits\ExprAware;
 class Expr {
 	use ExprAware;
 
-	const NULL = 'isNull';
-	const NOT_NULL = 'isNotNull';
-	const IN = 'in';
-	const NOT_IN = 'notIn';
-	const BETWEEN = 'between';
-	const NOT_BETWEEN = 'notBetween';
-	const LIKE = 'like';
-	const NOT_LIKE = 'notLike';
-	const REGEXP = 'regexp';
-	const NOT_REGEXP = 'notRegexp';
-	const RLIKE = 'rlike';
+	const NULL = Dialect::IS_NULL;
+	const NOT_NULL = Dialect::IS_NOT_NULL;
+	const IN = Dialect::IN;
+	const NOT_IN = Dialect::NOT_IN;
+	const BETWEEN = Dialect::BETWEEN;
+	const NOT_BETWEEN = Dialect::NOT_BETWEEN;
+	const LIKE = Dialect::LIKE;
+	const NOT_LIKE = Dialect::NOT_LIKE;
+	const REGEXP = Dialect::REGEXP;
+	const NOT_REGEXP = Dialect::NOT_REGEXP;
+	const RLIKE = Dialect::RLIKE;
 
 	/**
 	 * Field name.

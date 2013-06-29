@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver;
 
+use Titon\Model\Driver\Dialect\AbstractDialect;
 use Titon\Model\Query\Expr;
 use Titon\Model\Query\Func;
 use Titon\Model\Query\Predicate;
@@ -626,7 +627,7 @@ class DialectTest extends TestCase {
 		$schema->addForeign('fk2', [
 			'references' => 'posts.id',
 			'onUpdate' => Schema::SET_NULL,
-			'onDelete' => Schema::NONE
+			'onDelete' => Schema::NO_ACTION
 		]);
 
 		$expected .= ",\nFOREIGN KEY (`fk2`) REFERENCES `posts`(`id`) ON DELETE NO ACTION ON UPDATE SET NULL";
@@ -688,7 +689,7 @@ class DialectTest extends TestCase {
 	 * Test single clause fetching.
 	 */
 	public function testGetClause() {
-		$this->assertEquals('AND', $this->object->getClause('and'));
+		$this->assertEquals('%s AS %s', $this->object->getClause(AbstractDialect::AS_ALIAS));
 
 		try {
 			$this->object->getClause('foobar');

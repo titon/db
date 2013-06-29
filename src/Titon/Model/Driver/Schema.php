@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver;
 
+use Titon\Model\Driver\Dialect;
 use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Exception\MissingColumnException;
 
@@ -17,10 +18,10 @@ use Titon\Model\Exception\MissingColumnException;
  */
 class Schema {
 
-	const CASCADE = 'cascade';
-	const RESTRICT = 'restrict';
-	const SET_NULL = 'setNull';
-	const NONE = 'noAction';
+	const CASCADE = Dialect::CASCADE;
+	const RESTRICT = Dialect::RESTRICT;
+	const SET_NULL = Dialect::SET_NULL;
+	const NO_ACTION = Dialect::NO_ACTION;
 
 	/**
 	 * Table columns.
