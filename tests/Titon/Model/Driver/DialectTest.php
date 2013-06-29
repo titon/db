@@ -81,7 +81,7 @@ class DialectTest extends TestCase {
 
 		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n);", $this->object->buildCreateTable($query));
 
-		$query->attribute('engine', 'InnoDB');
+		$schema->addOption('engine', 'InnoDB');
 
 		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n) ENGINE=InnoDB;", $this->object->buildCreateTable($query));
 
@@ -603,13 +603,13 @@ class DialectTest extends TestCase {
 	 */
 	public function testFormatTableKeys() {
 		$schema = new Schema('foobar');
-		$schema->addConstraint(Schema::CONSTRAINT_UNIQUE, 'primary');
+		$schema->addUnique('primary');
 
 		$expected = ",\nUNIQUE KEY `primary` (`primary`)";
 
 		$this->assertEquals($expected, $this->object->formatTableKeys($schema));
 
-		$schema->addConstraint(Schema::CONSTRAINT_UNIQUE, 'unique', [
+		$schema->addUnique('unique', [
 			'constraint' => 'uniqueSymbol'
 		]);
 
@@ -617,16 +617,16 @@ class DialectTest extends TestCase {
 
 		$this->assertEquals($expected, $this->object->formatTableKeys($schema));
 
-		$schema->addConstraint(Schema::CONSTRAINT_FOREIGN, 'fk1', 'users.id');
+		$schema->addForeign('fk1', 'users.id');
 
 		$expected .= ",\nFOREIGN KEY (`fk1`) REFERENCES `users`(`id`)";
 
 		$this->assertEquals($expected, $this->object->formatTableKeys($schema));
 
-		$schema->addConstraint(Schema::CONSTRAINT_FOREIGN, 'fk2', [
+		$schema->addForeign('fk2', [
 			'references' => 'posts.id',
-			'onUpdate' => Schema::ACTION_SET_NULL,
-			'onDelete' => Schema::ACTION_NONE
+			'onUpdate' => Schema::SET_NULL,
+			'onDelete' => Schema::NONE
 		]);
 
 		$expected .= ",\nFOREIGN KEY (`fk2`) REFERENCES `posts`(`id`) ON DELETE NO ACTION ON UPDATE SET NULL";
@@ -648,7 +648,7 @@ class DialectTest extends TestCase {
 		$options = [];
 		$this->assertEquals('', $this->object->formatTableOptions($options));
 
-		$options['comment'] = 'Another comment';
+		$options['defaultComment'] = 'Another comment';
 		$this->assertEquals("DEFAULT COMMENT='Another comment'", $this->object->formatTableOptions($options));
 
 		$options['characterSet'] = 'utf8';

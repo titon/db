@@ -184,18 +184,20 @@ class Model extends Base {
 	 * Create a database table based off the models schema.
 	 * The schema must be an array of column data.
 	 *
-	 * @param array $attributes
+	 * @param array $options
+	 * @param bool $temporary
 	 * @return bool
 	 */
-	public function createTable(array $attributes = []) {
-		$attributes = $attributes + [
+	public function createTable(array $options = [], $temporary = false) {
+		$schema = $this->getSchema();
+		$schema->addOptions($options + [
 			'engine' => 'InnoDB',
 			'characterSet' => $this->getDriver()->getEncoding()
-		];
+		]);
 
 		return (bool) $this->query(Query::CREATE_TABLE)
-			->schema($this->getSchema())
-			->attribute($attributes)
+			->attribute('temporary', $temporary)
+			->schema($schema)
 			->save();
 	}
 

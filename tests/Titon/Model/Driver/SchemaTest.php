@@ -144,7 +144,7 @@ class SchemaTest extends TestCase {
 	public function testPrimaryKey() {
 		$this->assertEquals([], $this->object->getPrimaryKey());
 
-		$this->object->addConstraint(Schema::CONSTRAINT_PRIMARY, 'column1');
+		$this->object->addPrimary('column1');
 
 		$this->assertEquals([
 			'constraint' => '',
@@ -152,7 +152,7 @@ class SchemaTest extends TestCase {
 		], $this->object->getPrimaryKey());
 
 		// Adds another column
-		$this->object->addConstraint(Schema::CONSTRAINT_PRIMARY, 'column2', 'ignoredSymbol');
+		$this->object->addPrimary('column2', 'ignoredSymbol');
 
 		$this->assertEquals([
 			'constraint' => '',
@@ -166,7 +166,7 @@ class SchemaTest extends TestCase {
 	public function testPrimaryKeyConstraint() {
 		$this->assertEquals([], $this->object->getPrimaryKey());
 
-		$this->object->addConstraint(Schema::CONSTRAINT_PRIMARY, 'column1', 'symbolName');
+		$this->object->addPrimary('column1', 'symbolName');
 
 		$this->assertEquals([
 			'constraint' => 'symbolName',
@@ -181,7 +181,7 @@ class SchemaTest extends TestCase {
 		$this->assertEquals([], $this->object->getUniqueKeys());
 
 		// Use column name as index if its empty
-		$this->object->addConstraint(Schema::CONSTRAINT_UNIQUE, 'column1');
+		$this->object->addUnique('column1');
 
 		$this->assertEquals([
 			'column1' => [
@@ -191,7 +191,7 @@ class SchemaTest extends TestCase {
 		], $this->object->getUniqueKeys());
 
 		// Add another column with a different index
-		$this->object->addConstraint(Schema::CONSTRAINT_UNIQUE, 'column2', 'indexName');
+		$this->object->addUnique('column2', 'indexName');
 
 		$this->assertEquals([
 			'column1' => [
@@ -205,7 +205,7 @@ class SchemaTest extends TestCase {
 		], $this->object->getUniqueKeys());
 
 		// Add another column to a current index
-		$this->object->addConstraint(Schema::CONSTRAINT_UNIQUE, 'column3', 'indexName');
+		$this->object->addUnique('column3', 'indexName');
 
 		$this->assertEquals([
 			'column1' => [
@@ -226,7 +226,7 @@ class SchemaTest extends TestCase {
 		$this->assertEquals([], $this->object->getUniqueKeys());
 
 		// Use a constraint symbol
-		$this->object->addConstraint(Schema::CONSTRAINT_UNIQUE, 'column1', ['constraint' => 'symbolName']);
+		$this->object->addUnique('column1', ['constraint' => 'symbolName']);
 
 		$this->assertEquals([
 			'column1' => [
@@ -236,7 +236,7 @@ class SchemaTest extends TestCase {
 		], $this->object->getUniqueKeys());
 
 		// Use a constraint symbol and custom index
-		$this->object->addConstraint(Schema::CONSTRAINT_UNIQUE, 'column2', ['constraint' => 'otherSymbol', 'index' => 'indexName']);
+		$this->object->addUnique('column2', ['constraint' => 'otherSymbol', 'index' => 'indexName']);
 
 		$this->assertEquals([
 			'column1' => [
@@ -257,7 +257,7 @@ class SchemaTest extends TestCase {
 		$this->assertEquals([], $this->object->getForeignKeys());
 
 		// Add reference to table.id
-		$this->object->addConstraint(Schema::CONSTRAINT_FOREIGN, 'column1', 'table.id');
+		$this->object->addForeign('column1', 'table.id');
 
 		$this->assertEquals([
 			'column1' => [
@@ -269,10 +269,10 @@ class SchemaTest extends TestCase {
 		], $this->object->getForeignKeys());
 
 		// Add update/delete actions
-		$this->object->addConstraint(Schema::CONSTRAINT_FOREIGN, 'column2', [
+		$this->object->addForeign('column2', [
 			'references' => 'table.id',
-			'onUpdate' => Schema::ACTION_RESTRICT,
-			'onDelete' => Schema::ACTION_SET_NULL
+			'onUpdate' => Schema::RESTRICT,
+			'onDelete' => Schema::SET_NULL
 		]);
 
 		$this->assertEquals([
@@ -285,8 +285,8 @@ class SchemaTest extends TestCase {
 			'column2' => [
 				'references' => 'table.id',
 				'constraint' => '',
-				'onUpdate' => Schema::ACTION_RESTRICT,
-				'onDelete' => Schema::ACTION_SET_NULL
+				'onUpdate' => Schema::RESTRICT,
+				'onDelete' => Schema::SET_NULL
 			]
 		], $this->object->getForeignKeys());
 	}
@@ -298,7 +298,7 @@ class SchemaTest extends TestCase {
 		$this->assertEquals([], $this->object->getForeignKeys());
 
 		// Add reference to table.id
-		$this->object->addConstraint(Schema::CONSTRAINT_FOREIGN, 'column1', [
+		$this->object->addForeign('column1', [
 			'references' => 'table.id',
 			'constraint' => 'symbolName'
 		]);
@@ -311,6 +311,29 @@ class SchemaTest extends TestCase {
 				'onDelete' => false
 			]
 		], $this->object->getForeignKeys());
+	}
+
+	/**
+	 * Test option setting and getting.
+	 */
+	public function testOptions() {
+		$this->assertEquals([], $this->object->getOptions());
+
+		$this->object->addOption('engine', 'MyIsam');
+
+		$this->assertEquals([
+			'engine' => 'MyIsam'
+		], $this->object->getOptions());
+
+		$this->object->addOptions([
+			'engine' => 'InnoDB',
+			'comment' => 'Foobar'
+		]);
+
+		$this->assertEquals([
+			'engine' => 'InnoDB',
+			'comment' => 'Foobar'
+		], $this->object->getOptions());
 	}
 
 }

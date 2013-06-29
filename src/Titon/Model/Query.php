@@ -198,9 +198,7 @@ class Query implements Serializable, JsonSerializable {
 	 */
 	public function attribute($key, $value = null) {
 		if (is_array($key)) {
-			foreach ($key as $k => $v) {
-				$this->attribute($k, $v);
-			}
+			$this->_attributes = array_replace($this->_attributes, $key);
 		} else {
 			$this->_attributes[$key] = $value;
 		}

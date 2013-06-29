@@ -214,20 +214,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 			throw new InvalidSchemaException('Table creation requires a valid schema object');
 		}
 
-		$attributes = $query->getAttributes();
-		$actual = [];
-
-		if (isset($attributes['temporary'])) {
-			$actual['temporary'] = $attributes['temporary'];
-			unset($attributes['temporary']);
-		}
-
-		$params = $this->renderAttributes($actual + $this->getAttributes(Query::CREATE_TABLE));
+		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::CREATE_TABLE));
 		$params = $params + [
 			'table' => $this->formatTable($schema->getTable()),
 			'columns' => $this->formatColumns($schema),
 			'keys' => $this->formatTableKeys($schema),
-			'options' => $this->formatTableOptions($attributes)
+			'options' => $this->formatTableOptions($schema->getOptions())
 		];
 
 		return $this->renderStatement($this->getStatement(Query::CREATE_TABLE), $params);
@@ -806,13 +798,13 @@ abstract class AbstractDialect extends Base implements Dialect {
 	/**
 	 * Format the table options for a create table statement.
 	 *
-	 * @param array $attributes
+	 * @param array $options
 	 * @return string
 	 */
-	public function formatTableOptions(array $attributes) {
+	public function formatTableOptions(array $options) {
 		$output = [];
 
-		foreach ($attributes as $key => $value) {
+		foreach ($options as $key => $value) {
 			if (in_array($key, ['comment', 'defaultComment', 'connection', 'dataDirectory', 'indexDirectory', 'password'])) {
 				$value = $this->getDriver()->getConnection()->quote($value);
 			}

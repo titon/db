@@ -17,17 +17,10 @@ use Titon\Model\Exception\MissingColumnException;
  */
 class Schema {
 
-	const INDEX = 'index';
-	const INDEX_FULLTEXT = 'fulltext';
-
-	const CONSTRAINT_PRIMARY = 'primary';
-	const CONSTRAINT_UNIQUE = 'unique';
-	const CONSTRAINT_FOREIGN = 'foreign';
-
-	const ACTION_CASCADE = 'cascade';
-	const ACTION_RESTRICT = 'restrict';
-	const ACTION_SET_NULL = 'setNull';
-	const ACTION_NONE = 'noAction';
+	const CASCADE = 'cascade';
+	const RESTRICT = 'restrict';
+	const SET_NULL = 'setNull';
+	const NONE = 'noAction';
 
 	/**
 	 * Table columns.
@@ -49,6 +42,13 @@ class Schema {
 	 * @type array
 	 */
 	protected $_indexes = [];
+
+	/**
+	 * List of table options.
+	 *
+	 * @type array
+	 */
+	protected $_options = [];
 
 	/**
 	 * Primary key mapping.
@@ -92,6 +92,8 @@ class Schema {
 	 * 		@type int $length		The column data length
 	 * 		@type mixed $default	The default value
 	 * 		@type string $comment	The comment
+	 * 		@type string $charset	The character set for encoding
+	 * 		@type string $collation	The collation set
 	 * 		@type bool $null		Does the column allow nulls
 	 * 		@type bool $ai			Is this an auto incrementing column
 	 * 		@type mixed $index		Is this an index
@@ -112,6 +114,8 @@ class Schema {
 			'length' => '',
 			'default' => '',
 			'comment' => '',
+			'charset' => '',
+			'collation' => '',
 			'null' => false,
 			'ai' => false,
 			'index' => false,		// KEY index (field[, field])
@@ -128,13 +132,13 @@ class Schema {
 			$this->addIndex($column, $options['index']);
 
 		} else if ($options['primary']) {
-			$this->addConstraint(self::CONSTRAINT_PRIMARY, $column, $options['primary']);
+			$this->addPrimary($column, $options['primary']);
 
 		} else if ($options['unique']) {
-			$this->addConstraint(self::CONSTRAINT_UNIQUE, $column, $options['unique']);
+			$this->addUnique($column, $options['unique']);
 
 		} else if ($options['foreign']) {
-			$this->addConstraint(self::CONSTRAINT_FOREIGN, $column, $options['foreign']);
+			$this->addForeign($column, $options['foreign']);
 		}
 
 		return $this;
@@ -155,106 +159,32 @@ class Schema {
 	}
 
 	/**
-	 * Add a constraint for a column. The constraint is either a primary key, unique key or foreign key.
-	 * Each type of constraint requires different options, they are:
+	 * Add a foreign key for a column.
+	 * Multiple foreign keys can exist so group by column.
 	 *
-	 * Primary, Unique {
-	 * 		@type string $constraint	(Optional) Provide a name to reference the constraint by
-	 * }
-	 *
-	 * Unique {
-	 * 		@type string $index			Custom name for the index key, defaults to the column name
-	 * }
-	 *
-	 * Foreign {
+	 * @param string $column
+	 * @param string|array $options {
 	 * 		@type string $references	A table and field that the foreign key references, should be in a "user.id" format
 	 * 		@type string $onUpdate		Action to use for ON UPDATE clauses
 	 * 		@type string $onDelete		Action to use for ON DELETE clauses
 	 * }
-	 *
-	 * @param string $type
-	 * @param string $column
-	 * @param string|array $key
 	 * @return \Titon\Model\Driver\Schema
 	 * @throws \Titon\Model\Exception\InvalidArgumentException
 	 */
-	public function addConstraint($type, $column, $key = null) {
-		$symbol = '';
-		$index = $column;
-
-		// These values are optional
-		// So only grab them if the data is an array
-		if (is_array($key)) {
-			if (isset($key['constraint'])) {
-				$symbol = $key['constraint'];
-			}
-
-			if (isset($key['index'])) {
-				$index = $key['index'];
-			}
+	public function addForeign($column, $options = []) {
+		if (is_string($options)) {
+			$options = ['references' => $options];
 		}
 
-		switch ($type) {
-
-			// Only one primary key can exist
-			// However, multiple columns can exist in a primary key
-			case self::CONSTRAINT_PRIMARY:
-				if (is_string($key)) {
-					$symbol = $key;
-				}
-
-				if (empty($this->_primaryKey)) {
-					$this->_primaryKey = [
-						'constraint' => $symbol,
-						'columns' => [$column]
-					];
-				} else {
-					$this->_primaryKey['columns'][] = $column;
-				}
-			break;
-
-			// Multiple unique keys can exist
-			// Group by index
-			case self::CONSTRAINT_UNIQUE:
-				if (is_string($key)) {
-					$index = $key;
-				}
-
-				if (empty($this->_uniqueKeys[$index])) {
-					$this->_uniqueKeys[$index] = [
-						'constraint' => $symbol,
-						'columns' => [$column]
-					];
-				} else {
-					$this->_uniqueKeys[$index]['columns'][] = $column;
-				}
-			break;
-
-			// Multiple foreign keys can exist
-			// Group by column
-			case self::CONSTRAINT_FOREIGN:
-				if (is_string($key)) {
-					$key = ['references' => $key];
-				}
-
-				if (empty($key['references'])) {
-					throw new InvalidArgumentException(sprintf('Foreign key for %s must reference an external table', $column));
-				}
-
-				$this->_foreignKeys[$column] = $key + [
-					'constraint' => $symbol,
-					'onUpdate' => false,
-					'onDelete' => false
-				];
-			break;
-
-			// Invalid constraint
-			default:
-				throw new InvalidArgumentException(sprintf('Invalid constraint type for %s', $column));
-			break;
+		if (empty($options['references'])) {
+			throw new InvalidArgumentException(sprintf('Foreign key for %s must reference an external table', $column));
 		}
 
-		return $this;
+		$this->_foreignKeys[$column] = $options + [
+			'constraint' => '',
+			'onUpdate' => false,
+			'onDelete' => false
+		];
 	}
 
 	/**
@@ -272,6 +202,91 @@ class Schema {
 		$this->_indexes[$group][] = $column;
 
 		return $this;
+	}
+
+	/**
+	 * Add a table option.
+	 *
+	 * @param string $key
+	 * @param mixed $value
+	 * @return \Titon\Model\Driver\Schema
+	 */
+	public function addOption($key, $value) {
+		$this->_options[$key] = $value;
+
+		return $this;
+	}
+
+	/**
+	 * Add multiple table options.
+	 *
+	 * @param array $options
+	 * @return \Titon\Model\Driver\Schema
+	 */
+	public function addOptions(array $options) {
+		$this->_options = array_replace($this->_options, $options);
+
+		return $this;
+	}
+
+	/**
+	 * Add a primary key for a column. Only one primary key can exist.
+	 * However, multiple columns can exist in a primary key.
+	 *
+	 * @param string $column
+	 * @param string|bool $options Provide a name to reference the constraint by
+	 * @return \Titon\Model\Driver\Schema
+	 */
+	public function addPrimary($column, $options = false) {
+		$symbol = is_string($options) ? $options : '';
+
+		if (empty($this->_primaryKey)) {
+			$this->_primaryKey = [
+				'constraint' => $symbol,
+				'columns' => [$column]
+			];
+		} else {
+			$this->_primaryKey['columns'][] = $column;
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Add a unique key for a column.
+	 * Multiple unique keys can exist, so group by index.
+	 *
+	 * @param string $column
+	 * @param string|array $options {
+	 * 		@type string $constraint	Provide a name to reference the constraint by
+	 * 		@type string $index			Custom name for the index key, defaults to the column name
+	 * }
+	 * @return \Titon\Model\Driver\Schema
+	 */
+	public function addUnique($column, $options = []) {
+		$symbol = '';
+		$index = $column;
+
+		if (is_array($options)) {
+			if (isset($options['constraint'])) {
+				$symbol = $options['constraint'];
+			}
+
+			if (isset($options['index'])) {
+				$index = $options['index'];
+			}
+		} else if (is_string($options)) {
+			$index = $options;
+		}
+
+		if (empty($this->_uniqueKeys[$index])) {
+			$this->_uniqueKeys[$index] = [
+				'constraint' => $symbol,
+				'columns' => [$column]
+			];
+		} else {
+			$this->_uniqueKeys[$index]['columns'][] = $column;
+		}
 	}
 
 	/**
@@ -314,6 +329,15 @@ class Schema {
 	 */
 	public function getIndexes() {
 		return $this->_indexes;
+	}
+
+	/**
+	 * Return the table options.
+	 *
+	 * @return array
+	 */
+	public function getOptions() {
+		return $this->_options;
 	}
 
 	/**
