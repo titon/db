@@ -248,7 +248,6 @@ class Query implements Serializable, JsonSerializable {
 	 */
 	public function count() {
 		$this
-			->attribute('count', true)
 			->fields($this->func('COUNT', [$this->getModel()->getPrimaryKey() => Func::FIELD]))
 			->limit(0);
 

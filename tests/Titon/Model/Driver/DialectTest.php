@@ -175,29 +175,44 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::SELECT, new User());
 
 		$query->from('foobar');
-		$this->assertEquals('SELECT * FROM `foobar`;', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `foobar`;/', $this->object->buildSelect($query));
 
 		$query->where('status', 1)->where(function() {
 			$this->gte('rank', 15);
 		});
-		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?;/', $this->object->buildSelect($query));
 
 		$query->orderBy('id', 'desc');
-		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+ORDER BY `id` DESC;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+ORDER BY `id` DESC;/', $this->object->buildSelect($query));
 
 		$query->groupBy('rank', 'created');
-		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+ORDER BY `id` DESC;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+ORDER BY `id` DESC;/', $this->object->buildSelect($query));
 
 		$query->limit(50, 10);
-		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 
 		$query->having(function() {
 			$this->gte('id', 100);
 		});
-		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 
 		$query->fields('id', 'username', 'rank');
-		$this->assertRegExp('/SELECT `id`, `username`, `rank` FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+`id`, `username`, `rank` FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
+
+		// Attributes
+		$query = new Query(Query::SELECT, new User());
+		$query->from('foobar')->attribute('distinct', true);
+
+		$this->assertRegExp('/SELECT\s+DISTINCT\s+\* FROM `foobar`;/', $this->object->buildSelect($query));
+
+		$query->attribute('distinct', 'all');
+		$this->assertRegExp('/SELECT\s+ALL\s+\* FROM `foobar`;/', $this->object->buildSelect($query));
+
+		$query->attribute('optimize', 'sqlBufferResult');
+		$this->assertRegExp('/SELECT\s+ALL\s+SQL_BUFFER_RESULT\s+\* FROM `foobar`;/', $this->object->buildSelect($query));
+
+		$query->attribute('cache', 'sqlCache');
+		$this->assertRegExp('/SELECT\s+ALL\s+SQL_BUFFER_RESULT\s+SQL_CACHE\s+\* FROM `foobar`;/', $this->object->buildSelect($query));
 	}
 
 	/**
@@ -261,13 +276,13 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->fields($query->subQuery('id')->from('profiles'));
 
-		$this->assertRegExp('/SELECT \(SELECT `id` FROM `profiles`\) FROM `users`;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\(SELECT\s+`id` FROM `profiles`\) FROM `users`;/', $this->object->buildSelect($query));
 
 		// In fields with alias
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->fields($query->subQuery('id')->from('profiles')->asAlias('column'));
 
-		$this->assertRegExp('/SELECT \(SELECT `id` FROM `profiles`\) AS `column` FROM `users`;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\(SELECT\s+`id` FROM `profiles`\) AS `column` FROM `users`;/', $this->object->buildSelect($query));
 
 		// In function in fields
 		$query = new Query(Query::SELECT, new User());
@@ -275,31 +290,31 @@ class DialectTest extends TestCase {
 			$query->func('UPPER', [$query->subQuery('id')->from('profiles')])
 		);
 
-		$this->assertRegExp('/SELECT UPPER\(\(SELECT `id` FROM `profiles`\)\) FROM `users`;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+UPPER\(\(SELECT\s+`id` FROM `profiles`\)\) FROM `users`;/', $this->object->buildSelect($query));
 
 		// In where clause w/ function
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->where('column1', $query->subQuery($query->func('MAX', ['column2' => 'field']))->from('profiles'));
 
-		$this->assertRegExp('/SELECT \* FROM `users`\s+WHERE `column1` = \(SELECT MAX\(`column2`\) FROM `profiles`\);/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `users`\s+WHERE `column1` = \(SELECT\s+MAX\(`column2`\) FROM `profiles`\);/', $this->object->buildSelect($query));
 
 		// In where clause w/ SOME filter
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->where('column1', $query->subQuery('column2')->from('profiles')->withFilter('some'));
 
-		$this->assertRegExp('/SELECT \* FROM `users`\s+WHERE `column1` = SOME \(SELECT `column2` FROM `profiles`\);/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `users`\s+WHERE `column1` = SOME \(SELECT\s+`column2` FROM `profiles`\);/', $this->object->buildSelect($query));
 
 		// In where clause using IN operator
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->where('column1', 'in', $query->subQuery('column2')->from('profiles'));
 
-		$this->assertRegExp('/SELECT \* FROM `users`\s+WHERE `column1` IN \(SELECT `column2` FROM `profiles`\);/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `users`\s+WHERE `column1` IN \(SELECT\s+`column2` FROM `profiles`\);/', $this->object->buildSelect($query));
 
 		// In where clause using EXISTS operator
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->where('column1', $query->subQuery('column2')->from('profiles')->withFilter('exists'));
 
-		$this->assertRegExp('/SELECT \* FROM `users`\s+WHERE EXISTS \(SELECT `column2` FROM `profiles`\);/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM `users`\s+WHERE EXISTS \(SELECT\s+`column2` FROM `profiles`\);/', $this->object->buildSelect($query));
 	}
 
 	/**

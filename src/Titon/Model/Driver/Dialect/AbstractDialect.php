@@ -51,64 +51,71 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @type array
 	 */
 	protected $_clauses = [
-		'autoIncrement'	=> 'AUTO_INCREMENT',
-		'all'			=> 'ALL',
-		'and'			=> 'AND',
-		'any'			=> 'ANY',
-		'as'			=> '%s AS %s',
-		'asc'			=> 'ASC',
-		'between'		=> '%s BETWEEN ? AND ?',
-		'cascade'		=> 'CASCADE',
-		'characterSet'	=> 'CHARACTER SET',
-		'comment'		=> 'COMMENT %s',
-		'constraint'	=> 'CONSTRAINT %s',
-		'defaultComment'=> 'DEFAULT COMMENT',
-		'defaultValue'	=> 'DEFAULT %s',
-		'delayed'		=> 'DELAYED',
-		'desc'			=> 'DESC',
-		'engine'		=> 'ENGINE',
-		'exists'		=> 'EXISTS',
-		'expression'	=> '%s %s ?',
-		'foreignKey'	=> 'FOREIGN KEY (%s) REFERENCES %s(%s)',
-		'function'		=> '%s(%s)',
-		'groupBy'		=> 'GROUP BY %s',
-		'having'		=> 'HAVING %s',
-		'highPriority'	=> 'HIGH_PRIORITY',
-		'ignore'		=> 'IGNORE',
-		'in'			=> '%s IN (%s)',
-		'indexKey'		=> 'KEY %s (%s)',
-		'isNull'		=> '%s IS NULL',
-		'isNotNull'		=> '%s IS NOT NULL',
-		'like'			=> '%s LIKE ?',
-		'limit'			=> 'LIMIT %s',
-		'limitOffset'	=> 'LIMIT %s OFFSET %s',
-		'lowPriority'	=> 'LOW_PRIORITY',
-		'noAction'		=> 'NO ACTION',
-		'not'			=> '%s NOT ?',
-		'notBetween'	=> '%s NOT BETWEEN ? AND ?',
-		'notExists'		=> 'NOT EXISTS',
-		'notIn'			=> '%s NOT IN (%s)',
-		'notLike'		=> '%s NOT LIKE ?',
-		'notNull'		=> 'NOT NULL',
-		'notRegexp'		=> '%s NOT REGEXP ?',
-		'null'			=> 'NULL',
-		'onDelete'		=> 'ON DELETE %s',
-		'onUpdate'		=> 'ON UPDATE %s',
-		'or'			=> 'OR',
-		'orderBy'		=> 'ORDER BY %s',
-		'primaryKey'	=> 'PRIMARY KEY (%s)',
-		'regexp'		=> '%s REGEXP ?',
-		'restrict'		=> 'RESTRICT',
-		'rlike'			=> '%s REGEXP ?',
-		'setNull'		=> 'SET NULL',
-		'some'			=> 'SOME',
-		'subQuery'		=> '(%s)',
-		'where'			=> 'WHERE %s',
-		'xor'			=> 'XOR',
-		'uniqueKey'		=> 'UNIQUE KEY %s (%s)',
-		'unsigned'		=> 'UNSIGNED',
-		'valueGroup'	=> '(%s)',
-		'zerofill'		=> 'ZEROFILL'
+		'autoIncrement'		=> 'AUTO_INCREMENT',
+		'all'				=> 'ALL',
+		'and'				=> 'AND',
+		'any'				=> 'ANY',
+		'as'				=> '%s AS %s',
+		'asc'				=> 'ASC',
+		'between'			=> '%s BETWEEN ? AND ?',
+		'cascade'			=> 'CASCADE',
+		'characterSet'		=> 'CHARACTER SET',
+		'comment'			=> 'COMMENT %s',
+		'constraint'		=> 'CONSTRAINT %s',
+		'defaultComment'	=> 'DEFAULT COMMENT',
+		'defaultValue'		=> 'DEFAULT %s',
+		'delayed'			=> 'DELAYED',
+		'desc'				=> 'DESC',
+		'distinct'			=> 'DISTINCT',
+		'distinctRow'		=> 'DISTINCTROW',
+		'engine'			=> 'ENGINE',
+		'exists'			=> 'EXISTS',
+		'expression'		=> '%s %s ?',
+		'foreignKey'		=> 'FOREIGN KEY (%s) REFERENCES %s(%s)',
+		'function'			=> '%s(%s)',
+		'groupBy'			=> 'GROUP BY %s',
+		'having'			=> 'HAVING %s',
+		'highPriority'		=> 'HIGH_PRIORITY',
+		'ignore'			=> 'IGNORE',
+		'in'				=> '%s IN (%s)',
+		'indexKey'			=> 'KEY %s (%s)',
+		'isNull'			=> '%s IS NULL',
+		'isNotNull'			=> '%s IS NOT NULL',
+		'like'				=> '%s LIKE ?',
+		'limit'				=> 'LIMIT %s',
+		'limitOffset'		=> 'LIMIT %s OFFSET %s',
+		'lowPriority'		=> 'LOW_PRIORITY',
+		'noAction'			=> 'NO ACTION',
+		'not'				=> '%s NOT ?',
+		'notBetween'		=> '%s NOT BETWEEN ? AND ?',
+		'notExists'			=> 'NOT EXISTS',
+		'notIn'				=> '%s NOT IN (%s)',
+		'notLike'			=> '%s NOT LIKE ?',
+		'notNull'			=> 'NOT NULL',
+		'notRegexp'			=> '%s NOT REGEXP ?',
+		'null'				=> 'NULL',
+		'onDelete'			=> 'ON DELETE %s',
+		'onUpdate'			=> 'ON UPDATE %s',
+		'or'				=> 'OR',
+		'orderBy'			=> 'ORDER BY %s',
+		'primaryKey'		=> 'PRIMARY KEY (%s)',
+		'regexp'			=> '%s REGEXP ?',
+		'restrict'			=> 'RESTRICT',
+		'rlike'				=> '%s REGEXP ?',
+		'setNull'			=> 'SET NULL',
+		'some'				=> 'SOME',
+		'sqlBigResult'		=> 'SQL_BIG_RESULT',
+		'sqlBufferResult'	=> 'SQL_BUFFER_RESULT',
+		'sqlCache'			=> 'SQL_CACHE',
+		'sqlNoCache'		=> 'SQL_NO_CACHE',
+		'sqlSmallResult'	=> 'SQL_SMALL_RESULT',
+		'subQuery'			=> '(%s)',
+		'where'				=> 'WHERE %s',
+		'xor'				=> 'XOR',
+		'uniqueKey'			=> 'UNIQUE KEY %s (%s)',
+		'unsigned'			=> 'UNSIGNED',
+		'valueGroup'		=> '(%s)',
+		'zerofill'			=> 'ZEROFILL'
 	];
 
 	/**
@@ -118,7 +125,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	protected $_statements = [
 		Query::INSERT		=> 'INSERT {a.priority} {a.ignore} INTO {table} {fields} VALUES {values}',
-		Query::SELECT		=> 'SELECT {fields} FROM {table} {where} {groupBy} {having} {orderBy} {limit}',
+		Query::SELECT		=> 'SELECT {a.distinct} {a.priority} {a.optimize} {a.cache} {fields} FROM {table} {where} {groupBy} {having} {orderBy} {limit}',
 		Query::UPDATE		=> 'UPDATE {table} SET {fields} {where} {orderBy} {limit}',
 		Query::DELETE		=> 'DELETE FROM {table} {where} {orderBy} {limit}',
 		Query::TRUNCATE		=> 'TRUNCATE {table}',
@@ -136,6 +143,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 		Query::INSERT => [
 			'priority' => '',
 			'ignore' => false
+		],
+		Query::SELECT => [
+			'distinct' => '',
+			'priority' => '',
+			'optimize' => '',
+			'cache' => ''
 		]
 	];
 
@@ -264,7 +277,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildSelect(Query $query) {
-		return $this->renderStatement($this->getStatement(Query::SELECT), [
+		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::SELECT));
+		$params = $params + [
 			'table' => $this->formatTable($query->getTable()),
 			'fields' => $this->formatFields($query->getFields(), $query->getType()),
 			'where' => $this->formatWhere($query->getWhere()),
@@ -272,7 +286,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'having' => $this->formatHaving($query->getHaving()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
 			'limit' => $this->formatLimitOffset($query->getLimit(), $query->getOffset()),
-		]);
+		];
+
+		return $this->renderStatement($this->getStatement(Query::SELECT), $params);
 	}
 
 	/**
