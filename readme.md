@@ -6,6 +6,7 @@ Requires the PDO extension for most database connections.
 ### Features ###
 
 * `Model` - Queries drivers, maps relations and returns entities
+* `Behavior` - Executes logic during model callbacks
 * `Relation` - Object relation mapper (ORM)
 * `Entity` - Single record of data
 * `Connection` - Driver manager
@@ -28,9 +29,3 @@ Requires the PDO extension for most database connections.
 
 * PHP 5.4.0
 	* PDO
-
-### To Do ###
-
-* Behaviors
-* Fetch Neighbors/Threaded
-* Pagination
