@@ -93,16 +93,25 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::DELETE, new User());
 
 		$query->from('foobar');
-		$this->assertEquals('DELETE FROM `foobar`;', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM `foobar`;/', $this->object->buildDelete($query));
 
 		$query->limit(5);
-		$this->assertRegExp('/DELETE FROM `foobar`\s+LIMIT 5;/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM `foobar`\s+LIMIT 5;/', $this->object->buildDelete($query));
 
 		$query->where('id', [1, 2, 3]);
-		$this->assertRegExp('/DELETE FROM `foobar`\s+WHERE `id` IN \(\?, \?, \?\)\s+LIMIT 5;/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM `foobar`\s+WHERE `id` IN \(\?, \?, \?\)\s+LIMIT 5;/', $this->object->buildDelete($query));
 
 		$query->orderBy('id', 'asc');
-		$this->assertRegExp('/DELETE FROM `foobar`\s+WHERE `id` IN \(\?, \?, \?\)\s+ORDER BY `id` ASC\s+LIMIT 5;/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM `foobar`\s+WHERE `id` IN \(\?, \?, \?\)\s+ORDER BY `id` ASC\s+LIMIT 5;/', $this->object->buildDelete($query));
+
+		// Attributes
+		$query = new Query(Query::DELETE, new User());
+		$query->from('foobar')->attribute('quick', true);
+
+		$this->assertRegExp('/DELETE\s+QUICK\s+FROM `foobar`;/', $this->object->buildDelete($query));
+
+		$query->attribute('ignore', true);
+		$this->assertRegExp('/DELETE\s+QUICK\s+IGNORE\s+FROM `foobar`;/', $this->object->buildDelete($query));
 	}
 
 	/**
