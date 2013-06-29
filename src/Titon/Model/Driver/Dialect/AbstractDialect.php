@@ -77,7 +77,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'isNotNull'		=> '%s IS NOT NULL',
 		'like'			=> '%s LIKE ?',
 		'limit'			=> 'LIMIT %s',
-		'limitOffset'	=> 'LIMIT %s,%s',
+		'limitOffset'	=> 'LIMIT %s OFFSET %s',
 		'noAction'		=> 'NO ACTION',
 		'not'			=> '%s NOT ?',
 		'notBetween'	=> '%s NOT BETWEEN ? AND ?',
@@ -523,7 +523,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatLimitOffset($limit, $offset = 0) {
 		if ($limit && $offset) {
-			return sprintf($this->getClause('limitOffset'), (int) $offset, (int) $limit);
+			return sprintf($this->getClause('limitOffset'), (int) $limit, (int) $offset);
 		}
 
 		return $this->formatLimit($limit);

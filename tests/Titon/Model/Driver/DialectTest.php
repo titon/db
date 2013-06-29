@@ -181,15 +181,15 @@ class DialectTest extends TestCase {
 		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+ORDER BY `id` DESC;/', $this->object->buildSelect($query));
 
 		$query->limit(50, 10);
-		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+ORDER BY `id` DESC\s+LIMIT 10,50;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 
 		$query->having(function() {
 			$this->gte('id', 100);
 		});
-		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 10,50;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT \* FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 
 		$query->fields('id', 'username', 'rank');
-		$this->assertRegExp('/SELECT `id`, `username`, `rank` FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 10,50;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT `id`, `username`, `rank` FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 	}
 
 	/**
@@ -484,7 +484,7 @@ class DialectTest extends TestCase {
 	public function testFormatLimitOffset() {
 		$this->assertEquals('', $this->object->formatLimitOffset(0));
 		$this->assertEquals('LIMIT 5', $this->object->formatLimitOffset(5));
-		$this->assertEquals('LIMIT 10,5', $this->object->formatLimitOffset(5, 10));
+		$this->assertEquals('LIMIT 5 OFFSET 10', $this->object->formatLimitOffset(5, 10));
 	}
 
 	/**

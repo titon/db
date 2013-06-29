@@ -15,7 +15,8 @@ Requires the PDO extension for most database connections.
 	* `Type` - Data type mapping
 	* `Schema` - Table schema
 * `Query` - Object oriented query builder
-	* `Func` - Database function builder
+	* `Expr` - Expression builder
+	* `Func` - Function builder
 	* `Predicate` - Advanced clause builder
 	* `Result` - Result set mapper
 
