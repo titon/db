@@ -35,6 +35,23 @@ interface Driver {
 	public function commitTransaction();
 
 	/**
+	 * Inspect a database and describe all the tables within it.
+	 *
+	 * @param string $database
+	 * @return array
+	 */
+	public function describeDatabase($database = null);
+
+	/**
+	 * Inspect a table and describe all the columns within it.
+	 * Return an array of values that are usable in a schema.
+	 *
+	 * @param string $table
+	 * @return array
+	 */
+	public function describeTable($table);
+
+	/**
 	 * Disconnect from the driver.
 	 *
 	 * @return bool

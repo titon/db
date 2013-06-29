@@ -10,6 +10,7 @@ namespace Titon\Model\Driver;
 use Titon\Common\Config;
 use Titon\Model\Query;
 use Titon\Test\Stub\DriverStub;
+use Titon\Test\Stub\Model\Stat;
 use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
 use \Exception;
@@ -78,6 +79,171 @@ class PdoDriverTest extends TestCase {
 		$this->assertSame("'666.25'", $this->object->escape(666.25));
 		$this->assertSame("'abc'", $this->object->escape('abc'));
 		$this->assertSame("'1'", $this->object->escape(true));
+	}
+
+	/**
+	 * Test database inspecting.
+	 */
+	public function testDescribeDatabase() {
+		$this->loadFixtures(['Authors', 'Books', 'Genres', 'BookGenres', 'Series']);
+
+		// Check the keys since the values constantly change
+		$this->assertEquals(['authors', 'books', 'books_genres', 'genres', 'series'], array_keys($this->object->describeDatabase()));
+	}
+
+	/**
+	 * Test table inspecting.
+	 */
+	public function testDescribeTable() {
+		$this->loadFixtures(['Users', 'Stats']);
+
+		$user = new User();
+		$this->assertSame([
+			'id' => [
+				'field' => 'id',
+				'type' => 'int',
+				'length' => '11',
+				'null' => false,
+				'primary' => true,
+				'ai' => true
+			],
+			'country_id' => [
+				'field' => 'country_id',
+				'type' => 'int',
+				'length' => '11',
+				'null' => true,
+				'index' => true
+			],
+			'username' => [
+				'field' => 'username',
+				'type' => 'varchar',
+				'length' => '255',
+				'null' => false,
+				'default' => '',
+				'charset' => 'utf8',
+				'collate' => 'utf8_general_ci',
+				'unique' => true
+			],
+			'password' => [
+				'field' => 'password',
+				'type' => 'varchar',
+				'length' => '255',
+				'null' => false,
+				'default' => '',
+				'charset' => 'utf8',
+				'collate' => 'utf8_general_ci'
+			],
+			'email' => [
+				'field' => 'email',
+				'type' => 'varchar',
+				'length' => '255',
+				'null' => false,
+				'default' => '',
+				'charset' => 'utf8',
+				'collate' => 'utf8_general_ci'
+			],
+			'firstName' => [
+				'field' => 'firstName',
+				'type' => 'varchar',
+				'length' => '255',
+				'null' => false,
+				'default' => '',
+				'charset' => 'utf8',
+				'collate' => 'utf8_general_ci'
+			],
+			'lastName' => [
+				'field' => 'lastName',
+				'type' => 'varchar',
+				'length' => '255',
+				'null' => false,
+				'default' => '',
+				'charset' => 'utf8',
+				'collate' => 'utf8_general_ci'
+			],
+			'age' => [
+				'field' => 'age',
+				'type' => 'tinyint',
+				'length' => '4',
+				'null' => false
+			],
+			'created' => [
+				'field' => 'created',
+				'type' => 'datetime',
+				'length' => '',
+				'null' => true,
+				'default' => null
+			],
+			'modified' => [
+				'field' => 'modified',
+				'type' => 'datetime',
+				'length' => '',
+				'null' => true,
+				'default' => null
+			],
+		], $user->getDriver()->describeTable($user->getTable()));
+
+		$stat = new Stat();
+		$this->assertSame([
+			'id' => [
+				'field' => 'id',
+				'type' => 'int',
+				'length' => '11',
+				'null' => false,
+				'primary' => true,
+				'ai' => true
+			],
+			'name' => [
+				'field' => 'name',
+				'type' => 'varchar',
+				'length' => '255',
+				'null' => false,
+				'default' => '',
+				'charset' => 'utf8',
+				'collate' => 'utf8_general_ci'
+			],
+			'health' => [
+				'field' => 'health',
+				'type' => 'int',
+				'length' => '11',
+				'null' => false
+			],
+			'energy' => [
+				'field' => 'energy',
+				'type' => 'smallint',
+				'length' => '6',
+				'null' => false
+			],
+			'damage' => [
+				'field' => 'damage',
+				'type' => 'float',
+				'length' => '',
+				'null' => false
+			],
+			'defense' => [
+				'field' => 'defense',
+				'type' => 'double',
+				'length' => '',
+				'null' => false
+			],
+			'range' => [
+				'field' => 'range',
+				'type' => 'decimal',
+				'length' => '8,2',
+				'null' => false
+			],
+			'isMelee' => [
+				'field' => 'isMelee',
+				'type' => 'tinyint',
+				'length' => '1',
+				'null' => false
+			],
+			'data' => [
+				'field' => 'data',
+				'type' => 'blob',
+				'length' => '',
+				'null' => false
+			],
+		], $user->getDriver()->describeTable($stat->getTable()));
 	}
 
 	/**

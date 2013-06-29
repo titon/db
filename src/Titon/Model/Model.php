@@ -642,8 +642,6 @@ class Model extends Base {
 	/**
 	 * Return a schema object that represents the database table.
 	 *
-	 * TODO move to driver
-	 *
 	 * @return \Titon\Model\Driver\Schema
 	 */
 	public function getSchema() {
@@ -659,38 +657,7 @@ class Model extends Base {
 		// Inspect database for columns
 		// This approach should only be used for validating columns and types
 		} else {
-			$fields = $this->query(Query::DESCRIBE)->fetchAll(false);
-			$columns = [];
-
-			foreach ($fields as $field) {
-				$column = [];
-
-				if (preg_match('/([a-z]+)(?:\(([0-9]+)\))?/is', $field['Type'], $matches)) {
-					$column['type'] = strtolower($matches[1]);
-
-					if (isset($matches[2])) {
-						$column['length'] = $matches[2];
-					}
-				}
-
-				$dataType = AbstractType::factory($column['type'], $this->getDriver());
-
-				$column = $dataType->getDefaultOptions() + $column;
-				$column['null'] = ($field['Null'] === 'YES');
-				$column['default'] = $field['Default'];
-
-				switch (strtolower($field['Key'])) {
-					case 'pri': $column['primary'] = true; break;
-					case 'uni': $column['unique'] = true; break;
-					case 'mul': $column['index'] = true; break;
-				}
-
-				if ($field['Extra'] === 'auto_increment') {
-					$column['ai'] = true;
-				}
-
-				$columns[$field['Field']] = $column;
-			}
+			$columns = $this->getDriver()->describeTable($this->getTable());
 		}
 
 		$this->setSchema(new Schema($this->getTable(), $columns));
