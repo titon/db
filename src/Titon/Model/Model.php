@@ -752,6 +752,22 @@ class Model extends Base {
 	}
 
 	/**
+	 * Return results for the current query and a count of the results.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return array
+	 */
+	public function paginate(Query $query) {
+		$count = clone $query;
+		$count->limit(null, null);
+
+		return [
+			'count' => $count->count(),
+			'results' => $query->fetchAll()
+		];
+	}
+
+	/**
 	 * Callback called after a delete query.
 	 *
 	 * @param int|int[] $id
