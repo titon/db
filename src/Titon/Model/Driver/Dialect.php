@@ -19,6 +19,14 @@ use Titon\Model\Driver;
 interface Dialect {
 
 	/**
+	 * Return attributes for a query type.
+	 *
+	 * @param string $type
+	 * @return array
+	 */
+	public function getAttributes($type);
+
+	/**
 	 * Return a clause by key.
 	 *
 	 * @param string $key
@@ -62,6 +70,15 @@ interface Dialect {
 	 * @return string
 	 */
 	public function quote($value);
+
+	/**
+	 * Prepare the list of attributes for rendering.
+	 * If an attribute value exists, fetch a matching clause for it.
+	 *
+	 * @param array $attributes
+	 * @return array
+	 */
+	public function renderAttributes(array $attributes);
 
 	/**
 	 * Render the statement by piecing together the parameters.

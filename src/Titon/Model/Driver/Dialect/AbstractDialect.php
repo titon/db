@@ -13,6 +13,7 @@ use Titon\Model\Driver;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
+use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Exception\InvalidQueryException;
 use Titon\Model\Exception\InvalidSchemaException;
 use Titon\Model\Exception\MissingClauseException;
@@ -63,6 +64,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'constraint'	=> 'CONSTRAINT %s',
 		'defaultComment'=> 'DEFAULT COMMENT',
 		'defaultValue'	=> 'DEFAULT %s',
+		'delayed'		=> 'DELAYED',
 		'desc'			=> 'DESC',
 		'engine'		=> 'ENGINE',
 		'exists'		=> 'EXISTS',
@@ -71,6 +73,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'function'		=> '%s(%s)',
 		'groupBy'		=> 'GROUP BY %s',
 		'having'		=> 'HAVING %s',
+		'highPriority'	=> 'HIGH_PRIORITY',
+		'ignore'		=> 'IGNORE',
 		'in'			=> '%s IN (%s)',
 		'indexKey'		=> 'KEY %s (%s)',
 		'isNull'		=> '%s IS NULL',
@@ -78,6 +82,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'like'			=> '%s LIKE ?',
 		'limit'			=> 'LIMIT %s',
 		'limitOffset'	=> 'LIMIT %s OFFSET %s',
+		'lowPriority'	=> 'LOW_PRIORITY',
 		'noAction'		=> 'NO ACTION',
 		'not'			=> '%s NOT ?',
 		'notBetween'	=> '%s NOT BETWEEN ? AND ?',
@@ -112,7 +117,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @type array
 	 */
 	protected $_statements = [
-		Query::INSERT		=> 'INSERT INTO {table} {fields} VALUES {values}',
+		Query::INSERT		=> 'INSERT {a.priority} {a.ignore} INTO {table} {fields} VALUES {values}',
 		Query::SELECT		=> 'SELECT {fields} FROM {table} {where} {groupBy} {having} {orderBy} {limit}',
 		Query::UPDATE		=> 'UPDATE {table} SET {fields} {where} {orderBy} {limit}',
 		Query::DELETE		=> 'DELETE FROM {table} {where} {orderBy} {limit}',
@@ -120,6 +125,18 @@ abstract class AbstractDialect extends Base implements Dialect {
 		Query::DESCRIBE		=> 'DESCRIBE {table}',
 		Query::DROP_TABLE	=> 'DROP TABLE {table}',
 		Query::CREATE_TABLE	=> "CREATE TABLE {table} (\n{columns}{keys}\n) {options}"
+	];
+
+	/**
+	 * Available attributes for each query type.
+	 *
+	 * @type array
+	 */
+	protected $_attributes = [
+		Query::INSERT => [
+			'priority' => '',
+			'ignore' => false
+		]
 	];
 
 	/**
@@ -201,11 +218,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildInsert(Query $query) {
-		return $this->renderStatement($this->getStatement(Query::INSERT), [
+		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
+		$params = $params + [
 			'table' => $this->formatTable($query->getTable()),
 			'fields' => $this->formatFields($query->getFields(), $query->getType()),
 			'values' => $this->formatValues($query->getFields(), $query->getType()),
-		]);
+		];
+
+		return $this->renderStatement($this->getStatement(Query::INSERT), $params);
 	}
 
 	/**
@@ -227,11 +247,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 			$values[] = $this->formatValues($record, $type);
 		}
 
-		return $this->renderStatement($this->getStatement(Query::INSERT), [
+		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
+		$params = $params + [
 			'table' => $this->formatTable($query->getTable()),
 			'fields' => $fields,
 			'values' => implode(', ', $values),
-		]);
+		];
+
+		return $this->renderStatement($this->getStatement(Query::INSERT), $params);
 	}
 
 	/**
@@ -755,6 +778,19 @@ abstract class AbstractDialect extends Base implements Dialect {
 	/**
 	 * {@inheritdoc}
 	 *
+	 * @throws \Titon\Model\Exception\InvalidArgumentException
+	 */
+	public function getAttributes($type) {
+		if (isset($this->_attributes[$type])) {
+			return $this->_attributes[$type];
+		}
+
+		throw new InvalidArgumentException(sprintf('Invalid query type %s', $type));
+	}
+
+	/**
+	 * {@inheritdoc}
+	 *
 	 * @throws \Titon\Model\Exception\MissingClauseException
 	 */
 	public function getClause($key) {
@@ -809,6 +845,30 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function quoteList(array $values) {
 		return implode(', ', array_map([$this, 'quote'], $values));
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function renderAttributes(array $attributes) {
+		$output = [];
+
+		foreach ($attributes as $key => $clause) {
+			$value = '';
+
+			if ($clause) {
+				if (is_string($clause)) {
+					$value = $this->getClause($clause);
+
+				} else if ($clause === true) {
+					$value = $this->getClause($key);
+				}
+			}
+
+			$output['a.' . $key] = $value;
+		}
+
+		return $output;
 	}
 
 	/**

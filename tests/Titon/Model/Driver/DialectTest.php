@@ -134,14 +134,22 @@ class DialectTest extends TestCase {
 			'username' => 'miles'
 		]);
 
-		$this->assertEquals('INSERT INTO `foobar` (`username`) VALUES (?);', $this->object->buildInsert($query));
+		$this->assertRegExp('/INSERT\s+INTO `foobar` \(`username`\) VALUES \(\?\);/', $this->object->buildInsert($query));
 
 		$query->fields([
 			'email' => 'email@domain.com',
 			'website' => 'http://titon.io'
 		]);
 
-		$this->assertEquals('INSERT INTO `foobar` (`email`, `website`) VALUES (?, ?);', $this->object->buildInsert($query));
+		$this->assertRegExp('/INSERT\s+INTO `foobar` \(`email`, `website`\) VALUES \(\?, \?\);/', $this->object->buildInsert($query));
+
+		$query->attribute('ignore', true);
+
+		$this->assertRegExp('/INSERT\s+IGNORE\s+INTO `foobar` \(`email`, `website`\) VALUES \(\?, \?\);/', $this->object->buildInsert($query));
+
+		$query->attribute('priority', 'highPriority');
+
+		$this->assertRegExp('/INSERT HIGH_PRIORITY IGNORE INTO `foobar` \(`email`, `website`\) VALUES \(\?, \?\);/', $this->object->buildInsert($query));
 	}
 
 	/**
@@ -157,7 +165,7 @@ class DialectTest extends TestCase {
 			['username' => 'wolverine', 'firstName' => 'Logan', 'lastName' => ''],
 		]);
 
-		$this->assertEquals('INSERT INTO `foobar` (`username`, `firstName`, `lastName`) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?);', $this->object->buildMultiInsert($query));
+		$this->assertRegExp('/INSERT\s+INTO `foobar` \(`username`, `firstName`, `lastName`\) VALUES \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\);/', $this->object->buildMultiInsert($query));
 	}
 
 	/**
