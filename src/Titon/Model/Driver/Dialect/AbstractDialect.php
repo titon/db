@@ -57,14 +57,23 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'any'				=> 'ANY',
 		'as'				=> '%s AS %s',
 		'asc'				=> 'ASC',
+		'avgRowLength'		=> 'AVG_ROW_LENGTH',
 		'between'			=> '%s BETWEEN ? AND ?',
 		'cascade'			=> 'CASCADE',
+		'charset'			=> 'CHARACTER SET %s',
 		'characterSet'		=> 'CHARACTER SET',
+		'checksum'			=> 'CHECKSUM',
+		'collate'			=> 'COLLATE',
+		'collation'			=> 'COLLATE %s',
 		'comment'			=> 'COMMENT %s',
+		'connection'		=> 'CONNECTION',
 		'constraint'		=> 'CONSTRAINT %s',
+		'dataDirectory'		=> 'DATA DIRECTORY',
+		'defaultCharacterSet' => 'DEFAULT CHARACTER SET',
 		'defaultComment'	=> 'DEFAULT COMMENT',
 		'defaultValue'		=> 'DEFAULT %s',
 		'delayed'			=> 'DELAYED',
+		'delayKeyWrite'		=> 'DELAY_KEY_WRITE',
 		'desc'				=> 'DESC',
 		'distinct'			=> 'DISTINCT',
 		'distinctRow'		=> 'DISTINCTROW',
@@ -78,13 +87,18 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'highPriority'		=> 'HIGH_PRIORITY',
 		'ignore'			=> 'IGNORE',
 		'in'				=> '%s IN (%s)',
+		'indexDirectory'	=> 'INDEX DIRECTORY',
 		'indexKey'			=> 'KEY %s (%s)',
+		'insertMethod'		=> 'INSERT_METHOD',
 		'isNull'			=> '%s IS NULL',
 		'isNotNull'			=> '%s IS NOT NULL',
+		'keyBlockSize'		=> 'KEY_BLOCK_SIZE',
 		'like'				=> '%s LIKE ?',
 		'limit'				=> 'LIMIT %s',
 		'limitOffset'		=> 'LIMIT %s OFFSET %s',
 		'lowPriority'		=> 'LOW_PRIORITY',
+		'maxRows'			=> 'MAX_ROWS',
+		'minRows'			=> 'MIN_ROWS',
 		'noAction'			=> 'NO ACTION',
 		'not'				=> '%s NOT ?',
 		'notBetween'		=> '%s NOT BETWEEN ? AND ?',
@@ -98,11 +112,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'onUpdate'			=> 'ON UPDATE %s',
 		'or'				=> 'OR',
 		'orderBy'			=> 'ORDER BY %s',
+		'packKeys'			=> 'PACK_KEYS',
+		'password'			=> 'PASSWORD',
 		'primaryKey'		=> 'PRIMARY KEY (%s)',
 		'quick'				=> 'QUICK',
 		'regexp'			=> '%s REGEXP ?',
 		'restrict'			=> 'RESTRICT',
 		'rlike'				=> '%s REGEXP ?',
+		'rowFormat'			=> 'ROW_FORMAT',
 		'setNull'			=> 'SET NULL',
 		'some'				=> 'SOME',
 		'sqlBigResult'		=> 'SQL_BIG_RESULT',
@@ -110,11 +127,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 		'sqlCache'			=> 'SQL_CACHE',
 		'sqlNoCache'		=> 'SQL_NO_CACHE',
 		'sqlSmallResult'	=> 'SQL_SMALL_RESULT',
+		'statsAutoRecalc'	=> 'STATS_AUTO_RECALC',
+		'statsPersistent'	=> 'STATS_PERSISTENT',
 		'subQuery'			=> '(%s)',
 		'temporary'			=> 'TEMPORARY',
 		'where'				=> 'WHERE %s',
 		'xor'				=> 'XOR',
 		'uniqueKey'			=> 'UNIQUE KEY %s (%s)',
+		'union'				=> 'UNION',
 		'unsigned'			=> 'UNSIGNED',
 		'valueGroup'		=> '(%s)',
 		'zerofill'			=> 'ZEROFILL'
@@ -403,6 +423,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 			if (!empty($options['zerofill'])) {
 				$output[] = $this->getClause('zerofill');
+			}
+
+			if (!empty($options['charset'])) {
+				$output[] = sprintf($this->getClause('charset'), $options['charset']);
+			}
+
+			if (!empty($options['collation'])) {
+				$output[] = sprintf($this->getClause('collation'), $options['collation']);
 			}
 
 			$output[] = $this->getClause(empty($options['null']) ? 'notNull' : 'null');
@@ -785,8 +813,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		$output = [];
 
 		foreach ($attributes as $key => $value) {
-			if ($key === 'comment' || $key === 'defaultComment') {
-				$key = 'defaultComment';
+			if (in_array($key, ['comment', 'defaultComment', 'connection', 'dataDirectory', 'indexDirectory', 'password'])) {
 				$value = $this->getDriver()->getConnection()->quote($value);
 			}
 

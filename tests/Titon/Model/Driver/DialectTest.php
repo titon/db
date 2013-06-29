@@ -428,6 +428,16 @@ class DialectTest extends TestCase {
 		$expected .= ",\n`column4` DATETIME NULL DEFAULT NULL";
 
 		$this->assertEquals($expected, $this->object->formatColumns($schema));
+
+		$schema->addColumn('column5', [
+			'type' => 'varchar',
+			'collation' => 'utf8_general_ci',
+			'charset' => 'utf8'
+		]);
+
+		$expected .= ",\n`column5` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
+
+		$this->assertEquals($expected, $this->object->formatColumns($schema));
 	}
 
 	/**
