@@ -63,7 +63,7 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::CREATE_TABLE, new User());
 		$query->schema($schema);
 
-		$this->assertEquals("CREATE TABLE `foobar` (\n`column` int NOT NULL AUTO_INCREMENT\n);", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE TABLE `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT\n);", $this->object->buildCreateTable($query));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -71,7 +71,7 @@ class DialectTest extends TestCase {
 			'primary' => true
 		]);
 
-		$this->assertEquals("CREATE TABLE `foobar` (\n`column` int NOT NULL AUTO_INCREMENT,\nPRIMARY KEY (`column`)\n);", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE TABLE `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\nPRIMARY KEY (`column`)\n);", $this->object->buildCreateTable($query));
 
 		$schema->addColumn('column2', [
 			'type' => 'int',
@@ -79,11 +79,11 @@ class DialectTest extends TestCase {
 			'index' => true
 		]);
 
-		$this->assertEquals("CREATE TABLE `foobar` (\n`column` int NOT NULL AUTO_INCREMENT,\n`column2` int NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n);", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE TABLE `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n);", $this->object->buildCreateTable($query));
 
 		$query->attribute('engine', 'InnoDB');
 
-		$this->assertEquals("CREATE TABLE `foobar` (\n`column` int NOT NULL AUTO_INCREMENT,\n`column2` int NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n) ENGINE=InnoDB;", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE TABLE `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n) ENGINE=InnoDB;", $this->object->buildCreateTable($query));
 	}
 
 	/**
@@ -303,7 +303,7 @@ class DialectTest extends TestCase {
 			'type' => 'int'
 		]);
 
-		$this->assertEquals('`column` int NOT NULL', $this->object->formatColumns($schema));
+		$this->assertEquals('`column` INT NOT NULL', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -311,7 +311,7 @@ class DialectTest extends TestCase {
 			'zerofill' => true
 		]);
 
-		$this->assertEquals('`column` int UNSIGNED ZEROFILL NOT NULL', $this->object->formatColumns($schema));
+		$this->assertEquals('`column` INT UNSIGNED ZEROFILL NOT NULL', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -319,7 +319,7 @@ class DialectTest extends TestCase {
 			'comment' => 'Some comment here'
 		]);
 
-		$this->assertEquals('`column` int NULL COMMENT \'Some comment here\'', $this->object->formatColumns($schema));
+		$this->assertEquals('`column` INT NULL COMMENT \'Some comment here\'', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -327,7 +327,7 @@ class DialectTest extends TestCase {
 			'length' => 11
 		]);
 
-		$this->assertEquals('`column` int(11) NOT NULL AUTO_INCREMENT', $this->object->formatColumns($schema));
+		$this->assertEquals('`column` INT(11) NOT NULL AUTO_INCREMENT', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -340,7 +340,7 @@ class DialectTest extends TestCase {
 			'comment' => 'Some comment here'
 		]);
 
-		$expected = '`column` int(11) UNSIGNED ZEROFILL NULL DEFAULT NULL AUTO_INCREMENT COMMENT \'Some comment here\'';
+		$expected = '`column` INT(11) UNSIGNED ZEROFILL NULL DEFAULT NULL AUTO_INCREMENT COMMENT \'Some comment here\'';
 
 		$this->assertEquals($expected, $this->object->formatColumns($schema));
 
@@ -350,7 +350,7 @@ class DialectTest extends TestCase {
 			'null' => true
 		]);
 
-		$expected .= ",\n`column2` varchar(255) NULL";
+		$expected .= ",\n`column2` VARCHAR(255) NULL";
 
 		$this->assertEquals($expected, $this->object->formatColumns($schema));
 
@@ -359,7 +359,7 @@ class DialectTest extends TestCase {
 			'default' => 3
 		]);
 
-		$expected .= ",\n`column3` smallint NOT NULL DEFAULT '3'";
+		$expected .= ",\n`column3` SMALLINT NOT NULL DEFAULT '3'";
 
 		$this->assertEquals($expected, $this->object->formatColumns($schema));
 
@@ -368,7 +368,7 @@ class DialectTest extends TestCase {
 			'type' => 'datetime'
 		]);
 
-		$expected .= ",\n`column4` datetime NULL DEFAULT NULL";
+		$expected .= ",\n`column4` DATETIME NULL DEFAULT NULL";
 
 		$this->assertEquals($expected, $this->object->formatColumns($schema));
 	}

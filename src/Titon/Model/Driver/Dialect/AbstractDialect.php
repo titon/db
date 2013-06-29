@@ -319,7 +319,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$type .= '(' . $options['length'] . ')';
 			}
 
-			$output = [$this->quote($column), $type];
+			$output = [$this->quote($column), strtoupper($type)];
 
 			if (!empty($options['unsigned'])) {
 				$output[] = $this->getClause('unsigned');
