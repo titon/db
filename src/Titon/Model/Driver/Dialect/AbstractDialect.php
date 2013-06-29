@@ -126,7 +126,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	protected $_statements = [
 		Query::INSERT		=> 'INSERT {a.priority} {a.ignore} INTO {table} {fields} VALUES {values}',
 		Query::SELECT		=> 'SELECT {a.distinct} {a.priority} {a.optimize} {a.cache} {fields} FROM {table} {where} {groupBy} {having} {orderBy} {limit}',
-		Query::UPDATE		=> 'UPDATE {table} SET {fields} {where} {orderBy} {limit}',
+		Query::UPDATE		=> 'UPDATE {a.priority} {a.ignore} {table} SET {fields} {where} {orderBy} {limit}',
 		Query::DELETE		=> 'DELETE FROM {table} {where} {orderBy} {limit}',
 		Query::TRUNCATE		=> 'TRUNCATE {table}',
 		Query::DESCRIBE		=> 'DESCRIBE {table}',
@@ -149,7 +149,11 @@ abstract class AbstractDialect extends Base implements Dialect {
 			'priority' => '',
 			'optimize' => '',
 			'cache' => ''
-		]
+		],
+		Query::UPDATE => [
+			'priority' => '',
+			'ignore' => false
+		],
 	];
 
 	/**
@@ -330,13 +334,16 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildUpdate(Query $query) {
-		return $this->renderStatement($this->getStatement(Query::UPDATE), [
+		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::UPDATE));
+		$params = $params + [
 			'table' => $this->formatTable($query->getTable()),
 			'fields' => $this->formatFields($query->getFields(), $query->getType()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
 			'limit' => $this->formatLimit($query->getLimit()),
-		]);
+		];
+
+		return $this->renderStatement($this->getStatement(Query::UPDATE), $params);
 	}
 
 	/**

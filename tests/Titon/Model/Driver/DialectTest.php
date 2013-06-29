@@ -250,22 +250,31 @@ class DialectTest extends TestCase {
 		}
 
 		$query->from('foobar');
-		$this->assertRegExp('/UPDATE `foobar` SET `username` = \?;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+`foobar` SET `username` = \?;/', $this->object->buildUpdate($query));
 
 		$query->limit(15);
-		$this->assertRegExp('/UPDATE `foobar` SET `username` = \?\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+`foobar` SET `username` = \?\s+LIMIT 15;/', $this->object->buildUpdate($query));
 
 		$query->orderBy('username', 'desc');
-		$this->assertRegExp('/UPDATE `foobar` SET `username` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+`foobar` SET `username` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
 
 		$query->fields([
 			'email' => 'email@domain.com',
 			'website' => 'http://titon.io'
 		]);
-		$this->assertRegExp('/UPDATE `foobar` SET `email` = \?, `website` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+`foobar` SET `email` = \?, `website` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
 
 		$query->where('status', 3);
-		$this->assertRegExp('/UPDATE `foobar` SET `email` = \?, `website` = \?\s+WHERE `status` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+`foobar` SET `email` = \?, `website` = \?\s+WHERE `status` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+
+		// Attributes
+		$query = new Query(Query::UPDATE, new User());
+		$query->from('foobar')->fields(['username' => 'miles'])->attribute('ignore', true);
+
+		$this->assertRegExp('/UPDATE\s+IGNORE\s+`foobar` SET `username` = \?;/', $this->object->buildUpdate($query));
+
+		$query->attribute('priority', 'lowPriority');
+		$this->assertRegExp('/UPDATE LOW_PRIORITY IGNORE `foobar` SET `username` = \?;/', $this->object->buildUpdate($query));
 	}
 
 	/**
