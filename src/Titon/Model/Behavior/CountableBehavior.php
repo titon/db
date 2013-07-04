@@ -1,4 +1,9 @@
 <?php
+/**
+ * @copyright	Copyright 2010-2013, The Titon Project
+ * @license		http://opensource.org/licenses/bsd-license.php
+ * @link		http://titon.io
+ */
 
 namespace Titon\Model\Behavior;
 
@@ -6,10 +11,16 @@ use Titon\Common\Registry;
 use Titon\Common\Traits\Cacheable;
 use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Relation;
-use \Closure;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Model\Relation\ManyToOne;
+use \Closure;
 
+/**
+ * The CountableBehavior provides a way for many-to-one|many relations to track a count of how many related records exist.
+ * Each time a record is created, updated or deleted, the count will be updated in the related record.
+ *
+ * @package Titon\Model\Behavior
+ */
 class CountableBehavior extends AbstractBehavior {
 	use Cacheable;
 
@@ -30,7 +41,11 @@ class CountableBehavior extends AbstractBehavior {
 	 * @throws \Titon\Model\Exception\InvalidArgumentException
 	 */
 	public function addCounter($alias, $field, Closure $scope = null) {
-		$relation = $this->getModel()->getRelation($alias);
+		if ($alias instanceof Relation) {
+			$relation = $alias;
+		} else {
+			$relation = $this->getModel()->getRelation($alias);
+		}
 
 		if (!in_array($relation->getType(), [Relation::MANY_TO_ONE, Relation::MANY_TO_MANY])) {
 			throw new InvalidArgumentException(sprintf('Invalid relation %s, only many-to-one or many-to-many relationships permitted', $alias));
@@ -134,6 +149,8 @@ class CountableBehavior extends AbstractBehavior {
 	 * Using this example setup:
 	 *
 	 * 	- Entry (jfk:entry_id) has and belongs to many Tag (jfk:tag_id) (entry_count)
+	 *
+	 * @uses Titon\Common\Registry
 	 *
 	 * @param \Titon\Model\Relation\ManyToMany $relation
 	 * @param int|int[] $ids

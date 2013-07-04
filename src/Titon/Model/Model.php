@@ -161,6 +161,8 @@ class Model extends Base {
 	 * Missing fields will be added with an empty value or the schema default value.
 	 * Does not support callbacks or transactions.
 	 *
+	 * @uses Titon\Utility\Hash
+	 *
 	 * @param array $data Multi-dimensional array of records
 	 * @param bool $hasPk If true will allow primary key fields, else will remove them
 	 * @return int The count of records inserted
@@ -379,6 +381,8 @@ class Model extends Base {
 	 *
 	 * The related data will be added to the array indexed by the relation alias.
 	 *
+	 * @uses Titon\Utility\Hash
+	 *
 	 * @param \Titon\Model\Query $query
 	 * @param array $result
 	 * @param bool $wrap
@@ -556,6 +560,8 @@ class Model extends Base {
 
 	/**
 	 * Return the driver defined by key.
+	 *
+	 * @uses Titon\Common\Registry
 	 *
 	 * @return \Titon\Model\Driver
 	 */
@@ -854,6 +860,8 @@ class Model extends Base {
 	/**
 	 * Set and merge result data into the model.
 	 *
+	 * @uses Titon\Utility\Hash
+	 *
 	 * @param array $data
 	 * @return \Titon\Model\Model
 	 */
@@ -953,6 +961,8 @@ class Model extends Base {
 	/**
 	 * Either update or insert related data for the primary model's ID.
 	 * Each relation will handle upserting differently.
+	 *
+	 * @uses Titon\Common\Registry
 	 *
 	 * @param int $id
 	 * @param array $data
@@ -1206,6 +1216,8 @@ class Model extends Base {
 	 * Depending on the $fetchType, the returned results will differ.
 	 * If the type is "fetch" a single item will be returned, either an array or entity.
 	 * All other types currently return an array or an array of entities.
+	 *
+	 * @uses Titon\Model\Type\AbstractType
 	 *
 	 * @param \Titon\Model\Query $query
 	 * @param string $fetchType
@@ -1503,6 +1515,8 @@ class Model extends Base {
 	/**
 	 * Validate that relation data is structured correctly.
 	 * Will only validate the top-level dimensions.
+	 *
+	 * @uses Titon\Utility\Hash
 	 *
 	 * @param array $data
 	 * @throws \Titon\Model\Exception\InvalidRelationStructureException

@@ -8,7 +8,7 @@
 namespace Titon\Model\Behavior;
 
 /**
- * A behavior that will update a field with a timestamp anytime a record is created or updated.
+ * The TimestampableBehavior will update a field with a timestamp anytime a record is created or updated.
  *
  * @package Titon\Model\Behavior
  */

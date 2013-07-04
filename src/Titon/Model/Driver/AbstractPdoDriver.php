@@ -148,6 +148,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 	/**
 	 * {@inheritdoc}
+	 *
+	 * @uses Titon\Model\Type\AbstractType
 	 */
 	public function describeTable($table) {
 		$columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->fetchAll(false);
@@ -386,6 +388,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 	/**
 	 * Resolve the bind value and the PDO binding type.
+	 *
+	 * @uses Titon\Model\Type\AbstractType
 	 *
 	 * @param string $field
 	 * @param mixed $value

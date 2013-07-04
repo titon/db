@@ -40,6 +40,8 @@ class DateType extends AbstractType {
 
 	/**
 	 * {@inheritdoc}
+	 *
+	 * @uses Titon\Utility\Time
 	 */
 	public function to($value) {
 		if ($value instanceof DateTime) {

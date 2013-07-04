@@ -735,8 +735,8 @@ class Query implements Serializable, JsonSerializable {
 			$this->attribute($data['attributes']);
 		}
 
-		if ($data['cacheLength']) {
-			$this->cacheFor($data['cacheLength']);
+		if ($data['cacheKey']) {
+			$this->cache($data['cacheKey'], $data['cacheLength']);
 		}
 
 		if ($data['fields']) {
@@ -788,6 +788,7 @@ class Query implements Serializable, JsonSerializable {
 
 		return [
 			'attributes' => $this->getAttributes(),
+			'cacheKey' => $this->getCacheKey(),
 			'cacheLength' => $this->getCacheLength(),
 			'fields' => $fields,
 			'groupBy' => $this->getGroupBy(),

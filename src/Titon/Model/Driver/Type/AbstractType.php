@@ -23,6 +23,8 @@ abstract class AbstractType implements Type {
 	/**
 	 * {@inheritdoc}
 	 *
+	 * @uses \Titon\Common\Registry
+	 *
 	 * @throws \Titon\Model\Exception\UnsupportedTypeException
 	 */
 	public static function factory($type, Driver $driver) {

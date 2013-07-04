@@ -429,8 +429,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$output[] = sprintf($this->getClause(self::CHARACTER_SET), $options['charset']);
 			}
 
-			if (!empty($options['collation'])) {
-				$output[] = sprintf($this->getClause(self::COLLATE), $options['collation']);
+			if (!empty($options['collate'])) {
+				$output[] = sprintf($this->getClause(self::COLLATE), $options['collate']);
 			}
 
 			$output[] = $this->getKeyword(empty($options['null']) ? self::NOT_NULL : self::NULL);
@@ -973,6 +973,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 	/**
 	 * {@inheritdoc}
+	 *
+	 * @uses Titon\Utility\String
 	 */
 	public function renderStatement($statement, array $params) {
 		$statement = trim(String::insert($statement, $params, ['escape' => false])) . ';';
