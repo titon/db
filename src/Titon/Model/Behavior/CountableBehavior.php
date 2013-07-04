@@ -7,7 +7,6 @@
 
 namespace Titon\Model\Behavior;
 
-use Titon\Common\Registry;
 use Titon\Common\Traits\Cacheable;
 use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Relation;
@@ -75,7 +74,7 @@ class CountableBehavior extends AbstractBehavior {
 
 				switch ($relation->getType()) {
 					case Relation::MANY_TO_MANY:
-						$results = Registry::factory($relation->getJunctionModel())
+						$results = $relation->getJunctionModel()
 							->select()
 							->where($relation->getForeignKey(), $value)
 							->bindCallback($counter['scope'])
@@ -150,8 +149,6 @@ class CountableBehavior extends AbstractBehavior {
 	 *
 	 * 	- Entry (jfk:entry_id) has and belongs to many Tag (jfk:tag_id) (entry_count)
 	 *
-	 * @uses Titon\Common\Registry
-	 *
 	 * @param \Titon\Model\Relation\ManyToMany $relation
 	 * @param int|int[] $ids
 	 * @param array $counter
@@ -160,12 +157,8 @@ class CountableBehavior extends AbstractBehavior {
 		$alias = $relation->getAlias();
 		$fk = $relation->getForeignKey();
 		$rfk = $relation->getRelatedForeignKey();
-
-		/** @type \Titon\Model\Model $junctionModel */
-		$junctionModel = Registry::factory($relation->getJunctionModel());
-
-		/** @type \Titon\Model\Model $relatedModel */
-		$relatedModel = $this->getModel()->getObject($alias);
+		$junctionModel = $relation->getJunctionModel();
+		$relatedModel = $relation->getRelatedModel();
 
 		foreach ((array) $ids as $id) {
 			$results = $this->getCache(['Junction', $alias, $id]);
@@ -222,9 +215,7 @@ class CountableBehavior extends AbstractBehavior {
 		$model = $this->getModel();
 		$alias = $relation->getAlias();
 		$fk = $relation->getForeignKey();
-
-		/** @type \Titon\Model\Model $relatedModel */
-		$relatedModel = $this->getModel()->getObject($alias);
+		$relatedModel = $relation->getRelatedModel();
 
 		foreach ((array) $ids as $id) {
 			$result = $this->getCache(['Record', $alias, $id]) ?: $model->read($id, false);

@@ -52,11 +52,11 @@ class RelationTest extends TestCase {
 	/**
 	 * Test model class names.
 	 */
-	public function testModel() {
-		$this->assertEquals('Titon\Test\Stub\Model\User', $this->object->getModel());
+	public function testClass() {
+		$this->assertEquals('Titon\Test\Stub\Model\User', $this->object->getClass());
 
-		$this->object->setModel('Titon\Test\Stub\Model\Profile');
-		$this->assertEquals('Titon\Test\Stub\Model\Profile', $this->object->getModel());
+		$this->object->setClass('Titon\Test\Stub\Model\Profile');
+		$this->assertEquals('Titon\Test\Stub\Model\Profile', $this->object->getClass());
 	}
 
 	/**
@@ -108,11 +108,11 @@ class RelationTest extends TestCase {
 	/**
 	 * Test junction model class names.
 	 */
-	public function testJunctionModel() {
-		$this->assertEquals(null, $this->object->getJunctionModel());
+	public function testJunctionClass() {
+		$this->assertEquals(null, $this->object->getJunctionClass());
 
-		$this->object->setJunctionModel('Titon\Test\Stub\Model\Profile');
-		$this->assertEquals('Titon\Test\Stub\Model\Profile', $this->object->getJunctionModel());
+		$this->object->setJunctionClass('Titon\Test\Stub\Model\Profile');
+		$this->assertEquals('Titon\Test\Stub\Model\Profile', $this->object->getJunctionClass());
 	}
 
 }

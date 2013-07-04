@@ -7,7 +7,9 @@
 
 namespace Titon\Model\Relation;
 
+use Titon\Common\Registry;
 use Titon\Model\Relation;
+use Titon\Utility\Loader;
 
 /**
  * Represents a many-to-many model relationship.
@@ -23,20 +25,39 @@ class ManyToMany extends AbstractRelation {
 	 * Configuration.
 	 *
 	 * @type array {
-	 * 		@type string $junctionModel	Fully qualified model name for the junction table
+	 * 		@type string $junctionClass		Fully qualified model class name for the junction table
 	 * }
 	 */
 	protected $_config = [
-		'junctionModel' => ''
+		'junctionClass' => ''
 	];
 
 	/**
-	 * Return the junction model name.
+	 * Return the junction class name.
 	 *
 	 * @return string
 	 */
+	public function getJunctionClass() {
+		return $this->config->junctionClass;
+	}
+
+	/**
+	 * Return the junction model instance.
+	 *
+	 * @return \Titon\Model\Model
+	 */
 	public function getJunctionModel() {
-		return $this->config->junctionModel;
+		$class = $this->getJunctionClass();
+		$alias = Loader::baseClass($class);
+		$model = $this->getModel();
+
+		if ($model->hasObject($alias)) {
+			return $model->getObject($alias);
+		}
+
+		$model->attachObject($alias, Registry::factory($class));
+
+		return $model->getObject($alias);
 	}
 
 	/**
@@ -56,13 +77,13 @@ class ManyToMany extends AbstractRelation {
 	}
 
 	/**
-	 * Set the junction model name.
+	 * Set the junction class name.
 	 *
-	 * @param string $model
+	 * @param string $class
 	 * @return \Titon\Model\Relation\ManyToMany
 	 */
-	public function setJunctionModel($model) {
-		$this->config->junctionModel = $model;
+	public function setJunctionClass($class) {
+		$this->config->junctionClass = $class;
 
 		return $this;
 	}

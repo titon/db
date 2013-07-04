@@ -8,7 +8,6 @@
 namespace Titon\Model\Driver\Dialect;
 
 use Titon\Common\Base;
-use Titon\Common\Registry;
 use Titon\Model\Driver;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;

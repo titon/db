@@ -432,7 +432,7 @@ class DialectTest extends TestCase {
 
 		$schema->addColumn('column5', [
 			'type' => 'varchar',
-			'collation' => 'utf8_general_ci',
+			'collate' => 'utf8_general_ci',
 			'charset' => 'utf8'
 		]);
 

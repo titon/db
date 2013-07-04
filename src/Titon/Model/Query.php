@@ -662,8 +662,7 @@ class Query implements Serializable, JsonSerializable {
 				throw new InvalidRelationQueryException('Only select sub-queries are permitted for related data');
 			}
 		} else {
-			/** @type \Titon\Model\Query $relatedQuery */
-			$relatedQuery = $this->getModel()->getObject($alias)->select();
+			$relatedQuery = $relation->getRelatedModel()->select();
 
 			// Apply relation conditions
 			if ($conditions = $relation->getConditions()) {

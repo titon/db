@@ -29,6 +29,13 @@ interface Relation {
 	public function getAlias();
 
 	/**
+	 * Return the class name of the related model.
+	 *
+	 * @return string
+	 */
+	public function getClass();
+
+	/**
 	 * Return the query conditions.
 	 *
 	 * @return \Closure
@@ -43,9 +50,9 @@ interface Relation {
 	public function getForeignKey();
 
 	/**
-	 * Return the model class name as a string.
+	 * Return the primary model instance.
 	 *
-	 * @return string
+	 * @return \Titon\Model\Model
 	 */
 	public function getModel();
 
@@ -55,6 +62,13 @@ interface Relation {
 	 * @return string
 	 */
 	public function getRelatedForeignKey();
+
+	/**
+	 * Return the related model instance.
+	 *
+	 * @return \Titon\Model\Model
+	 */
+	public function getRelatedModel();
 
 	/**
 	 * Return the type of relation.
@@ -77,6 +91,14 @@ interface Relation {
 	 * @return \Titon\Model\Relation
 	 */
 	public function setAlias($alias);
+
+	/**
+	 * Set the related class name.
+	 *
+	 * @param string $class
+	 * @return \Titon\Model\Relation
+	 */
+	public function setClass($class);
 
 	/**
 	 * Set the query conditions for this relation.
@@ -103,12 +125,12 @@ interface Relation {
 	public function setForeignKey($key);
 
 	/**
-	 * Set the model class.
+	 * Set the primary model instance.
 	 *
-	 * @param string $model
+	 * @param \Titon\Model\Model $model
 	 * @return \Titon\Model\Relation
 	 */
-	public function setModel($model);
+	public function setModel(Model $model);
 
 	/**
 	 * Set the foreign key for the related model.

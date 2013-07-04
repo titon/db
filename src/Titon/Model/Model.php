@@ -121,11 +121,13 @@ class Model extends Base {
 	 * @return \Titon\Model\Relation|\Titon\Model\Relation\ManyToMany
 	 */
 	public function addRelation(Relation $relation) {
+		$relation->setModel($this);
+
 		$this->_relations[$relation->getAlias()] = $relation;
 
 		$this->attachObject([
 			'alias' => $relation->getAlias(),
-			'class' => $relation->getModel(),
+			'class' => $relation->getClass(),
 			'interface' => 'Titon\Model\Model'
 		]);
 
@@ -243,12 +245,10 @@ class Model extends Base {
 					continue;
 				}
 
-				/** @type \Titon\Model\Model $relatedModel */
-				$relatedModel = $this->getObject($alias);
-
 				switch ($relation->getType()) {
 					case Relation::ONE_TO_ONE:
 					case Relation::ONE_TO_MANY:
+						$relatedModel = $relation->getRelatedModel();
 						$results = [];
 
 						// Fetch IDs before deletion
@@ -274,7 +274,7 @@ class Model extends Base {
 
 					case Relation::MANY_TO_MANY:
 						/** @type \Titon\Model\Model $junctionModel */
-						$junctionModel = Registry::factory($relation->getJunctionModel());
+						$junctionModel = $relation->getJunctionModel();
 
 						// Only delete the junction records
 						// The related records should stay
@@ -398,7 +398,7 @@ class Model extends Base {
 		foreach ($queries as $alias => $subQuery) {
 			$newQuery = clone $subQuery;
 			$relation = $this->getRelation($alias);
-			$relatedModel = $this->getObject($alias);
+			$relatedModel = $relation->getRelatedModel();
 			$relatedClass = get_class($relatedModel);
 
 			switch ($relation->getType()) {
@@ -468,7 +468,7 @@ class Model extends Base {
 					}
 
 					// Fetch the related records using the junction IDs
-					$junctionModel = Registry::factory($relation->getJunctionModel());
+					$junctionModel = $relation->getJunctionModel();
 					$junctionResults = $junctionModel
 						->select()
 						->where($relation->getForeignKey(), $foreignValue)
@@ -962,8 +962,6 @@ class Model extends Base {
 	 * Either update or insert related data for the primary model's ID.
 	 * Each relation will handle upserting differently.
 	 *
-	 * @uses Titon\Common\Registry
-	 *
 	 * @param int $id
 	 * @param array $data
 	 * @return int
@@ -989,12 +987,9 @@ class Model extends Base {
 				}
 
 				$relation = $this->getRelation($alias);
+				$relatedModel = $relation->getRelatedModel();
 				$fk = $relation->getForeignKey();
 				$rfk = $relation->getRelatedForeignKey();
-
-				/** @type \Titon\Model\Model $relatedModel */
-				$relatedModel = $this->getObject($alias);
-				$pk = $this->getPrimaryKey();
 				$rpk = $relatedModel->getPrimaryKey();
 
 				switch ($relation->getType()) {
@@ -1032,7 +1027,7 @@ class Model extends Base {
 					// Loop through each set of data and upsert to gather an ID
 					// Use that foreign ID with the current ID and save in the junction table
 					case Relation::MANY_TO_MANY:
-						$junctionModel = Registry::factory($relation->getJunctionModel());
+						$junctionModel = $relation->getJunctionModel();
 						$jpk = $junctionModel->getPrimaryKey();
 
 						foreach ($relatedData as $i => $habtmData) {
