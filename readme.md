@@ -1,4 +1,4 @@
-# Model v0.1.11 [![Build Status](https://travis-ci.org/titon/Model.png)](https://travis-ci.org/titon/Model) #
+# Model v0.2.0 [![Build Status](https://travis-ci.org/titon/Model.png)](https://travis-ci.org/titon/Model) #
 
 The Titon model package provides a basic database abstraction layer and an object relational mapper.
 Requires the PDO extension for most database connections.
