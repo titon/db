@@ -161,6 +161,7 @@ class AbstractDeleteTest extends TestCase {
 				[
 					'id' => 3,
 					'name' => 'Action-Adventure',
+					'book_count' => 8,
 					'Junction' => [
 						'id' => 15,
 						'book_id' => 5,
@@ -169,6 +170,7 @@ class AbstractDeleteTest extends TestCase {
 				], [
 					'id' => 5,
 					'name' => 'Horror',
+					'book_count' => 5,
 					'Junction' => [
 						'id' => 16,
 						'book_id' => 5,
@@ -177,6 +179,7 @@ class AbstractDeleteTest extends TestCase {
 				], [
 					'id' => 8,
 					'name' => 'Fantasy',
+					'book_count' => 15,
 					'Junction' => [
 						'id' => 14,
 						'book_id' => 5,
@@ -198,7 +201,7 @@ class AbstractDeleteTest extends TestCase {
 			['id' => 3, 'name' => 'Action-Adventure'],
 			['id' => 5, 'name' => 'Horror'],
 			['id' => 8, 'name' => 'Fantasy'],
-		], $book->Genres->select()->where('id', [3, 5, 8])->fetchAll(false));
+		], $book->Genres->select('id', 'name')->where('id', [3, 5, 8])->fetchAll(false));
 	}
 
 	/**
@@ -225,6 +228,7 @@ class AbstractDeleteTest extends TestCase {
 				[
 					'id' => 3,
 					'name' => 'Action-Adventure',
+					'book_count' => 8,
 					'Junction' => [
 						'id' => 42,
 						'book_id' => 14,
@@ -233,6 +237,7 @@ class AbstractDeleteTest extends TestCase {
 				], [
 					'id' => 6,
 					'name' => 'Thriller',
+					'book_count' => 3,
 					'Junction' => [
 						'id' => 43,
 						'book_id' => 14,
@@ -241,6 +246,7 @@ class AbstractDeleteTest extends TestCase {
 				], [
 					'id' => 8,
 					'name' => 'Fantasy',
+					'book_count' => 15,
 					'Junction' => [
 						'id' => 41,
 						'book_id' => 14,

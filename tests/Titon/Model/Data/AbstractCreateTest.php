@@ -222,6 +222,7 @@ class AbstractCreateTest extends TestCase {
 				[
 					'id' => 3,
 					'name' => 'Action-Adventure',
+					'book_count' => '',
 					'Junction' => [
 						'book_id' => 16,
 						'genre_id' => 3,
@@ -231,6 +232,7 @@ class AbstractCreateTest extends TestCase {
 				[
 					'id' => 12,
 					'name' => 'Epic-Horror',
+					'book_count' => '',
 					'Junction' => [
 						'book_id' => 16,
 						'genre_id' => 12,

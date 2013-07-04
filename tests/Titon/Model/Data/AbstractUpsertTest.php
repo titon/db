@@ -221,6 +221,7 @@ class AbstractUpsertTest extends TestCase {
 				[
 					'id' => 2,
 					'name' => 'Adventure',
+					'book_count' => 7,
 					'Junction' => [
 						'id' => 30,
 						'book_id' => 10,
@@ -229,6 +230,7 @@ class AbstractUpsertTest extends TestCase {
 				], [
 					'id' => 7,
 					'name' => 'Mystery',
+					'book_count' => 7,
 					'Junction' => [
 						'id' => 31,
 						'book_id' => 10,
@@ -237,6 +239,7 @@ class AbstractUpsertTest extends TestCase {
 				], [
 					'id' => 8,
 					'name' => 'Fantasy',
+					'book_count' => 15,
 					'Junction' => [
 						'id' => 29,
 						'book_id' => 10,
@@ -265,6 +268,7 @@ class AbstractUpsertTest extends TestCase {
 				[
 					'id' => 2,
 					'name' => 'Adventure (Updated)',
+					'book_count' => 7,
 					'Junction' => [
 						'id' => 30,
 						'book_id' => 10,
@@ -273,6 +277,7 @@ class AbstractUpsertTest extends TestCase {
 				], [
 					'id' => 7,
 					'name' => 'Mystery',
+					'book_count' => 7,
 					'Junction' => [
 						'id' => 31,
 						'book_id' => 10,
@@ -281,6 +286,7 @@ class AbstractUpsertTest extends TestCase {
 				], [
 					'id' => 8,
 					'name' => 'Fantasy (Updated)',
+					'book_count' => 15,
 					'Junction' => [
 						'id' => 29,
 						'book_id' => 10,
@@ -289,6 +295,7 @@ class AbstractUpsertTest extends TestCase {
 				], [
 					'id' => 12,
 					'name' => 'Magic',
+					'book_count' => 0,
 					'Junction' => [
 						'id' => 47,
 						'book_id' => 10,
@@ -297,6 +304,7 @@ class AbstractUpsertTest extends TestCase {
 				], [
 					'id' => 13,
 					'name' => 'Wizardry',
+					'book_count' => 0,
 					'Junction' => [
 						'id' => 48,
 						'book_id' => 10,

@@ -9,6 +9,7 @@ namespace Titon\Model;
 
 use Titon\Model\Query\Expr;
 use Titon\Model\Relation\ManyToMany;
+use Titon\Model\Relation\OneToOne;
 use Titon\Test\Stub\Model\User;
 use Titon\Test\TestCase;
 
@@ -74,8 +75,15 @@ class RelationTest extends TestCase {
 	public function testDependent() {
 		$this->assertTrue($this->object->isDependent());
 
+		// Always true for ManyToMany
 		$this->object->setDependent(false);
-		$this->assertFalse($this->object->isDependent());
+		$this->assertTrue($this->object->isDependent());
+
+		$o2o = new OneToOne('User', 'Titon\Test\Stub\Model\User');
+
+		$this->assertTrue($o2o->isDependent());
+		$o2o->setDependent(false);
+		$this->assertFalse($o2o->isDependent());
 	}
 
 	/**

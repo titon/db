@@ -47,6 +47,15 @@ class ManyToMany extends AbstractRelation {
 	}
 
 	/**
+	 * Junction records should always be deleted.
+	 *
+	 * @return bool
+	 */
+	public function isDependent() {
+		return true;
+	}
+
+	/**
 	 * Set the junction model name.
 	 *
 	 * @param string $model

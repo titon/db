@@ -275,6 +275,7 @@ class AbstractReadTest extends TestCase {
 				new Entity([
 					'id' => 3,
 					'name' => 'Action-Adventure',
+					'book_count' => 8,
 					'Junction' => [
 						'id' => 15,
 						'book_id' => 5,
@@ -284,6 +285,7 @@ class AbstractReadTest extends TestCase {
 				new Entity([
 					'id' => 5,
 					'name' => 'Horror',
+					'book_count' => 5,
 					'Junction' => [
 						'id' => 16,
 						'book_id' => 5,
@@ -293,6 +295,7 @@ class AbstractReadTest extends TestCase {
 				new Entity([
 					'id' => 8,
 					'name' => 'Fantasy',
+					'book_count' => 15,
 					'Junction' => [
 						'id' => 14,
 						'book_id' => 5,
@@ -316,6 +319,7 @@ class AbstractReadTest extends TestCase {
 					new Entity([
 						'id' => 3,
 						'name' => 'Action-Adventure',
+						'book_count' => 8,
 						'Junction' => [
 							'id' => 39,
 							'book_id' => 13,
@@ -325,6 +329,7 @@ class AbstractReadTest extends TestCase {
 					new Entity([
 						'id' => 6,
 						'name' => 'Thriller',
+						'book_count' => 3,
 						'Junction' => [
 							'id' => 40,
 							'book_id' => 13,
@@ -334,6 +339,7 @@ class AbstractReadTest extends TestCase {
 					new Entity([
 						'id' => 8,
 						'name' => 'Fantasy',
+						'book_count' => 15,
 						'Junction' => [
 							'id' => 38,
 							'book_id' => 13,
@@ -352,6 +358,7 @@ class AbstractReadTest extends TestCase {
 					new Entity([
 						'id' => 3,
 						'name' => 'Action-Adventure',
+						'book_count' => 8,
 						'Junction' => [
 							'id' => 42,
 							'book_id' => 14,
@@ -361,6 +368,7 @@ class AbstractReadTest extends TestCase {
 					new Entity([
 						'id' => 6,
 						'name' => 'Thriller',
+						'book_count' => 3,
 						'Junction' => [
 							'id' => 43,
 							'book_id' => 14,
@@ -370,6 +378,7 @@ class AbstractReadTest extends TestCase {
 					new Entity([
 						'id' => 8,
 						'name' => 'Fantasy',
+						'book_count' => 15,
 						'Junction' => [
 							'id' => 41,
 							'book_id' => 14,
@@ -388,6 +397,7 @@ class AbstractReadTest extends TestCase {
 					new Entity([
 						'id' => 3,
 						'name' => 'Action-Adventure',
+						'book_count' => 8,
 						'Junction' => [
 							'id' => 45,
 							'book_id' => 15,
@@ -397,6 +407,7 @@ class AbstractReadTest extends TestCase {
 					new Entity([
 						'id' => 6,
 						'name' => 'Thriller',
+						'book_count' => 3,
 						'Junction' => [
 							'id' => 46,
 							'book_id' => 15,
@@ -406,6 +417,7 @@ class AbstractReadTest extends TestCase {
 					new Entity([
 						'id' => 8,
 						'name' => 'Fantasy',
+						'book_count' => 15,
 						'Junction' => [
 							'id' => 44,
 							'book_id' => 15,
@@ -453,6 +465,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 3,
 							'name' => 'Action-Adventure',
+							'book_count' => 8,
 							'Junction' => [
 								'id' => 2,
 								'book_id' => 1,
@@ -462,6 +475,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 5,
 							'name' => 'Horror',
+							'book_count' => 5,
 							'Junction' => [
 								'id' => 3,
 								'book_id' => 1,
@@ -471,6 +485,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 8,
 							'name' => 'Fantasy',
+							'book_count' => 15,
 							'Junction' => [
 								'id' => 1,
 								'book_id' => 1,
@@ -489,6 +504,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 3,
 							'name' => 'Action-Adventure',
+							'book_count' => 8,
 							'Junction' => [
 								'id' => 6,
 								'book_id' => 2,
@@ -498,6 +514,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 5,
 							'name' => 'Horror',
+							'book_count' => 5,
 							'Junction' => [
 								'id' => 7,
 								'book_id' => 2,
@@ -507,6 +524,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 8,
 							'name' => 'Fantasy',
+							'book_count' => 15,
 							'Junction' => [
 								'id' => 5,
 								'book_id' => 2,
@@ -525,6 +543,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 3,
 							'name' => 'Action-Adventure',
+							'book_count' => 8,
 							'Junction' => [
 								'id' => 9,
 								'book_id' => 3,
@@ -534,6 +553,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 5,
 							'name' => 'Horror',
+							'book_count' => 5,
 							'Junction' => [
 								'id' => 10,
 								'book_id' => 3,
@@ -543,6 +563,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 8,
 							'name' => 'Fantasy',
+							'book_count' => 15,
 							'Junction' => [
 								'id' => 8,
 								'book_id' => 3,
@@ -561,6 +582,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 3,
 							'name' => 'Action-Adventure',
+							'book_count' => 8,
 							'Junction' => [
 								'id' => 12,
 								'book_id' => 4,
@@ -570,6 +592,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 5,
 							'name' => 'Horror',
+							'book_count' => 5,
 							'Junction' => [
 								'id' => 13,
 								'book_id' => 4,
@@ -579,6 +602,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 8,
 							'name' => 'Fantasy',
+							'book_count' => 15,
 							'Junction' => [
 								'id' => 11,
 								'book_id' => 4,
@@ -597,6 +621,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 3,
 							'name' => 'Action-Adventure',
+							'book_count' => 8,
 							'Junction' => [
 								'id' => 15,
 								'book_id' => 5,
@@ -606,6 +631,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 5,
 							'name' => 'Horror',
+							'book_count' => 5,
 							'Junction' => [
 								'id' => 16,
 								'book_id' => 5,
@@ -615,6 +641,7 @@ class AbstractReadTest extends TestCase {
 						new Entity([
 							'id' => 8,
 							'name' => 'Fantasy',
+							'book_count' => 15,
 							'Junction' => [
 								'id' => 14,
 								'book_id' => 5,
@@ -874,13 +901,13 @@ class AbstractReadTest extends TestCase {
 			new Entity(['id' => 5, 'name' => 'Horror']),
 			new Entity(['id' => 6, 'name' => 'Thriller']),
 			new Entity(['id' => 7, 'name' => 'Mystery'])
-		], $genre->select()->where('id', '>=', 5)->limit(3)->fetchAll());
+		], $genre->select('id', 'name')->where('id', '>=', 5)->limit(3)->fetchAll());
 
 		// Limit and offset
 		$this->assertEquals([
 			new Entity(['id' => 10, 'name' => 'Sci-fi']),
 			new Entity(['id' => 11, 'name' => 'Fiction'])
-		], $genre->select()->where('id', '>=', 7)->limit(3, 3)->fetchAll());
+		], $genre->select('id', 'name')->where('id', '>=', 7)->limit(3, 3)->fetchAll());
 	}
 
 	/**

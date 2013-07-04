@@ -107,6 +107,8 @@ class Model extends Base {
 	 * @return \Titon\Model\Behavior
 	 */
 	public function addBehavior(Behavior $behavior) {
+		$behavior->setModel($this);
+
 		$this->_behaviors[$behavior->getAlias()] = $behavior;
 
 		return $behavior;
@@ -1430,7 +1432,7 @@ class Model extends Base {
 		}
 
 		foreach ($this->getBehaviors() as $behavior) {
-			if (!method_exists($behavior, 'preDelete')) {
+			if (method_exists($behavior, 'preDelete')) {
 				$state = $behavior->preDelete($id, $cascade);
 
 				if (!$state) {

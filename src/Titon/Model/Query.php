@@ -214,9 +214,11 @@ class Query implements Serializable, JsonSerializable {
 	 * @param mixed $argument
 	 * @return \Titon\Model\Query
 	 */
-	public function bindCallback(Closure $callback, $argument = null) {
-		$callback = $callback->bindTo($this, 'Titon\Model\Query');
-		$callback($argument);
+	public function bindCallback($callback, $argument = null) {
+		if ($callback instanceof Closure) {
+			$callback = $callback->bindTo($this, 'Titon\Model\Query');
+			$callback($argument);
+		}
 
 		return $this;
 	}
