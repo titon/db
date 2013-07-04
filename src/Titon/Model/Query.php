@@ -20,6 +20,7 @@ use Titon\Model\Query\Predicate;
 use Titon\Model\Query\SubQuery;
 use Titon\Model\Traits\ExprAware;
 use Titon\Model\Traits\FuncAware;
+use Titon\Model\Traits\ModelAware;
 use Titon\Utility\Hash;
 use \Closure;
 use \Serializable;
@@ -33,7 +34,7 @@ use \JsonSerializable;
  * @package Titon\Model
  */
 class Query implements Serializable, JsonSerializable {
-	use ExprAware, FuncAware;
+	use ExprAware, FuncAware, ModelAware;
 
 	// Order directions
 	const ASC = Dialect::ASC;
@@ -100,13 +101,6 @@ class Query implements Serializable, JsonSerializable {
 	protected $_limit;
 
 	/**
-	 * That parent model instance.
-	 *
-	 * @type \Titon\Model\Model
-	 */
-	protected $_model;
-
-	/**
 	 * What offset to start records from.
 	 *
 	 * @type int
@@ -164,7 +158,7 @@ class Query implements Serializable, JsonSerializable {
 	 */
 	public function __construct($type, Model $model) {
 		$this->_type = $type;
-		$this->_model = $model;
+		$this->setModel($model);
 	}
 
 	/**
@@ -388,15 +382,6 @@ class Query implements Serializable, JsonSerializable {
 	 */
 	public function getLimit() {
 		return $this->_limit;
-	}
-
-	/**
-	 * Return the parent model.
-	 *
-	 * @return \Titon\Model\Model
-	 */
-	public function getModel() {
-		return $this->_model;
 	}
 
 	/**
@@ -722,6 +707,8 @@ class Query implements Serializable, JsonSerializable {
 
 	/**
 	 * Reconstruct the query once unserialized.
+	 *
+	 * @uses Titon\Common\Registry
 	 *
 	 * @param array $data
 	 */

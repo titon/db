@@ -7,12 +7,14 @@
 
 namespace Titon\Model;
 
+use Titon\Model\Model\Callback;
+
 /**
  * A Behavior can be attached to a model and triggered during callbacks to modify functionality.
  *
  * @package Titon\Model
  */
-interface Behavior {
+interface Behavior extends Callback {
 
 	/**
 	 * Return the behavior alias name.

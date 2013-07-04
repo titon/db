@@ -20,6 +20,7 @@ use Titon\Model\Exception\InvalidRelationStructureException;
 use Titon\Model\Exception\MissingBehaviorException;
 use Titon\Model\Exception\MissingRelationException;
 use Titon\Model\Exception\QueryFailureException;
+use Titon\Model\Model\Callback;
 use Titon\Model\Query;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
@@ -41,7 +42,7 @@ use \Closure;
  *
  * @package Titon\Model
  */
-class Model extends Base {
+class Model extends Base implements Callback {
 	use Instanceable, Attachable, Cacheable;
 
 	/**
@@ -240,7 +241,7 @@ class Model extends Base {
 		}
 
 		try {
-			foreach ($this->getRelations() as $alias => $relation) {
+			foreach ($this->getRelations() as $relation) {
 				if (!$relation->isDependent()) {
 					continue;
 				}
@@ -746,70 +747,45 @@ class Model extends Base {
 	}
 
 	/**
-	 * Callback called after a delete query.
-	 *
-	 * @param int|int[] $id
-	 */
-	public function postDelete($id) {
-		return;
-	}
-
-	/**
-	 * Callback called after a select query.
-	 *
-	 * @param array $results The results of the query
-	 * @param string $fetchType Type of fetch used
-	 * @return array
-	 */
-	public function postFetch(array $results, $fetchType) {
-		return $results;
-	}
-
-	/**
-	 * Callback called after an insert or update query.
-	 *
-	 * @param int|int[] $id
-	 * @param bool $created If the record was created
-	 */
-	public function postSave($id, $created = false) {
-		return;
-	}
-
-	/**
-	 * Callback called before a delete query.
-	 * Modify cascading by overwriting the value.
-	 * Return a falsey value to stop the process.
-	 *
-	 * @param int|int[] $id
-	 * @param bool $cascade
-	 * @return mixed
+	 * {@inheritdoc}
 	 */
 	public function preDelete($id, &$cascade) {
 		return true;
 	}
 
 	/**
-	 * Callback called before a select query.
-	 * Return an array of data to use instead of the fetch results.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @param string $fetchType
-	 * @return mixed
+	 * {@inheritdoc}
 	 */
 	public function preFetch(Query $query, $fetchType) {
 		return true;
 	}
 
 	/**
-	 * Callback called before an insert or update query.
-	 * Return a falsey value to stop the process.
-	 *
-	 * @param int|int[] $id
-	 * @param array $data
-	 * @return mixed
+	 * {@inheritdoc}
 	 */
 	public function preSave($id, array $data) {
 		return $data;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function postDelete($id) {
+		return;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function postFetch(array $results, $fetchType) {
+		return $results;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function postSave($id, $created = false) {
+		return;
 	}
 
 	/**
@@ -1381,9 +1357,7 @@ class Model extends Base {
 		$this->postDelete($id);
 
 		foreach ($this->getBehaviors() as $behavior) {
-			if (method_exists($behavior, 'postDelete')) {
-				$behavior->postDelete($id);
-			}
+			$behavior->postDelete($id);
 		}
 	}
 
@@ -1399,9 +1373,7 @@ class Model extends Base {
 		$results = $this->postFetch($results, $fetchType);
 
 		foreach ($this->getBehaviors() as $behavior) {
-			if (method_exists($behavior, 'postFetch')) {
-				$results = $behavior->postFetch($results, $fetchType);
-			}
+			$behavior->postFetch($results, $fetchType);
 		}
 
 		return $results;
@@ -1417,9 +1389,7 @@ class Model extends Base {
 		$this->postSave($id, $created);
 
 		foreach ($this->getBehaviors() as $behavior) {
-			if (method_exists($behavior, 'postSave')) {
-				$behavior->postSave($id, $created);
-			}
+			$behavior->postSave($id, $created);
 		}
 	}
 
@@ -1439,12 +1409,10 @@ class Model extends Base {
 		}
 
 		foreach ($this->getBehaviors() as $behavior) {
-			if (method_exists($behavior, 'preDelete')) {
-				$state = $behavior->preDelete($id, $cascade);
+			$state = $behavior->preDelete($id, $cascade);
 
-				if (!$state) {
-					return false;
-				}
+			if (!$state) {
+				return false;
 			}
 		}
 
@@ -1467,12 +1435,10 @@ class Model extends Base {
 		}
 
 		foreach ($this->getBehaviors() as $behavior) {
-			if (method_exists($behavior, 'preFetch')) {
-				$state = $behavior->preFetch($query, $fetchType);
+			$state = $behavior->preFetch($query, $fetchType);
 
-				if (!$state) {
-					return false;
-				}
+			if (!$state) {
+				return false;
 			}
 		}
 
@@ -1495,12 +1461,10 @@ class Model extends Base {
 		}
 
 		foreach ($this->getBehaviors() as $behavior) {
-			if (method_exists($behavior, 'preSave')) {
-				$data = $behavior->preSave($id, $data);
+			$data = $behavior->preSave($id, $data);
 
-				if (!$data) {
-					return false;
-				}
+			if (!$data) {
+				return false;
 			}
 		}
 

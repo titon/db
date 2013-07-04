@@ -11,6 +11,7 @@ use Titon\Common\Base;
 use Titon\Model\Behavior;
 use Titon\Model\Model;
 use Titon\Model\Query;
+use Titon\Model\Traits\ModelAware;
 
 /**
  * Provides shared functionality for behaviors.
@@ -18,13 +19,7 @@ use Titon\Model\Query;
  * @package Titon\Model\Behavior
  */
 abstract class AbstractBehavior extends Base implements Behavior {
-
-	/**
-	 * Model object.
-	 *
-	 * @type \Titon\Model\Model
-	 */
-	protected $_model;
+	use ModelAware;
 
 	/**
 	 * {@inheritdoc}
@@ -36,17 +31,43 @@ abstract class AbstractBehavior extends Base implements Behavior {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getModel() {
-		return $this->_model;
+	public function preDelete($id, &$cascade) {
+		return true;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function setModel(Model $model) {
-		$this->_model = $model;
+	public function preFetch(Query $query, $fetchType) {
+		return true;
+	}
 
-		return $this;
+	/**
+	 * {@inheritdoc}
+	 */
+	public function preSave($id, array $data) {
+		return $data;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function postDelete($id) {
+		return;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function postFetch(array $results, $fetchType) {
+		return $results;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function postSave($id, $created = false) {
+		return;
 	}
 
 }

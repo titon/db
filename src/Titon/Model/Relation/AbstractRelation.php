@@ -1,7 +1,7 @@
 <?php
 /**
  * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opendriver.org/licenses/bsd-license.php
+ * @license		http://opensource.org/licenses/bsd-license.php
  * @link		http://titon.io
  */
 
@@ -10,6 +10,7 @@ namespace Titon\Model\Relation;
 use Titon\Common\Base;
 use Titon\Model\Model;
 use Titon\Model\Relation;
+use Titon\Model\Traits\ModelAware;
 use \Closure;
 
 /**
@@ -18,6 +19,7 @@ use \Closure;
  * @package Titon\Model\Relation
  */
 abstract class AbstractRelation extends Base implements Relation {
+	use ModelAware;
 
 	/**
 	 * Configuration.
@@ -44,13 +46,6 @@ abstract class AbstractRelation extends Base implements Relation {
 	 * @type \Closure
 	 */
 	protected $_conditions;
-
-	/**
-	 * Primary model object.
-	 *
-	 * @type \Titon\Model\Model
-	 */
-	protected $_model;
 
 	/**
 	 * Store the alias and class name.
@@ -92,13 +87,6 @@ abstract class AbstractRelation extends Base implements Relation {
 	 */
 	public function getForeignKey() {
 		return $this->config->foreignKey;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getModel() {
-		return $this->_model;
 	}
 
 	/**
@@ -163,15 +151,6 @@ abstract class AbstractRelation extends Base implements Relation {
 	 */
 	public function setForeignKey($key) {
 		$this->config->foreignKey = $key;
-
-		return $this;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function setModel(Model $model) {
-		$this->_model = $model;
 
 		return $this;
 	}
