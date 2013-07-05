@@ -62,6 +62,11 @@ interface Dialect {
 	const INSERT_METHOD = 'insertMethod';
 	const IS_NULL = 'isNull';
 	const IS_NOT_NULL = 'isNotNull';
+	const JOIN = 'join';
+	const JOIN_INNER = 'innerJoin';
+	const JOIN_LEFT = 'leftJoin';
+	const JOIN_OUTER = 'outerJoin';
+	const JOIN_RIGHT = 'rightJoin';
 	const KEY_BLOCK_SIZE = 'keyBlockSize';
 	const LIKE = 'like';
 	const LIMIT = 'limit';

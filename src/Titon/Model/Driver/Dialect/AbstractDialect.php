@@ -68,6 +68,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 		self::INDEX					=> 'KEY %s (%s)',
 		self::IS_NULL				=> '%s IS NULL',
 		self::IS_NOT_NULL			=> '%s IS NOT NULL',
+		self::JOIN_INNER			=> 'INNER JOIN %s ON %s',
+		self::JOIN_LEFT				=> 'LEFT JOIN %s ON %s',
+		self::JOIN_OUTER			=> 'OUTER JOIN %s ON %s',
+		self::JOIN_RIGHT			=> 'RIGHT JOIN %s ON %s',
 		self::LIKE					=> '%s LIKE ?',
 		self::LIMIT					=> 'LIMIT %s',
 		self::LIMIT_OFFSET			=> 'LIMIT %s OFFSET %s',
@@ -154,9 +158,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	protected $_statements = [
 		Query::INSERT		=> 'INSERT {a.priority} {a.ignore} INTO {table} {fields} VALUES {values}',
-		Query::SELECT		=> 'SELECT {a.distinct} {a.priority} {a.optimize} {a.cache} {fields} FROM {table} {where} {groupBy} {having} {orderBy} {limit}',
-		Query::UPDATE		=> 'UPDATE {a.priority} {a.ignore} {table} SET {fields} {where} {orderBy} {limit}',
-		Query::DELETE		=> 'DELETE {a.priority} {a.quick} {a.ignore} FROM {table} {where} {orderBy} {limit}',
+		Query::SELECT		=> 'SELECT {a.distinct} {a.priority} {a.optimize} {a.cache} {fields} FROM {table} {joins} {where} {groupBy} {having} {orderBy} {limit}',
+		Query::UPDATE		=> 'UPDATE {a.priority} {a.ignore} {table} {joins} SET {fields} {where} {orderBy} {limit}',
+		Query::DELETE		=> 'DELETE {a.priority} {a.quick} {a.ignore} FROM {table} {joins} {where} {orderBy} {limit}',
 		Query::TRUNCATE		=> 'TRUNCATE {table}',
 		Query::DESCRIBE		=> 'DESCRIBE {table}',
 		Query::DROP_TABLE	=> 'DROP {a.temporary} TABLE IF EXISTS {table}',
@@ -242,6 +246,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DELETE));
 		$params = $params + [
 			'table' => $this->formatTable($query->getTable()),
+			'joins' => $this->formatJoins($query->getJoins()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
 			'limit' => $this->formatLimit($query->getLimit()),
@@ -332,8 +337,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 	public function buildSelect(Query $query) {
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::SELECT));
 		$params = $params + [
-			'table' => $this->formatTable($query->getTable()),
 			'fields' => $this->formatFields($query->getFields(), $query->getType()),
+			'table' => $this->formatTable($query->getTable()),
+			'joins' => $this->formatJoins($query->getJoins()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'groupBy' => $this->formatGroupBy($query->getGroupBy()),
 			'having' => $this->formatHaving($query->getHaving()),
@@ -351,10 +357,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildSubQuery(SubQuery $query) {
-		$output = sprintf($this->getClause('subQuery'), trim($this->buildSelect($query), ';'));
+		$output = sprintf($this->getClause(self::SUB_QUERY), trim($this->buildSelect($query), ';'));
 
 		if ($alias = $query->getAlias()) {
-			$output = sprintf($this->getClause('as'), $output, $this->quote($alias));
+			$output = sprintf($this->getClause(self::AS_ALIAS), $output, $this->quote($alias));
 		}
 
 		if ($filter = $query->getFilter()) {
@@ -385,8 +391,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 	public function buildUpdate(Query $query) {
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::UPDATE));
 		$params = $params + [
-			'table' => $this->formatTable($query->getTable()),
 			'fields' => $this->formatFields($query->getFields(), $query->getType()),
+			'table' => $this->formatTable($query->getTable()),
+			'joins' => $this->formatJoins($query->getJoins()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
 			'limit' => $this->formatLimit($query->getLimit()),
@@ -604,6 +611,34 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
+	 * Format the list of joins.
+	 *
+	 * @param \Titon\Model\Query\Join[] $joins
+	 * @return string
+	 */
+	public function formatJoins(array $joins) {
+		if ($joins) {
+			$output = [];
+
+			foreach ($joins as $join) {
+				$conditions = [];
+
+				foreach ($join->getOn() as $fk => $key) {
+					$conditions[] = $this->quote($fk) . ' = ' . $this->quote($key);
+				}
+
+				$output[] = sprintf($this->getClause($join->getType()),
+					$this->formatTable($join->getTable(), $join->getAlias()),
+					implode(' ' . $this->getKeyword(self::ALSO) . ' ', $conditions));
+			}
+
+			return implode(' ', $output);
+		}
+
+		return '';
+	}
+
+	/**
 	 * Format the limit.
 	 *
 	 * @param int $limit
@@ -730,18 +765,25 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
-	 * Format the table name.
+	 * Format the table name and alias name.
 	 *
 	 * @param string $table
+	 * @param string $alias
 	 * @return string
 	 * @throws \Titon\Model\Exception\InvalidQueryException
 	 */
-	public function formatTable($table) {
+	public function formatTable($table, $alias = null) {
 		if (!$table) {
 			throw new InvalidQueryException('Missing table for query');
 		}
 
-		return $this->quote($table);
+		$table = $this->quote($table);
+
+		if ($alias) {
+			$table = sprintf($this->getClause(self::AS_ALIAS), $table, $this->quote($alias));
+		}
+
+		return $table;
 	}
 
 	/**
@@ -931,6 +973,16 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * {@inheritdoc}
 	 */
 	public function quote($value) {
+		if (strpos($value, '.') !== false) {
+			list($table, $field) = explode('.', $value);
+
+			if ($field !== '*') {
+				$field = $this->quote($field);
+			}
+
+			return $this->quote($table) . '.' . $field;
+		}
+
 		$char = $this->config->quoteCharacter;
 
 		return $char . trim($value, $char) . $char;

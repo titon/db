@@ -16,6 +16,7 @@ use Titon\Model\Exception\InvalidRelationQueryException;
 use Titon\Model\Model;
 use Titon\Model\Query\Expr;
 use Titon\Model\Query\Func;
+use Titon\Model\Query\Join;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Query\SubQuery;
 use Titon\Model\Traits\ExprAware;
@@ -92,6 +93,13 @@ class Query implements Serializable, JsonSerializable {
 	 * @type \Titon\Model\Query\Predicate
 	 */
 	protected $_having;
+
+	/**
+	 * List of joins.
+	 *
+	 * @type \Titon\Model\Query\Join[]
+	 */
+	protected $_joins = [];
 
 	/**
 	 * How many records to return.
@@ -376,6 +384,15 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Return the list of joins.
+	 *
+	 * @return \Titon\Model\Query\Join[]
+	 */
+	public function getJoins() {
+		return $this->_joins;
+	}
+
+	/**
 	 * Return the limit.
 	 *
 	 * @return int
@@ -478,6 +495,30 @@ class Query implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Add a new INNER join.
+	 *
+	 * @param string|\Titon\Model\Relation $table
+	 * @param array $on
+	 * @param array $fields
+	 * @return \Titon\Model\Query
+	 */
+	public function innerJoin($table, array $on = [], array $fields = []) {
+		return $this->_addJoin(Join::INNER, $table, $on, $fields);
+	}
+
+	/**
+	 * Add a new LEFT join.
+	 *
+	 * @param string|\Titon\Model\Relation $table
+	 * @param array $on
+	 * @param array $fields
+	 * @return \Titon\Model\Query
+	 */
+	public function leftJoin($table, array $on = [], array $fields = []) {
+		return $this->_addJoin(Join::LEFT, $table, $on, $fields);
+	}
+
+	/**
 	 * Set the record limit and offset.
 	 *
 	 * @param int $limit
@@ -559,6 +600,30 @@ class Query implements Serializable, JsonSerializable {
 	 */
 	public function orWhere($field, $op = null, $value = null) {
 		return $this->_modifyPredicate($this->_where, Predicate::EITHER, $field, $op, $value);
+	}
+
+	/**
+	 * Add a new OUTER join.
+	 *
+	 * @param string|\Titon\Model\Relation $table
+	 * @param array $on
+	 * @param array $fields
+	 * @return \Titon\Model\Query
+	 */
+	public function outerJoin($table, array $on = [], array $fields = []) {
+		return $this->_addJoin(Join::OUTER, $table, $on, $fields);
+	}
+
+	/**
+	 * Add a new RIGHT join.
+	 *
+	 * @param string|\Titon\Model\Relation $table
+	 * @param array $on
+	 * @param array $fields
+	 * @return \Titon\Model\Query
+	 */
+	public function rightJoin($table, array $on = [], array $fields = []) {
+		return $this->_addJoin(Join::RIGHT, $table, $on, $fields);
 	}
 
 	/**
@@ -717,6 +782,8 @@ class Query implements Serializable, JsonSerializable {
 
 		$this->__construct($data['type'], Registry::factory($data['model']));
 
+		// TODO joins
+
 		if ($data['attributes']) {
 			$this->attribute($data['attributes']);
 		}
@@ -779,6 +846,7 @@ class Query implements Serializable, JsonSerializable {
 			'fields' => $fields,
 			'groupBy' => $this->getGroupBy(),
 			'having' => $this->getHaving(),
+			'joins' => $this->getJoins(),
 			'limit' => $this->getLimit(),
 			'model' => get_class($this->getModel()),
 			'offset' => $this->getOffset(),
@@ -788,6 +856,35 @@ class Query implements Serializable, JsonSerializable {
 			'type' => $this->getType(),
 			'where' => $this->getWhere()
 		];
+	}
+
+	/**
+	 * Add a new join type. If table is a relation instance, introspect the correct values.
+	 *
+	 * @param string $type
+	 * @param string|\Titon\Model\Relation $table
+	 * @param array $on
+	 * @param array $fields
+	 * @return \Titon\Model\Query
+	 */
+	protected function _addJoin($type, $table, $on = [], $fields = []) {
+		$join = new Join($type);
+
+		if ($table instanceof Relation) {
+			$relation = $table;
+
+			$join
+				->from($relation->getRelatedModel()->getTable())
+				->asAlias($relation->getAlias())
+				->on($relation->getModel()->getPrimaryKey(), $relation->getRelatedModel()->getPrimaryKey())
+				->fields($fields);
+		} else {
+			$join->from($table)->on($on)->fields($fields);
+		}
+
+		$this->_joins[] = $join;
+
+		return $this;
 	}
 
 	/**
