@@ -1212,4 +1212,44 @@ class AbstractReadTest extends TestCase {
 		], $query->fetchAll(false));
 	}
 
+	/**
+	 * Test that left join fetches data.
+	 */
+	public function testLeftJoin() {
+		$this->loadFixtures(['Users', 'Profiles']);
+
+		$user = new User();
+		$query = $user->select('id', 'username')
+			->leftJoin($user->getRelation('Profile'), ['id'])
+			->orderBy('User.id', 'asc');
+
+		$this->assertEquals([
+			new Entity([
+				'id' => 1,
+				'username' => 'miles',
+				'Profile' => new Entity(['id' => 4])
+			]),
+			new Entity([
+				'id' => 2,
+				'username' => 'batman',
+				'Profile' => new Entity(['id' => 5])
+			]),
+			new Entity([
+				'id' => 3,
+				'username' => 'superman',
+				'Profile' => new Entity(['id' => 2])
+			]),
+			new Entity([
+				'id' => 4,
+				'username' => 'spiderman',
+				'Profile' => new Entity(['id' => 1])
+			]),
+			new Entity([
+				'id' => 5,
+				'username' => 'wolverine',
+				'Profile' => new Entity(['id' => 3])
+			])
+		], $query->fetchAll());
+	}
+
 }

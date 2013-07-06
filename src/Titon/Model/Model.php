@@ -1257,6 +1257,25 @@ class Model extends Base implements Callback {
 
 		if ($wrap && $entity) {
 			foreach ($results as $i => $result) {
+
+				// Wrap data pulled through a join
+				foreach ($result as $key => $value) {
+					if (is_array($value)) {
+
+						// Don't wrap collections of entities
+						if (isset($value[0]) && $value[0] instanceof Entity) {
+							continue;
+						}
+
+						if ($this->hasRelation($key)) {
+							$relatedEntity = $this->getRelation($key)->getRelatedModel()->getEntity() ?: $entity;
+							$result[$key] = new $relatedEntity($value);
+						} else {
+							$result[$key] = new $entity($value);
+						}
+					}
+				}
+
 				$results[$i] = new $entity($result);
 			}
 		}

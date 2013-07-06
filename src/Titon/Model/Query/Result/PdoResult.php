@@ -88,13 +88,13 @@ class PdoResult extends AbstractResult implements Result {
 	 * {@inheritdoc}
 	 */
 	public function fetch() {
-		$this->execute();
+		$results = $this->fetchAll();
 
-		$result = (array) $this->_statement->fetch(PDO::FETCH_ASSOC);
+		if (isset($results[0])) {
+			return $results[0];
+		}
 
-		$this->close();
-
-		return $result;
+		return $results;
 	}
 
 	/**
@@ -103,7 +103,39 @@ class PdoResult extends AbstractResult implements Result {
 	public function fetchAll() {
 		$this->execute();
 
-		$results = (array) $this->_statement->fetchAll(PDO::FETCH_ASSOC);
+		$statement = $this->_statement;
+		$columnMeta = [];
+		$results = [];
+
+		foreach (range(0, $statement->columnCount() - 1) as $index) {
+			$columnMeta[] = $statement->getColumnMeta($index);
+		}
+
+		while ($row = $statement->fetch(PDO::FETCH_NUM)) {
+			$joins = [];
+			$result = [];
+
+			foreach ($row as $index => $value) {
+				$column = $columnMeta[$index];
+
+				$joins[$column['table']][$column['name']] = $value;
+			}
+
+			foreach ($joins as $join => $data) {
+				if (empty($result)) {
+					$result = $data;
+
+				// Aliased/count fields don't have a table
+				} else if (empty($join)) {
+					$result = array_merge($result, $data);
+
+				} else {
+					$result[$join] = $data;
+				}
+			}
+
+			$results[] = $result;
+		}
 
 		$this->close();
 
