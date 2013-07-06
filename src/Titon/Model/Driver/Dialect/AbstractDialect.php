@@ -245,7 +245,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	public function buildDelete(Query $query) {
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DELETE));
 		$params = $params + [
-			'table' => $this->formatTable($query->getTable()),
+			'table' => $this->formatTable($query->getTable(), $query->getAlias()),
 			'joins' => $this->formatJoins($query->getJoins()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
@@ -338,7 +338,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::SELECT));
 		$params = $params + [
 			'fields' => $this->formatFields($query->getFields(), $query->getType()),
-			'table' => $this->formatTable($query->getTable()),
+			'table' => $this->formatTable($query->getTable(), $query->getAlias()),
 			'joins' => $this->formatJoins($query->getJoins()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'groupBy' => $this->formatGroupBy($query->getGroupBy()),
@@ -392,7 +392,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::UPDATE));
 		$params = $params + [
 			'fields' => $this->formatFields($query->getFields(), $query->getType()),
-			'table' => $this->formatTable($query->getTable()),
+			'table' => $this->formatTable($query->getTable(), $query->getAlias()),
 			'joins' => $this->formatJoins($query->getJoins()),
 			'where' => $this->formatWhere($query->getWhere()),
 			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
@@ -623,8 +623,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 			foreach ($joins as $join) {
 				$conditions = [];
 
-				foreach ($join->getOn() as $fk => $key) {
-					$conditions[] = $this->quote($fk) . ' = ' . $this->quote($key);
+				foreach ($join->getOn() as $pfk => $rfk) {
+					$conditions[] = $this->quote($pfk) . ' = ' . $this->quote($rfk);
 				}
 
 				$output[] = sprintf($this->getClause($join->getType()),
@@ -777,13 +777,13 @@ abstract class AbstractDialect extends Base implements Dialect {
 			throw new InvalidQueryException('Missing table for query');
 		}
 
-		$table = $this->quote($table);
+		$output = $this->quote($table);
 
-		if ($alias) {
-			$table = sprintf($this->getClause(self::AS_ALIAS), $table, $this->quote($alias));
+		if ($alias && $table !== $alias) {
+			$output = sprintf($this->getClause(self::AS_ALIAS), $output, $this->quote($alias));
 		}
 
-		return $table;
+		return $output;
 	}
 
 	/**

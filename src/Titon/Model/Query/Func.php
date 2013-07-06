@@ -8,6 +8,7 @@
 namespace Titon\Model\Query;
 
 use Titon\Model\Driver;
+use Titon\Model\Traits\AliasAware;
 use Titon\Model\Traits\FuncAware;
 
 /**
@@ -34,17 +35,10 @@ use Titon\Model\Traits\FuncAware;
  * @package Titon\Model\Query
  */
 class Func {
-	use FuncAware;
+	use FuncAware, AliasAware;
 
 	const FIELD = 'field';
 	const LITERAL = 'literal';
-
-	/**
-	 * Column alias name.
-	 *
-	 * @type string
-	 */
-	protected $_alias;
 
 	/**
 	 * List of function arguments.
@@ -109,27 +103,6 @@ class Func {
 		}
 
 		return sprintf('%s(%s) AS %s', $this->getName(), implode(', ', $arguments), $this->getAlias());
-	}
-
-	/**
-	 * Set the alias name.
-	 *
-	 * @param string $alias
-	 * @return \Titon\Model\Query\Func
-	 */
-	public function asAlias($alias) {
-		$this->_alias = $alias;
-
-		return $this;
-	}
-
-	/**
-	 * Return the alias name.
-	 *
-	 * @return string
-	 */
-	public function getAlias() {
-		return $this->_alias;
 	}
 
 	/**

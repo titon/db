@@ -507,6 +507,15 @@ class Model extends Base implements Callback {
 	}
 
 	/**
+	 * Return an alias for the model. Usually the class name.
+	 *
+	 * @return string
+	 */
+	public function getAlias() {
+		return $this->info->shortClassName;
+	}
+
+	/**
 	 * Return a behavior by alias.
 	 *
 	 * @param string $alias
@@ -798,7 +807,7 @@ class Model extends Base implements Callback {
 		$this->data = [];
 
 		$query = new Query($type, $this);
-		$query->from($this->getTable());
+		$query->from($this->getTable(), $this->getAlias());
 
 		return $query;
 	}

@@ -26,39 +26,11 @@ class SubQuery extends Query {
 	const NOT_EXISTS = Dialect::NOT_EXISTS;
 
 	/**
-	 * Column alias name.
-	 *
-	 * @type string
-	 */
-	protected $_alias;
-
-	/**
 	 * Comparison filter.
 	 *
 	 * @type string
 	 */
 	protected $_filter;
-
-	/**
-	 * Set the alias name.
-	 *
-	 * @param string $alias
-	 * @return \Titon\Model\Query\SubQuery
-	 */
-	public function asAlias($alias) {
-		$this->_alias = $alias;
-
-		return $this;
-	}
-
-	/**
-	 * Return the alias name.
-	 *
-	 * @return string
-	 */
-	public function getAlias() {
-		return $this->_alias;
-	}
 
 	/**
 	 * Return the filter type.

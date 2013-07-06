@@ -19,6 +19,7 @@ use Titon\Model\Query\Func;
 use Titon\Model\Query\Join;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Query\SubQuery;
+use Titon\Model\Traits\AliasAware;
 use Titon\Model\Traits\ExprAware;
 use Titon\Model\Traits\FuncAware;
 use Titon\Model\Traits\ModelAware;
@@ -35,7 +36,7 @@ use \JsonSerializable;
  * @package Titon\Model
  */
 class Query implements Serializable, JsonSerializable {
-	use ExprAware, FuncAware, ModelAware;
+	use AliasAware, ExprAware, FuncAware, ModelAware;
 
 	// Order directions
 	const ASC = Dialect::ASC;
@@ -321,12 +322,27 @@ class Query implements Serializable, JsonSerializable {
 	 * Set the table to query against.
 	 *
 	 * @param string $table
+	 * @param string $alias
 	 * @return \Titon\Model\Query
 	 */
-	public function from($table) {
+	public function from($table, $alias = null) {
 		$this->_table = (string) $table;
+		$this->asAlias($alias);
 
 		return $this;
+	}
+
+	/**
+	 * Only return the alias if joins have been set or this is a sub-query.
+	 *
+	 * @return string
+	 */
+	public function getAlias() {
+		if ($this->_joins || $this instanceof SubQuery) {
+			return $this->_alias;
+		}
+
+		return null;
 	}
 
 	/**
@@ -862,24 +878,56 @@ class Query implements Serializable, JsonSerializable {
 	 * Add a new join type. If table is a relation instance, introspect the correct values.
 	 *
 	 * @param string $type
-	 * @param string|\Titon\Model\Relation $table
+	 * @param string|array|\Titon\Model\Relation $table
 	 * @param array $on
 	 * @param array $fields
 	 * @return \Titon\Model\Query
+	 * @throws \Titon\Model\Exception\InvalidRelationQueryException
 	 */
 	protected function _addJoin($type, $table, $on = [], $fields = []) {
+		$model = $this->getModel();
 		$join = new Join($type);
 
 		if ($table instanceof Relation) {
 			$relation = $table;
+			$relatedModel = $relation->getRelatedModel();
 
-			$join
-				->from($relation->getRelatedModel()->getTable())
-				->asAlias($relation->getAlias())
-				->on($relation->getModel()->getPrimaryKey(), $relation->getRelatedModel()->getPrimaryKey())
-				->fields($fields);
+			$join->from($relatedModel->getTable(), $relatedModel->getAlias())->fields($fields);
+
+			switch ($relation->getType()) {
+				case Relation::MANY_TO_ONE:
+					$join->on($model->getAlias() . '.' . $relation->getForeignKey(), $relatedModel->getAlias() . '.' . $relatedModel->getPrimaryKey());
+				break;
+				case Relation::ONE_TO_ONE:
+					$join->on($model->getAlias() . '.' . $model->getPrimaryKey(), $relatedModel->getAlias() . '.' . $relation->getRelatedForeignKey());
+				break;
+				default:
+					throw new InvalidRelationQueryException('Only many-to-one and one-to-one relations can join data');
+				break;
+			}
 		} else {
-			$join->from($table)->on($on)->fields($fields);
+			if (is_array($table)) {
+				$alias = $table[1];
+				$table = $table[0];
+			} else {
+				$alias = $table;
+			}
+
+			$conditions = [];
+
+			foreach ($on as $pfk => $rfk) {
+				if (strpos($pfk, '.') === false) {
+					$pfk = $model->getAlias() . '.' . $pfk;
+				}
+
+				if (strpos($rfk, '.') === false) {
+					$rfk = $alias . '.' . $rfk;
+				}
+
+				$conditions[$pfk] = $rfk;
+			}
+
+			$join->from($table, $alias)->on($conditions)->fields($fields);
 		}
 
 		$this->_joins[] = $join;

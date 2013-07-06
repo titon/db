@@ -8,6 +8,7 @@
 namespace Titon\Model\Query;
 
 use Titon\Model\Driver\Dialect;
+use Titon\Model\Traits\AliasAware;
 
 /**
  * TODO
@@ -18,18 +19,12 @@ use Titon\Model\Driver\Dialect;
  * @package Titon\Model\Query
  */
 class Join {
+	use AliasAware;
 
 	const LEFT = Dialect::JOIN_LEFT;
 	const RIGHT = Dialect::JOIN_RIGHT;
 	const INNER = Dialect::JOIN_INNER;
 	const OUTER = Dialect::JOIN_OUTER;
-
-	/**
-	 * Table alias name.
-	 *
-	 * @type string
-	 */
-	protected $_alias;
 
 	/**
 	 * The conditions to join the tables on.
@@ -70,18 +65,6 @@ class Join {
 	}
 
 	/**
-	 * Set the alias name.
-	 *
-	 * @param string $alias
-	 * @return \Titon\Model\Query\Join
-	 */
-	public function asAlias($alias) {
-		$this->_alias = $alias;
-
-		return $this;
-	}
-
-	/**
 	 * Set the list of fields to return.
 	 *
 	 * @param string|array $fields
@@ -101,21 +84,14 @@ class Join {
 	 * Set the table to join against.
 	 *
 	 * @param string $table
+	 * @param string $alias
 	 * @return \Titon\Model\Query\Join
 	 */
-	public function from($table) {
+	public function from($table, $alias = null) {
 		$this->_table = (string) $table;
+		$this->asAlias($alias);
 
 		return $this;
-	}
-
-	/**
-	 * Return the alias name.
-	 *
-	 * @return string
-	 */
-	public function getAlias() {
-		return $this->_alias ?: $this->getTable();
 	}
 
 	/**

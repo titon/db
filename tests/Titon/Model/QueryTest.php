@@ -9,6 +9,7 @@ namespace Titon\Model;
 
 use Titon\Model\Query;
 use Titon\Model\Query\Expr;
+use Titon\Model\Query\Join;
 use Titon\Model\Query\Predicate;
 use Titon\Test\Stub\Model\Profile;
 use Titon\Test\Stub\Model\User;
@@ -149,6 +150,32 @@ class QueryTest extends TestCase {
 		$expected['size!=15'] = new Expr('size', '!=', 15);
 
 		$this->assertEquals($expected, $this->object->getHaving()->getParams());
+	}
+
+	/**
+	 * Test join building.
+	 */
+	public function testJoins() {
+		$expected = [];
+
+		$j1 = new Join(Join::LEFT);
+		$j1->from('profiles', 'profiles')->on('User.profile_id', 'profiles.id');
+
+		$this->object->leftJoin('profiles', ['profile_id' => 'id']);
+		$this->assertEquals($j1, $this->object->getJoins()[0]);
+
+		$j2 = new Join(Join::RIGHT);
+		$j2->from('profiles', 'profiles')->on('users.id', 'profiles.id')->fields(['id', 'created']);
+
+		$this->object->rightJoin('profiles', ['users.id' => 'profiles.id'], ['id', 'created']);
+		$this->assertEquals($j2, $this->object->getJoins()[1]);
+
+		// With relation
+		$j3 = new Join(Join::INNER);
+		$j3->from('profiles', 'Profile')->on('User.id', 'Profile.user_id');
+
+		$this->object->innerJoin($this->object->getModel()->getRelation('Profile'));
+		$this->assertEquals($j3, $this->object->getJoins()[2]);
 	}
 
 	/**

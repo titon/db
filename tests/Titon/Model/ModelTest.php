@@ -431,7 +431,7 @@ class ModelTest extends TestCase {
 	 */
 	public function testSelect() {
 		$query = new Query(Query::SELECT, $this->object);
-		$query->from($this->object->getTable())->fields('id', 'username');
+		$query->from($this->object->getTable(), 'User')->fields('id', 'username');
 
 		$this->assertEquals($query, $this->object->select('id', 'username'));
 	}

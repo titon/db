@@ -37,11 +37,6 @@ class JoinTest extends TestCase {
 	 * Test alias name is set.
 	 */
 	public function testAlias() {
-		$this->assertEquals(null, $this->object->getAlias());
-
-		$this->object->from('users');
-		$this->assertEquals('users', $this->object->getAlias());
-
 		$this->object->asAlias('U');
 		$this->assertEquals('U', $this->object->getAlias());
 	}
