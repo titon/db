@@ -345,9 +345,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildSubQuery(SubQuery $query) {
+
+		// Reset the alias since statement would have double aliasing
+		$alias = $query->getAlias();
+		$query->asAlias(null);
+
 		$output = sprintf($this->getClause(self::SUB_QUERY), trim($this->buildSelect($query), ';'));
 
-		if ($alias = $query->getAlias()) {
+		if ($alias) {
 			$output = sprintf($this->getClause(self::AS_ALIAS), $output, $this->quote($alias));
 		}
 

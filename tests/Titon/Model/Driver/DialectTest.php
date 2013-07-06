@@ -367,8 +367,6 @@ class DialectTest extends TestCase {
 	 * Test sub-query creation.
 	 */
 	public function testBuildSubQuery() {
-		$this->markTestSkipped('Need to fix AS aliasing for sub-queries');
-
 		// In fields
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->fields($query->subQuery('id')->from('profiles'));
