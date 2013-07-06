@@ -75,7 +75,7 @@ class Join {
 			$fields = func_get_args();
 		}
 
-		$this->_fields = array_values(array_unique($fields));
+		$this->_fields = $fields;
 
 		return $this;
 	}

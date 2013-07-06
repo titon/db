@@ -57,6 +57,9 @@ class JoinTest extends TestCase {
 
 		$this->object->fields(['id', 'user']);
 		$this->assertEquals(['id', 'user'], $this->object->getFields());
+
+		$this->object->fields(['user' => 'foo']);
+		$this->assertEquals(['user' => 'foo'], $this->object->getFields());
 	}
 
 	/**

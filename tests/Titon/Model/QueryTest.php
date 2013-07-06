@@ -161,13 +161,13 @@ class QueryTest extends TestCase {
 		$j1 = new Join(Join::LEFT);
 		$j1->from('profiles', 'profiles')->on('User.profile_id', 'profiles.id');
 
-		$this->object->leftJoin('profiles', ['profile_id' => 'id']);
+		$this->object->leftJoin('profiles', [], ['profile_id' => 'id']);
 		$this->assertEquals($j1, $this->object->getJoins()[0]);
 
 		$j2 = new Join(Join::RIGHT);
 		$j2->from('profiles', 'profiles')->on('users.id', 'profiles.id')->fields(['id', 'created']);
 
-		$this->object->rightJoin('profiles', ['users.id' => 'profiles.id'], ['id', 'created']);
+		$this->object->rightJoin('profiles', ['id', 'created'], ['users.id' => 'profiles.id']);
 		$this->assertEquals($j2, $this->object->getJoins()[1]);
 
 		// With relation

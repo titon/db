@@ -292,8 +292,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
 		$params = $params + [
 			'table' => $this->formatTable($query->getTable()),
-			'fields' => $this->formatFields($query->getFields(), $query->getType()),
-			'values' => $this->formatValues($query->getFields(), $query->getType()),
+			'fields' => $this->formatFields($query),
+			'values' => $this->formatValues($query)
 		];
 
 		return $this->renderStatement($this->getStatement(Query::INSERT), $params);
@@ -306,23 +306,11 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildMultiInsert(Query $query) {
-		$values = [];
-		$fields = [];
-		$type = $query->getType();
-
-		foreach ($query->getFields() as $record) {
-			if (!$fields) {
-				$fields = $this->formatFields($record, $type);
-			}
-
-			$values[] = $this->formatValues($record, $type);
-		}
-
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
 		$params = $params + [
 			'table' => $this->formatTable($query->getTable()),
-			'fields' => $fields,
-			'values' => implode(', ', $values),
+			'fields' => $this->formatFields($query),
+			'values' => $this->formatValues($query)
 		];
 
 		return $this->renderStatement($this->getStatement(Query::INSERT), $params);
@@ -337,7 +325,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	public function buildSelect(Query $query) {
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::SELECT));
 		$params = $params + [
-			'fields' => $this->formatFields($query->getFields(), $query->getType()),
+			'fields' => $this->formatFields($query),
 			'table' => $this->formatTable($query->getTable(), $query->getAlias()),
 			'joins' => $this->formatJoins($query->getJoins()),
 			'where' => $this->formatWhere($query->getWhere()),
@@ -391,7 +379,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	public function buildUpdate(Query $query) {
 		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::UPDATE));
 		$params = $params + [
-			'fields' => $this->formatFields($query->getFields(), $query->getType()),
+			'fields' => $this->formatFields($query),
 			'table' => $this->formatTable($query->getTable(), $query->getAlias()),
 			'joins' => $this->formatJoins($query->getJoins()),
 			'where' => $this->formatWhere($query->getWhere()),
@@ -478,12 +466,15 @@ abstract class AbstractDialect extends Base implements Dialect {
 	/**
 	 * Format the fields structure depending on the type of query.
 	 *
-	 * @param array $fields
-	 * @param int $type
+	 * @param \Titon\Model\Query $query
 	 * @return string
 	 * @throws \Titon\Model\Exception\InvalidQueryException
 	 */
-	public function formatFields(array $fields, $type) {
+	public function formatFields(Query $query) {
+		$fields = $query->getFields();
+		$joins = $query->getJoins();
+		$type = $query->getType();
+
 		switch ($type) {
 			case Query::INSERT:
 			case Query::MULTI_INSERT:
@@ -491,26 +482,22 @@ abstract class AbstractDialect extends Base implements Dialect {
 					throw new InvalidQueryException('Missing field data for insert query');
 				}
 
+				if ($type === Query::MULTI_INSERT) {
+					$fields = $fields[0];
+				}
+
 				return '(' . $this->quoteList(array_keys($fields)) . ')';
 			break;
 
 			case Query::SELECT:
-				if (empty($fields)) {
-					return '*';
-				}
+				if ($joins) {
+					$columns = $this->formatSelectFields($fields, $query->getModel()->getAlias());
 
-				$columns = [];
-
-				foreach ($fields as $field) {
-					if ($field instanceof Func) {
-						$columns[] = $this->formatFunction($field);
-
-					} else if ($field instanceof Query) {
-						$columns[] = $this->buildSubQuery($field);
-
-					} else {
-						$columns[] = $this->quote($field);
+					foreach ($joins as $join) {
+						$columns = array_merge($columns, $this->formatSelectFields($join->getFields(), $join->getAlias()));
 					}
+				} else {
+					$columns = $this->formatSelectFields($fields);
 				}
 
 				return implode(', ', $columns);
@@ -521,14 +508,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 					throw new InvalidQueryException('Missing field data for update query');
 				}
 
-				$values = [];
+				if ($joins) {
+					$values = $this->formatUpdateFields($fields, $query->getModel()->getAlias());
 
-				foreach ($fields as $key => $value) {
-					if ($value instanceof Expr) {
-						$values[] = $this->quote($key) . ' = ' . $this->formatExpression($value);
-					} else {
-						$values[] = $this->quote($key) . ' = ?';
+					foreach ($joins as $join) {
+						$values = array_merge($values, $this->formatUpdateFields($join->getFields(), $join->getAlias()));
 					}
+				} else {
+					$values = $this->formatUpdateFields($fields);
 				}
 
 				return implode(', ', $values);
@@ -536,6 +523,64 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Format a list of fields for a SELECT statement and apply an optional alias.
+	 *
+	 * @param array $fields
+	 * @param string $alias
+	 * @return array
+	 */
+	public function formatSelectFields(array $fields, $alias = null) {
+		$columns = [];
+
+		if ($alias) {
+			$alias = $this->quote($alias) . '.';
+		}
+
+		if (empty($fields)) {
+			$columns[] = $alias . '*';
+		} else {
+			foreach ($fields as $field) {
+				if ($field instanceof Func) {
+					$columns[] = $this->formatFunction($field);
+
+				} else if ($field instanceof Query) {
+					$columns[] = $this->buildSubQuery($field);
+
+				} else {
+					$columns[] = $alias . $this->quote($field);
+				}
+			}
+		}
+
+		return $columns;
+	}
+
+	/**
+	 * Format a list of fields for a SELECT statement and apply an optional alias.
+	 *
+	 * @param array $fields
+	 * @param string $alias
+	 * @return array
+	 */
+	public function formatUpdateFields(array $fields, $alias = null) {
+		$columns = [];
+
+		if ($alias) {
+			$alias = $this->quote($alias) . '.';
+		}
+
+		foreach ($fields as $key => $value) {
+			if ($value instanceof Expr) {
+				$columns[] = $alias . $this->quote($key) . ' = ' . $this->formatExpression($value);
+			} else {
+				$columns[] = $alias . $this->quote($key) . ' = ?';
+			}
+		}
+
+		return $columns;
 	}
 
 	/**
@@ -867,15 +912,20 @@ abstract class AbstractDialect extends Base implements Dialect {
 	/**
 	 * Format the fields values structure depending on the type of query.
 	 *
-	 * @param array $fields
-	 * @param int $type
+	 * @param \Titon\Model\Query $query
 	 * @return string
 	 */
-	public function formatValues(array $fields, $type) {
-		switch ($type) {
+	public function formatValues(Query $query) {
+		$fields = $query->getFields();
+
+		switch ($query->getType()) {
 			case Query::INSERT:
-			case Query::MULTI_INSERT:
 				return sprintf($this->getClause(self::GROUP), implode(', ', array_fill(0, count($fields), '?')));
+			break;
+			case Query::MULTI_INSERT:
+				$value = sprintf($this->getClause(self::GROUP), implode(', ', array_fill(0, count($fields[0]), '?')));
+
+				return implode(', ', array_fill(0, count($fields), $value));
 			break;
 		}
 

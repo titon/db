@@ -514,24 +514,24 @@ class Query implements Serializable, JsonSerializable {
 	 * Add a new INNER join.
 	 *
 	 * @param string|\Titon\Model\Relation $table
-	 * @param array $on
 	 * @param array $fields
+	 * @param array $on
 	 * @return \Titon\Model\Query
 	 */
-	public function innerJoin($table, array $on = [], array $fields = []) {
-		return $this->_addJoin(Join::INNER, $table, $on, $fields);
+	public function innerJoin($table, array $fields = [], array $on = []) {
+		return $this->_addJoin(Join::INNER, $table, $fields, $on);
 	}
 
 	/**
 	 * Add a new LEFT join.
 	 *
 	 * @param string|\Titon\Model\Relation $table
-	 * @param array $on
 	 * @param array $fields
+	 * @param array $on
 	 * @return \Titon\Model\Query
 	 */
-	public function leftJoin($table, array $on = [], array $fields = []) {
-		return $this->_addJoin(Join::LEFT, $table, $on, $fields);
+	public function leftJoin($table, array $fields = [], array $on = []) {
+		return $this->_addJoin(Join::LEFT, $table, $fields, $on);
 	}
 
 	/**
@@ -622,24 +622,24 @@ class Query implements Serializable, JsonSerializable {
 	 * Add a new OUTER join.
 	 *
 	 * @param string|\Titon\Model\Relation $table
-	 * @param array $on
 	 * @param array $fields
+	 * @param array $on
 	 * @return \Titon\Model\Query
 	 */
-	public function outerJoin($table, array $on = [], array $fields = []) {
-		return $this->_addJoin(Join::OUTER, $table, $on, $fields);
+	public function outerJoin($table, array $fields = [], array $on = []) {
+		return $this->_addJoin(Join::OUTER, $table, $fields, $on);
 	}
 
 	/**
 	 * Add a new RIGHT join.
 	 *
 	 * @param string|\Titon\Model\Relation $table
-	 * @param array $on
 	 * @param array $fields
+	 * @param array $on
 	 * @return \Titon\Model\Query
 	 */
-	public function rightJoin($table, array $on = [], array $fields = []) {
-		return $this->_addJoin(Join::RIGHT, $table, $on, $fields);
+	public function rightJoin($table, array $fields = [], array $on = []) {
+		return $this->_addJoin(Join::RIGHT, $table, $fields, $on);
 	}
 
 	/**
@@ -879,12 +879,12 @@ class Query implements Serializable, JsonSerializable {
 	 *
 	 * @param string $type
 	 * @param string|array|\Titon\Model\Relation $table
-	 * @param array $on
 	 * @param array $fields
+	 * @param array $on
 	 * @return \Titon\Model\Query
 	 * @throws \Titon\Model\Exception\InvalidRelationQueryException
 	 */
-	protected function _addJoin($type, $table, $on = [], $fields = []) {
+	protected function _addJoin($type, $table, $fields = [], $on = []) {
 		$model = $this->getModel();
 		$join = new Join($type);
 

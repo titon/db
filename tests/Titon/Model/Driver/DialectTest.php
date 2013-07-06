@@ -130,6 +130,24 @@ class DialectTest extends TestCase {
 	}
 
 	/**
+	 * Test delete statements that contain joins.
+	 */
+	public function testBuildDeleteJoins() {
+		$user = new User();
+		$query = $user->query(Query::DELETE);
+		$query->rightJoin($user->getRelation('Profile'));
+
+		$this->assertRegExp('/DELETE\s+FROM `users` AS `User` RIGHT JOIN `profiles` AS `Profile` ON `User`\.`id` = `Profile`\.`user_id`;/', $this->object->buildDelete($query));
+
+		// Three joins
+		$query = $user->select('id');
+		$query->leftJoin('foo', ['id'], ['User.id' => 'foo.id']);
+		$query->outerJoin(['bar', 'Bar'], ['id'], ['User.bar_id' => 'Bar.id']);
+
+		$this->assertRegExp('/DELETE\s+FROM `users` AS `User` LEFT JOIN `foo` ON `User`.`id` = `foo`.`id` OUTER JOIN `bar` AS `Bar` ON `User`.`bar_id` = `Bar`.`id`;/', $this->object->buildDelete($query));
+	}
+
+	/**
 	 * Test describe statement creation.
 	 */
 	public function testBuildDescribe() {
@@ -243,6 +261,30 @@ class DialectTest extends TestCase {
 	}
 
 	/**
+	 * Test select statements that contain joins.
+	 */
+	public function testBuildSelectJoins() {
+		$user = new User();
+		$query = $user->select();
+		$query->rightJoin($user->getRelation('Profile'));
+
+		$this->assertRegExp('/SELECT\s+`User`.*, `Profile`.* FROM `users` AS `User` RIGHT JOIN `profiles` AS `Profile` ON `User`.`id` = `Profile`.`user_id`;/', $this->object->buildSelect($query));
+
+		// With fields
+		$query = $user->select('id', 'username');
+		$query->rightJoin($user->getRelation('Profile'), ['id', 'avatar', 'lastLogin']);
+
+		$this->assertRegExp('/SELECT\s+`User`.`id`, `User`.`username`, `Profile`.`id`, `Profile`.`avatar`, `Profile`.`lastLogin` FROM `users` AS `User` RIGHT JOIN `profiles` AS `Profile` ON `User`.`id` = `Profile`.`user_id`;/', $this->object->buildSelect($query));
+
+		// Three joins
+		$query = $user->select('id');
+		$query->leftJoin('foo', ['id'], ['User.id' => 'foo.id']);
+		$query->outerJoin(['bar', 'Bar'], ['id'], ['User.bar_id' => 'Bar.id']);
+
+		$this->assertRegExp('/SELECT\s+`User`.`id`, `foo`.`id`, `Bar`.`id` FROM `users` AS `User` LEFT JOIN `foo` ON `User`.`id` = `foo`.`id` OUTER JOIN `bar` AS `Bar` ON `User`.`bar_id` = `Bar`.`id`;/', $this->object->buildSelect($query));
+	}
+
+	/**
 	 * Test truncate table statement creation.
 	 */
 	public function testBuildTruncate() {
@@ -302,6 +344,23 @@ class DialectTest extends TestCase {
 
 		$query->attribute('priority', 'lowPriority');
 		$this->assertRegExp('/UPDATE LOW_PRIORITY IGNORE `foobar`\s+SET `username` = \?;/', $this->object->buildUpdate($query));
+	}
+
+	/**
+	 * Test update statements that contain joins.
+	 */
+	public function testBuildUpdateJoins() {
+		$user = new User();
+		$query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
+		$query->rightJoin($user->getRelation('Profile'));
+
+		$this->assertRegExp('/UPDATE\s+`users` AS `User` RIGHT JOIN `profiles` AS `Profile` ON `User`\.`id` = `Profile`\.`user_id`\s+SET `User`\.`username` = \?;/', $this->object->buildUpdate($query));
+
+		// With fields
+		$query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
+		$query->rightJoin($user->getRelation('Profile'), ['avatar' => 'image.jpg']);
+
+		$this->assertRegExp('/UPDATE\s+`users` AS `User` RIGHT JOIN `profiles` AS `Profile` ON `User`\.`id` = `Profile`\.`user_id`\s+SET `User`\.`username` = \?, `Profile`\.`avatar` = \?;/', $this->object->buildUpdate($query));
 	}
 
 	/**
@@ -471,16 +530,26 @@ class DialectTest extends TestCase {
 			'email' => 'email@domain.com'
 		];
 
-		$this->assertEquals('(`id`, `username`, `email`)', $this->object->formatFields($fields, Query::INSERT));
-		$this->assertEquals('`id` = ?, `username` = ?, `email` = ?', $this->object->formatFields($fields, Query::UPDATE));
+		$query = new Query(Query::INSERT, new User());
+		$query->fields($fields);
 
+		$this->assertEquals('(`id`, `username`, `email`)', $this->object->formatFields($query));
+
+		$query = new Query(Query::UPDATE, new User());
+		$query->fields($fields);
+
+		$this->assertEquals('`id` = ?, `username` = ?, `email` = ?', $this->object->formatFields($query));
+
+		$query = new Query(Query::SELECT, new User());
 		$func = new Func('SUM', ['id' => Func::FIELD]);
+
+		$this->assertEquals('*', $this->object->formatFields($query));
 
 		$fields = array_keys($fields);
 		$fields[] = $func;
+		$query->fields($fields);
 
-		$this->assertEquals('`id`, `username`, `email`, SUM(`id`)', $this->object->formatFields($fields, Query::SELECT));
-		$this->assertEquals('*', $this->object->formatFields([], Query::SELECT));
+		$this->assertEquals('`id`, `username`, `email`, SUM(`id`)', $this->object->formatFields($query));
 	}
 
 	/**
@@ -695,13 +764,14 @@ class DialectTest extends TestCase {
 	 * Test values are represented with question marks.
 	 */
 	public function testFormatValues() {
-		$fields = [
+		$query = new Query(Query::INSERT, new User());
+		$query->fields([
 			'id' => 1,
 			'username' => 'miles',
 			'email' => 'email@domain.com'
-		];
+		]);
 
-		$this->assertEquals('(?, ?, ?)', $this->object->formatValues($fields, Query::INSERT));
+		$this->assertEquals('(?, ?, ?)', $this->object->formatValues($query));
 	}
 
 	/**
