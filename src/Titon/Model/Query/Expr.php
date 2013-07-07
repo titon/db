@@ -9,13 +9,15 @@ namespace Titon\Model\Query;
 
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Traits\ExprAware;
+use \Serializable;
+use \JsonSerializable;
 
 /**
  * The Expr class represents a mathematical or logical expression that can be calculated depending on context.
  *
  * @package Titon\Model\Query
  */
-class Expr {
+class Expr implements Serializable, JsonSerializable {
 	use ExprAware;
 
 	const NULL = Dialect::IS_NULL;
@@ -29,6 +31,7 @@ class Expr {
 	const REGEXP = Dialect::REGEXP;
 	const NOT_REGEXP = Dialect::NOT_REGEXP;
 	const RLIKE = Dialect::RLIKE;
+	const AS_ALIAS = Dialect::AS_ALIAS;
 
 	/**
 	 * Field name.
@@ -98,6 +101,41 @@ class Expr {
 	 */
 	public function useValue() {
 		return ($this->getOperator() !== null && $this->getValue() !== null);
+	}
+
+	/**
+	 * Serialize the expression.
+	 *
+	 * @return string
+	 */
+	public function serialize() {
+		return serialize($this->jsonSerialize());
+	}
+
+	/**
+	 * Reconstruct the expression once unserialized.
+	 *
+	 * @param string $data
+	 */
+	public function unserialize($data) {
+		$data = unserialize($data);
+
+		$this->_field = $data['field'];
+		$this->_operator = $data['operator'];
+		$this->_value = $data['value'];
+	}
+
+	/**
+	 * Return all data for serialization.
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize() {
+		return [
+			'field' => $this->getField(),
+			'operator' => $this->getOperator(),
+			'value' => $this->getValue()
+		];
 	}
 
 }

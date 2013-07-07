@@ -356,16 +356,13 @@ class Predicate implements Serializable, JsonSerializable {
 	/**
 	 * Reconstruct the query predicate once unserialized.
 	 *
-	 * @param array $data
+	 * @param string $data
 	 */
 	public function unserialize($data) {
 		$data = unserialize($data);
 
 		$this->_type = $data['type'];
-
-		foreach ($data['params'] as $param) {
-			$this->add($param['field'], $param['value'], $param['op']);
-		}
+		$this->_params = $data['params'];
 	}
 
 	/**

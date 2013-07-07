@@ -363,4 +363,150 @@ class QueryTest extends TestCase {
 		}
 	}
 
+	/**
+	 * Test object serialization.
+	 */
+	public function testSerialize() {
+		$model = new User();
+		$query = new Query(Query::SELECT, $model);
+		$func = $query->func('COUNT', ['id' => Query\Func::FIELD])->asAlias('count');
+
+		$query
+			->attribute('distinct', true)
+			->cache('cacheKey', '+5 minutes')
+			->fields(['id', $func])
+			->groupBy('id')
+			->having('count', '>', 5)
+			->leftJoin(['profiles', 'Profile'], [], ['User.id' => 'Profile.user_id'])
+			->limit(5, 10)
+			->orderBy('id', 'asc')
+			->from('users')
+			->where(function() {
+				$this->notIn('id', [1, 2, 3])->gte('size', 15);
+			});
+
+		$expected = unserialize(serialize($query));
+		$expected->setModel($model); // Asserting will fail unless we use the same model instance
+
+		$this->assertEquals($expected, $query);
+	}
+
+	/**
+	 * Test JSON encoding of queries.
+	 */
+	public function testJsonSerialize() {
+		$query = new Query(Query::SELECT, new User());
+		$query
+			->attribute('distinct', true)
+			->cache('cacheKey', '+5 minutes')
+			->fields([
+				'id', // column
+				$query->func('COUNT', ['id' => Query\Func::FIELD])->asAlias('count'), // function
+			])
+			->groupBy('id')
+			->having('count', '>', 5)
+			->leftJoin(['profiles', 'Profile'], [], ['User.id' => 'Profile.user_id'])
+			->limit(5, 10)
+			->orderBy('id', 'asc')
+			->from('users')
+			->where(function() {
+				$this->notIn('id', [1, 2, 3])->gte('size', 15);
+			});
+
+		$this->assertEquals(json_encode([
+			'alias' => null,
+			'attributes' => ['distinct' => true],
+			'cacheKey' => 'cacheKey',
+			'cacheLength' => '+5 minutes',
+			'fields' => [
+				'id',
+				[
+					'name' => 'COUNT',
+					'alias' => 'count',
+					'arguments' => [['type' => 'field', 'value' => 'id']],
+					'separator' => ', '
+				]
+			],
+			'groupBy' => ['id'],
+			'having' => [
+				'type' => 'and',
+				'params' => [
+					'count>5' => [
+						'field' => 'count',
+						'operator' => '>',
+						'value' => 5
+					]
+				]
+			],
+			'joins' => [
+				[
+					'table' => 'profiles',
+					'alias' => 'Profile',
+					'fields' => [],
+					'type' => 'leftJoin',
+					'on' => ['User.id' => 'Profile.user_id']
+				]
+			],
+			'limit' => 5,
+			'model' => 'Titon\Test\Stub\Model\User',
+			'offset' => 10,
+			'orderBy' => ['id' => 'asc'],
+			'relationQueries' => [],
+			'table' => 'users',
+			'type' => 'select',
+			'where' => [
+				'type' => 'and',
+				'params' => [
+					'idnotIn[1,2,3]' => [
+						'field' => 'id',
+						'operator' => 'notIn',
+						'value' => [1, 2, 3]
+					],
+					'size>=15' => [
+						'field' => 'size',
+						'operator' => '>=',
+						'value' => 15
+					]
+				]
+			]
+		]), json_encode($query));
+
+		// Test expressions (cant be done in select queries)
+		$query = new Query(Query::UPDATE, new User());
+		$query->from('users')->fields([
+			'size' => $this->object->expr('size', '+', 5) // expression
+		]);
+
+		$this->assertEquals(json_encode([
+			'alias' => null,
+			'attributes' => [],
+			'cacheKey' => null,
+			'cacheLength' => null,
+			'fields' => [
+				'size' => [
+					'field' => 'size',
+					'operator' => '+',
+					'value' => 5
+				]
+			],
+			'groupBy' => [],
+			'having' => [
+				'type' => 'and',
+				'params' => []
+			],
+			'joins' => [],
+			'limit' => null,
+			'model' => 'Titon\Test\Stub\Model\User',
+			'offset' => null,
+			'orderBy' => [],
+			'relationQueries' => [],
+			'table' => 'users',
+			'type' => 'update',
+			'where' => [
+				'type' => 'and',
+				'params' => []
+			]
+		]), json_encode($query));
+	}
+
 }

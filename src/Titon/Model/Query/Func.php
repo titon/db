@@ -10,6 +10,8 @@ namespace Titon\Model\Query;
 use Titon\Model\Driver;
 use Titon\Model\Traits\AliasAware;
 use Titon\Model\Traits\FuncAware;
+use \Serializable;
+use \JsonSerializable;
 
 /**
  * The Func class represents an SQL function with optional arguments.
@@ -34,7 +36,7 @@ use Titon\Model\Traits\FuncAware;
  *
  * @package Titon\Model\Query
  */
-class Func {
+class Func implements Serializable, JsonSerializable {
 	use FuncAware, AliasAware;
 
 	const FIELD = 'field';
@@ -130,6 +132,43 @@ class Func {
 	 */
 	public function getSeparator() {
 		return $this->_separator;
+	}
+
+	/**
+	 * Serialize the function.
+	 *
+	 * @return string
+	 */
+	public function serialize() {
+		return serialize($this->jsonSerialize());
+	}
+
+	/**
+	 * Reconstruct the function once unserialized.
+	 *
+	 * @param string $data
+	 */
+	public function unserialize($data) {
+		$data = unserialize($data);
+
+		$this->_alias = $data['alias'];
+		$this->_arguments = $data['arguments'];
+		$this->_name = $data['name'];
+		$this->_separator = $data['separator'];
+	}
+
+	/**
+	 * Return all data for serialization.
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize() {
+		return [
+			'name' => $this->getName(),
+			'alias' => $this->getAlias(),
+			'arguments' => $this->getArguments(),
+			'separator' => $this->getSeparator()
+		];
 	}
 
 }

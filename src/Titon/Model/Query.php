@@ -803,54 +803,28 @@ class Query implements Serializable, JsonSerializable {
 	 *
 	 * @uses Titon\Common\Registry
 	 *
-	 * @param array $data
+	 * @param string $data
 	 */
 	public function unserialize($data) {
 		$data = unserialize($data);
 
-		$this->__construct($data['type'], Registry::factory($data['model']));
-
-		// TODO joins
-
-		if ($data['attributes']) {
-			$this->attribute($data['attributes']);
-		}
-
-		if ($data['cacheKey']) {
-			$this->cache($data['cacheKey'], $data['cacheLength']);
-		}
-
-		if ($data['fields']) {
-			$this->fields($data['fields']);
-		}
-
-		if ($data['groupBy']) {
-			$this->groupBy($data['groupBy']);
-		}
-
-		if ($data['limit']) {
-			$this->limit($data['limit'], $data['offset']);
-		}
-
-		if ($data['orderBy']) {
-			$this->orderBy($data['orderBy']);
-		}
-
-		if ($data['table']) {
-			$this->from($data['table']);
-		}
-
-		if ($data['having']) {
-			$this->_having = $data['having'];
-		}
-
-		if ($data['where']) {
-			$this->_where = $data['where'];
-		}
-
-		if ($data['relationQueries']) {
-			$this->_relationQueries = $data['relationQueries'];
-		}
+		$this->_model = Registry::factory($data['model']);
+		$this->_alias = $data['alias'];
+		$this->_attributes = $data['attributes'];
+		$this->_cacheKey = $data['cacheKey'];
+		$this->_cacheLength = $data['cacheLength'];
+		$this->_fields = $data['fields'];
+		$this->_groupBy = $data['groupBy'];
+		$this->_having = $data['having'];
+		$this->_joins = $data['joins'];
+		$this->_limit = $data['limit'];
+		$this->_offset = $data['offset'];
+		$this->_orderBy = $data['orderBy'];
+		$this->_relationQueries = $data['relationQueries'];
+		$this->_schema = $data['schema'];
+		$this->_table = $data['table'];
+		$this->_type = $data['type'];
+		$this->_where = $data['where'];
 	}
 
 	/**
@@ -868,6 +842,7 @@ class Query implements Serializable, JsonSerializable {
 		}
 
 		return [
+			'alias' => $this->getAlias(),
 			'attributes' => $this->getAttributes(),
 			'cacheKey' => $this->getCacheKey(),
 			'cacheLength' => $this->getCacheLength(),
@@ -880,6 +855,7 @@ class Query implements Serializable, JsonSerializable {
 			'offset' => $this->getOffset(),
 			'orderBy' => $this->getOrderBy(),
 			'relationQueries' => $this->getRelationQueries(),
+			'schema' => $this->getSchema(),
 			'table' => $this->getTable(),
 			'type' => $this->getType(),
 			'where' => $this->getWhere()

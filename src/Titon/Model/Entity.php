@@ -57,7 +57,7 @@ class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, C
 	/**
 	 * Reconstruct the data once unserialized.
 	 *
-	 * @param array $data
+	 * @param string $data
 	 */
 	public function unserialize($data) {
 		$this->mapData(unserialize($data));
