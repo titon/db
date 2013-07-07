@@ -67,6 +67,7 @@ interface Dialect {
 	const JOIN_LEFT = 'leftJoin';
 	const JOIN_OUTER = 'outerJoin';
 	const JOIN_RIGHT = 'rightJoin';
+	const JOIN_STRAIGHT = 'straightJoin';
 	const KEY_BLOCK_SIZE = 'keyBlockSize';
 	const LIKE = 'like';
 	const LIMIT = 'limit';

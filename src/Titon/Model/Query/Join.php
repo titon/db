@@ -11,8 +11,9 @@ use Titon\Model\Driver\Dialect;
 use Titon\Model\Traits\AliasAware;
 
 /**
- * TODO
+ * The Join class represents meta data for an additional table to join records on.
  *
+ * @link http://mysqljoin.com/
  * @link http://www.codeproject.com/Articles/33052/Visual-Representation-of-SQL-Joins
  * @link http://www.codinghorror.com/blog/2007/10/a-visual-explanation-of-sql-joins.html
  *
@@ -21,10 +22,11 @@ use Titon\Model\Traits\AliasAware;
 class Join {
 	use AliasAware;
 
-	const LEFT = Dialect::JOIN_LEFT;
-	const RIGHT = Dialect::JOIN_RIGHT;
-	const INNER = Dialect::JOIN_INNER;
-	const OUTER = Dialect::JOIN_OUTER;
+	const LEFT = Dialect::JOIN_LEFT; // Use left join as reference table
+	const RIGHT = Dialect::JOIN_RIGHT; // Use right join as reference table
+	const INNER = Dialect::JOIN_INNER; // Return records that have matching rows in each join
+	const OUTER = Dialect::JOIN_OUTER; // Return records that have no matching rows in each join
+	const STRAIGHT = Dialect::JOIN_STRAIGHT; // Similar to INNER but forces reading of left table first
 
 	/**
 	 * The conditions to join the tables on.

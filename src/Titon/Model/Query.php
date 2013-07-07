@@ -513,7 +513,7 @@ class Query implements Serializable, JsonSerializable {
 	/**
 	 * Add a new INNER join.
 	 *
-	 * @param string|\Titon\Model\Relation $table
+	 * @param string|array|\Titon\Model\Relation $table
 	 * @param array $fields
 	 * @param array $on
 	 * @return \Titon\Model\Query
@@ -525,7 +525,7 @@ class Query implements Serializable, JsonSerializable {
 	/**
 	 * Add a new LEFT join.
 	 *
-	 * @param string|\Titon\Model\Relation $table
+	 * @param string|array|\Titon\Model\Relation $table
 	 * @param array $fields
 	 * @param array $on
 	 * @return \Titon\Model\Query
@@ -621,7 +621,7 @@ class Query implements Serializable, JsonSerializable {
 	/**
 	 * Add a new OUTER join.
 	 *
-	 * @param string|\Titon\Model\Relation $table
+	 * @param string|array|\Titon\Model\Relation $table
 	 * @param array $fields
 	 * @param array $on
 	 * @return \Titon\Model\Query
@@ -633,7 +633,7 @@ class Query implements Serializable, JsonSerializable {
 	/**
 	 * Add a new RIGHT join.
 	 *
-	 * @param string|\Titon\Model\Relation $table
+	 * @param string|array|\Titon\Model\Relation $table
 	 * @param array $fields
 	 * @param array $on
 	 * @return \Titon\Model\Query
@@ -662,6 +662,18 @@ class Query implements Serializable, JsonSerializable {
 		$this->_schema = $schema;
 
 		return $this;
+	}
+
+	/**
+	 * Add a new STRAIGHT join.
+	 *
+	 * @param string|array|\Titon\Model\Relation $table
+	 * @param array $fields
+	 * @param array $on
+	 * @return \Titon\Model\Query
+	 */
+	public function straightJoin($table, array $fields = [], array $on = []) {
+		return $this->_addJoin(Join::STRAIGHT, $table, $fields, $on);
 	}
 
 	/**
@@ -892,7 +904,9 @@ class Query implements Serializable, JsonSerializable {
 			$relation = $table;
 			$relatedModel = $relation->getRelatedModel();
 
-			$join->from($relatedModel->getTable(), $relatedModel->getAlias())->fields($fields);
+			$join
+				->from($relatedModel->getTable(), $relatedModel->getAlias())
+				->fields($fields);
 
 			switch ($relation->getType()) {
 				case Relation::MANY_TO_ONE:

@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Data;
 
+use Titon\Model\Driver\AbstractPdoDriver;
 use Titon\Model\Entity;
 use Titon\Model\Query\Func;
 use Titon\Model\Query;
@@ -1213,41 +1214,311 @@ class AbstractReadTest extends TestCase {
 	}
 
 	/**
-	 * Test that left join fetches data.
+	 * Test that inner join fetches data.
 	 */
-	public function testLeftJoin() {
-		$this->loadFixtures(['Users', 'Profiles']);
+	public function testInnerJoin() {
+		$this->loadFixtures(['Users', 'Countries']);
 
 		$user = new User();
+		$user->update([2, 5], ['country_id' => null]); // Reset some records
+
 		$query = $user->select('id', 'username')
-			->leftJoin($user->getRelation('Profile'), ['id'])
+			->innerJoin($user->getRelation('Country'))
 			->orderBy('User.id', 'asc');
 
 		$this->assertEquals([
 			new Entity([
 				'id' => 1,
 				'username' => 'miles',
-				'Profile' => new Entity(['id' => 4])
-			]),
-			new Entity([
-				'id' => 2,
-				'username' => 'batman',
-				'Profile' => new Entity(['id' => 5])
+				'Country' => new Entity([
+					'id' => 1,
+					'name' => 'United States of America',
+					'iso' => 'USA'
+				])
 			]),
 			new Entity([
 				'id' => 3,
 				'username' => 'superman',
-				'Profile' => new Entity(['id' => 2])
+				'Country' => new Entity([
+					'id' => 2,
+					'name' => 'Canada',
+					'iso' => 'CAN'
+				])
 			]),
 			new Entity([
 				'id' => 4,
 				'username' => 'spiderman',
-				'Profile' => new Entity(['id' => 1])
+				'Country' => new Entity([
+					'id' => 5,
+					'name' => 'Mexico',
+					'iso' => 'MEX'
+				])
+			])
+		], $query->fetchAll());
+	}
+
+	/**
+	 * Test that inner joins using non-relation arguments.
+	 */
+	public function testInnerJoinCustom() {
+		$this->loadFixtures(['Users', 'Countries']);
+
+		$user = new User();
+		$user->update([2, 5], ['country_id' => null]); // Reset some records
+
+		$query = $user->select('id', 'username')
+			->innerJoin(['countries', 'Country'], [], ['country_id' => 'Country.id'])
+			->orderBy('User.id', 'asc');
+
+		$this->assertEquals([
+			new Entity([
+				'id' => 1,
+				'username' => 'miles',
+				'Country' => new Entity([
+					'id' => 1,
+					'name' => 'United States of America',
+					'iso' => 'USA'
+				])
 			]),
+			new Entity([
+				'id' => 3,
+				'username' => 'superman',
+				'Country' => new Entity([
+					'id' => 2,
+					'name' => 'Canada',
+					'iso' => 'CAN'
+				])
+			]),
+			new Entity([
+				'id' => 4,
+				'username' => 'spiderman',
+				'Country' => new Entity([
+					'id' => 5,
+					'name' => 'Mexico',
+					'iso' => 'MEX'
+				])
+			])
+		], $query->fetchAll());
+	}
+
+	/**
+	 * Test that outer join fetches data.
+	 */
+	public function testOuterJoin() {
+		$this->loadFixtures(['Users', 'Countries']);
+
+		$user = new User();
+		$user->update([2, 5], ['country_id' => null]); // Reset some records
+
+		if ($user->getDriver() instanceof AbstractPdoDriver) {
+			if ($user->getDriver()->getDriver() === 'mysql') {
+				$this->markTestSkipped('MySQL does not support outer joins');
+			}
+		}
+
+		$query = $user->select()
+			->outerJoin($user->getRelation('Country'))
+			->orderBy('User.id', 'asc');
+
+		$this->assertEquals([
+			new Entity([
+				'id' => 1,
+				'username' => 'miles',
+				'Country' => new Entity([
+					'id' => 1,
+					'name' => 'United States of America',
+					'iso' => 'USA'
+				])
+			]),
+			new Entity([
+				'id' => 3,
+				'username' => 'superman',
+				'Country' => new Entity([
+					'id' => 2,
+					'name' => 'Canada',
+					'iso' => 'CAN'
+				])
+			]),
+			new Entity([
+				'id' => 4,
+				'username' => 'spiderman',
+				'Country' => new Entity([
+					'id' => 5,
+					'name' => 'Mexico',
+					'iso' => 'MEX'
+				])
+			])
+		], $query->fetchAll());
+	}
+
+	/**
+	 * Test that left join fetches data.
+	 */
+	public function testLeftJoin() {
+		$this->loadFixtures(['Users', 'Countries']);
+
+		$user = new User();
+		$user->update([2, 5], ['country_id' => null]); // Reset some records
+
+		$query = $user->select('id', 'username')
+			->leftJoin($user->getRelation('Country'))
+			->orderBy('User.id', 'asc');
+
+		$this->assertEquals([
+			new Entity([
+				'id' => 1,
+				'username' => 'miles',
+				'Country' => new Entity([
+					'id' => 1,
+					'name' => 'United States of America',
+					'iso' => 'USA'
+				])
+			]),
+			// Empty country
+			new Entity([
+				'id' => 2,
+				'username' => 'batman',
+				'Country' => new Entity([
+					'id' => null,
+					'name' => null,
+					'iso' => null
+				])
+			]),
+			new Entity([
+				'id' => 3,
+				'username' => 'superman',
+				'Country' => new Entity([
+					'id' => 2,
+					'name' => 'Canada',
+					'iso' => 'CAN'
+				])
+			]),
+			new Entity([
+				'id' => 4,
+				'username' => 'spiderman',
+				'Country' => new Entity([
+					'id' => 5,
+					'name' => 'Mexico',
+					'iso' => 'MEX'
+				])
+			]),
+			// Empty country
 			new Entity([
 				'id' => 5,
 				'username' => 'wolverine',
-				'Profile' => new Entity(['id' => 3])
+				'Country' => new Entity([
+					'id' => null,
+					'name' => null,
+					'iso' => null
+				])
+			]),
+		], $query->fetchAll());
+	}
+
+	/**
+	 * Test that right join fetches data.
+	 */
+	public function testRightJoin() {
+		$this->loadFixtures(['Users', 'Countries']);
+
+		$user = new User();
+		$user->update([2, 5], ['country_id' => null]); // Reset some records
+
+		$query = $user->select('id', 'username')
+			->rightJoin($user->getRelation('Country'))
+			->orderBy('User.id', 'asc');
+
+		$this->assertEquals([
+			// Empty user
+			new Entity([
+				'id' => null,
+				'username' => null,
+				'Country' => new Entity([
+					'id' => 3,
+					'name' => 'England',
+					'iso' => 'ENG'
+				])
+			]),
+			// Empty user
+			new Entity([
+				'id' => null,
+				'username' => null,
+				'Country' => new Entity([
+					'id' => 4,
+					'name' => 'Australia',
+					'iso' => 'AUS'
+				])
+			]),
+			new Entity([
+				'id' => 1,
+				'username' => 'miles',
+				'Country' => new Entity([
+					'id' => 1,
+					'name' => 'United States of America',
+					'iso' => 'USA'
+				])
+			]),
+			new Entity([
+				'id' => 3,
+				'username' => 'superman',
+				'Country' => new Entity([
+					'id' => 2,
+					'name' => 'Canada',
+					'iso' => 'CAN'
+				])
+			]),
+			new Entity([
+				'id' => 4,
+				'username' => 'spiderman',
+				'Country' => new Entity([
+					'id' => 5,
+					'name' => 'Mexico',
+					'iso' => 'MEX'
+				])
+			])
+		], $query->fetchAll());
+	}
+
+	/**
+	 * Test that straight join fetches data.
+	 */
+	public function testStraightJoin() {
+		$this->loadFixtures(['Users', 'Countries']);
+
+		$user = new User();
+		$user->update([2, 5], ['country_id' => null]); // Reset some records
+
+		$query = $user->select('id', 'username')
+			->straightJoin($user->getRelation('Country'))
+			->orderBy('User.id', 'asc');
+
+		$this->assertEquals([
+			new Entity([
+				'id' => 1,
+				'username' => 'miles',
+				'Country' => new Entity([
+					'id' => 1,
+					'name' => 'United States of America',
+					'iso' => 'USA'
+				])
+			]),
+			new Entity([
+				'id' => 3,
+				'username' => 'superman',
+				'Country' => new Entity([
+					'id' => 2,
+					'name' => 'Canada',
+					'iso' => 'CAN'
+				])
+			]),
+			new Entity([
+				'id' => 4,
+				'username' => 'spiderman',
+				'Country' => new Entity([
+					'id' => 5,
+					'name' => 'Mexico',
+					'iso' => 'MEX'
+				])
 			])
 		], $query->fetchAll());
 	}
