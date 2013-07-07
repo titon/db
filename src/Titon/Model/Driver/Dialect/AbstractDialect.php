@@ -611,7 +611,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 			if ($value instanceof Func) {
 				$value = $this->formatFunction($value);
 
-			} else if ($value instanceof Query) {
+			} else if ($value instanceof SubQuery) {
 				$value = $this->buildSubQuery($value);
 
 			} else if ($type === Func::FIELD) {

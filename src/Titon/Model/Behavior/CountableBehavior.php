@@ -33,7 +33,7 @@ class CountableBehavior extends AbstractBehavior {
 	/**
 	 * Add a counter for a relation.
 	 *
-	 * @param string $alias
+	 * @param string|\Titon\Model\Relation $alias
 	 * @param string $field
 	 * @param \Closure $scope
 	 * @return \Titon\Model\Behavior\CountableBehavior
@@ -42,6 +42,7 @@ class CountableBehavior extends AbstractBehavior {
 	public function addCounter($alias, $field, Closure $scope = null) {
 		if ($alias instanceof Relation) {
 			$relation = $alias;
+			$alias = $relation->getAlias();
 		} else {
 			$relation = $this->getModel()->getRelation($alias);
 		}
