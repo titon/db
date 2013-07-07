@@ -104,7 +104,7 @@ class Func implements Serializable, JsonSerializable {
 			$arguments[] = $arg['value'];
 		}
 
-		return sprintf('%s(%s) AS %s', $this->getName(), implode(', ', $arguments), $this->getAlias());
+		return sprintf('%s(%s) AS %s', $this->getName(), implode($this->getSeparator(), $arguments), $this->getAlias());
 	}
 
 	/**

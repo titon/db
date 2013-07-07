@@ -656,6 +656,27 @@ class AbstractReadTest extends TestCase {
 	}
 
 	/**
+	 * Test expressions in select statements.
+	 */
+	public function testSelectExpression() {
+		$this->loadFixtures('Stats');
+
+		$stat = new Stat();
+
+		$query = $stat->select();
+		$query->fields([
+			'name',
+			$query->expr('name', Query\Expr::AS_ALIAS, 'class')
+		]);
+
+		$this->assertEquals([
+			['name' => 'Warrior', 'class' => 'Warrior'],
+			['name' => 'Ranger', 'class' => 'Ranger'],
+			['name' => 'Mage', 'class' => 'Mage'],
+		], $query->fetchAll(false));
+	}
+
+	/**
 	 * Test functions in select statements.
 	 */
 	public function testSelectFunctions() {

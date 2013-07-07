@@ -462,7 +462,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 	public function formatExpression(Expr $expr) {
 		$field = $this->quote($expr->getField());
 
-		if ($expr->useValue()) {
+		if ($expr->getOperator() === Expr::AS_ALIAS) {
+			return sprintf($this->getClause(self::AS_ALIAS), $field, $expr->getValue());
+
+		} else if ($expr->useValue()) {
 			return sprintf($this->getClause(self::EXPRESSION), $field, $expr->getOperator());
 		}
 
@@ -552,7 +555,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 				if ($field instanceof Func) {
 					$columns[] = $this->formatFunction($field);
 
-				} else if ($field instanceof Query) {
+				} else if ($field instanceof Expr) {
+					$columns[] = $this->formatExpression($field);
+
+				} else if ($field instanceof SubQuery) {
 					$columns[] = $this->buildSubQuery($field);
 
 				} else {
