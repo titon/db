@@ -452,6 +452,7 @@ class QueryTest extends TestCase {
 			'offset' => 10,
 			'orderBy' => ['id' => 'asc'],
 			'relationQueries' => [],
+			'schema' => null,
 			'table' => 'users',
 			'type' => 'select',
 			'where' => [
@@ -500,6 +501,7 @@ class QueryTest extends TestCase {
 			'offset' => null,
 			'orderBy' => [],
 			'relationQueries' => [],
+			'schema' => null,
 			'table' => 'users',
 			'type' => 'update',
 			'where' => [

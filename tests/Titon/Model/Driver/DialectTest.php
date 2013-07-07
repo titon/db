@@ -144,7 +144,7 @@ class DialectTest extends TestCase {
 		$query->leftJoin('foo', ['id'], ['User.id' => 'foo.id']);
 		$query->outerJoin(['bar', 'Bar'], ['id'], ['User.bar_id' => 'Bar.id']);
 
-		$this->assertRegExp('/DELETE\s+FROM `users` AS `User` LEFT JOIN `foo` ON `User`.`id` = `foo`.`id` OUTER JOIN `bar` AS `Bar` ON `User`.`bar_id` = `Bar`.`id`;/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM `users` AS `User` LEFT JOIN `foo` ON `User`.`id` = `foo`.`id` FULL OUTER JOIN `bar` AS `Bar` ON `User`.`bar_id` = `Bar`.`id`;/', $this->object->buildDelete($query));
 	}
 
 	/**
@@ -281,7 +281,7 @@ class DialectTest extends TestCase {
 		$query->leftJoin('foo', ['id'], ['User.id' => 'foo.id']);
 		$query->outerJoin(['bar', 'Bar'], ['id'], ['User.bar_id' => 'Bar.id']);
 
-		$this->assertRegExp('/SELECT\s+`User`.`id`, `foo`.`id`, `Bar`.`id` FROM `users` AS `User` LEFT JOIN `foo` ON `User`.`id` = `foo`.`id` OUTER JOIN `bar` AS `Bar` ON `User`.`bar_id` = `Bar`.`id`;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+`User`.`id`, `foo`.`id`, `Bar`.`id` FROM `users` AS `User` LEFT JOIN `foo` ON `User`.`id` = `foo`.`id` FULL OUTER JOIN `bar` AS `Bar` ON `User`.`bar_id` = `Bar`.`id`;/', $this->object->buildSelect($query));
 	}
 
 	/**
@@ -633,7 +633,7 @@ class DialectTest extends TestCase {
 		$join2 = new Join(Join::OUTER);
 		$join2->from('settings', 'Setting')->on('User.setting_id', 'Setting.id');
 
-		$this->assertEquals('INNER JOIN `profiles` AS `Profile` ON `User`.`id` = `Profile`.`user_id` OUTER JOIN `settings` AS `Setting` ON `User`.`setting_id` = `Setting`.`id`', $this->object->formatJoins([$join, $join2]));
+		$this->assertEquals('INNER JOIN `profiles` AS `Profile` ON `User`.`id` = `Profile`.`user_id` FULL OUTER JOIN `settings` AS `Setting` ON `User`.`setting_id` = `Setting`.`id`', $this->object->formatJoins([$join, $join2]));
 	}
 
 	/**

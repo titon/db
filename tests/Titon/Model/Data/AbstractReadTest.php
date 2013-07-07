@@ -1523,4 +1523,34 @@ class AbstractReadTest extends TestCase {
 		], $query->fetchAll());
 	}
 
+	/**
+	 * Test joins with function aliasing.
+	 */
+	public function testJoinWithFunction() {
+		$this->loadFixtures(['Users', 'Countries']);
+
+		$user = new User();
+		$query = $user->select()->where('User.id', 1);
+		$query->fields([
+			'id', 'username',
+			$query->func('SUBSTRING', ['username' => Func::FIELD, 1, 3])->asAlias('shortName')
+		]);
+		$query->leftJoin($user->getRelation('Country'), [
+			'id', 'name', 'iso',
+			$query->func('SUBSTRING', ['Country.name' => Func::FIELD, 1, 6])->asAlias('countryName')
+		]);
+
+		$this->assertEquals([
+			'id' => 1,
+			'username' => 'miles',
+			'shortName' => 'mil',
+			'countryName' => 'United',
+			'Country' => [
+				'id' => 1,
+				'name' => 'United States of America',
+				'iso' => 'USA'
+			]
+		], $query->fetch(false));
+	}
+
 }
