@@ -151,12 +151,12 @@ class Model extends Base implements Callback {
 	 * Validate schema data and related data structure before inserting.
 	 *
 	 * @param array $data
+	 * @param array $options
 	 * @return int The record ID on success, 0 on failure
 	 * @throws \Titon\Model\Exception\QueryFailureException
-	 * @throws \Exception
 	 */
-	public function create(array $data) {
-		return $this->_processSave($this->query(Query::INSERT), null, $data);
+	public function create(array $data, array $options = []) {
+		return $this->_processSave($this->query(Query::INSERT), null, $data, $options);
 	}
 
 	/**
@@ -213,13 +213,13 @@ class Model extends Base implements Callback {
 	 * Delete a record by ID.
 	 *
 	 * @param int|int[] $id
-	 * @param bool $cascade Will delete related records if true
+	 * @param mixed $options
 	 * @return int The count of records deleted
 	 */
-	public function delete($id, $cascade = true) {
+	public function delete($id, $options = true) {
 		$query = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id);
 
-		return $this->_processDelete($query, $id, $cascade);
+		return $this->_processDelete($query, $id, $options);
 	}
 
 	/**
@@ -303,11 +303,11 @@ class Model extends Base implements Callback {
 	 * Delete multiple records with conditions.
 	 *
 	 * @param \Closure $conditions
-	 * @param bool $cascade Will delete related records if true
+	 * @param mixed $options
 	 * @return int The count of records deleted
 	 * @throws \Titon\Model\Exception\InvalidQueryException
 	 */
-	public function deleteMany(Closure $conditions, $cascade = true) {
+	public function deleteMany(Closure $conditions, $options = true) {
 		$pk = $this->getPrimaryKey();
 		$ids = $this->select($pk)->bindCallback($conditions)->fetchList($pk, $pk);
 		$query = $this->query(Query::DELETE)->bindCallback($conditions);
@@ -319,7 +319,7 @@ class Model extends Base implements Callback {
 			throw new InvalidQueryException('No where clause detected, will not delete all records');
 		}
 
-		return $this->_processDelete($query, $ids, $cascade);
+		return $this->_processDelete($query, $ids, $options);
 	}
 
 	/**
@@ -336,22 +336,22 @@ class Model extends Base implements Callback {
 	 * Return an entity for the first result from the query.
 	 *
 	 * @param \Titon\Model\Query $query
-	 * @param bool $wrap
+	 * @param mixed $options
 	 * @return \Titon\Model\Entity|array
 	 */
-	public function fetch(Query $query, $wrap = true) {
-		return $this->_processFetch($query, __FUNCTION__, $wrap);
+	public function fetch(Query $query, $options = true) {
+		return $this->_processFetch($query, __FUNCTION__, $options);
 	}
 
 	/**
 	 * Return a list of entities from the results of the query.
 	 *
 	 * @param \Titon\Model\Query $query
-	 * @param bool $wrap
+	 * @param mixed $options
 	 * @return \Titon\Model\Entity[]|array
 	 */
-	public function fetchAll(Query $query, $wrap = true) {
-		return $this->_processFetch($query, __FUNCTION__, $wrap);
+	public function fetchAll(Query $query, $options = true) {
+		return $this->_processFetch($query, __FUNCTION__, $options);
 	}
 
 	/**
@@ -360,10 +360,12 @@ class Model extends Base implements Callback {
 	 * @param \Titon\Model\Query $query
 	 * @param string $key The field to use as the array key
 	 * @param string $value The field to use as the array value
+	 * @param array $options
 	 * @return array
 	 */
-	public function fetchList(Query $query, $key = null, $value = null) {
-		$results = $this->_processFetch($query, __FUNCTION__, false);
+	public function fetchList(Query $query, $key = null, $value = null, array $options = []) {
+		$options['wrap'] = false;
+		$results = $this->_processFetch($query, __FUNCTION__, $options);
 
 		$key = $key ?: $this->getPrimaryKey();
 		$value = $value ?: $this->getDisplayField();
@@ -386,10 +388,10 @@ class Model extends Base implements Callback {
 	 *
 	 * @param \Titon\Model\Query $query
 	 * @param array $result
-	 * @param bool $wrap
+	 * @param mixed $options
 	 * @return array
 	 */
-	public function fetchRelations(Query $query, array $result, $wrap = true) {
+	public function fetchRelations(Query $query, array $result, $options = true) {
 		$queries = $query->getRelationQueries();
 
 		if (!$queries) {
@@ -416,7 +418,7 @@ class Model extends Base implements Callback {
 							->where($relation->getRelatedForeignKey(), $foreignValue)
 							->cache([$relatedClass, 'fetchOneToOne', $foreignValue])
 							->limit(1)
-							->fetch($wrap);
+							->fetch($options);
 					} else {
 						$result[$alias] = [];
 					}
@@ -433,7 +435,7 @@ class Model extends Base implements Callback {
 						$result[$alias] = $newQuery
 							->where($relation->getRelatedForeignKey(), $foreignValue)
 							->cache([$relatedClass, 'fetchOneToMany', $foreignValue])
-							->fetchAll($wrap);
+							->fetchAll($options);
 					} else {
 						$result[$alias] = [];
 					}
@@ -451,7 +453,7 @@ class Model extends Base implements Callback {
 							->where($relatedModel->getPrimaryKey(), $foreignValue)
 							->cache([$relatedClass, 'manyToOne', $foreignValue])
 							->limit(1)
-							->fetch($wrap);
+							->fetch($options);
 					} else {
 						$result[$alias] = [];
 					}
@@ -485,7 +487,7 @@ class Model extends Base implements Callback {
 					$m2mResults = $newQuery
 						->where($relatedModel->getPrimaryKey(), $lookupIDs)
 						->cache([$relatedClass, 'manyToMany', $lookupIDs])
-						->fetchAll($wrap);
+						->fetchAll($options);
 
 					// Include the junction data
 					foreach ($m2mResults as $i => $m2mResult) {
@@ -873,12 +875,13 @@ class Model extends Base implements Callback {
 	 *
 	 * @param int $id
 	 * @param array $data
+	 * @param array $options
 	 * @return int The count of records updated
 	 */
-	public function update($id, array $data) {
+	public function update($id, array $data, array $options = []) {
 		$query = $this->query(Query::UPDATE)->where($this->getPrimaryKey(), $id);
 
-		return $this->_processSave($query, $id, $data);
+		return $this->_processSave($query, $id, $data, $options);
 	}
 
 	/**
@@ -886,10 +889,11 @@ class Model extends Base implements Callback {
 	 *
 	 * @param array $data
 	 * @param \Closure $conditions
+	 * @param array $options
 	 * @return int The count of records updated
 	 * @throws \Titon\Model\Exception\InvalidQueryException
 	 */
-	public function updateMany(array $data, Closure $conditions) {
+	public function updateMany(array $data, Closure $conditions, array $options = []) {
 		$pk = $this->getPrimaryKey();
 		$ids = $this->select($pk)->bindCallback($conditions)->fetchList($pk, $pk);
 		$query = $this->query(Query::UPDATE)->bindCallback($conditions);
@@ -901,7 +905,7 @@ class Model extends Base implements Callback {
 			throw new InvalidQueryException('No where clause detected, will not update all records');
 		}
 
-		return $this->_processSave($query, $ids, $data);
+		return $this->_processSave($query, $ids, $data, $options);
 	}
 
 	/**
@@ -909,9 +913,10 @@ class Model extends Base implements Callback {
 	 *
 	 * @param array $data
 	 * @param int $id
+	 * @param array $options
 	 * @return int The record ID on success, 0 on failure
 	 */
-	public function upsert(array $data, $id = null) {
+	public function upsert(array $data, $id = null, array $options = []) {
 		$pk = $this->getPrimaryKey();
 		$update = false;
 
@@ -931,13 +936,13 @@ class Model extends Base implements Callback {
 		if ($update) {
 
 			// Do false check since updating can return 0 rows affected
-			if ($this->update($id, $data) === false) {
+			if ($this->update($id, $data, $options) === false) {
 				return 0;
 			}
 
 		// Or insert
 		} else {
-			$id = $this->create($data);
+			$id = $this->create($data, $options);
 		}
 
 		return $id;
@@ -949,11 +954,12 @@ class Model extends Base implements Callback {
 	 *
 	 * @param int $id
 	 * @param array $data
+	 * @param array $options
 	 * @return int
 	 * @throws \Titon\Model\Exception\QueryFailureException
 	 * @throws \Exception
 	 */
-	public function upsertRelations($id, array $data) {
+	public function upsertRelations($id, array $data, array $options = []) {
 		$upserted = 0;
 		$driver = $this->getDriver();
 
@@ -981,7 +987,7 @@ class Model extends Base implements Callback {
 					// Append the foreign key with the current ID
 					case Relation::ONE_TO_ONE:
 						$relatedData[$rfk] = $id;
-						$relatedData[$rpk] = $relatedModel->upsert($relatedData);
+						$relatedData[$rpk] = $relatedModel->upsert($relatedData, null, $options);
 
 						if (!$relatedData[$rpk]) {
 							throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
@@ -996,7 +1002,7 @@ class Model extends Base implements Callback {
 					case Relation::ONE_TO_MANY:
 						foreach ($relatedData as $i => $hasManyData) {
 							$hasManyData[$rfk] = $id;
-							$hasManyData[$rpk] = $relatedModel->upsert($hasManyData);
+							$hasManyData[$rpk] = $relatedModel->upsert($hasManyData, null, $options);
 
 							if (!$hasManyData[$rpk]) {
 								throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
@@ -1024,13 +1030,13 @@ class Model extends Base implements Callback {
 								unset($habtmData[$rfk]);
 
 								if ($habtmData) {
-									$foreign_id = $relatedModel->upsert($habtmData, $foreign_id);
+									$foreign_id = $relatedModel->upsert($habtmData, $foreign_id, $options);
 								}
 
 							// Existing record by relation primary key
 							// New record
 							} else {
-								$foreign_id = $relatedModel->upsert($habtmData);
+								$foreign_id = $relatedModel->upsert($habtmData, null, $options);
 								$habtmData = $relatedModel->data;
 							}
 
@@ -1047,7 +1053,7 @@ class Model extends Base implements Callback {
 								->fetch(false);
 
 							if (!$exists) {
-								$junctionData[$jpk] = $junctionModel->upsert($junctionData);
+								$junctionData[$jpk] = $junctionModel->upsert($junctionData, null, $options);
 
 								if (!$junctionData[$jpk]) {
 									throw new QueryFailureException(sprintf('Failed to upsert %s junction data', $alias));
@@ -1134,20 +1140,36 @@ class Model extends Base implements Callback {
 	 *
 	 * @param \Titon\Model\Query $query
 	 * @param int|int[] $id
-	 * @param bool $cascade
+	 * @param mixed $options {
+	 * 		@type bool $cascade			Will delete related dependent records
+	 * 		@type bool $preCallback		Will trigger before callbacks
+	 * 		@type bool $postCallback	Will trigger after callbacks
+	 * }
 	 * @return int The count of records deleted
 	 * @throws \Titon\Model\Exception\QueryFailureException
 	 * @throws \Exception
 	 */
-	protected function _processDelete(Query $query, $id, $cascade) {
-		$state = $this->_triggerPreDelete($id, $cascade);
+	protected function _processDelete(Query $query, $id, $options = []) {
+		if (is_bool($options)) {
+			$options = ['cascade' => $options];
+		}
 
-		if (!$state) {
-			return 0;
+		$options = $options + [
+			'cascade' => true,
+			'preCallback' => true,
+			'postCallback' => true
+		];
+
+		if ($options['preCallback']) {
+			$state = $this->_triggerPreDelete($id, $options['cascade']);
+
+			if (!$state) {
+				return 0;
+			}
 		}
 
 		// Use transactions for cascading
-		if ($cascade) {
+		if ($options['cascade']) {
 			$driver = $this->getDriver();
 
 			if (!$driver->startTransaction()) {
@@ -1161,7 +1183,7 @@ class Model extends Base implements Callback {
 					throw new QueryFailureException(sprintf('Failed to delete %s record with ID %s', get_class($this), implode(', ', (array) $id)));
 				}
 
-				$this->deleteDependents($id, $cascade);
+				$this->deleteDependents($id, $options['cascade']);
 
 				$driver->commitTransaction();
 
@@ -1182,7 +1204,10 @@ class Model extends Base implements Callback {
 		}
 
 		$this->data = [];
-		$this->_triggerPostDelete($id);
+
+		if ($options['postCallback']) {
+			$this->_triggerPostDelete($id);
+		}
 
 		return $count;
 	}
@@ -1191,7 +1216,7 @@ class Model extends Base implements Callback {
 	 * All-in-one method for fetching results from a query.
 	 * Before the query is executed, the preFetch() method is called.
 	 * After the query is executed, relations will be fetched, and then postFetch() will be called.
-	 * If wrap is true, all results will be wrapped in an Entity class.
+	 * If wrap option is true, all results will be wrapped in an Entity class.
 	 *
 	 * Depending on the $fetchType, the returned results will differ.
 	 * If the type is "fetch" a single item will be returned, either an array or entity.
@@ -1201,18 +1226,34 @@ class Model extends Base implements Callback {
 	 *
 	 * @param \Titon\Model\Query $query
 	 * @param string $fetchType
-	 * @param bool $wrap
+	 * @param mixed $options {
+	 * 		@type bool $wrap			Will wrap results in an Entity class
+	 * 		@type bool $preCallback		Will trigger before callbacks
+	 * 		@type bool $postCallback	Will trigger after callbacks
+	 * }
 	 * @return array|\Titon\Model\Entity|\Titon\Model\Entity[]
 	 */
-	protected function _processFetch(Query $query, $fetchType, $wrap) {
-		$result = $this->_triggerPreFetch($query, $fetchType);
-
-		// Use the return of preFetch() if applicable
-		if (!$result) {
-			return [];
+	protected function _processFetch(Query $query, $fetchType, $options = []) {
+		if (is_bool($options)) {
+			$options = ['wrap' => $options];
 		}
 
-		if (is_array($result)) {
+		$options = $options + [
+			'wrap' => true,
+			'preCallback' => true,
+			'postCallback' => true
+		];
+
+		// Use the return of preFetch() if applicable
+		if ($options['preCallback']) {
+			$result = $this->_triggerPreFetch($query, $fetchType);
+
+			if (!$result) {
+				return [];
+			}
+		}
+
+		if (isset($result) && is_array($result)) {
 			$results = $result;
 
 			if (!isset($results[0])) {
@@ -1245,17 +1286,19 @@ class Model extends Base implements Callback {
 				}
 			}
 
-			$results[$i] = $this->fetchRelations($query, $result, $wrap);
+			$results[$i] = $this->fetchRelations($query, $result, $options);
 		}
 
-		$results = $this->_triggerPostFetch($results, $fetchType);
+		if ($options['postCallback']) {
+			$results = $this->_triggerPostFetch($results, $fetchType);
+		}
 
 		$this->data = $results;
 
 		// Wrap the results in entities
 		$entity = $this->getEntity();
 
-		if ($wrap && $entity) {
+		if ($options['wrap'] && $entity) {
 			foreach ($results as $i => $result) {
 
 				// Wrap data pulled through a join
@@ -1300,16 +1343,27 @@ class Model extends Base implements Callback {
 	 * @param \Titon\Model\Query $query
 	 * @param int|int[] $id
 	 * @param array $data
+	 * @param mixed $options {
+	 * 		@type bool $preCallback		Will trigger before callbacks
+	 * 		@type bool $postCallback	Will trigger after callbacks
+	 * }
 	 * @return int The count of records updated
 	 * @throws \Titon\Model\Exception\QueryFailureException
 	 * @throws \Exception
 	 */
-	protected function _processSave(Query $query, $id, array $data) {
-		$data = $this->_triggerPreSave($id, $data);
+	protected function _processSave(Query $query, $id, array $data, $options = []) {
 		$isCreate = !$id;
+		$options = $options + [
+			'preCallback' => true,
+			'postCallback' => true
+		];
 
-		if (!$data) {
-			return 0;
+		if ($options['preCallback']) {
+			$data = $this->_triggerPreSave($id, $data);
+
+			if (!$data) {
+				return 0;
+			}
 		}
 
 		$this->_validateRelationData($data);
@@ -1339,7 +1393,7 @@ class Model extends Base implements Callback {
 					$id = $driver->getLastInsertID();
 				}
 
-				$this->upsertRelations($id, $relatedData);
+				$this->upsertRelations($id, $relatedData, $options);
 
 				$driver->commitTransaction();
 
@@ -1367,7 +1421,9 @@ class Model extends Base implements Callback {
 			$this->setData([$this->getPrimaryKey() => $id] + $data);
 		}
 
-		$this->_triggerPostSave($id, $isCreate);
+		if ($options['postCallback']) {
+			$this->_triggerPostSave($id, $isCreate);
+		}
 
 		if ($isCreate) {
 			return $id;

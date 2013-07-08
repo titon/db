@@ -262,22 +262,22 @@ class Query implements Serializable, JsonSerializable {
 	 * Pass the query to the model to interact with the database.
 	 * Return the first record from the results.
 	 *
-	 * @param bool $wrap
+	 * @param mixed $options
 	 * @return \Titon\Model\Entity
 	 */
-	public function fetch($wrap = true) {
-		return $this->getModel()->fetch($this, $wrap);
+	public function fetch($options = true) {
+		return $this->getModel()->fetch($this, $options);
 	}
 
 	/**
 	 * Pass the query to the model to interact with the database.
 	 * Return all records from the results.
 	 *
-	 * @param bool $wrap
+	 * @param mixed $options
 	 * @return \Titon\Model\Entity[]
 	 */
-	public function fetchAll($wrap = true) {
-		return $this->getModel()->fetchAll($this, $wrap);
+	public function fetchAll($options = true) {
+		return $this->getModel()->fetchAll($this, $options);
 	}
 
 	/**
@@ -286,10 +286,11 @@ class Query implements Serializable, JsonSerializable {
 	 *
 	 * @param string $key
 	 * @param string $value
+	 * @param array $options
 	 * @return array
 	 */
-	public function fetchList($key = null, $value = null) {
-		return $this->getModel()->fetchList($this, $key, $value);
+	public function fetchList($key = null, $value = null, array $options = []) {
+		return $this->getModel()->fetchList($this, $key, $value, $options);
 	}
 
 	/**
