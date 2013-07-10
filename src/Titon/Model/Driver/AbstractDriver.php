@@ -27,6 +27,11 @@ abstract class AbstractDriver extends Base implements Driver {
 	 * Configuration.
 	 *
 	 * @type array {
+	 * 		@type string $database	The database name
+	 * 		@type string $host		The hostname or IP to connect to
+	 * 		@type int $port			The port to connect with
+	 * 		@type string $user		Login user name
+	 * 		@type string $pass		Login user password
 	 *		@type bool $persistent	Should we use persistent data connections
 	 * 		@type string $encoding	Charset encoding for the driver
 	 * 		@type string $timezone	Timezone for the driver
@@ -34,6 +39,11 @@ abstract class AbstractDriver extends Base implements Driver {
 	 * }
 	 */
 	protected $_config = [
+		'database' => '',
+		'host' => '127.0.0.1',
+		'port' => 0,
+		'user' => '',
+		'pass' => '',
 		'persistent' => true,
 		'encoding' => 'utf8',
 		'timezone' => 'UTC',
@@ -139,6 +149,15 @@ abstract class AbstractDriver extends Base implements Driver {
 	}
 
 	/**
+	 * Return the database name.
+	 *
+	 * @return string
+	 */
+	public function getDatabase() {
+		return $this->config->database;
+	}
+
+	/**
 	 * {@inheritdoc}
 	 */
 	public function getDialect() {
@@ -150,6 +169,15 @@ abstract class AbstractDriver extends Base implements Driver {
 	 */
 	public function getEncoding() {
 		return $this->config->encoding;
+	}
+
+	/**
+	 * Return the database host.
+	 *
+	 * @return string
+	 */
+	public function getHost() {
+		return $this->config->host;
 	}
 
 	/**
@@ -171,6 +199,33 @@ abstract class AbstractDriver extends Base implements Driver {
 	 */
 	public function getLogger() {
 		return $this->_logger;
+	}
+
+	/**
+	 * Return the database password.
+	 *
+	 * @return string
+	 */
+	public function getPassword() {
+		return $this->config->pass;
+	}
+
+	/**
+	 * Return the database port.
+	 *
+	 * @return int
+	 */
+	public function getPort() {
+		return $this->config->port;
+	}
+
+	/**
+	 * Return the database user.
+	 *
+	 * @return string
+	 */
+	public function getUser() {
+		return $this->config->user;
 	}
 
 	/**

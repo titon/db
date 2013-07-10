@@ -33,21 +33,11 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * Configuration.
 	 *
 	 * @type array {
-	 * 		@type string $database	The database name
-	 * 		@type string $host		The hostname or IP to connect to
-	 * 		@type int $port			The port to connect with
-	 * 		@type string $user		Login user name
-	 * 		@type string $pass		Login user password
 	 * 		@type string $dsn		Custom DSN that would take precedence
 	 * 		@type string $socket	Path to unix socket to connect with
 	 * }
 	 */
 	protected $_config = [
-		'database' => '',
-		'host' => 'localhost',
-		'port' => 0,
-		'user' => '',
-		'pass' => '',
 		'dsn' => '',
 		'socket' => ''
 	];
@@ -223,15 +213,6 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	}
 
 	/**
-	 * Return the database name.
-	 *
-	 * @return string
-	 */
-	public function getDatabase() {
-		return $this->config->database;
-	}
-
-	/**
 	 * Return the PDO driver name.
 	 *
 	 * @return string
@@ -267,46 +248,10 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	}
 
 	/**
-	 * Return the database host.
-	 *
-	 * @return string
-	 */
-	public function getHost() {
-		return $this->config->host;
-	}
-
-	/**
 	 * {@inheritdoc}
 	 */
 	public function getLastInsertID() {
 		return $this->getConnection()->lastInsertId();
-	}
-
-	/**
-	 * Return the database password.
-	 *
-	 * @return string
-	 */
-	public function getPassword() {
-		return $this->config->pass;
-	}
-
-	/**
-	 * Return the database port.
-	 *
-	 * @return int
-	 */
-	public function getPort() {
-		return $this->config->port;
-	}
-
-	/**
-	 * Return the database user.
-	 *
-	 * @return string
-	 */
-	public function getUser() {
-		return $this->config->user;
 	}
 
 	/**
@@ -329,6 +274,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			'int' => 'Titon\Model\Driver\Type\IntType',
 			'integer' => 'Titon\Model\Driver\Type\IntType',
 			'bigint' => 'Titon\Model\Driver\Type\BigintType',
+			'real' => 'Titon\Model\Driver\Type\FloatType',
 			'float' => 'Titon\Model\Driver\Type\FloatType',
 			'double' => 'Titon\Model\Driver\Type\DoubleType',
 			'decimal' => 'Titon\Model\Driver\Type\DecimalType',
