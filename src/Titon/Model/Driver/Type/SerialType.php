@@ -18,7 +18,7 @@ class SerialType extends BigintType {
 	 * {@inheritdoc}
 	 */
 	public function getDefaultOptions() {
-		return ['type' => 'bigint', 'null' => false, 'unsigned' => true, 'ai' => true, 'unique' => true];
+		return ['type' => 'bigint', 'null' => false, 'unsigned' => true, 'ai' => true, 'primary' => true];
 	}
 
 	/**
