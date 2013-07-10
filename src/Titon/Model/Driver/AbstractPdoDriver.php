@@ -244,24 +244,24 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * @return string
 	 */
 	public function getDsn() {
-		$dsn = $this->config->dsn;
-
-		if (!$dsn) {
-			$params = ['dbname=' . $this->getDatabase()];
-
-			if ($socket = $this->getSocket()) {
-				$params[] = 'unix_socket=' . $socket;
-			} else {
-				$params[] = 'host=' . $this->getHost();
-				$params[] = 'port=' . $this->getPort();
-			}
-
-			if ($encoding = $this->getEncoding()) {
-				$params[] = 'charset=' . $encoding;
-			}
-
-			$dsn = $this->getDriver() . ':' . implode(';', $params);
+		if ($dsn = $this->config->dsn) {
+			return $dsn;
 		}
+
+		$params = ['dbname=' . $this->getDatabase()];
+
+		if ($socket = $this->getSocket()) {
+			$params[] = 'unix_socket=' . $socket;
+		} else {
+			$params[] = 'host=' . $this->getHost();
+			$params[] = 'port=' . $this->getPort();
+		}
+
+		if ($encoding = $this->getEncoding()) {
+			$params[] = 'charset=' . $encoding;
+		}
+
+		$dsn = $this->getDriver() . ':' . implode(';', $params);
 
 		return $dsn;
 	}
@@ -316,6 +316,43 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 */
 	public function getSocket() {
 		return $this->config->socket;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getSupportedTypes() {
+		return [
+			'tinyint' => 'Titon\Model\Driver\Type\IntType',
+			'smallint' => 'Titon\Model\Driver\Type\IntType',
+			'mediumint' => 'Titon\Model\Driver\Type\IntType',
+			'int' => 'Titon\Model\Driver\Type\IntType',
+			'integer' => 'Titon\Model\Driver\Type\IntType',
+			'bigint' => 'Titon\Model\Driver\Type\BigintType',
+			'float' => 'Titon\Model\Driver\Type\FloatType',
+			'double' => 'Titon\Model\Driver\Type\DoubleType',
+			'decimal' => 'Titon\Model\Driver\Type\DecimalType',
+			'boolean' => 'Titon\Model\Driver\Type\BooleanType',
+			'date' => 'Titon\Model\Driver\Type\DateType',
+			'datetime' => 'Titon\Model\Driver\Type\DatetimeType',
+			'timestamp' => 'Titon\Model\Driver\Type\DatetimeType',
+			'time' => 'Titon\Model\Driver\Type\TimeType',
+			'year' => 'Titon\Model\Driver\Type\YearType',
+			'char' => 'Titon\Model\Driver\Type\CharType',
+			'varchar' => 'Titon\Model\Driver\Type\StringType',
+			'tinytext' => 'Titon\Model\Driver\Type\TextType',
+			'mediumtext' => 'Titon\Model\Driver\Type\TextType',
+			'text' => 'Titon\Model\Driver\Type\TextType',
+			'longtext' => 'Titon\Model\Driver\Type\TextType',
+			'tinyblob' => 'Titon\Model\Driver\Type\BlobType',
+			'mediumblob' => 'Titon\Model\Driver\Type\BlobType',
+			'blob' => 'Titon\Model\Driver\Type\BlobType',
+			'longblob' => 'Titon\Model\Driver\Type\BlobType',
+			'bit' => 'Titon\Model\Driver\Type\BinaryType',
+			'binary' => 'Titon\Model\Driver\Type\BinaryType',
+			'varbinary' => 'Titon\Model\Driver\Type\BinaryType',
+			'serial' => 'Titon\Model\Driver\Type\SerialType'
+		];
 	}
 
 	/**
