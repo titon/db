@@ -342,7 +342,12 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 		$statement->params = $binds;
 
 		// Gather and log result
-		$this->_result = new PdoResult($statement);
+		if ($query instanceof Query) {
+			$this->_result = new PdoResult($statement, $query);
+
+		} else {
+			$this->_result = new PdoResult($statement);
+		}
 
 		$this->logQuery($this->_result);
 

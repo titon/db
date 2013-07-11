@@ -7,7 +7,9 @@
 
 namespace Titon\Model\Query\Result;
 
+use Titon\Common\Traits\Cacheable;
 use Titon\Model\Query\Result;
+use Titon\Model\Query;
 
 /**
  * Provides shared functionality for results.
@@ -15,6 +17,7 @@ use Titon\Model\Query\Result;
  * @package Titon\Model\Query\Result
  */
 abstract class AbstractResult implements Result {
+	use Cacheable;
 
 	/**
 	 * Affected row count.
@@ -38,6 +41,13 @@ abstract class AbstractResult implements Result {
 	protected $_params = [];
 
 	/**
+	 * Query object.
+	 *
+	 * @type \Titon\Model\Query
+	 */
+	protected $_query;
+
+	/**
 	 * Was the query execution successful.
 	 *
 	 * @type bool
@@ -50,6 +60,15 @@ abstract class AbstractResult implements Result {
 	 * @type int
 	 */
 	protected $_time = 0;
+
+	/**
+	 * Store the query object.
+	 *
+	 * @param \Titon\Model\Query $query
+	 */
+	public function __construct(Query $query = null) {
+		$this->_query = $query;
+	}
 
 	/**
 	 * Return all logged values.
@@ -77,6 +96,13 @@ abstract class AbstractResult implements Result {
 	 */
 	public function getParams() {
 		return $this->_params;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getQuery() {
+		return $this->_query;
 	}
 
 	/**

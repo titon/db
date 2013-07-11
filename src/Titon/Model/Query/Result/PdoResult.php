@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Query\Result;
 
+use Titon\Model\Query;
 use Titon\Model\Query\Result;
 use \PDO;
 use \PDOStatement;
@@ -29,13 +30,16 @@ class PdoResult extends AbstractResult implements Result {
 	 * Store the statement.
 	 *
 	 * @param \PDOStatement $statement
+	 * @param \Titon\Model\Query $query
 	 */
-	public function __construct(PDOStatement $statement) {
+	public function __construct(PDOStatement $statement, Query $query = null) {
 		$this->_statement = $statement;
 
 		if (isset($statement->params)) {
 			$this->_params = $statement->params;
 		}
+
+		parent::__construct($query);
 	}
 
 	/**
@@ -103,6 +107,7 @@ class PdoResult extends AbstractResult implements Result {
 	public function fetchAll() {
 		$this->execute();
 
+		$aliasMap = $this->_mapAliases();
 		$statement = $this->_statement;
 		$columnMeta = [];
 		$results = [];
@@ -117,16 +122,27 @@ class PdoResult extends AbstractResult implements Result {
 
 			foreach ($row as $index => $value) {
 				$column = $columnMeta[$index];
-				$table = isset($column['table']) ? $column['table'] : '';
+				$alias = '';
 
-				$joins[$table][$column['name']] = $value;
+				if (isset($column['table'])) {
+					// For drivers that only return the table
+					if (isset($aliasMap[$column['table']])) {
+						$alias = $aliasMap[$column['table']];
+
+					// For drivers that return the actual alias
+					} else {
+						$alias = $column['table'];
+					}
+				}
+
+				$joins[$alias][$column['name']] = $value;
 			}
 
 			foreach ($joins as $join => $data) {
 				if (empty($result)) {
 					$result = $data;
 
-				// Aliased/count fields don't have a table
+				// Aliased/count sometimes fields don't have a table
 				} else if (empty($join)) {
 					$result = array_merge($result, $data);
 
@@ -147,20 +163,22 @@ class PdoResult extends AbstractResult implements Result {
 	 * {@inheritdoc}
 	 */
 	public function getStatement() {
-		$statement = preg_replace("/ {2,}/", " ", $this->_statement->queryString); // Trim spaces
+		return $this->cache(__METHOD__, function() {
+			$statement = preg_replace("/ {2,}/", " ", $this->_statement->queryString); // Trim spaces
 
-		foreach ($this->getParams() as $param) {
-			switch ($param[1]) {
-				case PDO::PARAM_NULL:	$value = 'NULL'; break;
-				case PDO::PARAM_INT:
-				case PDO::PARAM_BOOL:	$value = (int) $param[0]; break;
-				default: 				$value = "'" . (string) $param[0] . "'"; break;
+			foreach ($this->getParams() as $param) {
+				switch ($param[1]) {
+					case PDO::PARAM_NULL:	$value = 'NULL'; break;
+					case PDO::PARAM_INT:
+					case PDO::PARAM_BOOL:	$value = (int) $param[0]; break;
+					default: 				$value = "'" . (string) $param[0] . "'"; break;
+				}
+
+				$statement = preg_replace('/\?/', $value, $statement, 1);
 			}
 
-			$statement = preg_replace('/\?/', $value, $statement, 1);
-		}
-
-		return $statement;
+			return $statement;
+		});
 	}
 
 	/**
@@ -174,6 +192,29 @@ class PdoResult extends AbstractResult implements Result {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Return a mapping of table to alias for the primary table and joins.
+	 *
+	 * @return array
+	 */
+	protected function _mapAliases() {
+		return $this->cache(__METHOD__, function() {
+			$query = $this->getQuery();
+
+			if (!$query) {
+				return [];
+			}
+
+			$map = [$query->getTable() => $query->getAlias()];
+
+			foreach ($query->getJoins() as $join) {
+				$map[$join->getTable()] = $join->getAlias();
+			}
+
+			return $map;
+		});
 	}
 
 }

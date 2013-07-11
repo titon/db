@@ -64,6 +64,13 @@ interface Result {
 	public function getParams();
 
 	/**
+	 * Return the query object for this result.
+	 *
+	 * @return \Titon\Model\Query
+	 */
+	public function getQuery();
+
+	/**
 	 * Return a count of how many affected rows.
 	 *
 	 * @return int
