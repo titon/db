@@ -65,7 +65,7 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::CREATE_TABLE, new User());
 		$query->schema($schema);
 
-		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT\n);", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT\n);", $this->object->buildCreateTable($query));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -73,7 +73,7 @@ class DialectTest extends TestCase {
 			'primary' => true
 		]);
 
-		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\nPRIMARY KEY (`column`)\n);", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\nPRIMARY KEY (`column`)\n);", $this->object->buildCreateTable($query));
 
 		$schema->addColumn('column2', [
 			'type' => 'int',
@@ -81,11 +81,11 @@ class DialectTest extends TestCase {
 			'index' => true
 		]);
 
-		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n);", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n);", $this->object->buildCreateTable($query));
 
 		$schema->addOption('engine', 'InnoDB');
 
-		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n) ENGINE=InnoDB;", $this->object->buildCreateTable($query));
+		$this->assertEquals("CREATE TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n) ENGINE=InnoDB;", $this->object->buildCreateTable($query));
 	}
 
 	/**
@@ -691,14 +691,11 @@ class DialectTest extends TestCase {
 		$options = [];
 		$this->assertEquals('', $this->object->formatTableOptions($options));
 
-		$options['defaultComment'] = 'Another comment';
-		$this->assertEquals("DEFAULT COMMENT='Another comment'", $this->object->formatTableOptions($options));
-
 		$options['characterSet'] = 'utf8';
-		$this->assertEquals("DEFAULT COMMENT='Another comment' CHARACTER SET=utf8", $this->object->formatTableOptions($options));
+		$this->assertEquals("CHARACTER SET=utf8", $this->object->formatTableOptions($options));
 
 		$options['engine'] = 'MyISAM';
-		$this->assertEquals("DEFAULT COMMENT='Another comment' CHARACTER SET=utf8 ENGINE=MyISAM", $this->object->formatTableOptions($options));
+		$this->assertEquals("CHARACTER SET=utf8 ENGINE=MyISAM", $this->object->formatTableOptions($options));
 	}
 
 	/**
