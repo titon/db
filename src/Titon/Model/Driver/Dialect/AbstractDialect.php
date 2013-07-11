@@ -38,7 +38,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * Configuration.
 	 *
 	 * @type array {
-	 * 		@type string $quoteCharacter	Character used for quoting fields
+	 * 		@type string $quoteCharacter	Character used for quoting keywords
 	 * }
 	 */
 	protected $_config = [
@@ -793,6 +793,54 @@ abstract class AbstractDialect extends Base implements Dialect {
 	}
 
 	/**
+	 * Format a table foreign key.
+	 *
+	 * @param array $data
+	 * @return string
+	 */
+	public function formatTableForeign(array $data) {
+		$ref = explode('.', $data['references']);
+		$key = sprintf($this->getClause(self::FOREIGN_KEY), $this->quote($data['column']), $this->quote($ref[0]), $this->quote($ref[1]));
+
+		if ($data['constraint']) {
+			$key = sprintf($this->getClause(self::CONSTRAINT), $this->quote($data['constraint'])) . ' ' . $key;
+		}
+
+		$actions = $data;
+		unset($actions['references'], $actions['constraint'], $actions['column']);
+
+		foreach ($actions as $clause => $action) {
+			if (!$action) {
+				continue;
+			}
+
+			$value = '';
+
+			if (isset($this->_keywords[$action])) {
+				$value = $this->getKeyword($action);
+
+			} else if (is_string($action)) {
+				$value = $this->quote($action);
+			}
+
+			$key .= ' ' . sprintf($this->getClause($clause), $value);
+		}
+
+		return $key;
+	}
+
+	/**
+	 * Format a table index key.
+	 *
+	 * @param string $index
+	 * @param array $data
+	 * @return string
+	 */
+	public function formatTableIndex($index, array $columns) {
+		return sprintf($this->getClause(self::INDEX), $this->quote($index), $this->quoteList($columns));
+	}
+
+	/**
 	 * Format table keys (primary, unique and foreign) and indexes.
 	 *
 	 * @param \Titon\Model\Driver\Schema $schema
@@ -800,65 +848,25 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function formatTableKeys(Schema $schema) {
 		$keys = [];
-		$constraint = $this->getClause(self::CONSTRAINT);
 
 		if ($primary = $schema->getPrimaryKey()) {
-			$key = sprintf($this->getClause(self::PRIMARY_KEY), $this->quoteList($primary['columns']));
-
-			if ($primary['constraint']) {
-				$key = sprintf($constraint, $this->quote($primary['constraint'])) . ' ' . $key;
-			}
-
-			$keys[] = $key;
+			$keys[] = $this->formatTablePrimary($primary);
 		}
 
-		foreach ($schema->getUniqueKeys() as $index => $unique) {
-			$key = sprintf($this->getClause(self::UNIQUE_KEY), $this->quote($index), $this->quoteList($unique['columns']));
-
-			if ($unique['constraint']) {
-				$key = sprintf($constraint, $this->quote($unique['constraint'])) . ' ' . $key;
-			}
-
-			$keys[] = $key;
+		foreach ($schema->getUniqueKeys() as $unique) {
+			$keys[] = $this->formatTableUnique($unique);
 		}
 
-		foreach ($schema->getForeignKeys() as $column => $foreign) {
-			$ref = explode('.', $foreign['references']);
-			$key = sprintf($this->getClause(self::FOREIGN_KEY), $this->quote($column), $this->quote($ref[0]), $this->quote($ref[1]));
-
-			if ($foreign['constraint']) {
-				$key = sprintf($constraint, $this->quote($foreign['constraint'])) . ' ' . $key;
-			}
-
-			$actions = $foreign;
-			unset($actions['references'], $actions['constraint']);
-
-			foreach ($actions as $clause => $action) {
-				if (!$action) {
-					continue;
-				}
-
-				$value = '';
-
-				if (isset($this->_keywords[$action])) {
-					$value = $this->getKeyword($action);
-
-				} else if (is_string($action)) {
-					$value = $this->quote($action);
-				}
-
-				$key .= ' ' . sprintf($this->getClause($clause), $value);
-			}
-
-			$keys[] = $key;
+		foreach ($schema->getForeignKeys() as $foreign) {
+			$keys[] = $this->formatTableForeign($foreign);
 		}
 
 		foreach ($schema->getIndexes() as $index => $columns) {
-			$keys[] = sprintf($this->getClause(self::INDEX), $this->quote($index), $this->quoteList($columns));
+			$keys[] = $this->formatTableIndex($index, $columns);
 		}
 
 		if ($keys) {
-			return ",\n" . implode(",\n", $keys);
+			return ",\n" . implode(",\n", array_filter($keys));
 		}
 
 		return '';
@@ -892,6 +900,38 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		return implode(' ', $output);
+	}
+
+	/**
+	 * Format a table primary key.
+	 *
+	 * @param array $data
+	 * @return string
+	 */
+	public function formatTablePrimary(array $data) {
+		$key = sprintf($this->getClause(self::PRIMARY_KEY), $this->quoteList($data['columns']));
+
+		if ($data['constraint']) {
+			$key = sprintf($this->getClause(self::CONSTRAINT), $this->quote($data['constraint'])) . ' ' . $key;
+		}
+
+		return $key;
+	}
+
+	/**
+	 * Format a table unique key.
+	 *
+	 * @param array $data
+	 * @return string
+	 */
+	public function formatTableUnique(array $data) {
+		$key = sprintf($this->getClause(self::UNIQUE_KEY), $this->quote($data['index']), $this->quoteList($data['columns']));
+
+		if ($data['constraint']) {
+			$key = sprintf($this->getClause(self::CONSTRAINT), $this->quote($data['constraint'])) . ' ' . $key;
+		}
+
+		return $key;
 	}
 
 	/**

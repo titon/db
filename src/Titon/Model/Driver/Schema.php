@@ -178,6 +178,7 @@ class Schema implements Serializable, JsonSerializable {
 		}
 
 		$this->_foreignKeys[$column] = $options + [
+			'column' => $column,
 			'constraint' => ''
 		];
 	}
@@ -276,6 +277,7 @@ class Schema implements Serializable, JsonSerializable {
 
 		if (empty($this->_uniqueKeys[$index])) {
 			$this->_uniqueKeys[$index] = [
+				'index' => $index,
 				'constraint' => $symbol,
 				'columns' => [$column]
 			];

@@ -96,6 +96,7 @@ class SchemaTest extends TestCase {
 
 		$this->assertEquals([
 			'username' => [
+				'index' => 'username',
 				'constraint' => '',
 				'columns' => ['username']
 			]
@@ -185,6 +186,7 @@ class SchemaTest extends TestCase {
 
 		$this->assertEquals([
 			'column1' => [
+				'index' => 'column1',
 				'constraint' => '',
 				'columns' => ['column1']
 			]
@@ -195,10 +197,12 @@ class SchemaTest extends TestCase {
 
 		$this->assertEquals([
 			'column1' => [
+				'index' => 'column1',
 				'constraint' => '',
 				'columns' => ['column1']
 			],
 			'indexName' => [
+				'index' => 'indexName',
 				'constraint' => '',
 				'columns' => ['column2']
 			]
@@ -209,10 +213,12 @@ class SchemaTest extends TestCase {
 
 		$this->assertEquals([
 			'column1' => [
+				'index' => 'column1',
 				'constraint' => '',
 				'columns' => ['column1']
 			],
 			'indexName' => [
+				'index' => 'indexName',
 				'constraint' => '',
 				'columns' => ['column2', 'column3']
 			]
@@ -230,6 +236,7 @@ class SchemaTest extends TestCase {
 
 		$this->assertEquals([
 			'column1' => [
+				'index' => 'column1',
 				'constraint' => 'symbolName',
 				'columns' => ['column1']
 			]
@@ -240,10 +247,12 @@ class SchemaTest extends TestCase {
 
 		$this->assertEquals([
 			'column1' => [
+				'index' => 'column1',
 				'constraint' => 'symbolName',
 				'columns' => ['column1']
 			],
 			'indexName' => [
+				'index' => 'indexName',
 				'constraint' => 'otherSymbol',
 				'columns' => ['column2']
 			]
@@ -261,6 +270,7 @@ class SchemaTest extends TestCase {
 
 		$this->assertEquals([
 			'column1' => [
+				'column' => 'column1',
 				'references' => 'table.id',
 				'constraint' => ''
 			]
@@ -275,10 +285,12 @@ class SchemaTest extends TestCase {
 
 		$this->assertEquals([
 			'column1' => [
+				'column' => 'column1',
 				'references' => 'table.id',
 				'constraint' => ''
 			],
 			'column2' => [
+				'column' => 'column2',
 				'references' => 'table.id',
 				'constraint' => '',
 				'onUpdate' => Dialect::RESTRICT,
@@ -301,6 +313,7 @@ class SchemaTest extends TestCase {
 
 		$this->assertEquals([
 			'column1' => [
+				'column' => 'column1',
 				'references' => 'table.id',
 				'constraint' => 'symbolName'
 			]

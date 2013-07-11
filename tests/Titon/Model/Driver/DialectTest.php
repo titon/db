@@ -642,6 +642,32 @@ class DialectTest extends TestCase {
 	}
 
 	/**
+	 * Test foreign keys.
+	 */
+	public function testFormatTableForeign() {
+		$data = ['column' => 'id', 'references' => 'users.id', 'constraint' => ''];
+
+		$this->assertEquals('FOREIGN KEY (`id`) REFERENCES `users`(`id`)', $this->object->formatTableForeign($data));
+
+		$data['constraint'] = 'symbol';
+		$this->assertEquals('CONSTRAINT `symbol` FOREIGN KEY (`id`) REFERENCES `users`(`id`)', $this->object->formatTableForeign($data));
+
+		$data['onUpdate'] = Dialect::RESTRICT;
+		$this->assertEquals('CONSTRAINT `symbol` FOREIGN KEY (`id`) REFERENCES `users`(`id`) ON UPDATE RESTRICT', $this->object->formatTableForeign($data));
+
+		$data['where'] = true; // fake example, used for actions with no value
+		$this->assertEquals('CONSTRAINT `symbol` FOREIGN KEY (`id`) REFERENCES `users`(`id`) ON UPDATE RESTRICT WHERE ', $this->object->formatTableForeign($data));
+	}
+
+	/**
+	 * Test index keys.
+	 */
+	public function testFormatTableIndex() {
+		$this->assertEquals('KEY `idx` (`foo`)', $this->object->formatTableIndex('idx', ['foo']));
+		$this->assertEquals('KEY `idx` (`foo`, `bar`)', $this->object->formatTableIndex('idx', ['foo', 'bar']));
+	}
+
+	/**
 	 * Test table keys are built with primary, unique, foreign and index.
 	 */
 	public function testFormatTableKeys() {
@@ -696,6 +722,36 @@ class DialectTest extends TestCase {
 
 		$options['engine'] = 'MyISAM';
 		$this->assertEquals("CHARACTER SET=utf8 ENGINE=MyISAM", $this->object->formatTableOptions($options));
+	}
+
+	/**
+	 * Test primary key.
+	 */
+	public function testFormatTablePrimary() {
+		$data = ['columns' => ['foo'], 'constraint' => ''];
+
+		$this->assertEquals('PRIMARY KEY (`foo`)', $this->object->formatTablePrimary($data));
+
+		$data['constraint'] = 'symbol';
+		$this->assertEquals('CONSTRAINT `symbol` PRIMARY KEY (`foo`)', $this->object->formatTablePrimary($data));
+
+		$data['columns'][] = 'bar';
+		$this->assertEquals('CONSTRAINT `symbol` PRIMARY KEY (`foo`, `bar`)', $this->object->formatTablePrimary($data));
+	}
+
+	/**
+	 * Test unique keys.
+	 */
+	public function testFormatTableUnique() {
+		$data = ['columns' => ['foo'], 'constraint' => '', 'index' => 'idx'];
+
+		$this->assertEquals('UNIQUE KEY `idx` (`foo`)', $this->object->formatTableUnique($data));
+
+		$data['constraint'] = 'symbol';
+		$this->assertEquals('CONSTRAINT `symbol` UNIQUE KEY `idx` (`foo`)', $this->object->formatTableUnique($data));
+
+		$data['columns'][] = 'bar';
+		$this->assertEquals('CONSTRAINT `symbol` UNIQUE KEY `idx` (`foo`, `bar`)', $this->object->formatTableUnique($data));
 	}
 
 	/**
