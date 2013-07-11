@@ -915,7 +915,17 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$value = $this->getDriver()->getConnection()->quote($value);
 			}
 
-			$output[] = $this->getKeyword($key) . '=' . $value;
+			$option = $this->getKeyword($key);
+
+			if (!$value) {
+				continue;
+			}
+
+			if (!is_bool($option)) {
+				$option .= '=' . $value;
+			}
+
+			$output[] = $option;
 		}
 
 		return implode(' ', $output);
@@ -1076,6 +1086,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 				} else if ($clause === true) {
 					$value = $this->getKeyword($key);
 				}
+			}
+
+			if (isset($this->_clauses[$key])) {
+				$value = sprintf($this->getClause($key), $value);
 			}
 
 			$output['a.' . $key] = $value;
