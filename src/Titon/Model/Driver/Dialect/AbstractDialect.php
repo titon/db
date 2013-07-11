@@ -830,10 +830,24 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$key = sprintf($constraint, $this->quote($foreign['constraint'])) . ' ' . $key;
 			}
 
-			foreach (['onDelete', 'onUpdate'] as $action) {
-				if ($foreign[$action]) {
-					$key .= ' ' . sprintf($this->getClause($action), $this->getKeyword($foreign[$action]));
+			$actions = $foreign;
+			unset($actions['references'], $actions['constraint']);
+
+			foreach ($actions as $clause => $action) {
+				if (!$action) {
+					continue;
 				}
+
+				$value = '';
+
+				if (isset($this->_keywords[$action])) {
+					$value = $this->getKeyword($action);
+
+				} else if (is_string($action)) {
+					$value = $this->quote($action);
+				}
+
+				$key .= ' ' . sprintf($this->getClause($clause), $value);
 			}
 
 			$keys[] = $key;

@@ -668,11 +668,11 @@ class DialectTest extends TestCase {
 
 		$schema->addForeign('fk2', [
 			'references' => 'posts.id',
-			'onUpdate' => Schema::SET_NULL,
-			'onDelete' => Schema::NO_ACTION
+			'onUpdate' => Dialect::SET_NULL,
+			'onDelete' => Dialect::NO_ACTION
 		]);
 
-		$expected .= ",\nFOREIGN KEY (`fk2`) REFERENCES `posts`(`id`) ON DELETE NO ACTION ON UPDATE SET NULL";
+		$expected .= ",\nFOREIGN KEY (`fk2`) REFERENCES `posts`(`id`) ON UPDATE SET NULL ON DELETE NO ACTION";
 
 		$this->assertEquals($expected, $this->object->formatTableKeys($schema));
 
@@ -757,8 +757,6 @@ class DialectTest extends TestCase {
 	 * Test single statement fetching.
 	 */
 	public function testGetStatement() {
-		$this->assertEquals('TRUNCATE {table}', $this->object->getStatement('truncate'));
-
 		try {
 			$this->object->getStatement('foobar');
 			$this->assertTrue(false);

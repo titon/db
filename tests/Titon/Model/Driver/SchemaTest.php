@@ -262,31 +262,27 @@ class SchemaTest extends TestCase {
 		$this->assertEquals([
 			'column1' => [
 				'references' => 'table.id',
-				'constraint' => '',
-				'onUpdate' => false,
-				'onDelete' => false
+				'constraint' => ''
 			]
 		], $this->object->getForeignKeys());
 
 		// Add update/delete actions
 		$this->object->addForeign('column2', [
 			'references' => 'table.id',
-			'onUpdate' => Schema::RESTRICT,
-			'onDelete' => Schema::SET_NULL
+			'onUpdate' => Dialect::RESTRICT,
+			'onDelete' => Dialect::SET_NULL
 		]);
 
 		$this->assertEquals([
 			'column1' => [
 				'references' => 'table.id',
-				'constraint' => '',
-				'onUpdate' => false,
-				'onDelete' => false
+				'constraint' => ''
 			],
 			'column2' => [
 				'references' => 'table.id',
 				'constraint' => '',
-				'onUpdate' => Schema::RESTRICT,
-				'onDelete' => Schema::SET_NULL
+				'onUpdate' => Dialect::RESTRICT,
+				'onDelete' => Dialect::SET_NULL
 			]
 		], $this->object->getForeignKeys());
 	}
@@ -306,9 +302,7 @@ class SchemaTest extends TestCase {
 		$this->assertEquals([
 			'column1' => [
 				'references' => 'table.id',
-				'constraint' => 'symbolName',
-				'onUpdate' => false,
-				'onDelete' => false
+				'constraint' => 'symbolName'
 			]
 		], $this->object->getForeignKeys());
 	}

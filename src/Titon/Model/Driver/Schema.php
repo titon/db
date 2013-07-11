@@ -7,7 +7,6 @@
 
 namespace Titon\Model\Driver;
 
-use Titon\Model\Driver\Dialect;
 use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Exception\MissingColumnException;
 use \Serializable;
@@ -19,11 +18,6 @@ use \JsonSerializable;
  * @package Titon\Model\Driver
  */
 class Schema implements Serializable, JsonSerializable {
-
-	const CASCADE = Dialect::CASCADE;
-	const RESTRICT = Dialect::RESTRICT;
-	const SET_NULL = Dialect::SET_NULL;
-	const NO_ACTION = Dialect::NO_ACTION;
 
 	/**
 	 * Table columns.
@@ -184,9 +178,7 @@ class Schema implements Serializable, JsonSerializable {
 		}
 
 		$this->_foreignKeys[$column] = $options + [
-			'constraint' => '',
-			'onUpdate' => false,
-			'onDelete' => false
+			'constraint' => ''
 		];
 	}
 
