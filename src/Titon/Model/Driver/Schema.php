@@ -112,7 +112,7 @@ class Schema implements Serializable, JsonSerializable {
 			'default' => '',
 			'comment' => '',
 			'charset' => '',
-			'collation' => '',
+			'collate' => '',
 			'null' => false,
 			'ai' => false,
 			'index' => false,		// KEY index (field[, field])
@@ -121,6 +121,7 @@ class Schema implements Serializable, JsonSerializable {
 			'foreign' => false		// [CONSTRAINT symbol] FOREIGN KEY (field) REFERENCES table(field) [ON DELETE CASCADE, etc]
 		];
 
+		// Filter out values so that type defaults can be inherited
 		$this->_columns[$column] = array_filter($options, function($value) {
 			return ($value !== '' && $value !== false);
 		});
