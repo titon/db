@@ -103,35 +103,39 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * {@inheritdoc}
 	 */
 	public function describeDatabase($database = null) {
-		$tables = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database ?: $this->getDatabase()])->fetchAll(false);
-		$schema = [];
+		$database = $database ?: $this->getDatabase();
 
-		if (!$tables) {
+		return $this->cache([__METHOD__, $database], function() use ($database) {
+			$tables = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->fetchAll(false);
+			$schema = [];
+
+			if (!$tables) {
+				return $schema;
+			}
+
+			foreach ($tables as $table) {
+				$name = $table['TABLE_NAME'];
+
+				$schema[$name] = [
+					'table' => $name,
+					'engine' => $table['ENGINE'],
+					'format' => $table['ROW_FORMAT'],
+					'rows' => $table['TABLE_ROWS'],
+					'autoIncrement' => $table['AUTO_INCREMENT'],
+					'collate' => $table['TABLE_COLLATION'],
+					'comment' => $table['TABLE_COMMENT'],
+					'avgRowLength' => $table['AVG_ROW_LENGTH'],
+					'dataLength' => $table['DATA_LENGTH'],
+					'dataFree' => $table['DATA_FREE'],
+					'maxDataLength' => $table['MAX_DATA_LENGTH'],
+					'indexLength' => $table['INDEX_LENGTH'],
+					'created' => $table['CREATE_TIME'],
+					'updated' => $table['UPDATE_TIME']
+				];
+			}
+
 			return $schema;
-		}
-
-		foreach ($tables as $table) {
-			$name = $table['TABLE_NAME'];
-
-			$schema[$name] = [
-				'table' => $name,
-				'engine' => $table['ENGINE'],
-				'format' => $table['ROW_FORMAT'],
-				'rows' => $table['TABLE_ROWS'],
-				'autoIncrement' => $table['AUTO_INCREMENT'],
-				'collate' => $table['TABLE_COLLATION'],
-				'comment' => $table['TABLE_COMMENT'],
-				'avgRowLength' => $table['AVG_ROW_LENGTH'],
-				'dataLength' => $table['DATA_LENGTH'],
-				'dataFree' => $table['DATA_FREE'],
-				'maxDataLength' => $table['MAX_DATA_LENGTH'],
-				'indexLength' => $table['INDEX_LENGTH'],
-				'created' => $table['CREATE_TIME'],
-				'updated' => $table['UPDATE_TIME']
-			];
-		}
-
-		return $schema;
+		});
 	}
 
 	/**
@@ -140,63 +144,65 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * @uses Titon\Model\Type\AbstractType
 	 */
 	public function describeTable($table) {
-		$columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->fetchAll(false);
-		$schema = [];
+		return $this->cache([__METHOD__, $table], function() use ($table) {
+			$columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->fetchAll(false);
+			$schema = [];
 
-		if (!$columns) {
+			if (!$columns) {
+				return $schema;
+			}
+
+			foreach ($columns as $column) {
+				$field = $column['COLUMN_NAME'];
+				$type = strtolower($column['COLUMN_TYPE']);
+				$length = '';
+
+				// Determine type and length
+				if (preg_match('/([a-z]+)(?:\(([0-9,]+)\))?/is', $type, $matches)) {
+					$type = $matches[1];
+
+					if (isset($matches[2])) {
+						$length = $matches[2];
+					}
+				}
+
+				// Inherit type defaults
+				$data = AbstractType::factory($type, $this)->getDefaultOptions();
+
+				// Overwrite with custom
+				$data = [
+					'field' => $field,
+					'type' => $type,
+					'length' => $length,
+					'null' => ($column['IS_NULLABLE'] === 'YES'),
+				] + $data;
+
+				foreach ([
+					'default' => 'COLUMN_DEFAULT',
+					'charset' => 'CHARACTER_SET_NAME',
+					'collate' => 'COLLATION_NAME',
+					'comment' => 'COLUMN_COMMENT'
+				] as $key => $search) {
+					if (!empty($column[$search])) {
+						$data[$key] = $column[$search];
+					}
+				}
+
+				switch (strtoupper($column['COLUMN_KEY'])) {
+					case 'PRI': $data['primary'] = true; break;
+					case 'UNI': $data['unique'] = true; break;
+					case 'MUL': $data['index'] = true; break;
+				}
+
+				if ($column['EXTRA'] === 'auto_increment') {
+					$data['ai'] = true;
+				}
+
+				$schema[$field] = $data;
+			}
+
 			return $schema;
-		}
-
-		foreach ($columns as $column) {
-			$field = $column['COLUMN_NAME'];
-			$type = strtolower($column['COLUMN_TYPE']);
-			$length = '';
-
-			// Determine type and length
-			if (preg_match('/([a-z]+)(?:\(([0-9,]+)\))?/is', $type, $matches)) {
-				$type = $matches[1];
-
-				if (isset($matches[2])) {
-					$length = $matches[2];
-				}
-			}
-
-			// Inherit type defaults
-			$data = AbstractType::factory($type, $this)->getDefaultOptions();
-
-			// Overwrite with custom
-			$data = [
-				'field' => $field,
-				'type' => $type,
-				'length' => $length,
-				'null' => ($column['IS_NULLABLE'] === 'YES'),
-			] + $data;
-
-			foreach ([
-				'default' => 'COLUMN_DEFAULT',
-				'charset' => 'CHARACTER_SET_NAME',
-				'collate' => 'COLLATION_NAME',
-				'comment' => 'COLUMN_COMMENT'
-			] as $key => $search) {
-				if (!empty($column[$search])) {
-					$data[$key] = $column[$search];
-				}
-			}
-
-			switch (strtoupper($column['COLUMN_KEY'])) {
-				case 'PRI': $data['primary'] = true; break;
-				case 'UNI': $data['unique'] = true; break;
-				case 'MUL': $data['index'] = true; break;
-			}
-
-			if ($column['EXTRA'] === 'auto_increment') {
-				$data['ai'] = true;
-			}
-
-			$schema[$field] = $data;
-		}
-
-		return $schema;
+		});
 	}
 
 	/**
