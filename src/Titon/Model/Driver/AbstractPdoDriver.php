@@ -34,12 +34,10 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 *
 	 * @type array {
 	 * 		@type string $dsn		Custom DSN that would take precedence
-	 * 		@type string $socket	Path to unix socket to connect with
 	 * }
 	 */
 	protected $_config = [
 		'dsn' => '',
-		'socket' => ''
 	];
 
 	/**
@@ -252,15 +250,6 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 */
 	public function getLastInsertID() {
 		return $this->getConnection()->lastInsertId();
-	}
-
-	/**
-	 * Return the unix socket path to connect with.
-	 *
-	 * @return string
-	 */
-	public function getSocket() {
-		return $this->config->socket;
 	}
 
 	/**

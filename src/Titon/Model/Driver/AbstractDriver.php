@@ -32,6 +32,7 @@ abstract class AbstractDriver extends Base implements Driver {
 	 * 		@type int $port			The port to connect with
 	 * 		@type string $user		Login user name
 	 * 		@type string $pass		Login user password
+	 * 		@type string $socket	Path to unix socket to connect with
 	 *		@type bool $persistent	Should we use persistent data connections
 	 * 		@type string $encoding	Charset encoding for the driver
 	 * 		@type string $timezone	Timezone for the driver
@@ -44,6 +45,7 @@ abstract class AbstractDriver extends Base implements Driver {
 		'port' => 0,
 		'user' => '',
 		'pass' => '',
+		'socket' => '',
 		'persistent' => true,
 		'encoding' => 'utf8',
 		'timezone' => 'UTC',
@@ -226,6 +228,15 @@ abstract class AbstractDriver extends Base implements Driver {
 	 */
 	public function getUser() {
 		return $this->config->user;
+	}
+
+	/**
+	 * Return the unix socket path to connect with.
+	 *
+	 * @return string
+	 */
+	public function getSocket() {
+		return $this->config->socket;
 	}
 
 	/**
