@@ -84,7 +84,8 @@ class SchemaTest extends TestCase {
 				'type' => 'varchar',
 				'length' => 30,
 				'unique' => true,
-				'field' => 'username'
+				'field' => 'username',
+				'null' => true
 			]
 		], $this->object->getColumns());
 

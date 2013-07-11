@@ -113,13 +113,18 @@ class Schema implements Serializable, JsonSerializable {
 			'comment' => '',
 			'charset' => '',
 			'collate' => '',
-			'null' => false,
+			'null' => true,
 			'ai' => false,
 			'index' => false,		// KEY index (field[, field])
 			'primary' => false,		// [CONSTRAINT symbol] PRIMARY KEY (field[, field])
 			'unique' => false,		// [CONSTRAINT symbol] UNIQUE KEY index (field[, field])
 			'foreign' => false		// [CONSTRAINT symbol] FOREIGN KEY (field) REFERENCES table(field) [ON DELETE CASCADE, etc]
 		];
+
+		// Force to NOT NULL for primary or auto increment columns
+		if ($options['primary'] || $options['ai']) {
+			$options['null'] = false;
+		}
 
 		// Filter out values so that type defaults can be inherited
 		$this->_columns[$column] = array_filter($options, function($value) {

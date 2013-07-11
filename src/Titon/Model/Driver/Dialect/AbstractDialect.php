@@ -366,6 +366,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 			$output = [$this->quote($column), strtoupper($type)];
 
+			$output[] = $this->getKeyword(empty($options['null']) ? self::NOT_NULL : self::NULL);
+
 			if (!empty($options['unsigned'])) {
 				$output[] = $this->getKeyword(self::UNSIGNED);
 			}
@@ -381,8 +383,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 			if (!empty($options['collate'])) {
 				$output[] = sprintf($this->getClause(self::COLLATE), $options['collate']);
 			}
-
-			$output[] = $this->getKeyword(empty($options['null']) ? self::NOT_NULL : self::NULL);
 
 			if (array_key_exists('default', $options) && $options['default'] !== '') {
 				$output[] = sprintf($this->getClause(self::DEFAULT_TO), $this->getDriver()->escape($options['default']));

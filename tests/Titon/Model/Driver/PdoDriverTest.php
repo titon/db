@@ -118,7 +118,7 @@ class PdoDriverTest extends TestCase {
 				'field' => 'username',
 				'type' => 'varchar',
 				'length' => '255',
-				'null' => false,
+				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_general_ci',
@@ -128,7 +128,7 @@ class PdoDriverTest extends TestCase {
 				'field' => 'password',
 				'type' => 'varchar',
 				'length' => '255',
-				'null' => false,
+				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_general_ci'
@@ -137,7 +137,7 @@ class PdoDriverTest extends TestCase {
 				'field' => 'email',
 				'type' => 'varchar',
 				'length' => '255',
-				'null' => false,
+				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_general_ci'
@@ -146,7 +146,7 @@ class PdoDriverTest extends TestCase {
 				'field' => 'firstName',
 				'type' => 'varchar',
 				'length' => '255',
-				'null' => false,
+				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_general_ci'
@@ -155,7 +155,7 @@ class PdoDriverTest extends TestCase {
 				'field' => 'lastName',
 				'type' => 'varchar',
 				'length' => '255',
-				'null' => false,
+				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_general_ci'
@@ -164,7 +164,7 @@ class PdoDriverTest extends TestCase {
 				'field' => 'age',
 				'type' => 'tinyint',
 				'length' => '4',
-				'null' => false
+				'null' => true
 			],
 			'created' => [
 				'field' => 'created',
@@ -196,7 +196,7 @@ class PdoDriverTest extends TestCase {
 				'field' => 'name',
 				'type' => 'varchar',
 				'length' => '255',
-				'null' => false,
+				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_general_ci'
@@ -205,43 +205,43 @@ class PdoDriverTest extends TestCase {
 				'field' => 'health',
 				'type' => 'int',
 				'length' => '11',
-				'null' => false
+				'null' => true
 			],
 			'energy' => [
 				'field' => 'energy',
 				'type' => 'smallint',
 				'length' => '6',
-				'null' => false
+				'null' => true
 			],
 			'damage' => [
 				'field' => 'damage',
 				'type' => 'float',
 				'length' => '',
-				'null' => false
+				'null' => true
 			],
 			'defense' => [
 				'field' => 'defense',
 				'type' => 'double',
 				'length' => '',
-				'null' => false
+				'null' => true
 			],
 			'range' => [
 				'field' => 'range',
 				'type' => 'decimal',
 				'length' => '8,2',
-				'null' => false
+				'null' => true
 			],
 			'isMelee' => [
 				'field' => 'isMelee',
 				'type' => 'tinyint',
 				'length' => '1',
-				'null' => false
+				'null' => true
 			],
 			'data' => [
 				'field' => 'data',
 				'type' => 'blob',
 				'length' => '',
-				'null' => false
+				'null' => true
 			],
 		], $user->getDriver()->describeTable($stat->getTable()));
 	}

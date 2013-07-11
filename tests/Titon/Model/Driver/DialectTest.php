@@ -364,7 +364,7 @@ class DialectTest extends TestCase {
 			'type' => 'int'
 		]);
 
-		$this->assertRegExp('/(`|\")column(`|\") INT NOT NULL/', $this->object->formatColumns($schema));
+		$this->assertRegExp('/(`|\")column(`|\") INT NULL/', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -372,15 +372,15 @@ class DialectTest extends TestCase {
 			'zerofill' => true
 		]);
 
-		$this->assertRegExp('/(`|\")column(`|\") INT UNSIGNED ZEROFILL NOT NULL/', $this->object->formatColumns($schema));
+		$this->assertRegExp('/(`|\")column(`|\") INT NULL UNSIGNED ZEROFILL/', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
-			'null' => true,
+			'null' => false,
 			'comment' => 'Some comment here'
 		]);
 
-		$this->assertRegExp('/(`|\")column(`|\") INT NULL COMMENT \'Some comment here\'/', $this->object->formatColumns($schema));
+		$this->assertRegExp('/(`|\")column(`|\") INT NOT NULL COMMENT \'Some comment here\'/', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -396,12 +396,12 @@ class DialectTest extends TestCase {
 			'length' => 11,
 			'unsigned' => true,
 			'zerofill' => true,
-			'null' => true,
+			'null' => false,
 			'default' => null,
 			'comment' => 'Some comment here'
 		]);
 
-		$expected = '(`|\")column(`|\") INT\(11\) UNSIGNED ZEROFILL NULL DEFAULT NULL AUTO_INCREMENT COMMENT \'Some comment here\'';
+		$expected = '(`|\")column(`|\") INT\(11\) NOT NULL UNSIGNED ZEROFILL DEFAULT NULL AUTO_INCREMENT COMMENT \'Some comment here\'';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 
@@ -417,7 +417,8 @@ class DialectTest extends TestCase {
 
 		$schema->addColumn('column3', [
 			'type' => 'smallint',
-			'default' => 3
+			'default' => 3,
+			'null' => false
 		]);
 
 		$expected .= ',\n(`|\")column3(`|\") SMALLINT NOT NULL DEFAULT \'3\'';
@@ -439,7 +440,7 @@ class DialectTest extends TestCase {
 			'charset' => 'utf8'
 		]);
 
-		$expected .= ',\n(`|\")column5(`|\") VARCHAR\(255\) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL';
+		$expected .= ',\n(`|\")column5(`|\") VARCHAR\(255\) NULL CHARACTER SET utf8 COLLATE utf8_general_ci';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 	}
