@@ -86,19 +86,6 @@ class DialectTest extends TestCase {
 		$schema->addOption('engine', 'InnoDB');
 
 		$this->assertEquals("CREATE  TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT,\n`column2` INT NULL,\nPRIMARY KEY (`column`),\nKEY `column2` (`column2`)\n) ENGINE=InnoDB;", $this->object->buildCreateTable($query));
-
-		// Attributes
-		$schema = new Schema('foobar');
-		$schema->addColumn('column', [
-			'type' => 'int',
-			'ai' => true
-		]);
-
-		$query = new Query(Query::CREATE_TABLE, new User());
-		$query->schema($schema)->attribute('temporary', true);
-
-		$this->assertEquals("CREATE TEMPORARY TABLE IF NOT EXISTS `foobar` (\n`column` INT NOT NULL AUTO_INCREMENT\n);", $this->object->buildCreateTable($query));
-
 	}
 
 	/**
@@ -118,15 +105,6 @@ class DialectTest extends TestCase {
 
 		$query->orderBy('id', 'asc');
 		$this->assertRegExp('/DELETE\s+FROM `foobar`\s+WHERE `id` IN \(\?, \?, \?\)\s+ORDER BY `id` ASC\s+LIMIT 5;/', $this->object->buildDelete($query));
-
-		// Attributes
-		$query = new Query(Query::DELETE, new User());
-		$query->from('foobar')->attribute('quick', true);
-
-		$this->assertRegExp('/DELETE\s+QUICK\s+FROM `foobar`;/', $this->object->buildDelete($query));
-
-		$query->attribute('ignore', true);
-		$this->assertRegExp('/DELETE\s+QUICK\s+IGNORE\s+FROM `foobar`;/', $this->object->buildDelete($query));
 	}
 
 	/**
@@ -165,9 +143,6 @@ class DialectTest extends TestCase {
 		$query->from('foobar');
 
 		$this->assertRegExp('/DROP\s+TABLE IF EXISTS `foobar`;/', $this->object->buildDropTable($query));
-
-		$query->attribute('temporary', true);
-		$this->assertRegExp('/DROP TEMPORARY TABLE IF EXISTS `foobar`;/', $this->object->buildDropTable($query));
 	}
 
 	/**
@@ -187,14 +162,6 @@ class DialectTest extends TestCase {
 		]);
 
 		$this->assertRegExp('/INSERT\s+INTO `foobar` \(`email`, `website`\) VALUES \(\?, \?\);/', $this->object->buildInsert($query));
-
-		$query->attribute('ignore', true);
-
-		$this->assertRegExp('/INSERT\s+IGNORE\s+INTO `foobar` \(`email`, `website`\) VALUES \(\?, \?\);/', $this->object->buildInsert($query));
-
-		$query->attribute('priority', 'highPriority');
-
-		$this->assertRegExp('/INSERT HIGH_PRIORITY IGNORE INTO `foobar` \(`email`, `website`\) VALUES \(\?, \?\);/', $this->object->buildInsert($query));
 	}
 
 	/**
@@ -243,21 +210,6 @@ class DialectTest extends TestCase {
 
 		$query->fields('id', 'username', 'rank');
 		$this->assertRegExp('/SELECT\s+`id`, `username`, `rank` FROM `foobar`\s+WHERE `status` = \? AND `rank` >= \?\s+GROUP BY `rank`, `created`\s+HAVING `id` >= \?\s+ORDER BY `id` DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
-
-		// Attributes
-		$query = new Query(Query::SELECT, new User());
-		$query->from('foobar')->attribute('distinct', true);
-
-		$this->assertRegExp('/SELECT\s+DISTINCT\s+\* FROM `foobar`;/', $this->object->buildSelect($query));
-
-		$query->attribute('distinct', 'all');
-		$this->assertRegExp('/SELECT\s+ALL\s+\* FROM `foobar`;/', $this->object->buildSelect($query));
-
-		$query->attribute('optimize', 'sqlBufferResult');
-		$this->assertRegExp('/SELECT\s+ALL\s+SQL_BUFFER_RESULT\s+\* FROM `foobar`;/', $this->object->buildSelect($query));
-
-		$query->attribute('cache', 'sqlCache');
-		$this->assertRegExp('/SELECT\s+ALL\s+SQL_BUFFER_RESULT\s+SQL_CACHE\s+\* FROM `foobar`;/', $this->object->buildSelect($query));
 	}
 
 	/**
@@ -335,15 +287,6 @@ class DialectTest extends TestCase {
 
 		$query->where('status', 3);
 		$this->assertRegExp('/UPDATE\s+`foobar`\s+SET `email` = \?, `website` = \?\s+WHERE `status` = \?\s+ORDER BY `username` DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
-
-		// Attributes
-		$query = new Query(Query::UPDATE, new User());
-		$query->from('foobar')->fields(['username' => 'miles'])->attribute('ignore', true);
-
-		$this->assertRegExp('/UPDATE\s+IGNORE\s+`foobar`\s+SET `username` = \?;/', $this->object->buildUpdate($query));
-
-		$query->attribute('priority', 'lowPriority');
-		$this->assertRegExp('/UPDATE LOW_PRIORITY IGNORE `foobar`\s+SET `username` = \?;/', $this->object->buildUpdate($query));
 	}
 
 	/**
@@ -413,7 +356,7 @@ class DialectTest extends TestCase {
 	}
 
 	/**
-	 * Test table column formatting builds according to the attributes defined.
+	 * Test table column formatting builds according to the options defined.
 	 */
 	public function testFormatColumns() {
 		$schema = new Schema('foobar');

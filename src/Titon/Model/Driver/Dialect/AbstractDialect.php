@@ -102,50 +102,25 @@ abstract class AbstractDialect extends Base implements Dialect {
 		self::ANY					=> 'ANY',
 		self::ASC					=> 'ASC',
 		self::AUTO_INCREMENT		=> 'AUTO_INCREMENT',
-		self::AVG_ROW_LENGTH		=> 'AVG_ROW_LENGTH',
-		self::BIG_RESULT			=> 'SQL_BIG_RESULT',
-		self::BUFFER_RESULT			=> 'SQL_BUFFER_RESULT',
-		self::CACHE					=> 'SQL_CACHE',
 		self::CASCADE				=> 'CASCADE',
 		self::CHARACTER_SET			=> 'CHARACTER SET',
 		self::CHECKSUM				=> 'CHECKSUM',
 		self::COLLATE				=> 'COLLATE',
-		self::CONNECTION			=> 'CONNECTION',
-		self::DATA_DIRECTORY		=> 'DATA DIRECTORY',
-		self::DEFAULT_CHARACTER_SET	=> 'DEFAULT CHARACTER SET',
-		self::DEFAULT_COMMENT		=> 'DEFAULT COMMENT',
-		self::DELAYED				=> 'DELAYED',
-		self::DELAY_KEY_WRITE		=> 'DELAY_KEY_WRITE',
 		self::DESC					=> 'DESC',
 		self::DISTINCT				=> 'DISTINCT',
-		self::DISTINCT_ROW			=> 'DISTINCTROW',
 		self::EITHER				=> 'OR',
 		self::ENGINE				=> 'ENGINE',
 		self::EXISTS				=> 'EXISTS',
-		self::HIGH_PRIORITY			=> 'HIGH_PRIORITY',
 		self::IGNORE				=> 'IGNORE',
-		self::INDEX_DIRECTORY		=> 'INDEX DIRECTORY',
-		self::INSERT_METHOD			=> 'INSERT_METHOD',
-		self::KEY_BLOCK_SIZE		=> 'KEY_BLOCK_SIZE',
-		self::LOW_PRIORITY			=> 'LOW_PRIORITY',
-		self::MAX_ROWS				=> 'MAX_ROWS',
 		self::MAYBE					=> 'XOR',
-		self::MIN_ROWS				=> 'MIN_ROWS',
 		self::NO_ACTION				=> 'NO ACTION',
-		self::NO_CACHE				=> 'SQL_NO_CACHE',
 		self::NOT_EXISTS			=> 'NOT EXISTS',
 		self::NOT_NULL				=> 'NOT NULL',
 		self::NULL					=> 'NULL',
-		self::PACK_KEYS				=> 'PACK_KEYS',
 		self::PASSWORD				=> 'PASSWORD',
-		self::QUICK					=> 'QUICK',
 		self::RESTRICT				=> 'RESTRICT',
-		self::ROW_FORMAT			=> 'ROW_FORMAT',
 		self::SET_NULL				=> 'SET NULL',
-		self::SMALL_RESULT			=> 'SQL_SMALL_RESULT',
 		self::SOME					=> 'SOME',
-		self::STATS_AUTO_RECALC		=> 'STATS_AUTO_RECALC',
-		self::STATS_PERSISTENT		=> 'STATS_PERSISTENT',
 		self::TEMPORARY				=> 'TEMPORARY',
 		self::UNION					=> 'UNION',
 		self::UNSIGNED				=> 'UNSIGNED',
@@ -158,14 +133,14 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @type array
 	 */
 	protected $_statements = [
-		Query::INSERT		=> 'INSERT {a.priority} {a.ignore} INTO {table} {fields} VALUES {values}',
-		Query::SELECT		=> 'SELECT {a.distinct} {a.priority} {a.optimize} {a.cache} {fields} FROM {table} {joins} {where} {groupBy} {having} {orderBy} {limit}',
-		Query::UPDATE		=> 'UPDATE {a.priority} {a.ignore} {table} {joins} SET {fields} {where} {orderBy} {limit}',
-		Query::DELETE		=> 'DELETE {a.priority} {a.quick} {a.ignore} FROM {table} {joins} {where} {orderBy} {limit}',
+		Query::INSERT		=> 'INSERT INTO {table} {fields} VALUES {values}',
+		Query::SELECT		=> 'SELECT {fields} FROM {table} {joins} {where} {groupBy} {having} {orderBy} {limit}',
+		Query::UPDATE		=> 'UPDATE {table} {joins} SET {fields} {where} {orderBy} {limit}',
+		Query::DELETE		=> 'DELETE FROM {table} {joins} {where} {orderBy} {limit}',
 		Query::TRUNCATE		=> 'TRUNCATE {table}',
 		Query::DESCRIBE		=> 'DESCRIBE {table}',
-		Query::DROP_TABLE	=> 'DROP {a.temporary} TABLE IF EXISTS {table}',
-		Query::CREATE_TABLE	=> "CREATE {a.temporary} TABLE IF NOT EXISTS {table} (\n{columns}{keys}\n) {options}"
+		Query::DROP_TABLE	=> 'DROP TABLE IF EXISTS {table}',
+		Query::CREATE_TABLE	=> "CREATE TABLE IF NOT EXISTS {table} (\n{columns}{keys}\n) {options}"
 	];
 
 	/**
@@ -173,33 +148,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 *
 	 * @type array
 	 */
-	protected $_attributes = [
-		Query::INSERT => [
-			'priority' => '',
-			'ignore' => false
-		],
-		Query::SELECT => [
-			'distinct' => false,
-			'priority' => '',
-			'optimize' => '',
-			'cache' => ''
-		],
-		Query::UPDATE => [
-			'priority' => '',
-			'ignore' => false
-		],
-		Query::DELETE => [
-			'priority' => '',
-			'quick' => false,
-			'ignore' => false
-		],
-		Query::DROP_TABLE => [
-			'temporary' => false
-		],
-		Query::CREATE_TABLE => [
-			'temporary' => false
-		],
-	];
+	protected $_attributes = [];
 
 	/**
 	 * Store the driver.
@@ -970,15 +919,9 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 	/**
 	 * {@inheritdoc}
-	 *
-	 * @throws \Titon\Model\Exception\InvalidArgumentException
 	 */
 	public function getAttributes($type) {
-		if (isset($this->_attributes[$type])) {
-			return $this->_attributes[$type];
-		}
-
-		throw new InvalidArgumentException(sprintf('Invalid query type %s', $type));
+		return isset($this->_attributes[$type]) ? $this->_attributes[$type] : [];
 	}
 
 	/**
@@ -1088,7 +1031,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 				}
 			}
 
-			if (isset($this->_clauses[$key])) {
+			if (isset($this->_clauses[$key]) && $value) {
 				$value = sprintf($this->getClause($key), $value);
 			}
 
