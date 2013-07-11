@@ -380,7 +380,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 3, 'country_id' => 1, 'username' => 'superman'],
 			['id' => 4, 'country_id' => 1, 'username' => 'spiderman'],
 			['id' => 5, 'country_id' => 1, 'username' => 'wolverine'],
-		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+		], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll(false));
 
 		// No where clause
 		$this->assertSame(5, $user->query(Query::UPDATE)->fields(['country_id' => 2])->save());
@@ -391,7 +391,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 3, 'country_id' => 2, 'username' => 'superman'],
 			['id' => 4, 'country_id' => 2, 'username' => 'spiderman'],
 			['id' => 5, 'country_id' => 2, 'username' => 'wolverine'],
-		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+		], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll(false));
 	}
 
 	/**
@@ -410,7 +410,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 3, 'country_id' => 1, 'username' => 'superman'],
 			['id' => 4, 'country_id' => 5, 'username' => 'spiderman'],
 			['id' => 5, 'country_id' => 4, 'username' => 'wolverine'],
-		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+		], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll(false));
 
 		// No where clause, offset ignored
 		$this->assertSame(2, $user->query(Query::UPDATE)->fields(['country_id' => 5])->limit(2, 2)->save());
@@ -421,7 +421,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 3, 'country_id' => 1, 'username' => 'superman'],
 			['id' => 4, 'country_id' => 5, 'username' => 'spiderman'],
 			['id' => 5, 'country_id' => 4, 'username' => 'wolverine'],
-		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+		], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll(false));
 	}
 
 	/**
@@ -444,7 +444,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 3, 'country_id' => 6, 'username' => 'superman'], // changed
 			['id' => 4, 'country_id' => 5, 'username' => 'spiderman'],
 			['id' => 5, 'country_id' => 6, 'username' => 'wolverine'], // changed
-		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+		], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll(false));
 	}
 
 	/**
@@ -466,7 +466,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 3, 'country_id' => null, 'username' => 'superman'],
 			['id' => 4, 'country_id' => null, 'username' => 'spiderman'],
 			['id' => 5, 'country_id' => 4, 'username' => 'wolverine'],
-		], $user->select('id', 'country_id', 'username')->fetchAll(false));
+		], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll(false));
 	}
 
 	/**
@@ -487,7 +487,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 3, 'username' => 'superman', 'firstName' => ''],
 			['id' => 4, 'username' => 'spiderman', 'firstName' => ''],
 			['id' => 5, 'username' => 'wolverine', 'firstName' => ''],
-		], $user->select('id', 'username', 'firstName')->fetchAll(false));
+		], $user->select('id', 'username', 'firstName')->orderBy('id', 'asc')->fetchAll(false));
 	}
 
 	/**
@@ -503,7 +503,7 @@ class AbstractUpdateTest extends TestCase {
 			'damage' => 145, // to float
 			'defense' => 60.25, // to double
 			'range' => '2', // to decimal
-			'isMelee' => null, // to boolean
+			'isMelee' => false, // to boolean
 		];
 
 		$this->assertEquals(1, $stat->update(1, $data));

@@ -88,20 +88,20 @@ class AbstractDeleteTest extends TestCase {
 		$user = new User();
 
 		$this->assertEquals([
-			['id' => 2, 'username' => 'batman'],
 			['id' => 1, 'username' => 'miles'],
-			['id' => 4, 'username' => 'spiderman'],
+			['id' => 2, 'username' => 'batman'],
 			['id' => 3, 'username' => 'superman'],
+			['id' => 4, 'username' => 'spiderman'],
 			['id' => 5, 'username' => 'wolverine']
-		], $user->select('id', 'username')->fetchAll(false));
+		], $user->select('id', 'username')->orderBy('id', 'asc')->fetchAll(false));
 
 		$this->assertSame(2, $user->query(Query::DELETE)->limit(2)->save());
 
 		$this->assertEquals([
-			['id' => 4, 'username' => 'spiderman'],
 			['id' => 3, 'username' => 'superman'],
+			['id' => 4, 'username' => 'spiderman'],
 			['id' => 5, 'username' => 'wolverine']
-		], $user->select('id', 'username')->fetchAll(false));
+		], $user->select('id', 'username')->orderBy('id', 'asc')->fetchAll(false));
 	}
 
 	/**

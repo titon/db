@@ -695,7 +695,7 @@ class AbstractReadTest extends TestCase {
 		// SUBSTRING
 		$query = $stat->select();
 		$query->fields([
-			$query->func('SUBSTRING', ['name' => Func::FIELD, 1, 3])->asAlias('shortName')
+			$query->func('SUBSTR', ['name' => Func::FIELD, 1, 3])->asAlias('shortName')
 		]);
 
 		$this->assertEquals([
@@ -707,7 +707,7 @@ class AbstractReadTest extends TestCase {
 		// SUBSTRING as field in where
 		$query = $stat->select('id', 'name');
 		$query->where(
-			$query->func('SUBSTRING', ['name' => Func::FIELD, -3]),
+			$query->func('SUBSTR', ['name' => Func::FIELD, -3]),
 			'ior'
 		);
 
@@ -744,14 +744,14 @@ class AbstractReadTest extends TestCase {
 
 		$this->assertEquals([
 			['id' => 2, 'username' => 'batman'],
-			['id' => 4, 'username' => 'spiderman'],
 			['id' => 3, 'username' => 'superman'],
-		], $user->select('id', 'username')->where('username', 'like', '%man%')->fetchAll(false));
+			['id' => 4, 'username' => 'spiderman'],
+		], $user->select('id', 'username')->where('username', 'like', '%man%')->orderBy('id', 'asc')->fetchAll(false));
 
 		$this->assertEquals([
 			['id' => 1, 'username' => 'miles'],
 			['id' => 5, 'username' => 'wolverine']
-		], $user->select('id', 'username')->where('username', 'notLike', '%man%')->fetchAll(false));
+		], $user->select('id', 'username')->where('username', 'notLike', '%man%')->orderBy('id', 'asc')->fetchAll(false));
 	}
 
 	/**
@@ -764,9 +764,9 @@ class AbstractReadTest extends TestCase {
 
 		$this->assertEquals([
 			['id' => 2, 'username' => 'batman'],
-			['id' => 4, 'username' => 'spiderman'],
 			['id' => 3, 'username' => 'superman'],
-		], $user->select('id', 'username')->where('username', 'regexp', 'man$')->fetchAll(false));
+			['id' => 4, 'username' => 'spiderman'],
+		], $user->select('id', 'username')->where('username', 'regexp', 'man$')->orderBy('id', 'asc')->fetchAll(false));
 
 		$this->assertEquals([
 			['id' => 1, 'username' => 'miles'],
@@ -832,7 +832,7 @@ class AbstractReadTest extends TestCase {
 			['id' => 3, 'username' => 'superman'],
 			['id' => 4, 'username' => 'spiderman'],
 			['id' => 5, 'username' => 'wolverine']
-		], $user->select('id', 'username')->where('created', 'isNotNull', null)->fetchAll(false));
+		], $user->select('id', 'username')->where('created', 'isNotNull', null)->orderBy('id', 'asc')->fetchAll(false));
 	}
 
 	/**
@@ -907,7 +907,7 @@ class AbstractReadTest extends TestCase {
 			new Entity(['id' => 1, 'name' => 'A Game of Thrones']),
 			new Entity(['id' => 6, 'name' => 'Harry Potter and the Philosopher\'s Stone']),
 			new Entity(['id' => 13, 'name' => 'The Fellowship of the Ring'])
-		], $book->select('id', 'name')->groupBy('series_id')->fetchAll());
+		], $book->select('id', 'name')->groupBy('series_id')->orderBy('id', 'asc')->fetchAll());
 	}
 
 	/**
@@ -1554,11 +1554,11 @@ class AbstractReadTest extends TestCase {
 		$query = $user->select()->where('User.id', 1);
 		$query->fields([
 			'id', 'username',
-			$query->func('SUBSTRING', ['username' => Func::FIELD, 1, 3])->asAlias('shortName')
+			$query->func('SUBSTR', ['username' => Func::FIELD, 1, 3])->asAlias('shortName')
 		]);
 		$query->leftJoin($user->getRelation('Country'), [
 			'id', 'name', 'iso',
-			$query->func('SUBSTRING', ['Country.name' => Func::FIELD, 1, 6])->asAlias('countryName')
+			$query->func('SUBSTR', ['Country.name' => Func::FIELD, 1, 6])->asAlias('countryName')
 		]);
 
 		$this->assertEquals([
