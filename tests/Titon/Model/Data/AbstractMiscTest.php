@@ -33,7 +33,7 @@ class AbstractMiscTest extends TestCase {
 	public function testCreateDropTable() {
 		$user = new User();
 
-		$sql = sprintf("SELECT COUNT(`table_name`) FROM information_schema.tables WHERE table_schema = 'titon_test' AND table_name = '%s';", $user->getTable());
+		$sql = sprintf("SELECT COUNT(table_name) FROM information_schema.tables WHERE table_schema = 'titon_test' AND table_name = '%s';", $user->getTable());
 
 		$this->assertEquals(0, $user->getDriver()->query($sql)->count());
 

@@ -133,7 +133,7 @@ class PdoResultTest extends TestCase {
 	public function testGetStatement() {
 		$stmt = $this->object->getDriver()->query($this->object->select('id', 'username')->where('id', 5));
 
-		$this->assertEquals('SELECT `id`, `username` FROM `users` WHERE `id` = 5;', $stmt->getStatement());
+		$this->assertRegExp('/SELECT (`|\")id(`|\"), (`|\")username(`|\") FROM (`|\")users(`|\") WHERE (`|\")id(`|\") = 5;/', $stmt->getStatement());
 	}
 
 	/**

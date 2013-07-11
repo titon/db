@@ -286,7 +286,7 @@ class PdoDriverTest extends TestCase {
 		$this->assertEquals(true, $result->isSuccessful());
 
 		// Test with params
-		$result = $this->object->query('DELETE FROM `users` WHERE `country_id` = ?', [1]);
+		$result = $this->object->query('DELETE FROM users WHERE country_id = ?', [1]);
 
 		$this->assertInstanceOf('Titon\Model\Query\Result', $result);
 
@@ -294,7 +294,7 @@ class PdoDriverTest extends TestCase {
 		$this->assertEquals(1, $result->save());
 
 		// Test with a string
-		$result = $this->object->query('DELETE FROM `users`');
+		$result = $this->object->query('DELETE FROM users');
 
 		$this->assertInstanceOf('Titon\Model\Query\Result', $result);
 
