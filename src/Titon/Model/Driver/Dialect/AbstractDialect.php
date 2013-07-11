@@ -865,8 +865,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 			$keys[] = $this->formatTableIndex($index, $columns);
 		}
 
+		$keys = array_filter($keys);
+
 		if ($keys) {
-			return ",\n" . implode(",\n", array_filter($keys));
+			return ",\n" . implode(",\n", $keys);
 		}
 
 		return '';

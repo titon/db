@@ -117,8 +117,9 @@ class PdoResult extends AbstractResult implements Result {
 
 			foreach ($row as $index => $value) {
 				$column = $columnMeta[$index];
+				$table = isset($column['table']) ? $column['table'] : '';
 
-				$joins[$column['table']][$column['name']] = $value;
+				$joins[$table][$column['name']] = $value;
 			}
 
 			foreach ($joins as $join => $data) {
