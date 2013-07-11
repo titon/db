@@ -11,6 +11,7 @@ use Titon\Model\Query;
 use Titon\Model\Query\Result;
 use \PDO;
 use \PDOStatement;
+use \PDOException;
 
 /**
  * Accepts a PDOStatement instance which is used for result fetching and query profiling.
@@ -107,51 +108,68 @@ class PdoResult extends AbstractResult implements Result {
 	public function fetchAll() {
 		$this->execute();
 
-		$aliasMap = $this->_mapAliases();
 		$statement = $this->_statement;
 		$columnMeta = [];
-		$results = [];
+		$columnCount = $statement->columnCount();
 
-		foreach (range(0, $statement->columnCount() - 1) as $index) {
-			$columnMeta[] = $statement->getColumnMeta($index);
+		if ($columnCount) {
+			foreach (range(0, $columnCount - 1) as $index) {
+				try {
+					$columnMeta[] = $statement->getColumnMeta($index);
+				} catch (PDOException $e) {
+					$columnMeta = [];
+					break;
+				}
+			}
 		}
 
-		while ($row = $statement->fetch(PDO::FETCH_NUM)) {
-			$joins = [];
-			$result = [];
+		// Fetch associated records if no meta data
+		// This solves issues in SQLite where meta fails on complex records
+		if (empty($columnMeta)) {
+			$results = $statement->fetchAll(PDO::FETCH_ASSOC);
 
-			foreach ($row as $index => $value) {
-				$column = $columnMeta[$index];
-				$alias = '';
+		// Else use the meta data for building
+		} else {
+			$aliasMap = $this->_mapAliases();
+			$results = [];
 
-				if (isset($column['table'])) {
-					// For drivers that only return the table
-					if (isset($aliasMap[$column['table']])) {
-						$alias = $aliasMap[$column['table']];
+			while ($row = $statement->fetch(PDO::FETCH_NUM)) {
+				$joins = [];
+				$result = [];
 
-					// For drivers that return the actual alias
+				foreach ($row as $index => $value) {
+					$column = $columnMeta[$index];
+					$alias = '';
+
+					if (isset($column['table'])) {
+						// For drivers that only return the table
+						if (isset($aliasMap[$column['table']])) {
+							$alias = $aliasMap[$column['table']];
+
+						// For drivers that return the actual alias
+						} else {
+							$alias = $column['table'];
+						}
+					}
+
+					$joins[$alias][$column['name']] = $value;
+				}
+
+				foreach ($joins as $join => $data) {
+					if (empty($result)) {
+						$result = $data;
+
+					// Aliased/count sometimes fields don't have a table
+					} else if (empty($join)) {
+						$result = array_merge($result, $data);
+
 					} else {
-						$alias = $column['table'];
+						$result[$join] = $data;
 					}
 				}
 
-				$joins[$alias][$column['name']] = $value;
+				$results[] = $result;
 			}
-
-			foreach ($joins as $join => $data) {
-				if (empty($result)) {
-					$result = $data;
-
-				// Aliased/count sometimes fields don't have a table
-				} else if (empty($join)) {
-					$result = array_merge($result, $data);
-
-				} else {
-					$result[$join] = $data;
-				}
-			}
-
-			$results[] = $result;
 		}
 
 		$this->close();

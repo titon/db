@@ -56,6 +56,8 @@ class PdoDriverTest extends TestCase {
 	 * Test statement building.
 	 */
 	public function testBuildStatement() {
+		$this->loadFixtures('Users');
+
 		// Unsupported query
 		try {
 			$this->object->buildStatement(new Query('someType', $this->model));
@@ -64,7 +66,7 @@ class PdoDriverTest extends TestCase {
 			$this->assertTrue(true);
 		}
 
-		$statement = $this->object->buildStatement((new Query(Query::SELECT, $this->model))->fields('id')->from('foobar'));
+		$statement = $this->object->buildStatement((new Query(Query::SELECT, $this->model))->fields('id')->from('users'));
 		$this->assertInstanceOf('PDOStatement', $statement);
 		$statement->closeCursor();
 	}
@@ -88,7 +90,7 @@ class PdoDriverTest extends TestCase {
 		$this->loadFixtures(['Authors', 'Books', 'Genres', 'BookGenres', 'Series']);
 
 		// Check the keys since the values constantly change
-		$this->assertEquals(['authors', 'books', 'books_genres', 'genres', 'series'], array_keys($this->object->describeDatabase()));
+		$this->assertArraysEqual(['authors', 'books', 'books_genres', 'genres', 'series'], array_keys($this->object->describeDatabase()));
 	}
 
 	/**
