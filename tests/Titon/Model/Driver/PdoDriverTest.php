@@ -123,7 +123,7 @@ class PdoDriverTest extends TestCase {
 				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
-				'collate' => 'utf8_general_ci',
+				'collate' => 'utf8_unicode_ci',
 				'unique' => true
 			],
 			'password' => [
@@ -133,7 +133,7 @@ class PdoDriverTest extends TestCase {
 				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
-				'collate' => 'utf8_general_ci'
+				'collate' => 'utf8_unicode_ci'
 			],
 			'email' => [
 				'field' => 'email',
@@ -142,7 +142,7 @@ class PdoDriverTest extends TestCase {
 				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
-				'collate' => 'utf8_general_ci'
+				'collate' => 'utf8_unicode_ci'
 			],
 			'firstName' => [
 				'field' => 'firstName',
@@ -151,7 +151,7 @@ class PdoDriverTest extends TestCase {
 				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
-				'collate' => 'utf8_general_ci'
+				'collate' => 'utf8_unicode_ci'
 			],
 			'lastName' => [
 				'field' => 'lastName',
@@ -160,7 +160,7 @@ class PdoDriverTest extends TestCase {
 				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
-				'collate' => 'utf8_general_ci'
+				'collate' => 'utf8_unicode_ci'
 			],
 			'age' => [
 				'field' => 'age',
@@ -185,7 +185,7 @@ class PdoDriverTest extends TestCase {
 		], $user->getDriver()->describeTable($user->getTable()));
 
 		$stat = new Stat();
-		$this->assertSame([
+		$this->assertEquals([
 			'id' => [
 				'field' => 'id',
 				'type' => 'int',
@@ -201,7 +201,7 @@ class PdoDriverTest extends TestCase {
 				'null' => true,
 				'default' => '',
 				'charset' => 'utf8',
-				'collate' => 'utf8_general_ci'
+				'collate' => 'utf8_unicode_ci'
 			],
 			'health' => [
 				'field' => 'health',
