@@ -10,6 +10,7 @@ namespace Titon\Model\Driver;
 use Titon\Model\Driver\AbstractDriver;
 use Titon\Model\Driver\Type\AbstractType;
 use Titon\Model\Exception\InvalidQueryException;
+use Titon\Model\Exception\MissingDriverException;
 use Titon\Model\Exception\UnsupportedQueryStatementException;
 use Titon\Model\Query;
 use Titon\Model\Query\Expr;
@@ -68,10 +69,15 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * Connect to the database using PDO.
 	 *
 	 * @return bool
+	 * @throws \Titon\Model\Exception\MissingDriverException
 	 */
 	public function connect() {
 		if ($this->isConnected()) {
 			return true;
+		}
+
+		if (!$this->isEnabled()) {
+			throw new MissingDriverException(sprintf('%s driver extension is not enabled', $this->getDriver()));
 		}
 
 		$this->_connection = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->config->flags + [

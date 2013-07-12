@@ -62,19 +62,6 @@ class AbstractMiscTest extends TestCase {
 	}
 
 	/**
-	 * Test table describing.
-	 */
-	public function testDescribeTable() {
-		$this->loadFixtures('Users');
-
-		$user = new User();
-
-		$this->assertEquals(10, count($user->getSchema()->getColumns()));
-
-		$this->assertEquals(10, count($user->query(Query::DESCRIBE)->fetchAll(false)));
-	}
-
-	/**
 	 * Test that all queries from the transaction run.
 	 */
 	public function testTransactions() {
