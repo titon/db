@@ -49,8 +49,10 @@ class Query implements Serializable, JsonSerializable {
 	const UPDATE = 'update';
 	const DELETE = 'delete';
 	const TRUNCATE = 'truncate';
-	const DROP_TABLE = 'dropTable';
 	const CREATE_TABLE = 'createTable';
+	const CREATE_INDEX = 'createIndex';
+	const DROP_TABLE = 'dropTable';
+	const DROP_INDEX = 'dropIndex';
 
 	/**
 	 * List of boolean attributes for the current query.
@@ -338,7 +340,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return string
 	 */
 	public function getAlias() {
-		if ($this->_joins || $this instanceof SubQuery) {
+		if ($this->_joins || $this instanceof SubQuery || in_array($this->getType(), [self::CREATE_INDEX, self::DROP_INDEX])) {
 			return $this->_alias;
 		}
 

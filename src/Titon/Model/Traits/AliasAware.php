@@ -25,7 +25,7 @@ trait AliasAware {
 	 * Set the alias name.
 	 *
 	 * @param string $alias
-	 * @return \Titon\Model\Query\Join
+	 * @return \Titon\Model\Traits\AliasAware
 	 */
 	public function asAlias($alias) {
 		$this->_alias = $alias;

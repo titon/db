@@ -53,6 +53,25 @@ class DialectTest extends TestCase {
 	}
 
 	/**
+	 * Test create index statement building.
+	 */
+	public function testBuildCreateIndex() {
+		$query = new Query(Query::CREATE_INDEX, new User());
+		$query->fields('profile_id')->from('users')->asAlias('idx');
+
+		$this->assertRegExp('/CREATE\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\") \((`|\")profile_id(`|\")\)/', $this->object->buildCreateIndex($query));
+
+		$query->fields(['profile_id' => 5]);
+		$this->assertRegExp('/CREATE\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\") \((`|\")profile_id(`|\")\(5\)\)/', $this->object->buildCreateIndex($query));
+
+		$query->fields(['profile_id' => 'asc', 'other_id']);
+		$this->assertRegExp('/CREATE\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\") \((`|\")profile_id(`|\") ASC, (`|\")other_id(`|\")\)/', $this->object->buildCreateIndex($query));
+
+		$query->fields(['profile_id' => ['length' => 5, 'order' => 'desc']]);
+		$this->assertRegExp('/CREATE\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\") \((`|\")profile_id(`|\")\(5\) DESC\)/', $this->object->buildCreateIndex($query));
+	}
+
+	/**
 	 * Test create table statement creation.
 	 */
 	public function testBuildCreateTable() {
@@ -81,11 +100,11 @@ class DialectTest extends TestCase {
 			'index' => true
 		]);
 
-		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT,\n(`|\")column2(`|\") INT NULL,\nPRIMARY KEY \((`|\")column(`|\")\),\nKEY (`|\")column2(`|\") \((`|\")column2(`|\")\)\n\);/', $this->object->buildCreateTable($query));
+		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT,\n(`|\")column2(`|\") INT NULL,\nPRIMARY KEY \((`|\")column(`|\")\)\n\);/', $this->object->buildCreateTable($query));
 
 		$schema->addOption('engine', 'InnoDB');
 
-		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT,\n(`|\")column2(`|\") INT NULL,\nPRIMARY KEY \((`|\")column(`|\")\),\nKEY (`|\")column2(`|\") \((`|\")column2(`|\")\)\n\) ENGINE InnoDB;/', $this->object->buildCreateTable($query));
+		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT,\n(`|\")column2(`|\") INT NULL,\nPRIMARY KEY \((`|\")column(`|\")\)\n\) ENGINE InnoDB;/', $this->object->buildCreateTable($query));
 	}
 
 	/**
@@ -123,6 +142,16 @@ class DialectTest extends TestCase {
 		$query->outerJoin(['bar', 'Bar'], ['id'], ['User.bar_id' => 'Bar.id']);
 
 		$this->assertRegExp('/DELETE\s+FROM (`|\")users(`|\") AS (`|\")User(`|\") LEFT JOIN (`|\")foo(`|\") ON (`|\")User(`|\").(`|\")id(`|\") = (`|\")foo(`|\").(`|\")id(`|\") FULL OUTER JOIN (`|\")bar(`|\") AS (`|\")Bar(`|\") ON (`|\")User(`|\").(`|\")bar_id(`|\") = (`|\")Bar(`|\").(`|\")id(`|\");/', $this->object->buildDelete($query));
+	}
+
+	/**
+	 * Test drop index statement building.
+	 */
+	public function testBuildDropIndex() {
+		$query = new Query(Query::DROP_INDEX, new User());
+		$query->from('users')->asAlias('idx');
+
+		$this->assertRegExp('/DROP\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\")/', $this->object->buildDropIndex($query));
 	}
 
 	/**
@@ -703,13 +732,6 @@ class DialectTest extends TestCase {
 		]);
 
 		$expected .= ',\nFOREIGN KEY \((`|\")fk2(`|\")\) REFERENCES (`|\")posts(`|\")\((`|\")id(`|\")\) ON UPDATE SET NULL ON DELETE NO ACTION';
-
-		$this->assertRegExp('/' . $expected . '/', $this->object->formatTableKeys($schema));
-
-		$schema->addIndex('column1');
-		$schema->addIndex('column2');
-
-		$expected .= ',\nKEY (`|\")column1(`|\") \((`|\")column1(`|\")\),\nKEY (`|\")column2(`|\") \((`|\")column2(`|\")\)';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatTableKeys($schema));
 	}

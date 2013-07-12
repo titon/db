@@ -189,21 +189,34 @@ class Model extends Base implements Callback {
 	}
 
 	/**
-	 * Create a database table based off the models schema.
+	 * Create a database table and indexes based off the models schema.
 	 * The schema must be an array of column data.
 	 *
 	 * @param array $options
-	 * @param bool $temporary
+	 * @param array $attributes
 	 * @return bool
 	 */
-	public function createTable(array $options = [], $temporary = false) {
+	public function createTable(array $options = [], array $attributes = []) {
 		$schema = $this->getSchema();
 		$schema->addOptions($options);
 
-		return (bool) $this->query(Query::CREATE_TABLE)
-			->attribute('temporary', $temporary)
+		// Create the table
+		$status = (bool) $this->query(Query::CREATE_TABLE)
+			->attribute($attributes)
 			->schema($schema)
 			->save();
+
+		// Create the indexes
+		if ($status) {
+			foreach ($schema->getIndexes() as $index => $columns) {
+				$this->query(Query::CREATE_INDEX)
+					->from($schema->getTable(), $index)
+					->fields($columns)
+					->save();
+			}
+		}
+
+		return $status;
 	}
 
 	/**

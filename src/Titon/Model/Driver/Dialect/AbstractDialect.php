@@ -138,8 +138,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 		Query::UPDATE		=> 'UPDATE {table} {joins} SET {fields} {where} {orderBy} {limit}',
 		Query::DELETE		=> 'DELETE FROM {table} {joins} {where} {orderBy} {limit}',
 		Query::TRUNCATE		=> 'TRUNCATE {table}',
+		Query::CREATE_TABLE	=> "CREATE TABLE IF NOT EXISTS {table} (\n{columns}{keys}\n) {options}",
+		Query::CREATE_INDEX	=> 'CREATE INDEX {index} ON {table} ({fields})',
 		Query::DROP_TABLE	=> 'DROP TABLE IF EXISTS {table}',
-		Query::CREATE_TABLE	=> "CREATE TABLE IF NOT EXISTS {table} (\n{columns}{keys}\n) {options}"
+		Query::DROP_INDEX	=> 'DROP INDEX {index} ON {table}'
 	];
 
 	/**
@@ -158,6 +160,23 @@ abstract class AbstractDialect extends Base implements Dialect {
 		parent::__construct();
 
 		$this->setDriver($driver);
+	}
+
+	/**
+	 * Build the CREATE INDEX query.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return string
+	 */
+	public function buildCreateIndex(Query $query) {
+		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::CREATE_INDEX));
+		$params = $params + [
+			'index' => $this->formatTable($query->getAlias()),
+			'table' => $this->formatTable($query->getTable()),
+			'fields' => $this->formatFields($query)
+		];
+
+		return $this->renderStatement($this->getStatement(Query::CREATE_INDEX), $params);
 	}
 
 	/**
@@ -202,6 +221,22 @@ abstract class AbstractDialect extends Base implements Dialect {
 		];
 
 		return $this->renderStatement($this->getStatement(Query::DELETE), $params);
+	}
+
+	/**
+	 * Build the DROP INDEX query.
+	 *
+	 * @param \Titon\Model\Query $query
+	 * @return string
+	 */
+	public function buildDropIndex(Query $query) {
+		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DROP_INDEX));
+		$params = $params + [
+			'index' => $this->formatTable($query->getAlias()),
+			'table' => $this->formatTable($query->getTable())
+		];
+
+		return $this->renderStatement($this->getStatement(Query::DROP_INDEX), $params);
 	}
 
 	/**
@@ -307,9 +342,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function buildTruncate(Query $query) {
-		return $this->renderStatement($this->getStatement(Query::TRUNCATE), [
+		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::TRUNCATE));
+		$params = $params + [
 			'table' => $this->formatTable($query->getTable())
-		]);
+		];
+
+		return $this->renderStatement($this->getStatement(Query::TRUNCATE), $params);
 	}
 
 	/**
@@ -487,6 +525,37 @@ abstract class AbstractDialect extends Base implements Dialect {
 				}
 
 				return implode(', ', $values);
+			break;
+
+			case Query::CREATE_INDEX:
+				$columns = [];
+
+				foreach ($fields as $column => $data) {
+					if (is_numeric($column)) {
+						$column = $data;
+						$data = [];
+					}
+
+					if (is_numeric($data)) {
+						$data = ['length' => $data, 'order' => ''];
+					} else if (is_string($data)) {
+						$data = ['length' => '', 'order' => $data];
+					}
+
+					$column = $this->quote($column);
+
+					if (!empty($data['length'])) {
+						$column .= sprintf($this->getClause(self::GROUP), $data['length']);
+					}
+
+					if (!empty($data['order'])) {
+						$column .= ' ' . $this->getKeyword($data['order']);
+					}
+
+					$columns[] = $column;
+				}
+
+				return implode(', ', $columns);
 			break;
 		}
 
@@ -869,10 +938,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 		foreach ($schema->getForeignKeys() as $foreign) {
 			$keys[] = $this->formatTableForeign($foreign);
-		}
-
-		foreach ($schema->getIndexes() as $index => $columns) {
-			$keys[] = $this->formatTableIndex($index, $columns);
 		}
 
 		$keys = array_filter($keys);
