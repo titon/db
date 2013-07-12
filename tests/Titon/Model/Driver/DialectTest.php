@@ -126,16 +126,6 @@ class DialectTest extends TestCase {
 	}
 
 	/**
-	 * Test describe statement creation.
-	 */
-	public function testBuildDescribe() {
-		$query = new Query(Query::DESCRIBE, new User());
-		$query->from('foobar');
-
-		$this->assertRegExp('/DESCRIBE (`|\")foobar(`|\");/', $this->object->buildDescribe($query));
-	}
-
-	/**
 	 * Test drop table statement creation.
 	 */
 	public function testBuildDropTable() {

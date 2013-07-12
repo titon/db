@@ -49,7 +49,6 @@ class Query implements Serializable, JsonSerializable {
 	const UPDATE = 'update';
 	const DELETE = 'delete';
 	const TRUNCATE = 'truncate';
-	const DESCRIBE = 'describe';
 	const DROP_TABLE = 'dropTable';
 	const CREATE_TABLE = 'createTable';
 

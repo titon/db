@@ -138,7 +138,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 		Query::UPDATE		=> 'UPDATE {table} {joins} SET {fields} {where} {orderBy} {limit}',
 		Query::DELETE		=> 'DELETE FROM {table} {joins} {where} {orderBy} {limit}',
 		Query::TRUNCATE		=> 'TRUNCATE {table}',
-		Query::DESCRIBE		=> 'DESCRIBE {table}',
 		Query::DROP_TABLE	=> 'DROP TABLE IF EXISTS {table}',
 		Query::CREATE_TABLE	=> "CREATE TABLE IF NOT EXISTS {table} (\n{columns}{keys}\n) {options}"
 	];
@@ -203,18 +202,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 		];
 
 		return $this->renderStatement($this->getStatement(Query::DELETE), $params);
-	}
-
-	/**
-	 * Build the DESCRIBE query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildDescribe(Query $query) {
-		return $this->renderStatement($this->getStatement(Query::DESCRIBE), [
-			'table' => $this->formatTable($query->getTable())
-		]);
 	}
 
 	/**
