@@ -228,28 +228,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 *
 	 * @return string
 	 */
-	public function getDsn() {
-		if ($dsn = $this->config->dsn) {
-			return $dsn;
-		}
-
-		$params = ['dbname=' . $this->getDatabase()];
-
-		if ($socket = $this->getSocket()) {
-			$params[] = 'unix_socket=' . $socket;
-		} else {
-			$params[] = 'host=' . $this->getHost();
-			$params[] = 'port=' . $this->getPort();
-		}
-
-		if ($encoding = $this->getEncoding()) {
-			$params[] = 'charset=' . $encoding;
-		}
-
-		$dsn = $this->getDriver() . ':' . implode(';', $params);
-
-		return $dsn;
-	}
+	abstract public function getDsn();
 
 	/**
 	 * {@inheritdoc}
