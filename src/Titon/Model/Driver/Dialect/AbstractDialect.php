@@ -357,7 +357,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 		foreach ($schema->getColumns() as $column => $options) {
 			$dataType = AbstractType::factory($options['type'], $this->getDriver());
 
-			$options = $dataType->getDefaultOptions() + $options;
+			$options = $options + $dataType->getDefaultOptions();
 			$type = $options['type'];
 
 			if (!empty($options['length'])) {
