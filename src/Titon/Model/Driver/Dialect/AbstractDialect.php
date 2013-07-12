@@ -355,10 +355,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 		$columns = [];
 
 		foreach ($schema->getColumns() as $column => $options) {
-			$type = $options['type'];
-			$dataType = AbstractType::factory($type, $this->getDriver());
+			$dataType = AbstractType::factory($options['type'], $this->getDriver());
 
-			$options = $options + $dataType->getDefaultOptions();
+			$options = $dataType->getDefaultOptions() + $options;
+			$type = $options['type'];
 
 			if (!empty($options['length'])) {
 				$type .= '(' . $options['length'] . ')';
