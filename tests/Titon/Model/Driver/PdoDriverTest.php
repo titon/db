@@ -100,7 +100,7 @@ class PdoDriverTest extends TestCase {
 		$this->loadFixtures(['Users', 'Stats']);
 
 		$user = new User();
-		$this->assertSame([
+		$this->assertEquals([
 			'id' => [
 				'field' => 'id',
 				'type' => 'int',
