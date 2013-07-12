@@ -198,10 +198,7 @@ class Model extends Base implements Callback {
 	 */
 	public function createTable(array $options = [], $temporary = false) {
 		$schema = $this->getSchema();
-		$schema->addOptions($options + [
-			Dialect::ENGINE => 'InnoDB',
-			Dialect::CHARACTER_SET => $this->getDriver()->getEncoding()
-		]);
+		$schema->addOptions($options);
 
 		return (bool) $this->query(Query::CREATE_TABLE)
 			->attribute('temporary', $temporary)
