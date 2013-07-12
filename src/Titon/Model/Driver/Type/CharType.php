@@ -24,6 +24,13 @@ class CharType extends AbstractType {
 	/**
 	 * {@inheritdoc}
 	 */
+	public function getDefaultOptions() {
+		return ['charset' => 'utf8', 'collate' => 'utf8_unicode_ci'];
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
 	public function getName() {
 		return self::CHAR;
 	}

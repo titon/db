@@ -18,7 +18,7 @@ class StringType extends CharType {
 	 * {@inheritdoc}
 	 */
 	public function getDefaultOptions() {
-		return ['length' => 255, 'default' => ''];
+		return ['length' => 255] + parent::getDefaultOptions();
 	}
 
 	/**

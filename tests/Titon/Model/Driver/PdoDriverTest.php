@@ -121,7 +121,6 @@ class PdoDriverTest extends TestCase {
 				'type' => 'varchar',
 				'length' => '255',
 				'null' => true,
-				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_unicode_ci',
 				'unique' => true
@@ -131,7 +130,6 @@ class PdoDriverTest extends TestCase {
 				'type' => 'varchar',
 				'length' => '255',
 				'null' => true,
-				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_unicode_ci'
 			],
@@ -140,7 +138,6 @@ class PdoDriverTest extends TestCase {
 				'type' => 'varchar',
 				'length' => '255',
 				'null' => true,
-				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_unicode_ci'
 			],
@@ -149,7 +146,6 @@ class PdoDriverTest extends TestCase {
 				'type' => 'varchar',
 				'length' => '255',
 				'null' => true,
-				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_unicode_ci'
 			],
@@ -158,7 +154,6 @@ class PdoDriverTest extends TestCase {
 				'type' => 'varchar',
 				'length' => '255',
 				'null' => true,
-				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_unicode_ci'
 			],
@@ -199,7 +194,6 @@ class PdoDriverTest extends TestCase {
 				'type' => 'varchar',
 				'length' => '255',
 				'null' => true,
-				'default' => '',
 				'charset' => 'utf8',
 				'collate' => 'utf8_unicode_ci'
 			],

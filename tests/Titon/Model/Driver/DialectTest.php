@@ -372,7 +372,7 @@ class DialectTest extends TestCase {
 			'zerofill' => true
 		]);
 
-		$this->assertRegExp('/(`|\")column(`|\") INT NULL UNSIGNED ZEROFILL/', $this->object->formatColumns($schema));
+		$this->assertRegExp('/(`|\")column(`|\") INT UNSIGNED ZEROFILL NULL/', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -401,7 +401,7 @@ class DialectTest extends TestCase {
 			'comment' => 'Some comment here'
 		]);
 
-		$expected = '(`|\")column(`|\") INT\(11\) NOT NULL UNSIGNED ZEROFILL DEFAULT NULL AUTO_INCREMENT COMMENT \'Some comment here\'';
+		$expected = '(`|\")column(`|\") INT\(11\) UNSIGNED ZEROFILL NOT NULL DEFAULT NULL AUTO_INCREMENT COMMENT \'Some comment here\'';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 
@@ -411,7 +411,7 @@ class DialectTest extends TestCase {
 			'null' => true
 		]);
 
-		$expected .= ',\n(`|\")column2(`|\") VARCHAR\(255\) NULL';
+		$expected .= ',\n(`|\")column2(`|\") VARCHAR\(255\) CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 
@@ -440,7 +440,7 @@ class DialectTest extends TestCase {
 			'charset' => 'utf8'
 		]);
 
-		$expected .= ',\n(`|\")column5(`|\") VARCHAR\(255\) NULL CHARACTER SET utf8 COLLATE utf8_general_ci';
+		$expected .= ',\n(`|\")column5(`|\") VARCHAR\(255\) CHARACTER SET utf8 COLLATE utf8_general_ci NULL';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 	}
