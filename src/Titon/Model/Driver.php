@@ -97,9 +97,10 @@ interface Driver {
 	/**
 	 * Return the ID of the last inserted record.
 	 *
+	 * @param \Titon\Model\Model
 	 * @return int
 	 */
-	public function getLastInsertID();
+	public function getLastInsertID(Model $model);
 
 	/**
 	 * Return a list of logged query statements.

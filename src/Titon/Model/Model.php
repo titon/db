@@ -1400,7 +1400,7 @@ class Model extends Base implements Callback {
 				}
 
 				if ($isCreate) {
-					$id = $driver->getLastInsertID();
+					$id = $driver->getLastInsertID($this);
 				}
 
 				$this->upsertRelations($id, $relatedData, $options);
@@ -1423,7 +1423,7 @@ class Model extends Base implements Callback {
 			}
 
 			if ($isCreate) {
-				$id = $driver->getLastInsertID();
+				$id = $driver->getLastInsertID($this);
 			}
 		}
 

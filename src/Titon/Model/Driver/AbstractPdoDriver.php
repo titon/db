@@ -12,6 +12,7 @@ use Titon\Model\Driver\Type\AbstractType;
 use Titon\Model\Exception\InvalidQueryException;
 use Titon\Model\Exception\MissingDriverException;
 use Titon\Model\Exception\UnsupportedQueryStatementException;
+use Titon\Model\Model;
 use Titon\Model\Query;
 use Titon\Model\Query\Expr;
 use Titon\Model\Query\Predicate;
@@ -239,7 +240,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getLastInsertID() {
+	public function getLastInsertID(Model $model) {
 		return $this->getConnection()->lastInsertId();
 	}
 
