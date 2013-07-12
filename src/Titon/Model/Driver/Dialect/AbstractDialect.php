@@ -396,7 +396,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$output[] = sprintf($this->getClause(self::COMMENT), $this->getDriver()->escape(substr($options['comment'], 0, 255)));
 			}
 
-			$columns[] = implode(' ', $output);
+			$columns[] = trim(implode(' ', $output));
 		}
 
 		return implode(",\n", $columns);
@@ -415,7 +415,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 		if ($value instanceof Closure) {
 			$value = $value($this);
-		} else {
+
+		} else if (is_string($value) || $value === null) {
 			$value = $this->getDriver()->escape($value);
 		}
 

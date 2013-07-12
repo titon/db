@@ -421,7 +421,7 @@ class DialectTest extends TestCase {
 			'null' => false
 		]);
 
-		$expected .= ',\n(`|\")column3(`|\") SMALLINT NOT NULL DEFAULT \'3\'';
+		$expected .= ',\n(`|\")column3(`|\") SMALLINT NOT NULL DEFAULT 3';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 
@@ -443,6 +443,19 @@ class DialectTest extends TestCase {
 		$expected .= ',\n(`|\")column5(`|\") VARCHAR\(255\) NULL CHARACTER SET utf8 COLLATE utf8_general_ci';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
+	}
+
+	/**
+	 * Test default formatting.
+	 */
+	public function testFormatDefault() {
+		$this->assertEquals('', $this->object->formatDefault(''));
+		$this->assertEquals('DEFAULT \'test\'', $this->object->formatDefault('test'));
+		$this->assertEquals('DEFAULT 5', $this->object->formatDefault(5));
+		$this->assertEquals('DEFAULT NULL', $this->object->formatDefault(null));
+		$this->assertEquals('DEFAULT CURRENT_TIMESTAMP', $this->object->formatDefault(function() {
+			return 'CURRENT_TIMESTAMP';
+		}));
 	}
 
 	/**
