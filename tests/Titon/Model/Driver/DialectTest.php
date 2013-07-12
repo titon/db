@@ -85,7 +85,7 @@ class DialectTest extends TestCase {
 
 		$schema->addOption('engine', 'InnoDB');
 
-		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT,\n(`|\")column2(`|\") INT NULL,\nPRIMARY KEY \((`|\")column(`|\")\),\nKEY (`|\")column2(`|\") \((`|\")column2(`|\")\)\n\) ENGINE=InnoDB;/', $this->object->buildCreateTable($query));
+		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT,\n(`|\")column2(`|\") INT NULL,\nPRIMARY KEY \((`|\")column(`|\")\),\nKEY (`|\")column2(`|\") \((`|\")column2(`|\")\)\n\) ENGINE InnoDB;/', $this->object->buildCreateTable($query));
 	}
 
 	/**
@@ -719,10 +719,10 @@ class DialectTest extends TestCase {
 		$this->assertEquals('', $this->object->formatTableOptions($options));
 
 		$options['characterSet'] = 'utf8';
-		$this->assertEquals("CHARACTER SET=utf8", $this->object->formatTableOptions($options));
+		$this->assertEquals("CHARACTER SET utf8", $this->object->formatTableOptions($options));
 
 		$options['engine'] = 'MyISAM';
-		$this->assertEquals("CHARACTER SET=utf8 ENGINE=MyISAM", $this->object->formatTableOptions($options));
+		$this->assertEquals("CHARACTER SET utf8 ENGINE MyISAM", $this->object->formatTableOptions($options));
 	}
 
 	/**

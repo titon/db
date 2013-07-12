@@ -12,7 +12,6 @@ use Titon\Model\Driver;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
-use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Exception\InvalidQueryException;
 use Titon\Model\Exception\InvalidSchemaException;
 use Titon\Model\Exception\MissingClauseException;
@@ -25,6 +24,7 @@ use Titon\Model\Query\Predicate;
 use Titon\Model\Query\SubQuery;
 use Titon\Model\Traits\DriverAware;
 use Titon\Utility\String;
+use \Closure;
 
 /**
  * Provides shared dialect functionality as well as MySQL style statement building.
@@ -384,8 +384,8 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$output[] = sprintf($this->getClause(self::COLLATE), $options['collate']);
 			}
 
-			if (array_key_exists('default', $options) && $options['default'] !== '') {
-				$output[] = sprintf($this->getClause(self::DEFAULT_TO), $this->getDriver()->escape($options['default']));
+			if (array_key_exists('default', $options)) {
+				$output[] = $this->formatDefault($options['default']);
 			}
 
 			if (!empty($options['ai'])) {
@@ -400,6 +400,26 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		return implode(",\n", $columns);
+	}
+
+	/**
+	 * Format the default value of a column.
+	 *
+	 * @param mixed $value
+	 * @return string
+	 */
+	public function formatDefault($value) {
+		if ($value === '') {
+			return '';
+		}
+
+		if ($value instanceof Closure) {
+			$value = $value($this);
+		} else {
+			$value = $this->getDriver()->escape($value);
+		}
+
+		return sprintf($this->getClause(self::DEFAULT_TO), $value);
 	}
 
 	/**
@@ -816,7 +836,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 			$value = '';
 
-			if (isset($this->_keywords[$action])) {
+			if ($this->hasKeyword($action)) {
 				$value = $this->getKeyword($action);
 
 			} else if (is_string($action)) {
@@ -833,7 +853,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * Format a table index key.
 	 *
 	 * @param string $index
-	 * @param array $data
+	 * @param array $columns
 	 * @return string
 	 */
 	public function formatTableIndex($index, array $columns) {
@@ -884,18 +904,19 @@ abstract class AbstractDialect extends Base implements Dialect {
 		$output = [];
 
 		foreach ($options as $key => $value) {
-			if (in_array($key, ['comment', 'defaultComment', 'connection', 'dataDirectory', 'indexDirectory', 'password'])) {
-				$value = $this->getDriver()->getConnection()->quote($value);
+			if ($this->hasKeyword($value)) {
+				$value = $this->getKeyword($value);
 			}
 
-			$option = $this->getKeyword($key);
+			if ($this->hasClause($key)) {
+				$option = sprintf($this->getClause($key), $value);
 
-			if (!$value) {
-				continue;
-			}
+			} else {
+				$option = $this->getKeyword($key);
 
-			if (!is_bool($option)) {
-				$option .= '=' . $value;
+				if ($value !== true) {
+					$option .= ' ' . $value;
+				}
 			}
 
 			$output[] = $option;
@@ -977,7 +998,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * {@inheritdoc}
 	 */
 	public function getAttributes($type) {
-		return isset($this->_attributes[$type]) ? $this->_attributes[$type] : [];
+		return $this->hasAttribute($type) ? $this->_attributes[$type] : [];
 	}
 
 	/**
@@ -986,7 +1007,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @throws \Titon\Model\Exception\MissingClauseException
 	 */
 	public function getClause($key) {
-		if (isset($this->_clauses[$key])) {
+		if ($this->hasClause($key)) {
 			return $this->_clauses[$key];
 		}
 
@@ -1006,7 +1027,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @throws \Titon\Model\Exception\MissingKeywordException
 	 */
 	public function getKeyword($key) {
-		if (isset($this->_keywords[$key])) {
+		if ($this->hasKeyword($key)) {
 			return $this->_keywords[$key];
 		}
 
@@ -1026,7 +1047,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @throws \Titon\Model\Exception\MissingStatementException
 	 */
 	public function getStatement($key) {
-		if (isset($this->_statements[$key])) {
+		if ($this->hasStatement($key)) {
 			return $this->_statements[$key];
 		}
 
@@ -1038,6 +1059,34 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 */
 	public function getStatements() {
 		return $this->_statements;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function hasAttribute($type) {
+		return isset($this->_attributes[$type]);
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function hasClause($key) {
+		return isset($this->_clauses[$key]);
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function hasKeyword($key) {
+		return isset($this->_keywords[$key]);
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function hasStatement($key) {
+		return isset($this->_statements[$key]);
 	}
 
 	/**
@@ -1087,7 +1136,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 				}
 			}
 
-			if (isset($this->_clauses[$key]) && $value) {
+			if ($this->hasClause($key) && $value) {
 				$value = sprintf($this->getClause($key), $value);
 			}
 

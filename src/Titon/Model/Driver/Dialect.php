@@ -145,6 +145,34 @@ interface Dialect {
 	public function getStatements();
 
 	/**
+	 * Return true if the attribute by key exists.
+	 *
+	 * @return bool
+	 */
+	public function hasAttribute($type);
+
+	/**
+	 * Return true if the clause by key exists.
+	 *
+	 * @return bool
+	 */
+	public function hasClause($key);
+
+	/**
+	 * Return true if the keyword by key exists.
+	 *
+	 * @return bool
+	 */
+	public function hasKeyword($key);
+
+	/**
+	 * Return true if the statement by key exists.
+	 *
+	 * @return bool
+	 */
+	public function hasStatement($key);
+
+	/**
 	 * Quote an SQL identifier by wrapping with a driver specific character.
 	 *
 	 * @param string $value
