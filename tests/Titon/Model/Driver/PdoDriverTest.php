@@ -120,7 +120,7 @@ class PdoDriverTest extends TestCase {
 				'field' => 'username',
 				'type' => 'varchar',
 				'length' => '255',
-				'null' => true,
+				'null' => false,
 				'charset' => 'utf8',
 				'collate' => 'utf8_unicode_ci',
 				'unique' => true

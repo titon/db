@@ -409,7 +409,12 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$output[] = sprintf($this->getClause(self::COLLATE), $options['collate']);
 			}
 
-			$output[] = $this->getKeyword(empty($options['null']) ? self::NOT_NULL : self::NULL);
+			// Primary and uniques can't be null
+			if (!empty($options['primary']) || !empty($options['unique'])) {
+				$output[] = $this->getKeyword(self::NOT_NULL);
+			} else {
+				$output[] = $this->getKeyword(empty($options['null']) ? self::NOT_NULL : self::NULL);
+			}
 
 			if (array_key_exists('default', $options)) {
 				$output[] = $this->formatDefault($options['default']);
@@ -537,15 +542,19 @@ abstract class AbstractDialect extends Base implements Dialect {
 					}
 
 					if (is_numeric($data)) {
-						$data = ['length' => $data, 'order' => ''];
+						$data = ['length' => $data, 'order' => '', 'collate' => ''];
 					} else if (is_string($data)) {
-						$data = ['length' => '', 'order' => $data];
+						$data = ['length' => '', 'order' => $data, 'collate' => ''];
 					}
 
 					$column = $this->quote($column);
 
 					if (!empty($data['length'])) {
 						$column .= sprintf($this->getClause(self::GROUP), $data['length']);
+					}
+
+					if (!empty($data['collate'])) {
+						$column .= ' ' . sprintf($this->getClause(self::COLLATE), $data['collate']);
 					}
 
 					if (!empty($data['order'])) {
@@ -1159,6 +1168,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		$char = $this->config->quoteCharacter;
+
+		if (!$char) {
+			return $value;
+		}
 
 		return $char . trim($value, $char) . $char;
 	}
