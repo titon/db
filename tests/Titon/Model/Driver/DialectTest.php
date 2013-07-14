@@ -59,16 +59,16 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::CREATE_INDEX, new User());
 		$query->fields('profile_id')->from('users')->asAlias('idx');
 
-		$this->assertRegExp('/CREATE\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\") \((`|\")profile_id(`|\")\)/', $this->object->buildCreateIndex($query));
+		$this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")?\)/', $this->object->buildCreateIndex($query));
 
 		$query->fields(['profile_id' => 5]);
-		$this->assertRegExp('/CREATE\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\") \((`|\")profile_id(`|\")\(5\)\)/', $this->object->buildCreateIndex($query));
+		$this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")?\(5\)\)/', $this->object->buildCreateIndex($query));
 
 		$query->fields(['profile_id' => 'asc', 'other_id']);
-		$this->assertRegExp('/CREATE\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\") \((`|\")profile_id(`|\") ASC, (`|\")other_id(`|\")\)/', $this->object->buildCreateIndex($query));
+		$this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")? ASC, (`|\")?other_id(`|\")?\)/', $this->object->buildCreateIndex($query));
 
 		$query->fields(['profile_id' => ['length' => 5, 'order' => 'desc']]);
-		$this->assertRegExp('/CREATE\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\") \((`|\")profile_id(`|\")\(5\) DESC\)/', $this->object->buildCreateIndex($query));
+		$this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")?\(5\) DESC\)/', $this->object->buildCreateIndex($query));
 	}
 
 	/**
@@ -84,7 +84,7 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::CREATE_TABLE, new User());
 		$query->schema($schema);
 
-		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT\n\);/', $this->object->buildCreateTable($query));
+		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")?foobar(`|\")? \(\n(`|\")?column(`|\")? INT NOT NULL AUTO_INCREMENT\n\);/', $this->object->buildCreateTable($query));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -92,7 +92,7 @@ class DialectTest extends TestCase {
 			'primary' => true
 		]);
 
-		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT,\nPRIMARY KEY \((`|\")column(`|\")\)\n\);/', $this->object->buildCreateTable($query));
+		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")?foobar(`|\")? \(\n(`|\")?column(`|\")? INT NOT NULL AUTO_INCREMENT,\nPRIMARY KEY \((`|\")?column(`|\")?\)\n\);/', $this->object->buildCreateTable($query));
 
 		$schema->addColumn('column2', [
 			'type' => 'int',
@@ -100,11 +100,11 @@ class DialectTest extends TestCase {
 			'index' => true
 		]);
 
-		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT,\n(`|\")column2(`|\") INT NULL,\nPRIMARY KEY \((`|\")column(`|\")\)\n\);/', $this->object->buildCreateTable($query));
+		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")?foobar(`|\")? \(\n(`|\")?column(`|\")? INT NOT NULL AUTO_INCREMENT,\n(`|\")?column2(`|\")? INT NULL,\nPRIMARY KEY \((`|\")?column(`|\")?\)\n\);/', $this->object->buildCreateTable($query));
 
 		$schema->addOption('engine', 'InnoDB');
 
-		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")foobar(`|\") \(\n(`|\")column(`|\") INT NOT NULL AUTO_INCREMENT,\n(`|\")column2(`|\") INT NULL,\nPRIMARY KEY \((`|\")column(`|\")\)\n\) ENGINE InnoDB;/', $this->object->buildCreateTable($query));
+		$this->assertRegExp('/CREATE\s+TABLE IF NOT EXISTS (`|\")?foobar(`|\")? \(\n(`|\")?column(`|\")? INT NOT NULL AUTO_INCREMENT,\n(`|\")?column2(`|\")? INT NULL,\nPRIMARY KEY \((`|\")?column(`|\")?\)\n\) ENGINE InnoDB;/', $this->object->buildCreateTable($query));
 	}
 
 	/**
@@ -114,16 +114,16 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::DELETE, new User());
 
 		$query->from('foobar');
-		$this->assertRegExp('/DELETE\s+FROM (`|\")foobar(`|\");/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM (`|\")?foobar(`|\")?;/', $this->object->buildDelete($query));
 
 		$query->limit(5);
-		$this->assertRegExp('/DELETE\s+FROM (`|\")foobar(`|\")\s+LIMIT 5;/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM (`|\")?foobar(`|\")?\s+LIMIT 5;/', $this->object->buildDelete($query));
 
 		$query->where('id', [1, 2, 3]);
-		$this->assertRegExp('/DELETE\s+FROM (`|\")foobar(`|\")\s+WHERE (`|\")id(`|\") IN \(\?, \?, \?\)\s+LIMIT 5;/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?id(`|\")? IN \(\?, \?, \?\)\s+LIMIT 5;/', $this->object->buildDelete($query));
 
 		$query->orderBy('id', 'asc');
-		$this->assertRegExp('/DELETE\s+FROM (`|\")foobar(`|\")\s+WHERE (`|\")id(`|\") IN \(\?, \?, \?\)\s+ORDER BY (`|\")id(`|\") ASC\s+LIMIT 5;/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?id(`|\")? IN \(\?, \?, \?\)\s+ORDER BY (`|\")?id(`|\")? ASC\s+LIMIT 5;/', $this->object->buildDelete($query));
 	}
 
 	/**
@@ -134,14 +134,14 @@ class DialectTest extends TestCase {
 		$query = $user->query(Query::DELETE);
 		$query->rightJoin($user->getRelation('Profile'));
 
-		$this->assertRegExp('/DELETE\s+FROM (`|\")users(`|\") AS (`|\")User(`|\") RIGHT JOIN (`|\")profiles(`|\") AS (`|\")Profile(`|\") ON (`|\")User(`|\")\.(`|\")id(`|\") = (`|\")Profile(`|\")\.(`|\")user_id(`|\");/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?;/', $this->object->buildDelete($query));
 
 		// Three joins
 		$query = $user->select('id');
 		$query->leftJoin('foo', ['id'], ['User.id' => 'foo.id']);
 		$query->outerJoin(['bar', 'Bar'], ['id'], ['User.bar_id' => 'Bar.id']);
 
-		$this->assertRegExp('/DELETE\s+FROM (`|\")users(`|\") AS (`|\")User(`|\") LEFT JOIN (`|\")foo(`|\") ON (`|\")User(`|\").(`|\")id(`|\") = (`|\")foo(`|\").(`|\")id(`|\") FULL OUTER JOIN (`|\")bar(`|\") AS (`|\")Bar(`|\") ON (`|\")User(`|\").(`|\")bar_id(`|\") = (`|\")Bar(`|\").(`|\")id(`|\");/', $this->object->buildDelete($query));
+		$this->assertRegExp('/DELETE\s+FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? LEFT JOIN (`|\")?foo(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?foo(`|\")?.(`|\")?id(`|\")? FULL OUTER JOIN (`|\")?bar(`|\")? AS (`|\")?Bar(`|\")? ON (`|\")?User(`|\")?.(`|\")?bar_id(`|\")? = (`|\")?Bar(`|\")?.(`|\")?id(`|\")?;/', $this->object->buildDelete($query));
 	}
 
 	/**
@@ -151,7 +151,7 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::DROP_INDEX, new User());
 		$query->from('users')->asAlias('idx');
 
-		$this->assertRegExp('/DROP\s+INDEX (`|\")idx(`|\") ON (`|\")users(`|\")/', $this->object->buildDropIndex($query));
+		$this->assertRegExp('/DROP\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")?/', $this->object->buildDropIndex($query));
 	}
 
 	/**
@@ -161,7 +161,7 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::DROP_TABLE, new User());
 		$query->from('foobar');
 
-		$this->assertRegExp('/DROP\s+TABLE IF EXISTS (`|\")foobar(`|\");/', $this->object->buildDropTable($query));
+		$this->assertRegExp('/DROP\s+TABLE IF EXISTS (`|\")?foobar(`|\")?;/', $this->object->buildDropTable($query));
 	}
 
 	/**
@@ -173,14 +173,14 @@ class DialectTest extends TestCase {
 			'username' => 'miles'
 		]);
 
-		$this->assertRegExp('/INSERT\s+INTO (`|\")foobar(`|\") \((`|\")username(`|\")\) VALUES \(\?\);/', $this->object->buildInsert($query));
+		$this->assertRegExp('/INSERT\s+INTO (`|\")?foobar(`|\")? \((`|\")?username(`|\")?\) VALUES \(\?\);/', $this->object->buildInsert($query));
 
 		$query->fields([
 			'email' => 'email@domain.com',
 			'website' => 'http://titon.io'
 		]);
 
-		$this->assertRegExp('/INSERT\s+INTO (`|\")foobar(`|\") \((`|\")email(`|\"), (`|\")website(`|\")\) VALUES \(\?, \?\);/', $this->object->buildInsert($query));
+		$this->assertRegExp('/INSERT\s+INTO (`|\")?foobar(`|\")? \((`|\")?email(`|\")?, (`|\")?website(`|\")?\) VALUES \(\?, \?\);/', $this->object->buildInsert($query));
 	}
 
 	/**
@@ -196,7 +196,7 @@ class DialectTest extends TestCase {
 			['username' => 'wolverine', 'firstName' => 'Logan', 'lastName' => ''],
 		]);
 
-		$this->assertRegExp('/INSERT\s+INTO (`|\")foobar(`|\") \((`|\")username(`|\"), (`|\")firstName(`|\"), (`|\")lastName(`|\")\) VALUES \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\);/', $this->object->buildMultiInsert($query));
+		$this->assertRegExp('/INSERT\s+INTO (`|\")?foobar(`|\")? \((`|\")?username(`|\")?, (`|\")?firstName(`|\")?, (`|\")?lastName(`|\")?\) VALUES \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\);/', $this->object->buildMultiInsert($query));
 	}
 
 	/**
@@ -206,29 +206,29 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::SELECT, new User());
 
 		$query->from('foobar');
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")foobar(`|\");/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?;/', $this->object->buildSelect($query));
 
 		$query->where('status', 1)->where(function() {
 			$this->gte('rank', 15);
 		});
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")foobar(`|\")\s+WHERE (`|\")status(`|\") = \? AND (`|\")rank(`|\") >= \?;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?;/', $this->object->buildSelect($query));
 
 		$query->orderBy('id', 'desc');
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")foobar(`|\")\s+WHERE (`|\")status(`|\") = \? AND (`|\")rank(`|\") >= \?\s+ORDER BY (`|\")id(`|\") DESC;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?\s+ORDER BY (`|\")?id(`|\")? DESC;/', $this->object->buildSelect($query));
 
 		$query->groupBy('rank', 'created');
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")foobar(`|\")\s+WHERE (`|\")status(`|\") = \? AND (`|\")rank(`|\") >= \?\s+GROUP BY (`|\")rank(`|\"), (`|\")created(`|\")\s+ORDER BY (`|\")id(`|\") DESC;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?\s+GROUP BY (`|\")?rank(`|\")?, (`|\")?created(`|\")?\s+ORDER BY (`|\")?id(`|\")? DESC;/', $this->object->buildSelect($query));
 
 		$query->limit(50, 10);
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")foobar(`|\")\s+WHERE (`|\")status(`|\") = \? AND (`|\")rank(`|\") >= \?\s+GROUP BY (`|\")rank(`|\"), (`|\")created(`|\")\s+ORDER BY (`|\")id(`|\") DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?\s+GROUP BY (`|\")?rank(`|\")?, (`|\")?created(`|\")?\s+ORDER BY (`|\")?id(`|\")? DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 
 		$query->having(function() {
 			$this->gte('id', 100);
 		});
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")foobar(`|\")\s+WHERE (`|\")status(`|\") = \? AND (`|\")rank(`|\") >= \?\s+GROUP BY (`|\")rank(`|\"), (`|\")created(`|\")\s+HAVING (`|\")id(`|\") >= \?\s+ORDER BY (`|\")id(`|\") DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?\s+GROUP BY (`|\")?rank(`|\")?, (`|\")?created(`|\")?\s+HAVING (`|\")?id(`|\")? >= \?\s+ORDER BY (`|\")?id(`|\")? DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 
 		$query->fields('id', 'username', 'rank');
-		$this->assertRegExp('/SELECT\s+(`|\")id(`|\"), (`|\")username(`|\"), (`|\")rank(`|\") FROM (`|\")foobar(`|\")\s+WHERE (`|\")status(`|\") = \? AND (`|\")rank(`|\") >= \?\s+GROUP BY (`|\")rank(`|\"), (`|\")created(`|\")\s+HAVING (`|\")id(`|\") >= \?\s+ORDER BY (`|\")id(`|\") DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+(`|\")?id(`|\")?, (`|\")?username(`|\")?, (`|\")?rank(`|\")? FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?\s+GROUP BY (`|\")?rank(`|\")?, (`|\")?created(`|\")?\s+HAVING (`|\")?id(`|\")? >= \?\s+ORDER BY (`|\")?id(`|\")? DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 	}
 
 	/**
@@ -239,20 +239,20 @@ class DialectTest extends TestCase {
 		$query = $user->select();
 		$query->rightJoin($user->getRelation('Profile'));
 
-		$this->assertRegExp('/SELECT\s+(`|\")User(`|\").*, (`|\")Profile(`|\").* FROM (`|\")users(`|\") AS (`|\")User(`|\") RIGHT JOIN (`|\")profiles(`|\") AS (`|\")Profile(`|\") ON (`|\")User(`|\").(`|\")id(`|\") = (`|\")Profile(`|\").(`|\")user_id(`|\");/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.*, (`|\")?Profile(`|\")?.* FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")?;/', $this->object->buildSelect($query));
 
 		// With fields
 		$query = $user->select('id', 'username');
 		$query->rightJoin($user->getRelation('Profile'), ['id', 'avatar', 'lastLogin']);
 
-		$this->assertRegExp('/SELECT\s+(`|\")User(`|\").(`|\")id(`|\"), (`|\")User(`|\").(`|\")username(`|\"), (`|\")Profile(`|\").(`|\")id(`|\"), (`|\")Profile(`|\").(`|\")avatar(`|\"), (`|\")Profile(`|\").(`|\")lastLogin(`|\") FROM (`|\")users(`|\") AS (`|\")User(`|\") RIGHT JOIN (`|\")profiles(`|\") AS (`|\")Profile(`|\") ON (`|\")User(`|\").(`|\")id(`|\") = (`|\")Profile(`|\").(`|\")user_id(`|\");/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.(`|\")?id(`|\")?, (`|\")?User(`|\")?.(`|\")?username(`|\")?, (`|\")?Profile(`|\")?.(`|\")?id(`|\")?, (`|\")?Profile(`|\")?.(`|\")?avatar(`|\")?, (`|\")?Profile(`|\")?.(`|\")?lastLogin(`|\")? FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")?;/', $this->object->buildSelect($query));
 
 		// Three joins
 		$query = $user->select('id');
 		$query->leftJoin('foo', ['id'], ['User.id' => 'foo.id']);
 		$query->outerJoin(['bar', 'Bar'], ['id'], ['User.bar_id' => 'Bar.id']);
 
-		$this->assertRegExp('/SELECT\s+(`|\")User(`|\").(`|\")id(`|\"), (`|\")foo(`|\").(`|\")id(`|\"), (`|\")Bar(`|\").(`|\")id(`|\") FROM (`|\")users(`|\") AS (`|\")User(`|\") LEFT JOIN (`|\")foo(`|\") ON (`|\")User(`|\").(`|\")id(`|\") = (`|\")foo(`|\").(`|\")id(`|\") FULL OUTER JOIN (`|\")bar(`|\") AS (`|\")Bar(`|\") ON (`|\")User(`|\").(`|\")bar_id(`|\") = (`|\")Bar(`|\").(`|\")id(`|\");/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.(`|\")?id(`|\")?, (`|\")?foo(`|\")?.(`|\")?id(`|\")?, (`|\")?Bar(`|\")?.(`|\")?id(`|\")? FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? LEFT JOIN (`|\")?foo(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?foo(`|\")?.(`|\")?id(`|\")? FULL OUTER JOIN (`|\")?bar(`|\")? AS (`|\")?Bar(`|\")? ON (`|\")?User(`|\")?.(`|\")?bar_id(`|\")? = (`|\")?Bar(`|\")?.(`|\")?id(`|\")?;/', $this->object->buildSelect($query));
 	}
 
 	/**
@@ -262,7 +262,7 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::TRUNCATE, new User());
 		$query->from('foobar');
 
-		$this->assertRegExp('/TRUNCATE (`|\")foobar(`|\");/', $this->object->buildTruncate($query));
+		$this->assertRegExp('/TRUNCATE (`|\")?foobar(`|\")?;/', $this->object->buildTruncate($query));
 	}
 
 	/**
@@ -290,22 +290,22 @@ class DialectTest extends TestCase {
 		}
 
 		$query->from('foobar');
-		$this->assertRegExp('/UPDATE\s+(`|\")foobar(`|\")\s+SET (`|\")username(`|\") = \?;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?username(`|\")? = \?;/', $this->object->buildUpdate($query));
 
 		$query->limit(15);
-		$this->assertRegExp('/UPDATE\s+(`|\")foobar(`|\")\s+SET (`|\")username(`|\") = \?\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?username(`|\")? = \?\s+LIMIT 15;/', $this->object->buildUpdate($query));
 
 		$query->orderBy('username', 'desc');
-		$this->assertRegExp('/UPDATE\s+(`|\")foobar(`|\")\s+SET (`|\")username(`|\") = \?\s+ORDER BY (`|\")username(`|\") DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?username(`|\")? = \?\s+ORDER BY (`|\")?username(`|\")? DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
 
 		$query->fields([
 			'email' => 'email@domain.com',
 			'website' => 'http://titon.io'
 		]);
-		$this->assertRegExp('/UPDATE\s+(`|\")foobar(`|\")\s+SET (`|\")email(`|\") = \?, (`|\")website(`|\") = \?\s+ORDER BY (`|\")username(`|\") DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?email(`|\")? = \?, (`|\")?website(`|\")? = \?\s+ORDER BY (`|\")?username(`|\")? DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
 
 		$query->where('status', 3);
-		$this->assertRegExp('/UPDATE\s+(`|\")foobar(`|\")\s+SET (`|\")email(`|\") = \?, (`|\")website(`|\") = \?\s+WHERE (`|\")status(`|\") = \?\s+ORDER BY (`|\")username(`|\") DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?email(`|\")? = \?, (`|\")?website(`|\")? = \?\s+WHERE (`|\")?status(`|\")? = \?\s+ORDER BY (`|\")?username(`|\")? DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
 	}
 
 	/**
@@ -316,13 +316,13 @@ class DialectTest extends TestCase {
 		$query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
 		$query->rightJoin($user->getRelation('Profile'));
 
-		$this->assertRegExp('/UPDATE\s+(`|\")users(`|\") AS (`|\")User(`|\") RIGHT JOIN (`|\")profiles(`|\") AS (`|\")Profile(`|\") ON (`|\")User(`|\")\.(`|\")id(`|\") = (`|\")Profile(`|\")\.(`|\")user_id(`|\")\s+SET (`|\")User(`|\")\.(`|\")username(`|\") = \?;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+(`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?\s+SET (`|\")?User(`|\")?\.(`|\")?username(`|\")? = \?;/', $this->object->buildUpdate($query));
 
 		// With fields
 		$query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
 		$query->rightJoin($user->getRelation('Profile'), ['avatar' => 'image.jpg']);
 
-		$this->assertRegExp('/UPDATE\s+(`|\")users(`|\") AS (`|\")User(`|\") RIGHT JOIN (`|\")profiles(`|\") AS (`|\")Profile(`|\") ON (`|\")User(`|\")\.(`|\")id(`|\") = (`|\")Profile(`|\")\.(`|\")user_id(`|\")\s+SET (`|\")User(`|\")\.(`|\")username(`|\") = \?, (`|\")Profile(`|\")\.(`|\")avatar(`|\") = \?;/', $this->object->buildUpdate($query));
+		$this->assertRegExp('/UPDATE\s+(`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?\s+SET (`|\")?User(`|\")?\.(`|\")?username(`|\")? = \?, (`|\")?Profile(`|\")?\.(`|\")?avatar(`|\")? = \?;/', $this->object->buildUpdate($query));
 	}
 
 	/**
@@ -333,13 +333,13 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->fields($query->subQuery('id')->from('profiles'));
 
-		$this->assertRegExp('/SELECT\s+\(SELECT\s+(`|\")id(`|\") FROM (`|\")profiles(`|\")\) FROM (`|\")users(`|\");/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?profiles(`|\")?\) FROM (`|\")?users(`|\")?;/', $this->object->buildSelect($query));
 
 		// In fields with alias
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->fields($query->subQuery('id')->from('profiles')->asAlias('column'));
 
-		$this->assertRegExp('/SELECT\s+\(SELECT\s+(`|\")id(`|\") FROM (`|\")profiles(`|\")\) AS (`|\")column(`|\") FROM (`|\")users(`|\");/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?profiles(`|\")?\) AS (`|\")?column(`|\")? FROM (`|\")?users(`|\")?;/', $this->object->buildSelect($query));
 
 		// In function in fields
 		$query = new Query(Query::SELECT, new User());
@@ -347,31 +347,31 @@ class DialectTest extends TestCase {
 			$query->func('UPPER', [$query->subQuery('id')->from('profiles')])
 		);
 
-		$this->assertRegExp('/SELECT\s+UPPER\(\(SELECT\s+(`|\")id(`|\") FROM (`|\")profiles(`|\")\)\) FROM (`|\")users(`|\");/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+UPPER\(\(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?profiles(`|\")?\)\) FROM (`|\")?users(`|\")?;/', $this->object->buildSelect($query));
 
 		// In where clause w/ function
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->where('column1', $query->subQuery($query->func('MAX', ['column2' => 'field']))->from('profiles'));
 
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")users(`|\")\s+WHERE (`|\")column1(`|\") = \(SELECT\s+MAX\((`|\")column2(`|\")\) FROM (`|\")profiles(`|\")\);/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?users(`|\")?\s+WHERE (`|\")?column1(`|\")? = \(SELECT\s+MAX\((`|\")?column2(`|\")?\) FROM (`|\")?profiles(`|\")?\);/', $this->object->buildSelect($query));
 
 		// In where clause w/ SOME filter
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->where('column1', $query->subQuery('column2')->from('profiles')->withFilter('some'));
 
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")users(`|\")\s+WHERE (`|\")column1(`|\") = SOME \(SELECT\s+(`|\")column2(`|\") FROM (`|\")profiles(`|\")\);/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?users(`|\")?\s+WHERE (`|\")?column1(`|\")? = SOME \(SELECT\s+(`|\")?column2(`|\")? FROM (`|\")?profiles(`|\")?\);/', $this->object->buildSelect($query));
 
 		// In where clause using IN operator
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->where('column1', 'in', $query->subQuery('column2')->from('profiles'));
 
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")users(`|\")\s+WHERE (`|\")column1(`|\") IN \(SELECT\s+(`|\")column2(`|\") FROM (`|\")profiles(`|\")\);/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?users(`|\")?\s+WHERE (`|\")?column1(`|\")? IN \(SELECT\s+(`|\")?column2(`|\")? FROM (`|\")?profiles(`|\")?\);/', $this->object->buildSelect($query));
 
 		// In where clause using EXISTS operator
 		$query = new Query(Query::SELECT, new User());
 		$query->from('users')->where('column1', $query->subQuery('column2')->from('profiles')->withFilter('exists'));
 
-		$this->assertRegExp('/SELECT\s+\* FROM (`|\")users(`|\")\s+WHERE EXISTS \(SELECT\s+(`|\")column2(`|\") FROM (`|\")profiles(`|\")\);/', $this->object->buildSelect($query));
+		$this->assertRegExp('/SELECT\s+\* FROM (`|\")?users(`|\")?\s+WHERE EXISTS \(SELECT\s+(`|\")?column2(`|\")? FROM (`|\")?profiles(`|\")?\);/', $this->object->buildSelect($query));
 	}
 
 	/**
@@ -383,7 +383,7 @@ class DialectTest extends TestCase {
 			'type' => 'int'
 		]);
 
-		$this->assertRegExp('/(`|\")column(`|\") INT NULL/', $this->object->formatColumns($schema));
+		$this->assertRegExp('/(`|\")?column(`|\")? INT NULL/', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -391,7 +391,7 @@ class DialectTest extends TestCase {
 			'zerofill' => true
 		]);
 
-		$this->assertRegExp('/(`|\")column(`|\") INT UNSIGNED ZEROFILL NULL/', $this->object->formatColumns($schema));
+		$this->assertRegExp('/(`|\")?column(`|\")? INT UNSIGNED ZEROFILL NULL/', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -399,7 +399,7 @@ class DialectTest extends TestCase {
 			'comment' => 'Some comment here'
 		]);
 
-		$this->assertRegExp('/(`|\")column(`|\") INT NOT NULL COMMENT \'Some comment here\'/', $this->object->formatColumns($schema));
+		$this->assertRegExp('/(`|\")?column(`|\")? INT NOT NULL COMMENT \'Some comment here\'/', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -407,7 +407,7 @@ class DialectTest extends TestCase {
 			'length' => 11
 		]);
 
-		$this->assertRegExp('/(`|\")column(`|\") INT\(11\) NOT NULL AUTO_INCREMENT/', $this->object->formatColumns($schema));
+		$this->assertRegExp('/(`|\")?column(`|\")? INT\(11\) NOT NULL AUTO_INCREMENT/', $this->object->formatColumns($schema));
 
 		$schema->addColumn('column', [
 			'type' => 'int',
@@ -420,7 +420,7 @@ class DialectTest extends TestCase {
 			'comment' => 'Some comment here'
 		]);
 
-		$expected = '(`|\")column(`|\") INT\(11\) UNSIGNED ZEROFILL NOT NULL DEFAULT NULL AUTO_INCREMENT COMMENT \'Some comment here\'';
+		$expected = '(`|\")?column(`|\")? INT\(11\) UNSIGNED ZEROFILL NOT NULL DEFAULT NULL AUTO_INCREMENT COMMENT \'Some comment here\'';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 
@@ -430,7 +430,7 @@ class DialectTest extends TestCase {
 			'null' => true
 		]);
 
-		$expected .= ',\n(`|\")column2(`|\") VARCHAR\(255\) CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL';
+		$expected .= ',\n(`|\")?column2(`|\")? VARCHAR\(255\) CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 
@@ -440,7 +440,7 @@ class DialectTest extends TestCase {
 			'null' => false
 		]);
 
-		$expected .= ',\n(`|\")column3(`|\") SMALLINT NOT NULL DEFAULT 3';
+		$expected .= ',\n(`|\")?column3(`|\")? SMALLINT NOT NULL DEFAULT 3';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 
@@ -449,7 +449,7 @@ class DialectTest extends TestCase {
 			'type' => 'datetime'
 		]);
 
-		$expected .= ',\n(`|\")column4(`|\") DATETIME NULL DEFAULT NULL';
+		$expected .= ',\n(`|\")?column4(`|\")? DATETIME NULL DEFAULT NULL';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 
@@ -459,7 +459,7 @@ class DialectTest extends TestCase {
 			'charset' => 'utf8'
 		]);
 
-		$expected .= ',\n(`|\")column5(`|\") VARCHAR\(255\) CHARACTER SET utf8 COLLATE utf8_general_ci NULL';
+		$expected .= ',\n(`|\")?column5(`|\")? VARCHAR\(255\) CHARACTER SET utf8 COLLATE utf8_general_ci NULL';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 	}
@@ -482,16 +482,16 @@ class DialectTest extends TestCase {
 	 */
 	public function testFormatExpression() {
 		$expr = new Expr('column', '+', 5);
-		$this->assertRegExp('/(`|\")column(`|\") \+ \?/', $this->object->formatExpression($expr));
+		$this->assertRegExp('/(`|\")?column(`|\")? \+ \?/', $this->object->formatExpression($expr));
 
 		$expr = new Expr('column', null, 5);
-		$this->assertRegExp('/(`|\")column(`|\")/', $this->object->formatExpression($expr));
+		$this->assertRegExp('/(`|\")?column(`|\")?/', $this->object->formatExpression($expr));
 
 		$expr = new Expr('column', '+');
-		$this->assertRegExp('/(`|\")column(`|\")/', $this->object->formatExpression($expr));
+		$this->assertRegExp('/(`|\")?column(`|\")?/', $this->object->formatExpression($expr));
 
 		$expr = new Expr('column');
-		$this->assertRegExp('/(`|\")column(`|\")/', $this->object->formatExpression($expr));
+		$this->assertRegExp('/(`|\")?column(`|\")?/', $this->object->formatExpression($expr));
 	}
 
 	/**
@@ -507,12 +507,12 @@ class DialectTest extends TestCase {
 		$query = new Query(Query::INSERT, new User());
 		$query->fields($fields);
 
-		$this->assertRegExp('/\((`|\")id(`|\"), (`|\")username(`|\"), (`|\")email(`|\")\)/', $this->object->formatFields($query));
+		$this->assertRegExp('/\((`|\")?id(`|\")?, (`|\")?username(`|\")?, (`|\")?email(`|\")?\)/', $this->object->formatFields($query));
 
 		$query = new Query(Query::UPDATE, new User());
 		$query->fields($fields);
 
-		$this->assertRegExp('/(`|\")id(`|\") = \?, (`|\")username(`|\") = \?, (`|\")email(`|\") = \?/', $this->object->formatFields($query));
+		$this->assertRegExp('/(`|\")?id(`|\")? = \?, (`|\")?username(`|\")? = \?, (`|\")?email(`|\")? = \?/', $this->object->formatFields($query));
 
 		$query = new Query(Query::SELECT, new User());
 		$func = new Func('SUM', ['id' => Func::FIELD]);
@@ -523,7 +523,7 @@ class DialectTest extends TestCase {
 		$fields[] = $func;
 		$query->fields($fields);
 
-		$this->assertRegExp('/(`|\")id(`|\"), (`|\")username(`|\"), (`|\")email(`|\"), SUM\((`|\")id(`|\")\)/', $this->object->formatFields($query));
+		$this->assertRegExp('/(`|\")?id(`|\")?, (`|\")?username(`|\")?, (`|\")?email(`|\")?, SUM\((`|\")?id(`|\")?\)/', $this->object->formatFields($query));
 	}
 
 	/**
@@ -534,7 +534,7 @@ class DialectTest extends TestCase {
 		$this->assertEquals("SUBSTRING('TitonFramework', 5)", $this->object->formatFunction($func));
 
 		$func->asAlias('column');
-		$this->assertRegExp('/SUBSTRING\(\'TitonFramework\', 5\) AS (`|\")column(`|\")/', $this->object->formatFunction($func));
+		$this->assertRegExp('/SUBSTRING\(\'TitonFramework\', 5\) AS (`|\")?column(`|\")?/', $this->object->formatFunction($func));
 
 		$func = new Func('INSERT', ['Titon', 3, 5, 'Framework']);
 		$this->assertEquals("INSERT('Titon', 3, 5, 'Framework')", $this->object->formatFunction($func));
@@ -552,7 +552,7 @@ class DialectTest extends TestCase {
 		$this->assertEquals("TRIM(TRAILING 'xyz' FROM 'barxxyz')", $this->object->formatFunction($func));
 
 		$func = new Func('COUNT', ['id' => Func::FIELD]);
-		$this->assertRegExp("/COUNT\((`|\")id(`|\")\)/", $this->object->formatFunction($func));
+		$this->assertRegExp("/COUNT\((`|\")?id(`|\")?\)/", $this->object->formatFunction($func));
 
 		$func1 = new Func('HEX', 255);
 		$func2 = new Func('CONV', [$func1, 16, 10]);
@@ -568,7 +568,7 @@ class DialectTest extends TestCase {
 	 */
 	public function testFormatGroupBy() {
 		$this->assertEquals('', $this->object->formatGroupBy([]));
-		$this->assertRegExp('/GROUP BY (`|\")id(`|\"), (`|\")username(`|\")/', $this->object->formatGroupBy(['id', 'username']));
+		$this->assertRegExp('/GROUP BY (`|\")?id(`|\")?, (`|\")?username(`|\")?/', $this->object->formatGroupBy(['id', 'username']));
 	}
 
 	/**
@@ -581,7 +581,7 @@ class DialectTest extends TestCase {
 
 		$pred->gte('age', 12);
 
-		$this->assertRegExp('/HAVING (`|\")age(`|\") >= \?/', $this->object->formatHaving($pred));
+		$this->assertRegExp('/HAVING (`|\")?age(`|\")? >= \?/', $this->object->formatHaving($pred));
 	}
 
 	/**
@@ -591,25 +591,25 @@ class DialectTest extends TestCase {
 		$join = new Join(Join::LEFT);
 		$join->from('users')->on(['id' => 'id']);
 
-		$this->assertRegExp('/LEFT JOIN (`|\")users(`|\") ON (`|\")id(`|\") = (`|\")id(`|\")/', $this->object->formatJoins([$join]));
+		$this->assertRegExp('/LEFT JOIN (`|\")?users(`|\")? ON (`|\")?id(`|\")? = (`|\")?id(`|\")?/', $this->object->formatJoins([$join]));
 
 		$join->asAlias('User');
-		$this->assertRegExp('/LEFT JOIN (`|\")users(`|\") AS (`|\")User(`|\") ON (`|\")id(`|\") = (`|\")id(`|\")/', $this->object->formatJoins([$join]));
+		$this->assertRegExp('/LEFT JOIN (`|\")?users(`|\")? AS (`|\")?User(`|\")? ON (`|\")?id(`|\")? = (`|\")?id(`|\")?/', $this->object->formatJoins([$join]));
 
 		$join = new Join(Join::RIGHT);
 		$join->from('profiles', 'profiles')->on('User.profile_id', 'profiles.id');
 
-		$this->assertRegExp('/RIGHT JOIN (`|\")profiles(`|\") ON (`|\")User(`|\").(`|\")profile_id(`|\") = (`|\")profiles(`|\").(`|\")id(`|\")/', $this->object->formatJoins([$join]));
+		$this->assertRegExp('/RIGHT JOIN (`|\")?profiles(`|\")? ON (`|\")?User(`|\")?.(`|\")?profile_id(`|\")? = (`|\")?profiles(`|\")?.(`|\")?id(`|\")?/', $this->object->formatJoins([$join]));
 
 		$join = new Join(Join::INNER);
 		$join->from('profiles', 'Profile')->on('User.id', 'Profile.user_id');
 
-		$this->assertRegExp('/INNER JOIN (`|\")profiles(`|\") AS (`|\")Profile(`|\") ON (`|\")User(`|\").(`|\")id(`|\") = (`|\")Profile(`|\").(`|\")user_id(`|\")/', $this->object->formatJoins([$join]));
+		$this->assertRegExp('/INNER JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")?/', $this->object->formatJoins([$join]));
 
 		$join2 = new Join(Join::OUTER);
 		$join2->from('settings', 'Setting')->on('User.setting_id', 'Setting.id');
 
-		$this->assertRegExp('/INNER JOIN (`|\")profiles(`|\") AS (`|\")Profile(`|\") ON (`|\")User(`|\").(`|\")id(`|\") = (`|\")Profile(`|\").(`|\")user_id(`|\") FULL OUTER JOIN (`|\")settings(`|\") AS (`|\")Setting(`|\") ON (`|\")User(`|\").(`|\")setting_id(`|\") = (`|\")Setting(`|\").(`|\")id(`|\")/', $this->object->formatJoins([$join, $join2]));
+		$this->assertRegExp('/INNER JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")? FULL OUTER JOIN (`|\")?settings(`|\")? AS (`|\")?Setting(`|\")? ON (`|\")?User(`|\")?.(`|\")?setting_id(`|\")? = (`|\")?Setting(`|\")?.(`|\")?id(`|\")?/', $this->object->formatJoins([$join, $join2]));
 	}
 
 	/**
@@ -634,8 +634,8 @@ class DialectTest extends TestCase {
 	 */
 	public function testFormatOrderBy() {
 		$this->assertEquals('', $this->object->formatOrderBy([]));
-		$this->assertRegExp('/ORDER BY (`|\")id(`|\") ASC/', $this->object->formatOrderBy(['id' => 'asc']));
-		$this->assertRegExp('/ORDER BY (`|\")id(`|\") ASC, (`|\")username(`|\") DESC/', $this->object->formatOrderBy(['id' => 'asc', 'username' => 'desc']));
+		$this->assertRegExp('/ORDER BY (`|\")?id(`|\")? ASC/', $this->object->formatOrderBy(['id' => 'asc']));
+		$this->assertRegExp('/ORDER BY (`|\")?id(`|\")? ASC, (`|\")?username(`|\")? DESC/', $this->object->formatOrderBy(['id' => 'asc', 'username' => 'desc']));
 
 		$func = new Func('RAND');
 
@@ -649,7 +649,7 @@ class DialectTest extends TestCase {
 		$pred = new Predicate(Predicate::ALSO);
 		$pred->eq('id', 1)->gte('age', 12);
 
-		$this->assertRegExp('/(`|\")id(`|\") = \? AND (`|\")age(`|\") >= \?/', $this->object->formatPredicate($pred));
+		$this->assertRegExp('/(`|\")?id(`|\")? = \? AND (`|\")?age(`|\")? >= \?/', $this->object->formatPredicate($pred));
 
 		$pred->either(function() {
 			$this->like('name', '%Titon%')->notLike('name', '%Symfony%');
@@ -658,20 +658,20 @@ class DialectTest extends TestCase {
 			});
 		});
 
-		$this->assertRegExp('/(`|\")id(`|\") = \? AND (`|\")age(`|\") >= \? AND \((`|\")name(`|\") LIKE \? OR (`|\")name(`|\") NOT LIKE \? OR \((`|\")active(`|\") = \? AND (`|\")status(`|\") != \?\)\)/', $this->object->formatPredicate($pred));
+		$this->assertRegExp('/(`|\")?id(`|\")? = \? AND (`|\")?age(`|\")? >= \? AND \((`|\")?name(`|\")? LIKE \? OR (`|\")?name(`|\")? NOT LIKE \? OR \((`|\")?active(`|\")? = \? AND (`|\")?status(`|\")? != \?\)\)/', $this->object->formatPredicate($pred));
 
 		$pred = new Predicate(Predicate::MAYBE);
 		$pred->eq('id', 1)->gte('age', 12);
 
-		$this->assertRegExp('/(`|\")id(`|\") = \? XOR (`|\")age(`|\") >= \?/', $this->object->formatPredicate($pred));
+		$this->assertRegExp('/(`|\")?id(`|\")? = \? XOR (`|\")?age(`|\")? >= \?/', $this->object->formatPredicate($pred));
 	}
 
 	/**
 	 * Test table is quoted.
 	 */
 	public function testFormatTable() {
-		$this->assertRegExp('/(`|\")foobar(`|\")/', $this->object->formatTable('foobar'));
-		$this->assertRegExp('/(`|\")foobar(`|\") AS (`|\")Foo(`|\")/', $this->object->formatTable('foobar', 'Foo'));
+		$this->assertRegExp('/(`|\")?foobar(`|\")?/', $this->object->formatTable('foobar'));
+		$this->assertRegExp('/(`|\")?foobar(`|\")? AS (`|\")?Foo(`|\")?/', $this->object->formatTable('foobar', 'Foo'));
 	}
 
 	/**
@@ -680,24 +680,24 @@ class DialectTest extends TestCase {
 	public function testFormatTableForeign() {
 		$data = ['column' => 'id', 'references' => 'users.id', 'constraint' => ''];
 
-		$this->assertRegExp('/FOREIGN KEY \((`|\")id(`|\")\) REFERENCES (`|\")users(`|\")\((`|\")id(`|\")\)/', $this->object->formatTableForeign($data));
+		$this->assertRegExp('/FOREIGN KEY \((`|\")?id(`|\")?\) REFERENCES (`|\")?users(`|\")?\((`|\")?id(`|\")?\)/', $this->object->formatTableForeign($data));
 
 		$data['constraint'] = 'symbol';
-		$this->assertRegExp('/CONSTRAINT (`|\")symbol(`|\") FOREIGN KEY \((`|\")id(`|\")\) REFERENCES (`|\")users(`|\")\((`|\")id(`|\")\)/', $this->object->formatTableForeign($data));
+		$this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? FOREIGN KEY \((`|\")?id(`|\")?\) REFERENCES (`|\")?users(`|\")?\((`|\")?id(`|\")?\)/', $this->object->formatTableForeign($data));
 
 		$data['onUpdate'] = Dialect::RESTRICT;
-		$this->assertRegExp('/CONSTRAINT (`|\")symbol(`|\") FOREIGN KEY \((`|\")id(`|\")\) REFERENCES (`|\")users(`|\")\((`|\")id(`|\")\) ON UPDATE RESTRICT/', $this->object->formatTableForeign($data));
+		$this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? FOREIGN KEY \((`|\")?id(`|\")?\) REFERENCES (`|\")?users(`|\")?\((`|\")?id(`|\")?\) ON UPDATE RESTRICT/', $this->object->formatTableForeign($data));
 
 		$data['where'] = true; // fake example, used for actions with no value
-		$this->assertRegExp('/CONSTRAINT (`|\")symbol(`|\") FOREIGN KEY \((`|\")id(`|\")\) REFERENCES (`|\")users(`|\")\((`|\")id(`|\")\) ON UPDATE RESTRICT WHERE /', $this->object->formatTableForeign($data));
+		$this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? FOREIGN KEY \((`|\")?id(`|\")?\) REFERENCES (`|\")?users(`|\")?\((`|\")?id(`|\")?\) ON UPDATE RESTRICT WHERE /', $this->object->formatTableForeign($data));
 	}
 
 	/**
 	 * Test index keys.
 	 */
 	public function testFormatTableIndex() {
-		$this->assertRegExp('/KEY (`|\")idx(`|\") \((`|\")foo(`|\")\)/', $this->object->formatTableIndex('idx', ['foo']));
-		$this->assertRegExp('/KEY (`|\")idx(`|\") \((`|\")foo(`|\"), (`|\")bar(`|\")\)/', $this->object->formatTableIndex('idx', ['foo', 'bar']));
+		$this->assertRegExp('/KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?\)/', $this->object->formatTableIndex('idx', ['foo']));
+		$this->assertRegExp('/KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?, (`|\")?bar(`|\")?\)/', $this->object->formatTableIndex('idx', ['foo', 'bar']));
 	}
 
 	/**
@@ -707,7 +707,7 @@ class DialectTest extends TestCase {
 		$schema = new Schema('foobar');
 		$schema->addUnique('primary');
 
-		$expected = ',\nUNIQUE KEY (`|\")primary(`|\") \((`|\")primary(`|\")\)';
+		$expected = ',\nUNIQUE KEY (`|\")?primary(`|\")? \((`|\")?primary(`|\")?\)';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatTableKeys($schema));
 
@@ -715,13 +715,13 @@ class DialectTest extends TestCase {
 			'constraint' => 'uniqueSymbol'
 		]);
 
-		$expected .= ',\nCONSTRAINT (`|\")uniqueSymbol(`|\") UNIQUE KEY (`|\")unique(`|\") \((`|\")unique(`|\")\)';
+		$expected .= ',\nCONSTRAINT (`|\")?uniqueSymbol(`|\")? UNIQUE KEY (`|\")?unique(`|\")? \((`|\")?unique(`|\")?\)';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatTableKeys($schema));
 
 		$schema->addForeign('fk1', 'users.id');
 
-		$expected .= ',\nFOREIGN KEY \((`|\")fk1(`|\")\) REFERENCES (`|\")users(`|\")\((`|\")id(`|\")\)';
+		$expected .= ',\nFOREIGN KEY \((`|\")?fk1(`|\")?\) REFERENCES (`|\")?users(`|\")?\((`|\")?id(`|\")?\)';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatTableKeys($schema));
 
@@ -731,7 +731,7 @@ class DialectTest extends TestCase {
 			'onDelete' => Dialect::NO_ACTION
 		]);
 
-		$expected .= ',\nFOREIGN KEY \((`|\")fk2(`|\")\) REFERENCES (`|\")posts(`|\")\((`|\")id(`|\")\) ON UPDATE SET NULL ON DELETE NO ACTION';
+		$expected .= ',\nFOREIGN KEY \((`|\")?fk2(`|\")?\) REFERENCES (`|\")?posts(`|\")?\((`|\")?id(`|\")?\) ON UPDATE SET NULL ON DELETE NO ACTION';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatTableKeys($schema));
 	}
@@ -756,13 +756,13 @@ class DialectTest extends TestCase {
 	public function testFormatTablePrimary() {
 		$data = ['columns' => ['foo'], 'constraint' => ''];
 
-		$this->assertRegExp('/PRIMARY KEY \((`|\")foo(`|\")\)/', $this->object->formatTablePrimary($data));
+		$this->assertRegExp('/PRIMARY KEY \((`|\")?foo(`|\")?\)/', $this->object->formatTablePrimary($data));
 
 		$data['constraint'] = 'symbol';
-		$this->assertRegExp('/CONSTRAINT (`|\")symbol(`|\") PRIMARY KEY \((`|\")foo(`|\")\)/', $this->object->formatTablePrimary($data));
+		$this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? PRIMARY KEY \((`|\")?foo(`|\")?\)/', $this->object->formatTablePrimary($data));
 
 		$data['columns'][] = 'bar';
-		$this->assertRegExp('/CONSTRAINT (`|\")symbol(`|\") PRIMARY KEY \((`|\")foo(`|\"), (`|\")bar(`|\")\)/', $this->object->formatTablePrimary($data));
+		$this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? PRIMARY KEY \((`|\")?foo(`|\")?, (`|\")?bar(`|\")?\)/', $this->object->formatTablePrimary($data));
 	}
 
 	/**
@@ -771,13 +771,13 @@ class DialectTest extends TestCase {
 	public function testFormatTableUnique() {
 		$data = ['columns' => ['foo'], 'constraint' => '', 'index' => 'idx'];
 
-		$this->assertRegExp('/UNIQUE KEY (`|\")idx(`|\") \((`|\")foo(`|\")\)/', $this->object->formatTableUnique($data));
+		$this->assertRegExp('/UNIQUE KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?\)/', $this->object->formatTableUnique($data));
 
 		$data['constraint'] = 'symbol';
-		$this->assertRegExp('/CONSTRAINT (`|\")symbol(`|\") UNIQUE KEY (`|\")idx(`|\") \((`|\")foo(`|\")\)/', $this->object->formatTableUnique($data));
+		$this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? UNIQUE KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?\)/', $this->object->formatTableUnique($data));
 
 		$data['columns'][] = 'bar';
-		$this->assertRegExp('/CONSTRAINT (`|\")symbol(`|\") UNIQUE KEY (`|\")idx(`|\") \((`|\")foo(`|\"), (`|\")bar(`|\")\)/', $this->object->formatTableUnique($data));
+		$this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? UNIQUE KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?, (`|\")?bar(`|\")?\)/', $this->object->formatTableUnique($data));
 	}
 
 	/**
@@ -804,7 +804,7 @@ class DialectTest extends TestCase {
 
 		$pred->between('id', 1, 100)->eq('status', 1);
 
-		$this->assertRegExp('/WHERE (`|\")id(`|\") BETWEEN \? AND \? OR (`|\")status(`|\") = \?/', $this->object->formatWhere($pred));
+		$this->assertRegExp('/WHERE (`|\")?id(`|\")? BETWEEN \? AND \? OR (`|\")?status(`|\")? = \?/', $this->object->formatWhere($pred));
 	}
 
 	/**
