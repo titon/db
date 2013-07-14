@@ -93,7 +93,7 @@ class QueryTest extends TestCase {
 		$this->assertEquals(['id' => 1, 'title' => 'Titon', 'username' => 'miles'], $query->getFields());
 
 		// Now with joins
-		$query = new Query(Query::INSERT, new User());
+		$query = new Query(Query::SELECT, new User());
 		$query->innerJoin($query->getModel()->getRelation('Profile'));
 
 		$this->assertEquals(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], $query->getFields());
