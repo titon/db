@@ -527,7 +527,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @param array $on
 	 * @return \Titon\Model\Query
 	 */
-	public function innerJoin($table, array $fields = [], array $on = []) {
+	public function innerJoin($table, array $fields, array $on = []) {
 		return $this->_addJoin(Join::INNER, $table, $fields, $on);
 	}
 
@@ -539,7 +539,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @param array $on
 	 * @return \Titon\Model\Query
 	 */
-	public function leftJoin($table, array $fields = [], array $on = []) {
+	public function leftJoin($table, array $fields, array $on = []) {
 		return $this->_addJoin(Join::LEFT, $table, $fields, $on);
 	}
 
@@ -634,7 +634,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @param array $on
 	 * @return \Titon\Model\Query
 	 */
-	public function outerJoin($table, array $fields = [], array $on = []) {
+	public function outerJoin($table, array $fields, array $on = []) {
 		return $this->_addJoin(Join::OUTER, $table, $fields, $on);
 	}
 
@@ -646,7 +646,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @param array $on
 	 * @return \Titon\Model\Query
 	 */
-	public function rightJoin($table, array $fields = [], array $on = []) {
+	public function rightJoin($table, array $fields, array $on = []) {
 		return $this->_addJoin(Join::RIGHT, $table, $fields, $on);
 	}
 
@@ -680,7 +680,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @param array $on
 	 * @return \Titon\Model\Query
 	 */
-	public function straightJoin($table, array $fields = [], array $on = []) {
+	public function straightJoin($table, array $fields, array $on = []) {
 		return $this->_addJoin(Join::STRAIGHT, $table, $fields, $on);
 	}
 
