@@ -340,7 +340,7 @@ class Query implements Serializable, JsonSerializable {
 	 * @return string
 	 */
 	public function getAlias() {
-		if ($this->_joins || $this instanceof SubQuery || in_array($this->getType(), [self::CREATE_INDEX, self::DROP_INDEX])) {
+		if ($this->getJoins() || $this instanceof SubQuery || in_array($this->getType(), [self::CREATE_INDEX, self::DROP_INDEX])) {
 			return $this->_alias;
 		}
 
@@ -376,11 +376,18 @@ class Query implements Serializable, JsonSerializable {
 
 	/**
 	 * Return the list of fields and or values.
+	 * Return all model fields if a join exists and no fields were whitelisted.
 	 *
 	 * @return string[]
 	 */
 	public function getFields() {
-		return $this->_fields;
+		$fields = $this->_fields;
+
+		if ($this->getJoins() && !$fields) {
+			return $this->_mapModelFields($this->getModel());
+		}
+
+		return $fields;
 	}
 
 	/**
@@ -602,7 +609,6 @@ class Query implements Serializable, JsonSerializable {
 	 * @param string $op
 	 * @param mixed $value
 	 * @return \Titon\Model\Query
-	 * @throws \Titon\Model\Exception\ExistingPredicateException
 	 */
 	public function orHaving($field, $op = null, $value = null) {
 		return $this->_modifyPredicate($this->_having, Predicate::EITHER, $field, $op, $value);
@@ -882,6 +888,10 @@ class Query implements Serializable, JsonSerializable {
 			$relation = $table;
 			$relatedModel = $relation->getRelatedModel();
 
+			if (!$fields) {
+				$fields = $this->_mapModelFields($relatedModel);
+			}
+
 			$join
 				->from($relatedModel->getTable(), $relatedModel->getAlias())
 				->fields($fields);
@@ -925,6 +935,22 @@ class Query implements Serializable, JsonSerializable {
 		$this->_joins[] = $join;
 
 		return $this;
+	}
+
+	/**
+	 * Return all fields for a model. This is required for joins and complex queries.
+	 *
+	 * @param \Titon\Model\Model $model
+	 * @return array
+	 */
+	protected function _mapModelFields(Model $model) {
+		$fields = [];
+
+		if ($schema = $model->getSchema()) {
+			$fields = array_keys($schema->getColumns());
+		}
+
+		return $fields;
 	}
 
 	/**

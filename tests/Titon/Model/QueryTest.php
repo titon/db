@@ -91,6 +91,12 @@ class QueryTest extends TestCase {
 
 		$query->fields(['username' => 'miles'], true);
 		$this->assertEquals(['id' => 1, 'title' => 'Titon', 'username' => 'miles'], $query->getFields());
+
+		// Now with joins
+		$query = new Query(Query::INSERT, new User());
+		$query->innerJoin($query->getModel()->getRelation('Profile'));
+
+		$this->assertEquals(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], $query->getFields());
 	}
 
 	/**
@@ -172,7 +178,7 @@ class QueryTest extends TestCase {
 
 		// With relation
 		$j3 = new Join(Join::INNER);
-		$j3->from('profiles', 'Profile')->on('User.id', 'Profile.user_id');
+		$j3->from('profiles', 'Profile')->on('User.id', 'Profile.user_id')->fields('id', 'user_id', 'lastLogin', 'currentLogin');
 
 		$this->object->innerJoin($this->object->getModel()->getRelation('Profile'));
 		$this->assertEquals($j3, $this->object->getJoins()[2]);
