@@ -139,6 +139,7 @@ class PdoResult extends AbstractResult implements Result {
 
 				foreach ($row as $index => $value) {
 					$column = $columnMeta[$index];
+					$name = $column['name'];
 					$alias = '';
 
 					if (isset($column['table'])) {
@@ -150,9 +151,13 @@ class PdoResult extends AbstractResult implements Result {
 						} else {
 							$alias = $column['table'];
 						}
+
+					// For drivers that alias fields as Alias__column
+					} else if (strpos($name, '__') !== false) {
+						list($alias, $name) = explode('__', $name, 1);
 					}
 
-					$joins[$alias][$column['name']] = $value;
+					$joins[$alias][$name] = $value;
 				}
 
 				foreach ($joins as $join => $data) {
