@@ -75,7 +75,7 @@ class AbstractReadTest extends TestCase {
 				'isbn' => '',
 				'released' => '1955-10-25'
 			]),
-		], $book->select()->where('series_id', 3)->fetchAll());
+		], $book->select()->where('series_id', 3)->orderBy('id', 'asc')->fetchAll());
 	}
 
 	/**
@@ -212,7 +212,7 @@ class AbstractReadTest extends TestCase {
 				'author_id' => 1,
 				'name' => 'A Song of Ice and Fire'
 			])
-		]), $book->select()->where('id', 5)->with('Series')->fetch());
+		]), $book->select()->where('id', 5)->with('Series')->orderBy('id', 'asc')->fetch());
 
 		// Multiple
 		$this->assertEquals([
@@ -252,7 +252,7 @@ class AbstractReadTest extends TestCase {
 					'name' => 'The Lord of the Rings'
 				])
 			]),
-		], $book->select()->where('series_id', 3)->with('Series')->fetchAll());
+		], $book->select()->where('series_id', 3)->with('Series')->orderBy('id', 'asc')->fetchAll());
 	}
 
 	/**
@@ -307,7 +307,7 @@ class AbstractReadTest extends TestCase {
 		]), $actual);
 
 		// Multiple
-		$actual = $book->select()->where('series_id', 3)->with('Genres')->fetchAll();
+		$actual = $book->select()->where('series_id', 3)->with('Genres')->orderBy('id', 'asc')->fetchAll();
 
 		$this->assertEquals([
 			new Entity([
@@ -849,7 +849,7 @@ class AbstractReadTest extends TestCase {
 			new Entity(['id' => 3, 'name' => 'A Storm of Swords']),
 			new Entity(['id' => 4, 'name' => 'A Feast for Crows']),
 			new Entity(['id' => 5, 'name' => 'A Dance with Dragons']),
-		], $book->select('id', 'name')->where('series_id', 1)->fetchAll());
+		], $book->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->fetchAll(false));
 
 		// Invalid field
 		try {
@@ -956,7 +956,10 @@ class AbstractReadTest extends TestCase {
 			new Entity(['id' => 3, 'series_id' => 1, 'name' => 'A Storm of Swords']),
 			new Entity(['id' => 2, 'series_id' => 1, 'name' => 'A Clash of Kings']),
 			new Entity(['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones']),
-		], $book->select('id', 'series_id', 'name')->orderBy('series_id', 'desc')->fetchAll());
+		], $book->select('id', 'series_id', 'name')->orderBy([
+			'series_id' => 'desc',
+			'name' => 'desc'
+		])->fetchAll());
 
 		$this->assertEquals([
 			new Entity(['id' => 13, 'series_id' => 3, 'name' => 'The Fellowship of the Ring']),
