@@ -142,6 +142,15 @@ class PdoResult extends AbstractResult implements Result {
 					$name = $column['name'];
 					$alias = '';
 
+					// For drivers that alias fields as Alias__column
+					if (strpos($name, '__') !== false) {
+						list($alias, $name) = explode('__', $name, 2);
+
+						if (empty($column['table'])) {
+							$column['table'] = $alias;
+						}
+					}
+
 					if (isset($column['table'])) {
 						// For drivers that only return the table
 						if (isset($aliasMap[$column['table']])) {
@@ -151,10 +160,6 @@ class PdoResult extends AbstractResult implements Result {
 						} else {
 							$alias = $column['table'];
 						}
-
-					// For drivers that alias fields as Alias__column
-					} else if (strpos($name, '__') !== false) {
-						list($alias, $name) = explode('__', $name, 1);
 					}
 
 					$joins[$alias][$name] = $value;
@@ -230,10 +235,17 @@ class PdoResult extends AbstractResult implements Result {
 				return [];
 			}
 
-			$map = [$query->getTable() => $query->getAlias()];
+			$alias = $query->getAlias();
+			$map = [
+				$query->getTable() => $alias,
+				strtolower($alias) => $alias
+			];
 
 			foreach ($query->getJoins() as $join) {
-				$map[$join->getTable()] = $join->getAlias();
+				$joinAlias = $join->getAlias();
+
+				$map[$join->getTable()] = $joinAlias;
+				$map[strtolower($joinAlias)] = $joinAlias;
 			}
 
 			return $map;
