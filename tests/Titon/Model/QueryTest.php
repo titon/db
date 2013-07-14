@@ -94,7 +94,7 @@ class QueryTest extends TestCase {
 
 		// Now with joins
 		$query = new Query(Query::SELECT, new User());
-		$query->innerJoin($query->getModel()->getRelation('Profile'));
+		$query->innerJoin($query->getModel()->getRelation('Profile'), []);
 
 		$this->assertEquals(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], $query->getFields());
 	}
@@ -180,7 +180,7 @@ class QueryTest extends TestCase {
 		$j3 = new Join(Join::INNER);
 		$j3->from('profiles', 'Profile')->on('User.id', 'Profile.user_id')->fields('id', 'user_id', 'lastLogin', 'currentLogin');
 
-		$this->object->innerJoin($this->object->getModel()->getRelation('Profile'));
+		$this->object->innerJoin($this->object->getModel()->getRelation('Profile'), []);
 		$this->assertEquals($j3, $this->object->getJoins()[2]);
 	}
 

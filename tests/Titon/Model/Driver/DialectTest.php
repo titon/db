@@ -132,7 +132,7 @@ class DialectTest extends TestCase {
 	public function testBuildDeleteJoins() {
 		$user = new User();
 		$query = $user->query(Query::DELETE);
-		$query->rightJoin($user->getRelation('Profile'));
+		$query->rightJoin($user->getRelation('Profile'), []);
 
 		$this->assertRegExp('/DELETE\s+FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?;/', $this->object->buildDelete($query));
 
@@ -237,7 +237,7 @@ class DialectTest extends TestCase {
 	public function testBuildSelectJoins() {
 		$user = new User();
 		$query = $user->select();
-		$query->rightJoin($user->getRelation('Profile'));
+		$query->rightJoin($user->getRelation('Profile'), []);
 
 		$this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.*, (`|\")?Profile(`|\")?.* FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")?;/', $this->object->buildSelect($query));
 
@@ -314,7 +314,7 @@ class DialectTest extends TestCase {
 	public function testBuildUpdateJoins() {
 		$user = new User();
 		$query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
-		$query->rightJoin($user->getRelation('Profile'));
+		$query->rightJoin($user->getRelation('Profile'), []);
 
 		$this->assertRegExp('/UPDATE\s+(`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?\s+SET (`|\")?User(`|\")?\.(`|\")?username(`|\")? = \?;/', $this->object->buildUpdate($query));
 
@@ -430,7 +430,7 @@ class DialectTest extends TestCase {
 			'null' => true
 		]);
 
-		$expected .= ',\n(`|\")?column2(`|\")? VARCHAR\(255\) CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL';
+		$expected .= ',\n(`|\")?column2(`|\")? VARCHAR\(255\) NULL';
 
 		$this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
 
