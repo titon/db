@@ -35,14 +35,6 @@ interface Driver {
 	public function commitTransaction();
 
 	/**
-	 * Inspect a database and describe all the tables within it.
-	 *
-	 * @param string $database
-	 * @return array
-	 */
-	public function describeDatabase($database = null);
-
-	/**
 	 * Inspect a table and describe all the columns within it.
 	 * Return an array of values that are usable in a schema.
 	 *
@@ -150,6 +142,14 @@ interface Driver {
 	 * @return bool
 	 */
 	public function isPersistent();
+
+	/**
+	 * List out all the tables within a database.
+	 *
+	 * @param string $database
+	 * @return array
+	 */
+	public function listTables($database = null);
 
 	/**
 	 * Logs a query result.

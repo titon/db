@@ -84,16 +84,6 @@ class PdoDriverTest extends TestCase {
 	}
 
 	/**
-	 * Test database inspecting.
-	 */
-	public function testDescribeDatabase() {
-		$this->loadFixtures(['Authors', 'Books', 'Genres', 'BookGenres', 'Series']);
-
-		// Check the keys since the values constantly change
-		$this->assertArraysEqual(['authors', 'books', 'books_genres', 'genres', 'series'], $this->object->describeDatabase());
-	}
-
-	/**
 	 * Test table inspecting.
 	 */
 	public function testDescribeTable() {
@@ -254,6 +244,16 @@ class PdoDriverTest extends TestCase {
 
 		$this->object->config->dsn = 'custom:dsn';
 		$this->assertEquals('custom:dsn', $this->object->getDsn());
+	}
+
+	/**
+	 * Test database inspecting.
+	 */
+	public function testListTables() {
+		$this->loadFixtures(['Authors', 'Books', 'Genres', 'BookGenres', 'Series']);
+
+		// Check the keys since the values constantly change
+		$this->assertArraysEqual(['authors', 'books', 'books_genres', 'genres', 'series'], $this->object->listTables());
 	}
 
 	/**

@@ -108,45 +108,6 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
 	/**
 	 * {@inheritdoc}
-	 */
-	public function describeDatabase($database = null) {
-		$database = $database ?: $this->getDatabase();
-
-		return $this->cache([__METHOD__, $database], function() use ($database) {
-			$tables = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->fetchAll(false);
-			$schema = [];
-
-			if (!$tables) {
-				return $schema;
-			}
-
-			foreach ($tables as $table) {
-				$name = $table['TABLE_NAME'];
-
-				$schema[$name] = [
-					'table' => $name,
-					'engine' => $table['ENGINE'],
-					'format' => $table['ROW_FORMAT'],
-					'rows' => $table['TABLE_ROWS'],
-					'autoIncrement' => $table['AUTO_INCREMENT'],
-					'collate' => $table['TABLE_COLLATION'],
-					'comment' => $table['TABLE_COMMENT'],
-					'avgRowLength' => $table['AVG_ROW_LENGTH'],
-					'dataLength' => $table['DATA_LENGTH'],
-					'dataFree' => $table['DATA_FREE'],
-					'maxDataLength' => $table['MAX_DATA_LENGTH'],
-					'indexLength' => $table['INDEX_LENGTH'],
-					'created' => $table['CREATE_TIME'],
-					'updated' => $table['UPDATE_TIME']
-				];
-			}
-
-			return $schema;
-		});
-	}
-
-	/**
-	 * {@inheritdoc}
 	 *
 	 * @uses Titon\Model\Type\AbstractType
 	 */
@@ -280,6 +241,28 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 			'varbinary' => 'Titon\Model\Driver\Type\BinaryType',
 			'serial' => 'Titon\Model\Driver\Type\SerialType'
 		];
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function listTables($database = null) {
+		$database = $database ?: $this->getDatabase();
+
+		return $this->cache([__METHOD__, $database], function() use ($database) {
+			$tables = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->fetchAll(false);
+			$schema = [];
+
+			if (!$tables) {
+				return $schema;
+			}
+
+			foreach ($tables as $table) {
+				$schema[] = $table['TABLE_NAME'];
+			}
+
+			return $schema;
+		});
 	}
 
 	/**
