@@ -90,7 +90,7 @@ class PdoDriverTest extends TestCase {
 		$this->loadFixtures(['Authors', 'Books', 'Genres', 'BookGenres', 'Series']);
 
 		// Check the keys since the values constantly change
-		$this->assertArraysEqual(['authors', 'books', 'books_genres', 'genres', 'series'], array_keys($this->object->describeDatabase()));
+		$this->assertArraysEqual(['authors', 'books', 'books_genres', 'genres', 'series'], $this->object->describeDatabase());
 	}
 
 	/**

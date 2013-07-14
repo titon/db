@@ -136,7 +136,7 @@ class AbstractDeleteTest extends TestCase {
 			['id' => 3, 'name' => 'A Storm of Swords'],
 			['id' => 4, 'name' => 'A Feast for Crows'],
 			['id' => 5, 'name' => 'A Dance with Dragons'],
-		], $series->Books->select('id', 'name')->where('series_id', 1)->fetchAll(false));
+		], $series->Books->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->fetchAll(false));
 
 		$series->delete(1, true);
 
@@ -219,7 +219,7 @@ class AbstractDeleteTest extends TestCase {
 			['id' => 13, 'name' => 'The Fellowship of the Ring'],
 			['id' => 14, 'name' => 'The Two Towers'],
 			['id' => 15, 'name' => 'The Return of the King'],
-		], $series->Books->select('id', 'name')->where('series_id', 3)->fetchAll(false));
+		], $series->Books->select('id', 'name')->where('series_id', 3)->orderBy('id', 'asc')->fetchAll(false));
 
 		$this->assertEquals([
 			'id' => 14,

@@ -108,7 +108,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 1, 'name' => 'Warrior', 'health' => 1500],
 			['id' => 2, 'name' => 'Ranger', 'health' => 800],
 			['id' => 3, 'name' => 'Mage', 'health' => 600],
-		], $stat->select('id', 'name', 'health')->fetchAll(false));
+		], $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->fetchAll(false));
 
 		$query = $stat->query(Query::UPDATE);
 		$query->fields(['health' => $query->expr('health', '+', 75)]);
@@ -119,7 +119,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 1, 'name' => 'Warrior', 'health' => 1575],
 			['id' => 2, 'name' => 'Ranger', 'health' => 875],
 			['id' => 3, 'name' => 'Mage', 'health' => 675],
-		], $stat->select('id', 'name', 'health')->fetchAll(false));
+		], $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->fetchAll(false));
 
 		// Single record
 		$this->assertEquals(1, $stat->update(2, [
@@ -130,7 +130,7 @@ class AbstractUpdateTest extends TestCase {
 			['id' => 1, 'name' => 'Warrior', 'health' => 1575],
 			['id' => 2, 'name' => 'Ranger', 'health' => 750],
 			['id' => 3, 'name' => 'Mage', 'health' => 675],
-		], $stat->select('id', 'name', 'health')->fetchAll(false));
+		], $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->fetchAll(false));
 	}
 
 	/**
@@ -509,10 +509,9 @@ class AbstractUpdateTest extends TestCase {
 		$this->assertEquals(1, $stat->update(1, $data));
 
 		$expected = $stat->select()->where('id', 1)->fetch(false);
-		unset($expected['data']);
+		unset($expected['data'], $expected['id']);
 
 		$this->assertSame([
-			'id' => 1,
 			'name' => 'Warrior',
 			'health' => 2000,
 			'energy' => 300,

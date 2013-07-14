@@ -865,6 +865,7 @@ class AbstractReadTest extends TestCase {
 			->with('Series', function() {
 				$this->fields('name');
 			})
+			->orderBy('id', 'asc')
 			->fetchAll();
 
 		$this->assertEquals([
@@ -1247,7 +1248,7 @@ class AbstractReadTest extends TestCase {
 		$user->update([2, 5], ['country_id' => null]); // Reset some records
 
 		$query = $user->select('id', 'username')
-			->innerJoin($user->getRelation('Country'))
+			->innerJoin($user->getRelation('Country'), [])
 			->orderBy('User.id', 'asc');
 
 		$this->assertEquals([
@@ -1291,7 +1292,7 @@ class AbstractReadTest extends TestCase {
 		$user->update([2, 5], ['country_id' => null]); // Reset some records
 
 		$query = $user->select('id', 'username')
-			->innerJoin(['countries', 'Country'], [], ['country_id' => 'Country.id'])
+			->innerJoin(['countries', 'Country'], ['id', 'name', 'iso'], ['country_id' => 'Country.id'])
 			->orderBy('User.id', 'asc');
 
 		$this->assertEquals([
@@ -1341,7 +1342,8 @@ class AbstractReadTest extends TestCase {
 		}
 
 		$query = $user->select()
-			->outerJoin($user->getRelation('Country'))
+			->fields('id', 'username')
+			->outerJoin($user->getRelation('Country'), [])
 			->orderBy('User.id', 'asc');
 
 		$this->assertEquals([
@@ -1352,6 +1354,15 @@ class AbstractReadTest extends TestCase {
 					'id' => 1,
 					'name' => 'United States of America',
 					'iso' => 'USA'
+				])
+			]),
+			new Entity([
+				'id' => 2,
+				'username' => 'batman',
+				'Country' => new Entity([
+					'id' => null,
+					'name' => null,
+					'iso' => null
 				])
 			]),
 			new Entity([
@@ -1371,7 +1382,34 @@ class AbstractReadTest extends TestCase {
 					'name' => 'Mexico',
 					'iso' => 'MEX'
 				])
-			])
+			]),
+			new Entity([
+				'id' => 5,
+				'username' => 'wolverine',
+				'Country' => new Entity([
+					'id' => null,
+					'name' => null,
+					'iso' => null
+				])
+			]),
+			new Entity([
+				'id' => null,
+				'username' => null,
+				'Country' => new Entity([
+					'id' => 4,
+					'name' => 'Australia',
+					'iso' => 'AUS'
+				])
+			]),
+			new Entity([
+				'id' => null,
+				'username' => null,
+				'Country' => new Entity([
+					'id' => 3,
+					'name' => 'England',
+					'iso' => 'ENG'
+				])
+			]),
 		], $query->fetchAll());
 	}
 
@@ -1385,7 +1423,7 @@ class AbstractReadTest extends TestCase {
 		$user->update([2, 5], ['country_id' => null]); // Reset some records
 
 		$query = $user->select('id', 'username')
-			->leftJoin($user->getRelation('Country'))
+			->leftJoin($user->getRelation('Country'), [])
 			->orderBy('User.id', 'asc');
 
 		$this->assertEquals([
@@ -1449,7 +1487,7 @@ class AbstractReadTest extends TestCase {
 		$user->update([2, 5], ['country_id' => null]); // Reset some records
 
 		$query = $user->select('id', 'username')
-			->rightJoin($user->getRelation('Country'))
+			->rightJoin($user->getRelation('Country'), [])
 			->orderBy('User.id', 'asc');
 
 		$this->assertEquals([
@@ -1513,7 +1551,7 @@ class AbstractReadTest extends TestCase {
 		$user->update([2, 5], ['country_id' => null]); // Reset some records
 
 		$query = $user->select('id', 'username')
-			->straightJoin($user->getRelation('Country'))
+			->straightJoin($user->getRelation('Country'), [])
 			->orderBy('User.id', 'asc');
 
 		$this->assertEquals([

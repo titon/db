@@ -312,7 +312,9 @@ class AbstractUpsertTest extends TestCase {
 					]
 				]
 			]
-		], $book->select()->where('id', 10)->with('Genres')->fetch(false));
+		], $book->select()->where('id', 10)->with('Genres', function() {
+			$this->orderBy('id', 'asc');
+		})->fetch(false));
 	}
 
 }

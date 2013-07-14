@@ -177,7 +177,7 @@ class AbstractMiscTest extends TestCase {
 
 		// ANY filter
 		$query = $user->select('id', 'country_id', 'username');
-		$query->where('country_id', '=', $query->subQuery('id')->from('countries')->withFilter(SubQuery::ANY));
+		$query->where('country_id', '=', $query->subQuery('id')->from('countries')->withFilter(SubQuery::ANY))->orderBy('id', 'asc');
 
 		$this->assertEquals([
 			['id' => 1, 'country_id' => 1, 'username' => 'miles'],
