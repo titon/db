@@ -383,7 +383,7 @@ class Query implements Serializable, JsonSerializable {
 	public function getFields() {
 		$fields = $this->_fields;
 
-		if ($this->getJoins() && !$fields) {
+		if ($this->getJoins() && !$fields && $this->getType() === self::SELECT) {
 			return $this->_mapModelFields($this->getModel());
 		}
 
@@ -888,7 +888,7 @@ class Query implements Serializable, JsonSerializable {
 			$relation = $table;
 			$relatedModel = $relation->getRelatedModel();
 
-			if (!$fields) {
+			if (!$fields && $this->getType() === self::SELECT) {
 				$fields = $this->_mapModelFields($relatedModel);
 			}
 

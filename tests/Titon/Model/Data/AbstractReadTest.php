@@ -849,7 +849,7 @@ class AbstractReadTest extends TestCase {
 			new Entity(['id' => 3, 'name' => 'A Storm of Swords']),
 			new Entity(['id' => 4, 'name' => 'A Feast for Crows']),
 			new Entity(['id' => 5, 'name' => 'A Dance with Dragons']),
-		], $book->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->fetchAll(false));
+		], $book->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->fetchAll());
 
 		// Invalid field
 		try {
@@ -958,7 +958,7 @@ class AbstractReadTest extends TestCase {
 			new Entity(['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones']),
 		], $book->select('id', 'series_id', 'name')->orderBy([
 			'series_id' => 'desc',
-			'name' => 'desc'
+			'id' => 'desc'
 		])->fetchAll());
 
 		$this->assertEquals([
