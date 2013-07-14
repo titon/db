@@ -78,7 +78,7 @@ class TimestampableBehaviorTest extends TestCase {
 
 		// Now with behavior
 		$this->object->addBehavior(new TimestampableBehavior([
-			'onUpdateField' => 'modified'
+			'updateField' => 'modified'
 		]));
 
 		$time = time();

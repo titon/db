@@ -18,13 +18,13 @@ class TimestampableBehavior extends AbstractBehavior {
 	 * Configuration.
 	 *
 	 * @type array {
-	 * 		@type string $onCreateField		Field to update when a record is created
-	 * 		@type string $onUpdateField		Field to update when a record is updated
+	 * 		@type string $createField	Field to update when a record is created
+	 * 		@type string $updateField	Field to update when a record is updated
 	 * }
 	 */
 	protected $_config = [
-		'onCreateField' => 'created',
-		'onUpdateField' => 'updated'
+		'createField' => 'created',
+		'updateField' => 'updated'
 	];
 
 	/**
@@ -35,7 +35,7 @@ class TimestampableBehavior extends AbstractBehavior {
 	 * @return array
 	 */
 	public function preSave($id, array $data) {
-		$field = $id ? $this->config->onUpdateField : $this->config->onCreateField;
+		$field = $id ? $this->config->updateField : $this->config->createField;
 		$data[$field] = time();
 
 		return $data;
