@@ -226,7 +226,7 @@ class AbstractCreateTest extends TestCase {
 					'Junction' => [
 						'book_id' => 16,
 						'genre_id' => 3,
-						'id' => 47
+						'id' => 46
 					]
 				],
 				[
@@ -236,7 +236,7 @@ class AbstractCreateTest extends TestCase {
 					'Junction' => [
 						'book_id' => 16,
 						'genre_id' => 12,
-						'id' => 48
+						'id' => 47
 					]
 				],
 				[
@@ -244,7 +244,7 @@ class AbstractCreateTest extends TestCase {
 					'Junction' => [
 						'book_id' => 16,
 						'genre_id' => 8,
-						'id' => 49
+						'id' => 48
 					]
 				]
 			]

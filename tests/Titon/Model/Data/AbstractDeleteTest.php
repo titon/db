@@ -163,7 +163,7 @@ class AbstractDeleteTest extends TestCase {
 					'name' => 'Action-Adventure',
 					'book_count' => 8,
 					'Junction' => [
-						'id' => 15,
+						'id' => 14,
 						'book_id' => 5,
 						'genre_id' => 3
 					]
@@ -172,7 +172,7 @@ class AbstractDeleteTest extends TestCase {
 					'name' => 'Horror',
 					'book_count' => 5,
 					'Junction' => [
-						'id' => 16,
+						'id' => 15,
 						'book_id' => 5,
 						'genre_id' => 5
 					]
@@ -181,7 +181,7 @@ class AbstractDeleteTest extends TestCase {
 					'name' => 'Fantasy',
 					'book_count' => 15,
 					'Junction' => [
-						'id' => 14,
+						'id' => 13,
 						'book_id' => 5,
 						'genre_id' => 8
 					]
@@ -230,7 +230,7 @@ class AbstractDeleteTest extends TestCase {
 					'name' => 'Action-Adventure',
 					'book_count' => 8,
 					'Junction' => [
-						'id' => 42,
+						'id' => 41,
 						'book_id' => 14,
 						'genre_id' => 3
 					]
@@ -239,7 +239,7 @@ class AbstractDeleteTest extends TestCase {
 					'name' => 'Thriller',
 					'book_count' => 3,
 					'Junction' => [
-						'id' => 43,
+						'id' => 42,
 						'book_id' => 14,
 						'genre_id' => 6
 					]
@@ -248,7 +248,7 @@ class AbstractDeleteTest extends TestCase {
 					'name' => 'Fantasy',
 					'book_count' => 15,
 					'Junction' => [
-						'id' => 41,
+						'id' => 40,
 						'book_id' => 14,
 						'genre_id' => 8
 					]

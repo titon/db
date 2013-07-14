@@ -223,7 +223,7 @@ class AbstractUpsertTest extends TestCase {
 					'name' => 'Adventure',
 					'book_count' => 7,
 					'Junction' => [
-						'id' => 30,
+						'id' => 29,
 						'book_id' => 10,
 						'genre_id' => 2
 					]
@@ -232,7 +232,7 @@ class AbstractUpsertTest extends TestCase {
 					'name' => 'Mystery',
 					'book_count' => 7,
 					'Junction' => [
-						'id' => 31,
+						'id' => 30,
 						'book_id' => 10,
 						'genre_id' => 7
 					]
@@ -241,7 +241,7 @@ class AbstractUpsertTest extends TestCase {
 					'name' => 'Fantasy',
 					'book_count' => 15,
 					'Junction' => [
-						'id' => 29,
+						'id' => 28,
 						'book_id' => 10,
 						'genre_id' => 8
 					]
@@ -270,7 +270,7 @@ class AbstractUpsertTest extends TestCase {
 					'name' => 'Adventure (Updated)',
 					'book_count' => 7,
 					'Junction' => [
-						'id' => 30,
+						'id' => 29,
 						'book_id' => 10,
 						'genre_id' => 2
 					]
@@ -279,7 +279,7 @@ class AbstractUpsertTest extends TestCase {
 					'name' => 'Mystery',
 					'book_count' => 7,
 					'Junction' => [
-						'id' => 31,
+						'id' => 30,
 						'book_id' => 10,
 						'genre_id' => 7
 					]
@@ -288,7 +288,7 @@ class AbstractUpsertTest extends TestCase {
 					'name' => 'Fantasy (Updated)',
 					'book_count' => 15,
 					'Junction' => [
-						'id' => 29,
+						'id' => 28,
 						'book_id' => 10,
 						'genre_id' => 8
 					]
@@ -297,7 +297,7 @@ class AbstractUpsertTest extends TestCase {
 					'name' => 'Magic',
 					'book_count' => 0,
 					'Junction' => [
-						'id' => 47,
+						'id' => 46,
 						'book_id' => 10,
 						'genre_id' => 12
 					]
@@ -306,7 +306,7 @@ class AbstractUpsertTest extends TestCase {
 					'name' => 'Wizardry',
 					'book_count' => 0,
 					'Junction' => [
-						'id' => 48,
+						'id' => 47,
 						'book_id' => 10,
 						'genre_id' => 13
 					]

@@ -278,7 +278,7 @@ class AbstractReadTest extends TestCase {
 					'name' => 'Action-Adventure',
 					'book_count' => 8,
 					'Junction' => [
-						'id' => 15,
+						'id' => 14,
 						'book_id' => 5,
 						'genre_id' => 3
 					]
@@ -288,7 +288,7 @@ class AbstractReadTest extends TestCase {
 					'name' => 'Horror',
 					'book_count' => 5,
 					'Junction' => [
-						'id' => 16,
+						'id' => 15,
 						'book_id' => 5,
 						'genre_id' => 5
 					]
@@ -298,7 +298,7 @@ class AbstractReadTest extends TestCase {
 					'name' => 'Fantasy',
 					'book_count' => 15,
 					'Junction' => [
-						'id' => 14,
+						'id' => 13,
 						'book_id' => 5,
 						'genre_id' => 8
 					]
@@ -322,7 +322,7 @@ class AbstractReadTest extends TestCase {
 						'name' => 'Action-Adventure',
 						'book_count' => 8,
 						'Junction' => [
-							'id' => 39,
+							'id' => 38,
 							'book_id' => 13,
 							'genre_id' => 3
 						]
@@ -332,7 +332,7 @@ class AbstractReadTest extends TestCase {
 						'name' => 'Thriller',
 						'book_count' => 3,
 						'Junction' => [
-							'id' => 40,
+							'id' => 39,
 							'book_id' => 13,
 							'genre_id' => 6
 						]
@@ -342,7 +342,7 @@ class AbstractReadTest extends TestCase {
 						'name' => 'Fantasy',
 						'book_count' => 15,
 						'Junction' => [
-							'id' => 38,
+							'id' => 37,
 							'book_id' => 13,
 							'genre_id' => 8
 						]
@@ -361,7 +361,7 @@ class AbstractReadTest extends TestCase {
 						'name' => 'Action-Adventure',
 						'book_count' => 8,
 						'Junction' => [
-							'id' => 42,
+							'id' => 41,
 							'book_id' => 14,
 							'genre_id' => 3
 						]
@@ -371,7 +371,7 @@ class AbstractReadTest extends TestCase {
 						'name' => 'Thriller',
 						'book_count' => 3,
 						'Junction' => [
-							'id' => 43,
+							'id' => 42,
 							'book_id' => 14,
 							'genre_id' => 6
 						]
@@ -381,7 +381,7 @@ class AbstractReadTest extends TestCase {
 						'name' => 'Fantasy',
 						'book_count' => 15,
 						'Junction' => [
-							'id' => 41,
+							'id' => 40,
 							'book_id' => 14,
 							'genre_id' => 8
 						]
@@ -400,7 +400,7 @@ class AbstractReadTest extends TestCase {
 						'name' => 'Action-Adventure',
 						'book_count' => 8,
 						'Junction' => [
-							'id' => 45,
+							'id' => 44,
 							'book_id' => 15,
 							'genre_id' => 3
 						]
@@ -410,7 +410,7 @@ class AbstractReadTest extends TestCase {
 						'name' => 'Thriller',
 						'book_count' => 3,
 						'Junction' => [
-							'id' => 46,
+							'id' => 45,
 							'book_id' => 15,
 							'genre_id' => 6
 						]
@@ -420,7 +420,7 @@ class AbstractReadTest extends TestCase {
 						'name' => 'Fantasy',
 						'book_count' => 15,
 						'Junction' => [
-							'id' => 44,
+							'id' => 43,
 							'book_id' => 15,
 							'genre_id' => 8
 						]
@@ -507,7 +507,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Action-Adventure',
 							'book_count' => 8,
 							'Junction' => [
-								'id' => 6,
+								'id' => 5,
 								'book_id' => 2,
 								'genre_id' => 3
 							]
@@ -517,7 +517,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Horror',
 							'book_count' => 5,
 							'Junction' => [
-								'id' => 7,
+								'id' => 6,
 								'book_id' => 2,
 								'genre_id' => 5
 							]
@@ -527,7 +527,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Fantasy',
 							'book_count' => 15,
 							'Junction' => [
-								'id' => 5,
+								'id' => 4,
 								'book_id' => 2,
 								'genre_id' => 8
 							]
@@ -546,7 +546,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Action-Adventure',
 							'book_count' => 8,
 							'Junction' => [
-								'id' => 9,
+								'id' => 8,
 								'book_id' => 3,
 								'genre_id' => 3
 							]
@@ -556,7 +556,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Horror',
 							'book_count' => 5,
 							'Junction' => [
-								'id' => 10,
+								'id' => 9,
 								'book_id' => 3,
 								'genre_id' => 5
 							]
@@ -566,7 +566,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Fantasy',
 							'book_count' => 15,
 							'Junction' => [
-								'id' => 8,
+								'id' => 7,
 								'book_id' => 3,
 								'genre_id' => 8
 							]
@@ -585,7 +585,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Action-Adventure',
 							'book_count' => 8,
 							'Junction' => [
-								'id' => 12,
+								'id' => 11,
 								'book_id' => 4,
 								'genre_id' => 3
 							]
@@ -595,7 +595,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Horror',
 							'book_count' => 5,
 							'Junction' => [
-								'id' => 13,
+								'id' => 12,
 								'book_id' => 4,
 								'genre_id' => 5
 							]
@@ -605,7 +605,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Fantasy',
 							'book_count' => 15,
 							'Junction' => [
-								'id' => 11,
+								'id' => 10,
 								'book_id' => 4,
 								'genre_id' => 8
 							]
@@ -624,7 +624,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Action-Adventure',
 							'book_count' => 8,
 							'Junction' => [
-								'id' => 15,
+								'id' => 14,
 								'book_id' => 5,
 								'genre_id' => 3
 							]
@@ -634,7 +634,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Horror',
 							'book_count' => 5,
 							'Junction' => [
-								'id' => 16,
+								'id' => 15,
 								'book_id' => 5,
 								'genre_id' => 5
 							]
@@ -644,7 +644,7 @@ class AbstractReadTest extends TestCase {
 							'name' => 'Fantasy',
 							'book_count' => 15,
 							'Junction' => [
-								'id' => 14,
+								'id' => 13,
 								'book_id' => 5,
 								'genre_id' => 8
 							]

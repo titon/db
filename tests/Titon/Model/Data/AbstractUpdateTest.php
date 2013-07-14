@@ -310,7 +310,7 @@ class AbstractUpdateTest extends TestCase {
 					'name' => 'Action-Adventure',
 					'book_count' => '',
 					'Junction' => [
-						'id' => 15,
+						'id' => 14,
 						'book_id' => 5,
 						'genre_id' => 3
 					]
@@ -321,12 +321,12 @@ class AbstractUpdateTest extends TestCase {
 					'Junction' => [
 						'book_id' => 5,
 						'genre_id' => 12,
-						'id' => 47
+						'id' => 46
 					]
 				], [
 					// Data isn't set when using foreign keys
 					'Junction' => [
-						'id' => 14,
+						'id' => 13,
 						'book_id' => 5,
 						'genre_id' => 8
 					]
