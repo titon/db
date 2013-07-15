@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\BooleanType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class BooleanTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new BooleanType();
+		$this->object = new BooleanType(new DriverStub('default', []));
 	}
 
 	/**

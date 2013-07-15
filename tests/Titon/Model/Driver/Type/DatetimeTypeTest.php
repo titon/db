@@ -9,6 +9,7 @@ namespace Titon\Model\Driver\Type;
 
 use DateTime;
 use Titon\Model\Driver\Type\DatetimeType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -24,7 +25,7 @@ class DatetimeTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new DatetimeType();
+		$this->object = new DatetimeType(new DriverStub('default', []));
 	}
 
 	/**

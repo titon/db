@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\BinaryType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class BinaryTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new BinaryType();
+		$this->object = new BinaryType(new DriverStub('default', []));
 	}
 
 	/**

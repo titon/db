@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\FloatType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class FloatTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new FloatType();
+		$this->object = new FloatType(new DriverStub('default', []));
 	}
 
 	/**

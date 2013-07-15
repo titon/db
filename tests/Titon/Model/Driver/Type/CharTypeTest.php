@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\CharType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class CharTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new CharType();
+		$this->object = new CharType(new DriverStub('default', []));
 	}
 
 	/**

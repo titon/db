@@ -9,6 +9,7 @@ namespace Titon\Model\Driver\Type;
 
 use DateTime;
 use Titon\Model\Driver\Type\YearType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -24,7 +25,7 @@ class YearTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new YearType();
+		$this->object = new YearType(new DriverStub('default', []));
 	}
 
 	/**

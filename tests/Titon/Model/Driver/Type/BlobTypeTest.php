@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\BlobType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class BlobTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new BlobType();
+		$this->object = new BlobType(new DriverStub('default', []));
 	}
 
 	/**

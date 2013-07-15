@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\SerialType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class SerialTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new SerialType();
+		$this->object = new SerialType(new DriverStub('default', []));
 	}
 
 	/**

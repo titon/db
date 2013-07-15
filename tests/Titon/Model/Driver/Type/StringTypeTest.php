@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\StringType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class StringTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new StringType();
+		$this->object = new StringType(new DriverStub('default', []));
 	}
 
 	/**

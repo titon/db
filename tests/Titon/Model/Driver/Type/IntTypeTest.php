@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\IntType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class IntTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new IntType();
+		$this->object = new IntType(new DriverStub('default', []));
 	}
 
 	/**

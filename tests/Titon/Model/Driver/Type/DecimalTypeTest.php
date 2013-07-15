@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\DecimalType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class DecimalTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new DecimalType();
+		$this->object = new DecimalType(new DriverStub('default', []));
 	}
 
 	/**

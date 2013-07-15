@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\DoubleType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class DoubleTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new DoubleType();
+		$this->object = new DoubleType(new DriverStub('default', []));
 	}
 
 	/**

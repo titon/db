@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\TextType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class TextTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new TextType();
+		$this->object = new TextType(new DriverStub('default', []));
 	}
 
 	/**

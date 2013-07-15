@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Driver\Type\BigintType;
+use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
@@ -23,7 +24,7 @@ class BigintTypeTest extends TestCase {
 	protected function setUp() {
 		parent::setUp();
 
-		$this->object = new BigintType();
+		$this->object = new BigintType(new DriverStub('default', []));
 	}
 
 	/**
