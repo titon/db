@@ -877,6 +877,18 @@ class DialectTest extends TestCase {
 	}
 
 	/**
+	 * Test attribute parsing.
+	 */
+	public function testRenderAttributes() {
+		$this->assertEquals(['a.distinct' => ''], $this->object->renderAttributes(['distinct' => false]));
+		$this->assertEquals(['a.distinct' => 'DISTINCT'], $this->object->renderAttributes(['distinct' => true]));
+		$this->assertEquals(['a.distinct' => 'DISTINCT'], $this->object->renderAttributes(['distinct' => 'distinct']));
+		$this->assertEquals(['a.distinct' => 'DEFAULT test'], $this->object->renderAttributes(['distinct' => function(Dialect $dialect) {
+			return sprintf($dialect->getClause(Dialect::DEFAULT_TO), 'test');
+		}]));
+	}
+
+	/**
 	 * Test params are rendered in a statement.
 	 */
 	public function testRenderStatement() {

@@ -38,8 +38,7 @@ class BlobTypeTest extends TestCase {
 	 * Test to database conversion.
 	 */
 	public function testTo() {
-		$this->assertSame('This is direct input', $this->object->to('This is direct input'));
-		$this->assertSame('This is loading from a file handle', $this->object->to(fopen(TEMP_DIR . '/blob.txt', 'r')));
+		$this->assertInternalType('resource', $this->object->to(fopen(TEMP_DIR . '/blob.txt', 'r')));
 	}
 
 }

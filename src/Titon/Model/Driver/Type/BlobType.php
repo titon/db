@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use Titon\Model\Exception\ConversionFailureException;
+use Titon\Model\Exception\UnsupportedTypeException;
 use \PDO;
 
 /**
@@ -56,10 +57,8 @@ class BlobType extends AbstractType {
 	 * {@inheritdoc}
 	 */
 	public function to($value) {
-		if (is_resource($value)) {
-			$contents = stream_get_contents($value, -1, 0);
-			fclose($value);
-			$value = $contents;
+		if ($value && !is_resource($value)) {
+			throw new UnsupportedTypeException('Blob data must be wrapped in a stream');
 		}
 
 		return $value;
