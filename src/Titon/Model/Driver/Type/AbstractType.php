@@ -11,6 +11,7 @@ use Titon\Common\Registry;
 use Titon\Model\Driver;
 use Titon\Model\Driver\Type;
 use Titon\Model\Exception\UnsupportedTypeException;
+use Titon\Model\Traits\DriverAware;
 use \PDO;
 
 /**
@@ -19,6 +20,7 @@ use \PDO;
  * @package Titon\Model\Driver\Type
  */
 abstract class AbstractType implements Type {
+	use DriverAware;
 
 	/**
 	 * {@inheritdoc}
@@ -31,10 +33,27 @@ abstract class AbstractType implements Type {
 		$types = $driver->getSupportedTypes();
 
 		if (isset($types[$type])) {
-			return Registry::factory($types[$type]);
+			$class = $types[$type];
+
+			if (Registry::has($class)) {
+				return Registry::get($class);
+			}
+
+			$object = new $class($driver);
+
+			return Registry::set($object, $class);
 		}
 
 		throw new UnsupportedTypeException(sprintf('Unsupported data type %s', $type));
+	}
+
+	/**
+	 * Store the driver.
+	 *
+	 * @param \Titon\Model\Driver $driver
+	 */
+	public function __construct(Driver $driver) {
+		$this->setDriver($driver);
 	}
 
 	/**
