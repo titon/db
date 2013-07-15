@@ -813,30 +813,22 @@ abstract class AbstractDialect extends Base implements Dialect {
 					$field = $this->quote($field);
 				}
 
-				switch ($operator) {
-					case Expr::IN:
-					case Expr::NOT_IN:
-						if ($isSubQuery) {
-							$clause = sprintf($this->getClause($operator), $field, '?');
-							$clause = str_replace(['(', ')'], '', $clause);
-						} else {
-							$clause = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($value), '?')));
-						}
-					break;
-					case Expr::NULL:
-					case Expr::NOT_NULL:
-					case Expr::BETWEEN:
-					case Expr::NOT_BETWEEN:
-					case Expr::LIKE:
-					case Expr::NOT_LIKE:
-					case Expr::REGEXP:
-					case Expr::NOT_REGEXP:
-					case Expr::RLIKE;
-						$clause = sprintf($this->getClause($operator), $field);
-					break;
-					default:
-						$clause = sprintf($this->getClause(self::EXPRESSION), $field, $operator);
-					break;
+				// IN has special case
+				if ($operator === Expr::IN || $operator === Expr::NOT_IN) {
+					if ($isSubQuery) {
+						$clause = sprintf($this->getClause($operator), $field, '?');
+						$clause = str_replace(['(', ')'], '', $clause);
+					} else {
+						$clause = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($value), '?')));
+					}
+
+				// Operators with clauses
+				} else if ($this->hasClause($operator)) {
+					$clause = sprintf($this->getClause($operator), $field);
+
+				// Basic operator
+				} else {
+					$clause = sprintf($this->getClause(self::EXPRESSION), $field, $operator);
 				}
 
 				// Replace ? with sub-query statement
