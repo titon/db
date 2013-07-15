@@ -106,10 +106,11 @@ class Predicate implements Serializable, JsonSerializable {
 	 * Bind a Closure callback to this predicate and execute it.
 	 *
 	 * @param \Closure $callback
+	 * @param \Titon\Model\Query $query
 	 */
-	public function bindCallback(Closure $callback) {
+	public function bindCallback(Closure $callback, $query = null) {
 		$callback = $callback->bindTo($this, 'Titon\Model\Query\Predicate');
-		$callback();
+		$callback($query);
 	}
 
 	/**

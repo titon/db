@@ -973,7 +973,7 @@ class Query implements Serializable, JsonSerializable {
 		}
 
 		if ($field instanceof Closure) {
-			$predicate->bindCallback($field);
+			$predicate->bindCallback($field, $this);
 
 		} else if ($value !== null || in_array($op, [Expr::NULL, Expr::NOT_NULL])) {
 			$predicate->add($field, $op, $value);
