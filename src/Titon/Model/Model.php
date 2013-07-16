@@ -46,7 +46,7 @@ class Model extends Base implements Callback {
 	use Instanceable, Attachable, Cacheable;
 
 	/**
-	 * ID of last inserted record.
+	 * ID of last updated or inserted record.
 	 *
 	 * @type int
 	 */
@@ -1435,6 +1435,7 @@ class Model extends Base implements Callback {
 		}
 
 		if (!is_array($id)) {
+			$this->id = $id;
 			$this->setData([$this->getPrimaryKey() => $id] + $data);
 		}
 
@@ -1443,8 +1444,6 @@ class Model extends Base implements Callback {
 		}
 
 		if ($isCreate) {
-			$this->id = $id;
-
 			return $id;
 		}
 

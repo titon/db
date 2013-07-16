@@ -285,6 +285,8 @@ abstract class AbstractDriver extends Base implements Driver {
 
 		// Clear the cache
 		$this->flushCache();
+
+		return $this;
 	}
 
 	/**

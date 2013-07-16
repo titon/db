@@ -149,6 +149,7 @@ interface Dialect {
 	/**
 	 * Return true if the attribute by key exists.
 	 *
+	 * @param string $key
 	 * @return bool
 	 */
 	public function hasAttribute($type);
@@ -156,6 +157,7 @@ interface Dialect {
 	/**
 	 * Return true if the clause by key exists.
 	 *
+	 * @param string $key
 	 * @return bool
 	 */
 	public function hasClause($key);
@@ -163,6 +165,7 @@ interface Dialect {
 	/**
 	 * Return true if the keyword by key exists.
 	 *
+	 * @param string $key
 	 * @return bool
 	 */
 	public function hasKeyword($key);
@@ -170,6 +173,7 @@ interface Dialect {
 	/**
 	 * Return true if the statement by key exists.
 	 *
+	 * @param string $key
 	 * @return bool
 	 */
 	public function hasStatement($key);

@@ -13,10 +13,10 @@ use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
 use Titon\Model\Exception\InvalidQueryException;
-use Titon\Model\Exception\InvalidSchemaException;
 use Titon\Model\Exception\MissingClauseException;
 use Titon\Model\Exception\MissingKeywordException;
 use Titon\Model\Exception\MissingStatementException;
+use Titon\Model\Exception\UnsupportedQueryStatementException;
 use Titon\Model\Query;
 use Titon\Model\Query\Expr;
 use Titon\Model\Query\Func;
@@ -27,7 +27,7 @@ use Titon\Utility\String;
 use \Closure;
 
 /**
- * Provides shared dialect functionality as well as MySQL style statement building.
+ * Provides shared dialect functionality and support for attribute, keyword, clause and statement formatting.
  *
  * @package Titon\Model\Driver\Dialect
  */
@@ -160,214 +160,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 		parent::__construct();
 
 		$this->setDriver($driver);
-	}
-
-	/**
-	 * Build the CREATE INDEX query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildCreateIndex(Query $query) {
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::CREATE_INDEX));
-		$params = $params + [
-			'index' => $this->formatTable($query->getAlias()),
-			'table' => $this->formatTable($query->getTable()),
-			'fields' => $this->formatFields($query)
-		];
-
-		return $this->renderStatement($this->getStatement(Query::CREATE_INDEX), $params);
-	}
-
-	/**
-	 * Build the CREATE TABLE query. Requires a table schema object.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 * @throws \Titon\Model\Exception\InvalidSchemaException
-	 */
-	public function buildCreateTable(Query $query) {
-		$schema = $query->getSchema();
-
-		if (!$schema) {
-			throw new InvalidSchemaException('Table creation requires a valid schema object');
-		}
-
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::CREATE_TABLE));
-		$params = $params + [
-			'table' => $this->formatTable($schema->getTable()),
-			'columns' => $this->formatColumns($schema),
-			'keys' => $this->formatTableKeys($schema),
-			'options' => $this->formatTableOptions($schema->getOptions())
-		];
-
-		return $this->renderStatement($this->getStatement(Query::CREATE_TABLE), $params);
-	}
-
-	/**
-	 * Build the DELETE query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildDelete(Query $query) {
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DELETE));
-		$params = $params + [
-			'table' => $this->formatTable($query->getTable(), $query->getAlias()),
-			'joins' => $this->formatJoins($query->getJoins()),
-			'where' => $this->formatWhere($query->getWhere()),
-			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimit($query->getLimit()),
-		];
-
-		return $this->renderStatement($this->getStatement(Query::DELETE), $params);
-	}
-
-	/**
-	 * Build the DROP INDEX query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildDropIndex(Query $query) {
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DROP_INDEX));
-		$params = $params + [
-			'index' => $this->formatTable($query->getAlias()),
-			'table' => $this->formatTable($query->getTable())
-		];
-
-		return $this->renderStatement($this->getStatement(Query::DROP_INDEX), $params);
-	}
-
-	/**
-	 * Build the DROP TABLE query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildDropTable(Query $query) {
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DROP_TABLE));
-		$params = $params + [
-			'table' => $this->formatTable($query->getTable())
-		];
-
-		return $this->renderStatement($this->getStatement(Query::DROP_TABLE), $params);
-	}
-
-	/**
-	 * Build the INSERT query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildInsert(Query $query) {
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
-		$params = $params + [
-			'table' => $this->formatTable($query->getTable()),
-			'fields' => $this->formatFields($query),
-			'values' => $this->formatValues($query)
-		];
-
-		return $this->renderStatement($this->getStatement(Query::INSERT), $params);
-	}
-
-	/**
-	 * Build the INSERT query with multiple record support.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildMultiInsert(Query $query) {
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
-		$params = $params + [
-			'table' => $this->formatTable($query->getTable()),
-			'fields' => $this->formatFields($query),
-			'values' => $this->formatValues($query)
-		];
-
-		return $this->renderStatement($this->getStatement(Query::INSERT), $params);
-	}
-
-	/**
-	 * Build the SELECT query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildSelect(Query $query) {
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::SELECT));
-		$params = $params + [
-			'fields' => $this->formatFields($query),
-			'table' => $this->formatTable($query->getTable(), $query->getAlias()),
-			'joins' => $this->formatJoins($query->getJoins()),
-			'where' => $this->formatWhere($query->getWhere()),
-			'groupBy' => $this->formatGroupBy($query->getGroupBy()),
-			'having' => $this->formatHaving($query->getHaving()),
-			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimitOffset($query->getLimit(), $query->getOffset()),
-		];
-
-		return $this->renderStatement($this->getStatement(Query::SELECT), $params);
-	}
-
-	/**
-	 * Build a sub-query.
-	 *
-	 * @param \Titon\Model\Query\SubQuery $query
-	 * @return string
-	 */
-	public function buildSubQuery(SubQuery $query) {
-
-		// Reset the alias since statement would have double aliasing
-		$alias = $query->getAlias();
-		$query->asAlias(null);
-
-		$output = sprintf($this->getClause(self::SUB_QUERY), trim($this->buildSelect($query), ';'));
-
-		if ($alias) {
-			$output = sprintf($this->getClause(self::AS_ALIAS), $output, $this->quote($alias));
-		}
-
-		if ($filter = $query->getFilter()) {
-			$output = $this->getKeyword($filter) . ' ' . $output;
-		}
-
-		return $output;
-	}
-
-	/**
-	 * Build the TRUNCATE query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildTruncate(Query $query) {
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::TRUNCATE));
-		$params = $params + [
-			'table' => $this->formatTable($query->getTable())
-		];
-
-		return $this->renderStatement($this->getStatement(Query::TRUNCATE), $params);
-	}
-
-	/**
-	 * Build the UPDATE query.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @return string
-	 */
-	public function buildUpdate(Query $query) {
-		$params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::UPDATE));
-		$params = $params + [
-			'fields' => $this->formatFields($query),
-			'table' => $this->formatTable($query->getTable(), $query->getAlias()),
-			'joins' => $this->formatJoins($query->getJoins()),
-			'where' => $this->formatWhere($query->getWhere()),
-			'orderBy' => $this->formatOrderBy($query->getOrderBy()),
-			'limit' => $this->formatLimit($query->getLimit()),
-		];
-
-		return $this->renderStatement($this->getStatement(Query::UPDATE), $params);
 	}
 
 	/**
@@ -506,10 +298,10 @@ abstract class AbstractDialect extends Base implements Dialect {
 
 			// EXISTS and NOT EXISTS doesn't have a field or operator
 			if (in_array($value->getFilter(), [SubQuery::EXISTS, SubQuery::NOT_EXISTS])) {
-				$clause = $this->buildSubQuery($value);
+				$clause = $this->formatSubQuery($value);
 
 			} else {
-				$clause = str_replace('?', $this->buildSubQuery($value), $clause);
+				$clause = str_replace('?', $this->formatSubQuery($value), $clause);
 			}
 		}
 
@@ -638,7 +430,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 					$columns[] = $this->formatExpression($field);
 
 				} else if ($field instanceof SubQuery) {
-					$columns[] = $this->buildSubQuery($field);
+					$columns[] = $this->formatSubQuery($field);
 
 				} else {
 					$columns[] = $alias . $this->quote($field);
@@ -691,7 +483,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$value = $this->formatFunction($value);
 
 			} else if ($value instanceof SubQuery) {
-				$value = $this->buildSubQuery($value);
+				$value = $this->formatSubQuery($value);
 
 			} else if ($type === Func::FIELD) {
 				$value = $this->quote($value);
@@ -846,6 +638,36 @@ abstract class AbstractDialect extends Base implements Dialect {
 		}
 
 		return implode(' ' . $this->getKeyword($predicate->getType()) . ' ', $output);
+	}
+
+	/**
+	 * Format a sub-query.
+	 *
+	 * @param \Titon\Model\Query\SubQuery $query
+	 * @return string
+	 * @throws \Titon\Model\Exception\UnsupportedQueryStatementException
+	 */
+	public function formatSubQuery(SubQuery $query) {
+
+		// Reset the alias since statement would have double aliasing
+		$alias = $query->getAlias();
+		$query->asAlias(null);
+
+		if (method_exists($this, 'buildSelect')) {
+			$output = sprintf($this->getClause(self::SUB_QUERY), trim($this->buildSelect($query), ';'));
+		} else {
+			throw new UnsupportedQueryStatementException('Sub-query building requires a buildSelect() method');
+		}
+
+		if ($alias) {
+			$output = sprintf($this->getClause(self::AS_ALIAS), $output, $this->quote($alias));
+		}
+
+		if ($filter = $query->getFilter()) {
+			$output = $this->getKeyword($filter) . ' ' . $output;
+		}
+
+		return $output;
 	}
 
 	/**

@@ -170,6 +170,8 @@ interface Driver {
 
 	/**
 	 * Reset the driver for the next query.
+	 *
+	 * @return \Titon\Model\Driver
 	 */
 	public function reset();
 

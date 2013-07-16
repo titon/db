@@ -39,7 +39,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 * }
 	 */
 	protected $_config = [
-		'dsn' => '',
+		'dsn' => ''
 	];
 
 	/**
