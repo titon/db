@@ -123,6 +123,9 @@ class QueryTest extends TestCase {
 
 		$this->object->groupBy('title');
 		$this->assertEquals(['id', 'created', 'title'], $this->object->getGroupBy());
+
+		$this->object->groupBy(['content', 'modified']);
+		$this->assertEquals(['id', 'created', 'title', 'content', 'modified'], $this->object->getGroupBy());
 	}
 
 	/**
@@ -225,6 +228,14 @@ class QueryTest extends TestCase {
 		} catch (Exception $e) {
 			$this->assertTrue(true);
 		}
+
+		$rand1 = new Query\Func('RAND');
+		$this->object->orderBy('RAND');
+		$this->assertEquals(['id' => 'desc', 'created' => 'asc', $rand1], $this->object->getOrderBy());
+
+		$rand2 = new Query\Func('RAND');
+		$this->object->orderBy($rand2);
+		$this->assertEquals(['id' => 'desc', 'created' => 'asc', $rand1, $rand2], $this->object->getOrderBy());
 	}
 
 	/**
@@ -367,6 +378,23 @@ class QueryTest extends TestCase {
 		} catch (Exception $e) {
 			$this->assertTrue(true);
 		}
+
+		// Multiple relations
+		$this->object->with(['Profile', 'Country']);
+		$this->assertEquals(['Profile', 'Country'], array_keys($this->object->getRelationQueries()));
+
+		// Test custom query
+		try {
+			$query = new Query(Query::SELECT, new User());
+			$query->with('Profile', new Query(Query::DELETE, new User()));
+
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
+
+		$query = new Query(Query::SELECT, new User());
+		$query->with('Profile', new Query(Query::SELECT, new User()));
 	}
 
 	/**
@@ -515,6 +543,18 @@ class QueryTest extends TestCase {
 				'params' => []
 			]
 		]), json_encode($query));
+	}
+
+	/**
+	 * Test where and having objects persist through cloning.
+	 */
+	public function testCloning() {
+		$query1 = new Query(Query::SELECT, new User());
+		$query1->where('id', 1)->having('id', '>', 1);
+
+		$query2 = clone $query1;
+
+		$this->assertEquals($query1, $query2);
 	}
 
 }

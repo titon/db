@@ -8,6 +8,7 @@
 namespace Titon\Model\Driver\Type;
 
 use DateTime;
+use PDO;
 use Titon\Model\Driver\Type\TimeType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
@@ -46,6 +47,27 @@ class TimeTypeTest extends TestCase {
 		$this->assertSame('21:05:29', $this->object->to('21:05:29'));
 		$this->assertSame('12:33:00', $this->object->to('June 6th 1985, 12:33pm'));
 		$this->assertSame('02:44:55', $this->object->to(new DateTime('02:44:55')));
+	}
+
+	/**
+	 * Test name string.
+	 */
+	public function testGetName() {
+		$this->assertEquals('time', $this->object->getName());
+	}
+
+	/**
+	 * Test PDO type.
+	 */
+	public function testGetBindingType() {
+		$this->assertEquals(PDO::PARAM_STR, $this->object->getBindingType());
+	}
+
+	/**
+	 * Test schema options.
+	 */
+	public function testGetDefaultOptions() {
+		$this->assertEquals(['null' => true, 'default' => null], $this->object->getDefaultOptions());
 	}
 
 }

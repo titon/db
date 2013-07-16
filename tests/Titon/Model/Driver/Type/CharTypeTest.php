@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver\Type;
 
+use PDO;
 use Titon\Model\Driver\Type\CharType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
@@ -47,6 +48,27 @@ class CharTypeTest extends TestCase {
 		$this->assertSame('1', $this->object->to(true));
 		$this->assertSame('', $this->object->to(false));
 		$this->assertSame('', $this->object->to(null));
+	}
+
+	/**
+	 * Test name string.
+	 */
+	public function testGetName() {
+		$this->assertEquals('char', $this->object->getName());
+	}
+
+	/**
+	 * Test PDO type.
+	 */
+	public function testGetBindingType() {
+		$this->assertEquals(PDO::PARAM_STR, $this->object->getBindingType());
+	}
+
+	/**
+	 * Test schema options.
+	 */
+	public function testGetDefaultOptions() {
+		$this->assertEquals([], $this->object->getDefaultOptions());
 	}
 
 }

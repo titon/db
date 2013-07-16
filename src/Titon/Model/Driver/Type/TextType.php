@@ -20,7 +20,7 @@ class TextType extends AbstractType {
 	 * {@inheritdoc}
 	 */
 	public function getBindingType() {
-		return PDO::PARAM_LOB;
+		return PDO::PARAM_STR;
 	}
 
 	/**

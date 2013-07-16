@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver\Type;
 
+use PDO;
 use Titon\Model\Driver\Type\IntType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
@@ -46,6 +47,27 @@ class IntTypeTest extends TestCase {
 		$this->assertSame(456, $this->object->to(456));
 		$this->assertSame(666, $this->object->to('666'));
 		$this->assertSame(0, $this->object->to('abc'));
+	}
+
+	/**
+	 * Test name string.
+	 */
+	public function testGetName() {
+		$this->assertEquals('int', $this->object->getName());
+	}
+
+	/**
+	 * Test PDO type.
+	 */
+	public function testGetBindingType() {
+		$this->assertEquals(PDO::PARAM_INT, $this->object->getBindingType());
+	}
+
+	/**
+	 * Test schema options.
+	 */
+	public function testGetDefaultOptions() {
+		$this->assertEquals([], $this->object->getDefaultOptions());
 	}
 
 }

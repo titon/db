@@ -9,6 +9,7 @@ namespace Titon\Model\Driver;
 
 use Titon\Model\Driver\Schema;
 use Titon\Test\TestCase;
+use \Exception;
 
 /**
  * Test class for Titon\Model\Driver\Schema.
@@ -106,6 +107,23 @@ class SchemaTest extends TestCase {
 		$this->assertEquals([
 			'status' => ['status']
 		], $this->object->getIndexes());
+
+		// Single
+		$this->assertEquals([
+			'type' => 'varchar',
+			'length' => 30,
+			'unique' => true,
+			'field' => 'username',
+			'null' => true
+		], $this->object->getColumn('username'));
+
+		try {
+			$this->object->getColumn('foobar');
+
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
 	}
 
 	/**
@@ -342,6 +360,84 @@ class SchemaTest extends TestCase {
 			'engine' => 'InnoDB',
 			'comment' => 'Foobar'
 		], $this->object->getOptions());
+	}
+
+	/**
+	 * Test object serialization.
+	 */
+	public function testSerialize() {
+		$this->object->addColumn('id', [
+			'type' => 'int',
+			'primary' => true,
+			'ai' => true,
+			'null' => false
+		]);
+
+		$this->object->addColumn('user_id', [
+			'type' => 'int',
+			'foreign' => 'users.id',
+			'index' => true,
+			'null' => true
+		]);
+
+		$this->object->addColumn('name', [
+			'type' => 'varchar',
+			'length' => 200,
+			'index' => true,
+			'unique' => true,
+			'null' => false
+		]);
+
+		$this->assertEquals([
+			'columns' => [
+				'id' => [
+					'type' => 'int',
+					'primary' => true,
+					'ai' => true,
+					'field' => 'id'
+				],
+				'user_id' => [
+					'type' => 'int',
+					'foreign' => 'users.id',
+					'index' => true,
+					'null' => true,
+					'field' => 'user_id'
+				],
+				'name' => [
+					'type' => 'varchar',
+					'length' => 200,
+					'index' => true,
+					'unique' => true,
+					'field' => 'name'
+				]
+			],
+			'foreignKeys' => [
+				'user_id' => [
+					'references' => 'users.id',
+					'column' => 'user_id',
+					'constraint' => ''
+				]
+			],
+			'indexes' => [
+				'user_id' => ['user_id'],
+				'name' => ['name']
+			],
+			'options' => [],
+			'primaryKey' => [
+				'constraint' => '',
+				'columns' => ['id']
+			],
+			'table' => 'table',
+			'uniqueKeys' => [
+				'name' => [
+					'index' => 'name',
+					'constraint' => '',
+					'columns' => ['name']
+				]
+			],
+		], $this->object->jsonSerialize());
+
+		$this->assertEquals($this->object, unserialize(serialize($this->object)));
 	}
 
 }

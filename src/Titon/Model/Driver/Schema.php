@@ -131,10 +131,7 @@ class Schema implements Serializable, JsonSerializable {
 			return ($value !== '' && $value !== false);
 		});
 
-		if ($options['index']) {
-			$this->addIndex($column, $options['index']);
-
-		} else if ($options['primary']) {
+		if ($options['primary']) {
 			$this->addPrimary($column, $options['primary']);
 
 		} else if ($options['unique']) {
@@ -142,6 +139,10 @@ class Schema implements Serializable, JsonSerializable {
 
 		} else if ($options['foreign']) {
 			$this->addForeign($column, $options['foreign']);
+		}
+
+		if ($options['index']) {
+			$this->addIndex($column, $options['index']);
 		}
 
 		return $this;

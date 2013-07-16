@@ -31,7 +31,7 @@ class TypeTest extends TestCase {
 		$this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('longblob', $driver));
 
 		try {
-			AbstractType::factory('longblob', $driver);
+			$this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('foobar', $driver));
 			$this->assertTrue(false);
 		} catch (Exception $e) {
 			$this->assertTrue(true);

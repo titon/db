@@ -67,13 +67,13 @@ class PredicateTest extends TestCase {
 	 * Test OR sub-grouping.
 	 */
 	public function testEither() {
-		$also = new Predicate(Predicate::EITHER);
-		$also->notEq('level', 1)->notEq('level', 2);
+		$either = new Predicate(Predicate::EITHER);
+		$either->notEq('level', 1)->notEq('level', 2);
 
 		$this->object->either(function() {
 			$this->notEq('level', 1)->notEq('level', 2);
 		});
-		$this->assertEquals([$also], $this->object->getParams());
+		$this->assertEquals([$either], $this->object->getParams());
 	}
 
 	/**
@@ -95,6 +95,15 @@ class PredicateTest extends TestCase {
 		$this->object->eq('name', null);
 		$expected['nameisNull'] = new Expr('name', 'isNull', null);
 
+		$this->assertEquals($expected, $this->object->getParams());
+	}
+
+	/**
+	 * Test adding params.
+	 */
+	public function testExpr() {
+		$this->object->expr('id', '!=', 1);
+		$expected = ['id!=1' => new Expr('id', '!=', 1)];
 		$this->assertEquals($expected, $this->object->getParams());
 	}
 
@@ -158,6 +167,32 @@ class PredicateTest extends TestCase {
 		$this->assertEquals([
 			'size<1234' => new Expr('size', '<', 1234)
 		], $this->object->getParams());
+	}
+
+	/**
+	 * Test XOR sub-grouping.
+	 */
+	public function testMaybe() {
+		$maybe = new Predicate(Predicate::MAYBE);
+		$maybe->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
+
+		$this->object->maybe(function() {
+			$this->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
+		});
+		$this->assertEquals([$maybe], $this->object->getParams());
+	}
+
+	/**
+	 * Test NOR sub-grouping.
+	 */
+	public function testNeither() {
+		$neither = new Predicate(Predicate::NEITHER);
+		$neither->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
+
+		$this->object->neither(function() {
+			$this->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
+		});
+		$this->assertEquals([$neither], $this->object->getParams());
 	}
 
 	/**

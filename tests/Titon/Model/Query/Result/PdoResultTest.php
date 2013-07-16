@@ -39,6 +39,15 @@ class PdoResultTest extends TestCase {
 	}
 
 	/**
+	 * Test statement is generated when cast to string.
+	 */
+	public function testToString() {
+		$result = $this->object->getDriver()->query($this->object->select()->where('id', 1));
+
+		$this->assertRegExp('/\[SQL\] SELECT \* FROM `users` WHERE `id` = 1; \[TIME\] [0-9\.,]+ \[COUNT\] [0-9]+ \[STATE\] (Executed|Prepared)/i', (string) $result);
+	}
+
+	/**
 	 * Test a count of records is returned.
 	 */
 	public function testCount() {

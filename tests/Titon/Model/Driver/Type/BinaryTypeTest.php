@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver\Type;
 
+use PDO;
 use Titon\Model\Driver\Type\BinaryType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
@@ -42,6 +43,27 @@ class BinaryTypeTest extends TestCase {
 		$this->assertSame('1100010011001000110011', $this->object->to('1100010011001000110011'));
 		$this->assertSame('1100010011001000110011', $this->object->to(123));
 		$this->assertSame('11000010110001001100011', $this->object->to('abc'));
+	}
+
+	/**
+	 * Test name string.
+	 */
+	public function testGetName() {
+		$this->assertEquals('binary', $this->object->getName());
+	}
+
+	/**
+	 * Test PDO type.
+	 */
+	public function testGetBindingType() {
+		$this->assertEquals(PDO::PARAM_STR, $this->object->getBindingType());
+	}
+
+	/**
+	 * Test schema options.
+	 */
+	public function testGetDefaultOptions() {
+		$this->assertEquals([], $this->object->getDefaultOptions());
 	}
 
 }

@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver\Type;
 
+use PDO;
 use Titon\Model\Driver\Type\DecimalType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
@@ -43,6 +44,27 @@ class DecimalTypeTest extends TestCase {
 		$this->assertSame(1234.25, $this->object->to(1234.25));
 		$this->assertSame(5678.9, $this->object->to(5678.900));
 		$this->assertSame(666.1337, $this->object->to('666.1337'));
+	}
+
+	/**
+	 * Test name string.
+	 */
+	public function testGetName() {
+		$this->assertEquals('decimal', $this->object->getName());
+	}
+
+	/**
+	 * Test PDO type.
+	 */
+	public function testGetBindingType() {
+		$this->assertEquals(PDO::PARAM_STR, $this->object->getBindingType());
+	}
+
+	/**
+	 * Test schema options.
+	 */
+	public function testGetDefaultOptions() {
+		$this->assertEquals(['length' => '8,2'], $this->object->getDefaultOptions());
 	}
 
 }

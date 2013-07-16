@@ -267,6 +267,8 @@ class Query implements Serializable, JsonSerializable {
 	 * @return \Titon\Model\Entity
 	 */
 	public function fetch($options = true) {
+		$this->limit(1);
+
 		return $this->getModel()->fetch($this, $options);
 	}
 
@@ -552,7 +554,10 @@ class Query implements Serializable, JsonSerializable {
 	 */
 	public function limit($limit, $offset = 0) {
 		$this->_limit = (int) $limit;
-		$this->offset($offset);
+
+		if ($offset) {
+			$this->offset($offset);
+		}
 
 		return $this;
 	}

@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver\Type;
 
+use PDO;
 use Titon\Model\Driver\Type\SerialType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
@@ -43,6 +44,27 @@ class SerialTypeTest extends TestCase {
 		$this->assertSame('1337', $this->object->to(1337));
 		$this->assertSame('1234567890', $this->object->to(1234567890));
 		$this->assertSame('12345678901234567890', $this->object->to('12345678901234567890'));
+	}
+
+	/**
+	 * Test name string.
+	 */
+	public function testGetName() {
+		$this->assertEquals('serial', $this->object->getName());
+	}
+
+	/**
+	 * Test PDO type.
+	 */
+	public function testGetBindingType() {
+		$this->assertEquals(PDO::PARAM_STR, $this->object->getBindingType());
+	}
+
+	/**
+	 * Test schema options.
+	 */
+	public function testGetDefaultOptions() {
+		$this->assertEquals(['type' => 'bigint', 'null' => false, 'unsigned' => true, 'ai' => true, 'primary' => true], $this->object->getDefaultOptions());
 	}
 
 }

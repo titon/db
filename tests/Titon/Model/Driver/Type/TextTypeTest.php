@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver\Type;
 
+use PDO;
 use Titon\Model\Driver\Type\TextType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
@@ -43,6 +44,27 @@ class TextTypeTest extends TestCase {
 		$this->assertSame(123, $this->object->to(123));
 		$this->assertSame('abc', $this->object->to('abc'));
 		$this->assertSame(null, $this->object->to(null));
+	}
+
+	/**
+	 * Test name string.
+	 */
+	public function testGetName() {
+		$this->assertEquals('text', $this->object->getName());
+	}
+
+	/**
+	 * Test PDO type.
+	 */
+	public function testGetBindingType() {
+		$this->assertEquals(PDO::PARAM_STR, $this->object->getBindingType());
+	}
+
+	/**
+	 * Test schema options.
+	 */
+	public function testGetDefaultOptions() {
+		$this->assertEquals([], $this->object->getDefaultOptions());
 	}
 
 }

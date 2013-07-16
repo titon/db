@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Driver\Type;
 
+use PDO;
 use Titon\Model\Driver\Type\BooleanType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
@@ -49,6 +50,27 @@ class BooleanTypeTest extends TestCase {
 		$this->assertSame(false, $this->object->to(0));
 		$this->assertSame(true, $this->object->to('abc'));
 		$this->assertSame(false, $this->object->to(null));
+	}
+
+	/**
+	 * Test name string.
+	 */
+	public function testGetName() {
+		$this->assertEquals('boolean', $this->object->getName());
+	}
+
+	/**
+	 * Test PDO type.
+	 */
+	public function testGetBindingType() {
+		$this->assertEquals(PDO::PARAM_BOOL, $this->object->getBindingType());
+	}
+
+	/**
+	 * Test schema options.
+	 */
+	public function testGetDefaultOptions() {
+		$this->assertEquals([], $this->object->getDefaultOptions());
 	}
 
 }
