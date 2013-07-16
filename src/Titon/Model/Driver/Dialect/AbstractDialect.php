@@ -462,16 +462,58 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function formatExpression(Expr $expr) {
-		$field = $this->quote($expr->getField());
-
 		if ($expr->getOperator() === Expr::AS_ALIAS) {
-			return sprintf($this->getClause(self::AS_ALIAS), $field, $expr->getValue());
+			return sprintf($this->getClause(self::AS_ALIAS), $this->quote($expr->getField()), $expr->getValue());
 
-		} else if ($expr->useValue()) {
-			return sprintf($this->getClause(self::EXPRESSION), $field, $expr->getOperator());
+		} else if (!$expr->useValue()) {
+			return $this->quote($expr->getField());
 		}
 
-		return $field;
+		$field = $expr->getField();
+		$operator = $expr->getOperator();
+		$value = $expr->getValue();
+		$isSubQuery = ($value instanceof Query);
+
+		// Function instead of field
+		if ($field instanceof Func) {
+			$field = $this->formatFunction($field);
+
+		// Regular clause
+		} else {
+			$field = $this->quote($field);
+		}
+
+		// IN has special case
+		if ($operator === Expr::IN || $operator === Expr::NOT_IN) {
+			if ($isSubQuery) {
+				$clause = sprintf($this->getClause($operator), $field, '?');
+				$clause = str_replace(['(', ')'], '', $clause);
+			} else {
+				$clause = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($value), '?')));
+			}
+
+		// Operators with clauses
+		} else if ($this->hasClause($operator)) {
+			$clause = sprintf($this->getClause($operator), $field);
+
+		// Basic operator
+		} else {
+			$clause = sprintf($this->getClause(self::EXPRESSION), $field, $operator);
+		}
+
+		// Replace ? with sub-query statement
+		if ($isSubQuery) {
+
+			// EXISTS and NOT EXISTS doesn't have a field or operator
+			if (in_array($value->getFilter(), [SubQuery::EXISTS, SubQuery::NOT_EXISTS])) {
+				$clause = $this->buildSubQuery($value);
+
+			} else {
+				$clause = str_replace('?', $this->buildSubQuery($value), $clause);
+			}
+		}
+
+		return $clause;
 	}
 
 	/**
@@ -799,51 +841,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 				$output[] = sprintf($this->getClause(self::GROUP), $this->formatPredicate($param));
 
 			} else if ($param instanceof Expr) {
-				$field = $param->getField();
-				$operator = $param->getOperator();
-				$value = $param->getValue();
-				$isSubQuery = ($value instanceof Query);
-
-				// Function instead of field
-				if ($field instanceof Func) {
-					$field = $this->formatFunction($field);
-
-				// Regular clause
-				} else {
-					$field = $this->quote($field);
-				}
-
-				// IN has special case
-				if ($operator === Expr::IN || $operator === Expr::NOT_IN) {
-					if ($isSubQuery) {
-						$clause = sprintf($this->getClause($operator), $field, '?');
-						$clause = str_replace(['(', ')'], '', $clause);
-					} else {
-						$clause = sprintf($this->getClause($operator), $field, implode(', ', array_fill(0, count($value), '?')));
-					}
-
-				// Operators with clauses
-				} else if ($this->hasClause($operator)) {
-					$clause = sprintf($this->getClause($operator), $field);
-
-				// Basic operator
-				} else {
-					$clause = sprintf($this->getClause(self::EXPRESSION), $field, $operator);
-				}
-
-				// Replace ? with sub-query statement
-				if ($isSubQuery) {
-
-					// EXISTS and NOT EXISTS doesn't have a field or operator
-					if (in_array($value->getFilter(), [SubQuery::EXISTS, SubQuery::NOT_EXISTS])) {
-						$clause = $this->buildSubQuery($value);
-
-					} else {
-						$clause = str_replace('?', $this->buildSubQuery($value), $clause);
-					}
-				}
-
-				$output[] = $clause;
+				$output[] = $this->formatExpression($param);
 			}
 		}
 

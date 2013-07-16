@@ -21,9 +21,11 @@ class SubQuery extends Query {
 
 	const ALL = Dialect::ALL;
 	const ANY = Dialect::ANY;
-	const SOME = Dialect::SOME;
 	const EXISTS = Dialect::EXISTS;
+	const IN = Dialect::IN;
 	const NOT_EXISTS = Dialect::NOT_EXISTS;
+	const NOT_IN = Dialect::NOT_IN;
+	const SOME = Dialect::SOME;
 
 	/**
 	 * Comparison filter.
@@ -49,7 +51,7 @@ class SubQuery extends Query {
 	 * @throws \Titon\Model\Exception\InvalidArgumentException
 	 */
 	public function withFilter($filter) {
-		if (!in_array($filter, [self::ALL, self::ANY, self::SOME, self::EXISTS, self::NOT_EXISTS])) {
+		if (!in_array($filter, [self::ALL, self::ANY, self::SOME, self::EXISTS, self::NOT_EXISTS, self::IN, self::NOT_IN])) {
 			throw new InvalidArgumentException('Invalid filter type for sub-query');
 		}
 

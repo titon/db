@@ -19,9 +19,10 @@ use \JsonSerializable;
  */
 class Predicate implements Serializable, JsonSerializable {
 
-	const ALSO = Dialect::ALSO;
-	const EITHER = Dialect::EITHER;
-	const MAYBE = Dialect::MAYBE;
+	const ALSO = Dialect::ALSO; // AND
+	const EITHER = Dialect::EITHER; // OR
+	const NEITHER = Dialect::NEITHER; // NOR
+	const MAYBE = Dialect::MAYBE; // XOR
 
 	/**
 	 * Type of predicate, either AND or OR.
@@ -107,10 +108,13 @@ class Predicate implements Serializable, JsonSerializable {
 	 *
 	 * @param \Closure $callback
 	 * @param \Titon\Model\Query $query
+	 * @return \Titon\Model\Query\Predicate
 	 */
 	public function bindCallback(Closure $callback, $query = null) {
 		$callback = $callback->bindTo($this, 'Titon\Model\Query\Predicate');
 		$callback($query);
+
+		return $this;
 	}
 
 	/**
@@ -147,6 +151,18 @@ class Predicate implements Serializable, JsonSerializable {
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Alias for add().
+	 *
+	 * @param string $field
+	 * @param string $op
+	 * @param mixed $value
+	 * @return \Titon\Model\Query\Predicate
+	 */
+	public function expr($field, $op, $value) {
+		return $this->add($field, $op, $value);
 	}
 
 	/**
@@ -253,6 +269,21 @@ class Predicate implements Serializable, JsonSerializable {
 	 */
 	public function maybe(Closure $callback) {
 		$predicate = new Predicate(self::MAYBE);
+		$predicate->bindCallback($callback);
+
+		$this->_params[] = $predicate;
+
+		return $this;
+	}
+
+	/**
+	 * Generate a new sub-grouped NOR predicate.
+	 *
+	 * @param \Closure $callback
+	 * @return \Titon\Model\Query\Predicate
+	 */
+	public function neither(Closure $callback) {
+		$predicate = new Predicate(self::NEITHER);
 		$predicate->bindCallback($callback);
 
 		$this->_params[] = $predicate;

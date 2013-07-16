@@ -58,7 +58,9 @@ interface Dialect {
 	const LIMIT = 'limit';
 	const LIMIT_OFFSET = 'limitOffset';
 	const MAYBE = 'xor';
+	const NEITHER = 'nor';
 	const NO_ACTION = 'noAction';
+	const NOT = 'not';
 	const NOT_BETWEEN = 'notBetween';
 	const NOT_EXISTS = 'notExists';
 	const NOT_IN = 'notIn';

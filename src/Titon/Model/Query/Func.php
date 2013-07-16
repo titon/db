@@ -71,7 +71,7 @@ class Func implements Serializable, JsonSerializable {
 	 * @param string $separator
 	 */
 	public function __construct($name, $arguments = [], $separator = ', ') {
-		$this->_name = strtoupper($name);
+		$this->_name = $name;
 		$this->_separator = $separator;
 
 		if (!is_array($arguments)) {
