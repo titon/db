@@ -110,9 +110,7 @@ class Expr implements Serializable, JsonSerializable {
 	 * @return bool
 	 */
 	public function useValue() {
-		$operator = $this->getOperator();
-
-		return ($operator !== null && $this->getValue() !== null) || ($operator === self::NULL || $operator === self::NOT_NULL);
+		return ($this->getOperator() !== null && $this->getValue() !== null);
 	}
 
 	/**

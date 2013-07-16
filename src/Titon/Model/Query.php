@@ -494,7 +494,7 @@ class Query implements Serializable, JsonSerializable {
 	/**
 	 * Set what fields to group on.
 	 *
-	 * @param string $field,...
+	 * @param string $fields,...
 	 * @return \Titon\Model\Query
 	 */
 	public function groupBy() {

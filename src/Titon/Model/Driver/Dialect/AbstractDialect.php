@@ -254,16 +254,17 @@ abstract class AbstractDialect extends Base implements Dialect {
 	 * @return string
 	 */
 	public function formatExpression(Expr $expr) {
-		if ($expr->getOperator() === Expr::AS_ALIAS) {
-			return sprintf($this->getClause(self::AS_ALIAS), $this->quote($expr->getField()), $expr->getValue());
-
-		} else if (!$expr->useValue()) {
-			return $this->quote($expr->getField());
-		}
-
 		$field = $expr->getField();
 		$operator = $expr->getOperator();
 		$value = $expr->getValue();
+
+		if ($operator === Expr::AS_ALIAS) {
+			return sprintf($this->getClause(self::AS_ALIAS), $this->quote($field), $value);
+
+		} else if (!$expr->useValue() && !($operator === Expr::NULL || $operator === Expr::NOT_NULL)) {
+			return $this->quote($field);
+		}
+
 		$isSubQuery = ($value instanceof Query);
 
 		// Function instead of field
