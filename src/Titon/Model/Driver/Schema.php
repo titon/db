@@ -381,6 +381,15 @@ class Schema implements Serializable, JsonSerializable {
 	}
 
 	/**
+	 * Return true if any column has been defined.
+	 *
+	 * @return bool
+	 */
+	public function hasColumns() {
+		return !empty($this->_columns);
+	}
+
+	/**
 	 * Serialize the schema.
 	 *
 	 * @return string

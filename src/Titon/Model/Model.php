@@ -46,6 +46,13 @@ class Model extends Base implements Callback {
 	use Instanceable, Attachable, Cacheable;
 
 	/**
+	 * ID of last inserted record.
+	 *
+	 * @type int
+	 */
+	public $id;
+
+	/**
 	 * Data or results from the last query.
 	 *
 	 * @type array
@@ -1118,8 +1125,8 @@ class Model extends Base implements Callback {
 			}
 		}
 
-		if ($schema = $this->getSchema()) {
-			$data = array_intersect_key($data, $schema->getColumns());
+		if ($columns = $this->getSchema()->getColumns()) {
+			$data = array_intersect_key($data, $columns);
 		}
 
 		return $related;
@@ -1436,6 +1443,8 @@ class Model extends Base implements Callback {
 		}
 
 		if ($isCreate) {
+			$this->id = $id;
+
 			return $id;
 		}
 
