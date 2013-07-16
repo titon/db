@@ -845,7 +845,7 @@ class Query implements Serializable, JsonSerializable {
 
 		foreach ($fields as $field => $value) {
 			if (is_resource($value)) {
-				$fields[$field] = stream_get_contents($value, -1, 0);
+				$fields[$field] = stream_get_contents($value);
 			}
 		}
 
