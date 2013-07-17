@@ -835,11 +835,15 @@ class Model extends Base implements Callback {
 	 * Fetch a single record by ID.
 	 *
 	 * @param int $id
-	 * @param bool $wrap
+	 * @param mixed $options
+	 * @param \Closure $callback
 	 * @return \Titon\Model\Entity|array
 	 */
-	public function read($id, $wrap = true) {
-		return $this->select()->where($this->getPrimaryKey(), $id)->fetch($wrap);
+	public function read($id, $options = true, Closure $callback = null) {
+		return $this->select()
+			->where($this->getPrimaryKey(), $id)
+			->bindCallback($callback)
+			->fetch($options);
 	}
 
 	/**
