@@ -1,7 +1,14 @@
-# Model v0.4.9 [![Build Status](https://travis-ci.org/titon/Model.png)](https://travis-ci.org/titon/Model) #
+# Model v0.4.10 [![Build Status](https://travis-ci.org/titon/Model.png)](https://travis-ci.org/titon/Model) #
 
 The Titon model package provides a basic database abstraction layer and an object relational mapper.
-Requires the PDO extension for most database connections.
+Supported drivers are implemented in external packages that can be installed through composer.
+
+### Drivers ###
+
+* `MySQL` - https://github.com/titon/Model.MySQL
+* `PostgreSQL` - https://github.com/titon/Model.PostgreSQL
+* `SQLite` - https://github.com/titon/Model.MySQL
+* `MongoDB` - https://github.com/titon/Model.MongoDB
 
 ### Features ###
 
