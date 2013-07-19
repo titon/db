@@ -1112,6 +1112,45 @@ class Model extends Base implements Callback {
 	}
 
 	/**
+	 * Wrap results in the defined entity class and wrap joined data in the originating models entity class.
+	 *
+	 * @param array $results
+	 * @return \Titon\Model\Entity[]
+	 */
+	public function wrapEntities(array $results) {
+		$entity = $this->getEntity();
+
+		if (!$entity) {
+			return $results;
+		}
+
+		foreach ($results as $i => $result) {
+
+			// Wrap data pulled through a join
+			foreach ($result as $key => $value) {
+				if (!is_array($value)) {
+					continue;
+				}
+
+				// Don't wrap collections of entities
+				if (isset($value[0]) && $value[0] instanceof Entity) {
+					continue;
+				}
+
+				if ($this->hasRelation($key)) {
+					$relatedEntity = $this->getRelation($key)->getRelatedModel()->getEntity() ?: $entity;
+
+					$result[$key] = new $relatedEntity($value);
+				}
+			}
+
+			$results[$i] = new $entity($result);
+		}
+
+		return $results;
+	}
+
+	/**
 	 * Extract related model data from an array of complex data.
 	 * Filter out non-schema columns from the data.
 	 *
@@ -1317,31 +1356,8 @@ class Model extends Base implements Callback {
 		$this->data = $results;
 
 		// Wrap the results in entities
-		$entity = $this->getEntity();
-
-		if ($options['wrap'] && $entity) {
-			foreach ($results as $i => $result) {
-
-				// Wrap data pulled through a join
-				foreach ($result as $key => $value) {
-					if (is_array($value)) {
-
-						// Don't wrap collections of entities
-						if (isset($value[0]) && $value[0] instanceof Entity) {
-							continue;
-						}
-
-						if ($this->hasRelation($key)) {
-							$relatedEntity = $this->getRelation($key)->getRelatedModel()->getEntity() ?: $entity;
-							$result[$key] = new $relatedEntity($value);
-						} else {
-							$result[$key] = new $entity($value);
-						}
-					}
-				}
-
-				$results[$i] = new $entity($result);
-			}
+		if ($options['wrap']) {
+			$results = $this->wrapEntities($results);
 		}
 
 		// Reset the driver local cache
