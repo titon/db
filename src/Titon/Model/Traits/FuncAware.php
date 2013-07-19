@@ -24,7 +24,7 @@ trait FuncAware {
 	 * @param string $separator
 	 * @return \Titon\Model\Query\Func
 	 */
-	public function func($name, $arguments = [], $separator = ', ') {
+	public static function func($name, $arguments = [], $separator = ', ') {
 		return new Func($name, $arguments, $separator);
 	}
 

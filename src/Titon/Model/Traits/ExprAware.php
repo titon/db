@@ -24,7 +24,7 @@ trait ExprAware {
 	 * @param mixed $value
 	 * @return \Titon\Model\Query\Expr
 	 */
-	public function expr($field, $operator = null, $value = null) {
+	public static function expr($field, $operator = null, $value = null) {
 		return new Expr($field, $operator, $value);
 	}
 
