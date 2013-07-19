@@ -22,15 +22,6 @@ use \Exception;
 class AbstractUpdateTest extends TestCase {
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test basic database record updating.
 	 */
 	public function testUpdate() {

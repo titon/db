@@ -30,15 +30,6 @@ class PdoResultTest extends TestCase {
 	}
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test statement is generated when cast to string.
 	 */
 	public function testToString() {

@@ -19,15 +19,6 @@ use \Exception;
 class AbstractMiscTest extends TestCase {
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test table creation and deletion.
 	 */
 	public function testCreateDropTable() {

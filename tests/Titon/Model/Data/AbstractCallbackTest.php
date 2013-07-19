@@ -18,15 +18,6 @@ use Titon\Test\TestCase;
 class AbstractCallbackTest extends TestCase {
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test Model::preDelete() callbacks.
 	 */
 	public function testPreDelete() {

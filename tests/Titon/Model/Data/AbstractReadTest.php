@@ -27,15 +27,6 @@ use \Exception;
 class AbstractReadTest extends TestCase {
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test basic fetching of rows.
 	 */
 	public function testFetch() {

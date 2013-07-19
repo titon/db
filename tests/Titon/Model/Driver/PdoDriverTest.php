@@ -48,7 +48,6 @@ class PdoDriverTest extends TestCase {
 	protected function tearDown() {
 		parent::tearDown();
 
-		$this->unloadFixtures();
 		$this->object->disconnect();
 	}
 

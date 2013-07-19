@@ -31,15 +31,6 @@ class ModelTest extends TestCase {
 	}
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test model behavior management.
 	 */
 	public function testAddHasBehaviors() {

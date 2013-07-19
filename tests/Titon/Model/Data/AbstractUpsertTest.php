@@ -18,15 +18,6 @@ use Titon\Test\TestCase;
 class AbstractUpsertTest extends TestCase {
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test that the record is created.
 	 */
 	public function testUpsertNoId() {

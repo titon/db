@@ -27,15 +27,6 @@ class TimestampableBehaviorTest extends TestCase {
 	}
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test created timestamp is appended.
 	 */
 	public function testOnCreate() {

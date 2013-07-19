@@ -21,15 +21,6 @@ use Titon\Test\TestCase;
 class CountableBehaviorTest extends TestCase {
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test that counts are synced on create or update.
 	 */
 	public function testOnUpsertManyToMany() {

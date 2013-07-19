@@ -36,6 +36,8 @@ class DriverTest extends TestCase {
 	 * Disconnect just in case.
 	 */
 	protected function tearDown() {
+		parent::tearDown();
+
 		$this->object->disconnect();
 	}
 

@@ -21,15 +21,6 @@ use \Exception;
 class AbstractDeleteTest extends TestCase {
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test single record deletion.
 	 */
 	public function testDelete() {

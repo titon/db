@@ -18,15 +18,6 @@ use Titon\Test\TestCase;
 class HierarchicalBehaviorTest extends TestCase {
 
 	/**
-	 * Unload fixtures.
-	 */
-	protected function tearDown() {
-		parent::tearDown();
-
-		$this->unloadFixtures();
-	}
-
-	/**
 	 * Test that inserting nodes shifts other nodes around properly.
 	 */
 	public function testCreateNode() {
