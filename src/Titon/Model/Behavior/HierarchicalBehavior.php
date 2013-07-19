@@ -38,7 +38,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 	 * Do not shift the nodes until postSave() just in case the insert fails.
 	 *
 	 * Before an update, remove the left and right fields so that the tree cannot be modified.
-	 * Use moveUp(), moveDown(), sync() or reorder() to update existing nodes.
+	 * Use moveUp(), moveDown(), moveTo(), sync() or reorder() to update existing nodes.
 	 *
 	 * @param int|int[] $id
 	 * @param array $data
@@ -104,21 +104,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 			return;
 		}
 
-		$model = $this->getModel();
-
-		foreach ([$this->config->leftField, $this->config->rightField] as $field) {
-			$query = $model->query(Query::UPDATE)
-				->fields([$field => Query::expr($field, '+', 2)])
-				->where($field, '>=', $this->_saveIndex);
-
-			if ($id) {
-				$query->where($model->getPrimaryKey(), '!=', $id);
-			}
-
-			$query->save();
-		}
-
-		// Reset or we will run into incrementing issues
+		$this->_insertNode($id, $this->_saveIndex);
 		$this->_saveIndex = null;
 	}
 
@@ -175,15 +161,26 @@ class HierarchicalBehavior extends AbstractBehavior {
 	}
 
 	/**
-	 * Return a node by ID.
+	 * Return a node by ID. If $withParent is true, parent data will be joined in.
 	 *
 	 * @param int $id
+	 * @param bool $withParent
 	 * @return array
 	 */
-	public function getNode($id) {
-		return $this->getModel()->select()
-			->where($this->getModel()->getPrimaryKey(), $id)
-			->fetch(false);
+	public function getNode($id, $withParent = false) {
+		$model = $this->getModel();
+		$pk = $model->getPrimaryKey();
+		$query = $model->select();
+
+		if ($withParent) {
+			$query
+				->where($model->getAlias() . '.' . $pk, $id)
+				->leftJoin([$model->getTable(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $pk]);
+		} else {
+			$query->where($pk, $id);
+		}
+
+		return $query->fetch(false);
 	}
 
 	/**
@@ -305,10 +302,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 	 */
 	public function moveDown($id, $count = 1) {
 		$model = $this->getModel();
-		$node = $model->select()
-			->where($model->getAlias() . '.' . $model->getPrimaryKey(), $id)
-			->leftJoin([$model->getTable(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $model->getPrimaryKey()])
-			->fetch(false);
+		$node = $this->getNode($id, true);
 
 		if (!$node || empty($node['Parent'])) {
 			return false;
@@ -368,10 +362,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 	 */
 	public function moveUp($id, $count = 1) {
 		$model = $this->getModel();
-		$node = $model->select()
-			->where($model->getAlias() . '.' . $model->getPrimaryKey(), $id)
-			->leftJoin([$model->getTable(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $model->getPrimaryKey()])
-			->fetch(false);
+		$node = $this->getNode($id, true);
 
 		if (!$node || empty($node['Parent'])) {
 			return false;
@@ -419,6 +410,86 @@ class HierarchicalBehavior extends AbstractBehavior {
 			->save();
 
 		return true;
+	}
+
+	/**
+	 * Move a node between parents and the root. This will re-order the tree accordingly.
+	 * If $parent_id is null, the node will be moved to the root.
+	 *
+	 * @param int $id
+	 * @param int $parent_id
+	 * @return bool
+	 */
+	public function moveTo($id, $parent_id) {
+		$model = $this->getModel();
+		$node = $this->getNode($id);
+
+		if (!$node || $node[$this->config->parentField] == $parent_id) {
+			return false;
+		}
+
+		$left = $this->config->leftField;
+		$right = $this->config->rightField;
+		$data = [];
+
+		// Remove the node and reset others
+		$model->query(Query::UPDATE)
+			->fields([
+				$left => Query::expr($left, '-', 2),
+				$right => Query::expr($right, '-', 2)
+			])
+			->where($right, '>', $node[$right])
+			->save();
+
+		// Insert into parent
+		if ($parent_id && ($parentNode = $this->getNode($parent_id))) {
+			$data = [
+				$left => $parentNode[$right],
+				$right => $parentNode[$right] + 1
+			];
+
+		// Or the root
+		} else if ($lastNode = $this->getLastNode()) {
+			$data = [
+				$left => $lastNode[$right] + 1,
+				$right => $lastNode[$right] + 2
+			];
+		}
+
+		if (!$data) {
+			return false;
+		}
+
+		$model->query(Query::UPDATE)
+			->fields($data + [$this->config->parentField => $parent_id])
+			->where($model->getPrimaryKey(), $id)
+			->save();
+
+		$this->_insertNode($id, $data[$left]);
+
+		return true;
+	}
+
+	/**
+	 * Prepares a node for insertion by moving all following nodes down.
+	 *
+	 * @param int $id
+	 * @param int $index
+	 */
+	protected function _insertNode($id, $index) {
+		$model = $this->getModel();
+
+		foreach ([$this->config->leftField, $this->config->rightField] as $field) {
+			$query = $model->query(Query::UPDATE)
+				->fields([$field => Query::expr($field, '+', 2)])
+				->where($field, '>=', $index);
+
+			if ($id) {
+				$query->where($model->getPrimaryKey(), '!=', $id);
+			}
+
+			$query->save();
+		}
 	}
 
 }

@@ -359,4 +359,36 @@ class HierarchicalBehaviorTest extends TestCase {
 		]], $category->getBehavior('Hierarchical')->getTree(5));
 	}
 
+	/**
+	 * Test that nodes can be moved to other parents.
+	 */
+	public function testMoveTo() {
+		$this->loadFixtures('Categories');
+
+		$category = new Category();
+		$category->addBehavior(new HierarchicalBehavior());
+
+		// Move banana to berry list
+		$category->getBehavior('Hierarchical')->moveTo(2, 5);
+
+		$this->assertEquals([
+			'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 6, 'right' => 15, 'Nodes' => [
+				['id' => 6, 'name' => 'Blueberry', 'parent_id' => 5, 'left' => 7, 'right' => 8],
+				['id' => 7, 'name' => 'Blackberry', 'parent_id' => 5, 'left' => 9, 'right' => 10],
+				['id' => 8, 'name' => 'Strawberry', 'parent_id' => 5, 'left' => 11, 'right' => 12],
+				['id' => 2, 'name' => 'Banana', 'parent_id' => 5, 'left' => 13, 'right' => 14],
+		]], $category->getBehavior('Hierarchical')->getTree(5));
+
+		// Move barley to the root
+		$category->getBehavior('Hierarchical')->moveTo(14, null);
+
+		$this->assertEquals([
+			'id' => 14,
+			'parent_id' => null,
+			'name' => 'Barley',
+			'left' => 51,
+			'right' => 52
+		], $category->getBehavior('Hierarchical')->getLastNode());
+	}
+
 }
