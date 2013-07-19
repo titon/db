@@ -7,7 +7,7 @@ Supported drivers are implemented in external packages that can be installed thr
 
 * `MySQL` - https://github.com/titon/Model.MySQL
 * `PostgreSQL` - https://github.com/titon/Model.PostgreSQL
-* `SQLite` - https://github.com/titon/Model.MySQL
+* `SQLite` - https://github.com/titon/Model.SQLite
 * `MongoDB` - https://github.com/titon/Model.MongoDB
 
 ### Features ###

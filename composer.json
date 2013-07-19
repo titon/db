@@ -1,7 +1,7 @@
 {
 	"name": "titon/model",
 	"type": "library",
-	"description": "The Titon model package provides a basic database abstraction layer and an object relational mapper. Requires the PDO extension for database connections.",
+	"description": "The Titon model package provides a basic database abstraction layer and an object relational mapper.",
 	"keywords": ["titon", "model", "entity", "database", "driver", "query", "connection", "relation", "schema", "predicate", "clause", "dialect", "type"],
 	"homepage": "https://github.com/titon/Model",
 	"license": "BSD-2",
@@ -23,7 +23,7 @@
 		"psr/log": "*"
 	},
 	"suggest": {
-		"titon/cache": "Cache queries using a Storage engine",
+		"titon/cache": "Cache query results using a Storage engine",
 		"psr/log": "Log queries using a Logger"
 	},
 	"autoload": {
