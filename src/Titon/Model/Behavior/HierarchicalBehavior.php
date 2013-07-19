@@ -21,7 +21,6 @@ class HierarchicalBehavior extends AbstractBehavior {
 		'leftField' => 'left',
 		'rightField' => 'right',
 		'treeField' => '',
-		'scope' => [],
 		'onSave' => true,
 		'onDelete' => true
 	];
@@ -494,6 +493,18 @@ class HierarchicalBehavior extends AbstractBehavior {
 	}
 
 	/**
+	 * Re-order the tree.
+	 *
+	 * @param array $order
+	 * @return bool
+	 */
+	public function reOrder(array $order) {
+		$this->_reOrder(null, 0, $order);
+
+		return true;
+	}
+
+	/**
 	 * Prepares a node for insertion by moving all following nodes down.
 	 *
 	 * @param int $id
@@ -513,6 +524,45 @@ class HierarchicalBehavior extends AbstractBehavior {
 
 			$query->save();
 		}
+	}
+
+	/**
+	 * Re-order the tree by recursively looping through all parents and children,
+	 * ordering the results, and generating the correct left and right indexes.
+	 *
+	 * @param int $parent_id
+	 * @param int $left
+	 * @param array $order
+	 * @return int
+	 */
+	protected function _reOrder($parent_id, $left, array $order = []) {
+		$parent = $this->config->parentField;
+		$model = $this->getModel();
+		$pk = $model->getPrimaryKey();
+		$right = $left + 1;
+
+		// Get children and sort
+		$children = $model->select()
+			->where($parent, $parent_id)
+			->orderBy($order)
+			->fetchAll(false);
+
+		foreach ($children as $child) {
+			$right = $this->_reOrder($child[$pk], $right, $order);
+		}
+
+		// Update parent node
+		if ($parent_id) {
+			$model->query(Query::UPDATE)
+				->fields([
+					$this->config->leftField => $left,
+					$this->config->rightField => $right
+				])
+				->where($pk, $parent_id)
+				->save();
+		}
+
+		return $right + 1;
 	}
 
 }
