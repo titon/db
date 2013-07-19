@@ -20,29 +20,70 @@ class HierarchicalBehavior extends AbstractBehavior {
 		'parentField' => 'parent_id',
 		'leftField' => 'left',
 		'rightField' => 'right',
-		'treeField' => 'Nodes',
+		'treeField' => '',
 		'scope' => [],
 		'onSave' => true,
 		'onDelete' => true
 	];
 
 	/**
-	 * Settings to move nodes at a later time.
+	 * Index to start shifting down all nodes after a save.
 	 *
 	 * @type int
 	 */
-	protected $_moveTo;
+	protected $_saveIndex;
 
+	/**
+	 * Before an insert, determine the correct left and right using the parent or root node as a base.
+	 * Do not shift the nodes until postSave() just in case the insert fails.
+	 *
+	 * Before an update, remove the left and right fields so that the tree cannot be modified.
+	 * Use moveUp(), moveDown(), sync() or reorder() to update existing nodes.
+	 *
+	 * @param int|int[] $id
+	 * @param array $data
+	 * @return array
+	 */
 	public function preSave($id, array $data) {
 		if (!$this->config->onSave) {
 			return $data;
 		}
 
 		$parent = $this->config->parentField;
+		$left = $this->config->leftField;
+		$right = $this->config->rightField;
 
 		// Append left and right during create
 		if (!$id) {
-			$data = $this->appendTo(isset($data[$parent]) ? $data[$parent] : null) + $data;
+			$indexes = [];
+
+			// Is a child
+			if (isset($data[$parent])) {
+				if ($node = $this->getNode($data[$parent])) {
+					$parentRight = $node[$right];
+
+					// Save index for moving postSave
+					$this->_saveIndex = $parentRight;
+
+					$indexes = [
+						$left => $parentRight,
+						$right => $parentRight + 1
+					];
+				}
+			}
+
+			// Fallback to root
+			if (empty($indexes)) {
+				$node = $this->getLastNode();
+				$rootRight = $node[$right];
+
+				$indexes = [
+					$left => $rootRight + 1,
+					$right => $rootRight + 2
+				];
+			}
+
+			$data = $indexes + $data;
 
 		// Remove left and right fields from updates as it should not be modified
 		} else {
@@ -52,45 +93,33 @@ class HierarchicalBehavior extends AbstractBehavior {
 		return $data;
 	}
 
-	public function postSave($id, $created = false) {
-		if ($created) {
-			$this->moveDown($this->_moveTo['index'], $this->_moveTo['count'], $id);
-		}
-
-		return;
-	}
-
 	/**
-	 * Determine the left and right values using the parent ID as a base.
+	 * After an insert, shift all nodes down using the base index.
 	 *
-	 * @param int $parent_id
-	 * @return array
+	 * @param int|int[] $id
+	 * @param bool $created
 	 */
-	public function appendTo($parent_id = null) {
-		$left = $this->config->leftField;
-		$right = $this->config->rightField;
-
-		// Is a child
-		if ($parent_id && ($node = $this->getNode($parent_id))) {
-			$parentRight = $node[$right];
-
-			// Save data for moving
-			$this->_moveTo = ['count' => 1, 'index' => $parentRight];
-
-			return [
-				$left => $parentRight,
-				$right => $parentRight + 1
-			];
+	public function postSave($id, $created = false) {
+		if (!$this->config->onSave || !$created || !$this->_saveIndex) {
+			return;
 		}
 
-		// Is root
-		$node = $this->getLastNode();
-		$rootRight = $node[$right];
+		$model = $this->getModel();
 
-		return [
-			$left => $rootRight + 1,
-			$right => $rootRight + 2
-		];
+		foreach ([$this->config->leftField, $this->config->rightField] as $field) {
+			$query = $model->query(Query::UPDATE)
+				->fields([$field => Query::expr($field, '+', 2)])
+				->where($field, '>=', $this->_saveIndex);
+
+			if ($id) {
+				$query->where($model->getPrimaryKey(), '!=', $id);
+			}
+
+			$query->save();
+		}
+
+		// Reset or we will run into incrementing issues
+		$this->_saveIndex = null;
 	}
 
 	/**
@@ -120,6 +149,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 	/**
 	 * Return a list of nodes indented to indicate tree level.
 	 * The $key and $value will be used to extract values from the node.
+	 * If no ID is provided, the top level root will be used.
 	 *
 	 * @param int $id
 	 * @param string $key
@@ -206,7 +236,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 
 	/**
 	 * Map a nested tree using the primary key and display field as the values to populate the list.
-	 * Nested lists will be prepend with a spacer to integrate indentation.
+	 * Nested lists will be prepended with a spacer to indicate indentation.
 	 *
 	 * @param array $nodes
 	 * @param string $key
@@ -224,11 +254,9 @@ class HierarchicalBehavior extends AbstractBehavior {
 		foreach ($nodes as $node) {
 			$count = count($stack);
 
-			if ($count) {
-				while ($stack[$count - 1] < $node[$right]) {
-					array_pop($stack);
-					$count--;
-				}
+			while ($count && $stack[$count - 1] < $node[$right]) {
+				array_pop($stack);
+				$count--;
 			}
 
 			$tree[$node[$key]] = str_repeat($spacer, $count) . $node[$value];
@@ -258,7 +286,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 			$id = $node[$pk];
 
 			if (isset($mappedNodes[$id])) {
-				$node[$this->config->treeField] = $this->mapTree($mappedNodes[$id], $mappedNodes);
+				$node[$this->config->treeField ?: 'Nodes'] = $this->mapTree($mappedNodes[$id], $mappedNodes);
 			}
 
 			$tree[] = $node;
