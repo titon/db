@@ -310,7 +310,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 			->leftJoin([$model->getTable(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $model->getPrimaryKey()])
 			->fetch(false);
 
-		if (!$node || $node['Parent']) {
+		if (!$node || empty($node['Parent'])) {
 			return false;
 		}
 
@@ -347,6 +347,69 @@ class HierarchicalBehavior extends AbstractBehavior {
 			->save();
 
 		// Move node down
+		$model->query(Query::UPDATE)
+			->fields([
+				$left => $newNodeLeft,
+				$right => $newNodeRight
+			])
+			->where($model->getPrimaryKey(), $id)
+			->save();
+
+		return true;
+	}
+
+	/**
+	 * Move a child node up in the list and move down neighboring nodes.
+	 * If the node does not have a parent (is a root node), this method will not work.
+	 *
+	 * @param int $id
+	 * @param int $count
+	 * @return bool
+	 */
+	public function moveUp($id, $count = 1) {
+		$model = $this->getModel();
+		$node = $model->select()
+			->where($model->getAlias() . '.' . $model->getPrimaryKey(), $id)
+			->leftJoin([$model->getTable(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $model->getPrimaryKey()])
+			->fetch(false);
+
+		if (!$node || empty($node['Parent'])) {
+			return false;
+		}
+
+		$left = $this->config->leftField;
+		$right = $this->config->rightField;
+		$nodeLeft = $node[$left];
+		$nodeRight = $node[$right];
+		$inc = ($count * 2);
+
+		$newNodeLeft = $nodeLeft - $inc;
+		$newNodeRight = $nodeRight - $inc;
+
+		// Can't go outside of the parent
+		$parentLeft = $node['Parent'][$left];
+
+		if ($newNodeRight <= $parentLeft) {
+			$newNodeLeft = $parentLeft + 1;
+			$newNodeRight = $parentLeft + 2;
+		}
+
+		// Exit early if the values are the same
+		if ($nodeLeft === $newNodeLeft) {
+			return true;
+		}
+
+		// Move previous nodes down
+		$model->query(Query::UPDATE)
+			->fields([
+				$left => Query::expr($left, '+', 2),
+				$right => Query::expr($right, '+', 2)
+			])
+			->where($left, '>=', $newNodeLeft)
+			->where($right, '<', $nodeLeft)
+			->save();
+
+		// Move node up
 		$model->query(Query::UPDATE)
 			->fields([
 				$left => $newNodeLeft,

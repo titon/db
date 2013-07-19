@@ -308,7 +308,48 @@ class HierarchicalBehaviorTest extends TestCase {
 		]], $category->getBehavior('Hierarchical')->getTree(16));
 
 		// Move strawberry down, but it wont since its already last
-		$category->getBehavior('Hierarchical')->moveDown(8, 2);
+		$category->getBehavior('Hierarchical')->moveDown(8);
+
+		$this->assertEquals([
+			'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15, 'Nodes' => [
+				['id' => 6, 'name' => 'Blueberry', 'parent_id' => 5, 'left' => 9, 'right' => 10],
+				['id' => 7, 'name' => 'Blackberry', 'parent_id' => 5, 'left' => 11, 'right' => 12],
+				['id' => 8, 'name' => 'Strawberry', 'parent_id' => 5, 'left' => 13, 'right' => 14],
+		]], $category->getBehavior('Hierarchical')->getTree(5));
+	}
+
+	/**
+	 * Test child nodes can move up.
+	 */
+	public function testMoveUp() {
+		$this->loadFixtures('Categories');
+
+		$category = new Category();
+		$category->addBehavior(new HierarchicalBehavior());
+
+		// Move lobster up
+		$category->getBehavior('Hierarchical')->moveUp(25);
+
+		$this->assertEquals([
+			'id' => 22, 'name' => 'Shellfish', 'parent_id' => 20, 'left' => 42, 'right' => 49, 'Nodes' => [
+				['id' => 23, 'name' => 'Shrimp', 'parent_id' => 22, 'left' => 43, 'right' => 44],
+				['id' => 25, 'name' => 'Lobster', 'parent_id' => 22, 'left' => 45, 'right' => 46],
+				['id' => 24, 'name' => 'Crab', 'parent_id' => 22, 'left' => 47, 'right' => 48],
+		]], $category->getBehavior('Hierarchical')->getTree(22));
+
+		// Move farro to the top
+		$category->getBehavior('Hierarchical')->moveUp(15, 4);
+
+		$this->assertEquals([
+			'id' => 11, 'name' => 'Grain', 'parent_id' => null, 'left' => 21, 'right' => 30, 'Nodes' => [
+				['id' => 15, 'name' => 'Farro', 'parent_id' => 11, 'left' => 22, 'right' => 23],
+				['id' => 12, 'name' => 'Wheat', 'parent_id' => 11, 'left' => 24, 'right' => 25],
+				['id' => 13, 'name' => 'Bulgur', 'parent_id' => 11, 'left' => 26, 'right' => 27],
+				['id' => 14, 'name' => 'Barley', 'parent_id' => 11, 'left' => 28, 'right' => 29],
+		]], $category->getBehavior('Hierarchical')->getTree(11));
+
+		// Move Blueberry up, but it wont since its already first
+		$category->getBehavior('Hierarchical')->moveUp(6);
 
 		$this->assertEquals([
 			'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15, 'Nodes' => [
