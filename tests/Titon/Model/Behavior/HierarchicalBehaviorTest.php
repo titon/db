@@ -167,6 +167,34 @@ class HierarchicalBehaviorTest extends TestCase {
 	}
 
 	/**
+	 * Test that removing nodes shifts other nodes around properly.
+	 */
+	public function testDeleteNode() {
+		$this->loadFixtures('Categories');
+
+		$category = new Category();
+		$category->addBehavior(new HierarchicalBehavior());
+
+		// Delete pork
+		$category->delete(18);
+
+		$this->assertEquals([
+			'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 36, 'Nodes' => [
+				['id' => 17, 'name' => 'Beef', 'parent_id' => 16, 'left' => 32, 'right' => 33],
+				['id' => 19, 'name' => 'Chicken', 'parent_id' => 16, 'left' => 34, 'right' => 35],
+		]], $category->getBehavior('Hierarchical')->getTree(16));
+
+		// Attempt to delete meat, should fail
+		$this->assertEquals(0, $category->delete(16));
+
+		$this->assertEquals([
+			'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 36, 'Nodes' => [
+				['id' => 17, 'name' => 'Beef', 'parent_id' => 16, 'left' => 32, 'right' => 33],
+				['id' => 19, 'name' => 'Chicken', 'parent_id' => 16, 'left' => 34, 'right' => 35],
+		]], $category->getBehavior('Hierarchical')->getTree(16));
+	}
+
+	/**
 	 * Test that a nested tree of arrays is returned.
 	 */
 	public function testGetTree() {

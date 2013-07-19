@@ -9,6 +9,16 @@ namespace Titon\Model\Behavior;
 
 use Titon\Model\Query;
 
+/**
+ * The HierarchicalBehavior implements a pattern of tree traversal which allows for a nested hierarchy of nodes.
+ * After every node insertion and deletion, the tree is updated accordingly.
+ * The tree is based off the Modified Preorder Tree Traversal (MPTT) pattern.
+ *
+ * @link http://en.wikipedia.org/wiki/Tree_traversal
+ * @link http://www.sitepoint.com/hierarchical-data-database-2/
+ *
+ * @package Titon\Model\Behavior
+ */
 class HierarchicalBehavior extends AbstractBehavior {
 
 	/**
@@ -26,18 +36,69 @@ class HierarchicalBehavior extends AbstractBehavior {
 	];
 
 	/**
-	 * Index to start shifting down all nodes after a save.
+	 * Index to shift up all nodes after a delete.
+	 *
+	 * @type int
+	 */
+	protected $_deleteIndex;
+
+	/**
+	 * Index to shift down all nodes after a save.
 	 *
 	 * @type int
 	 */
 	protected $_saveIndex;
 
 	/**
+	 * Before a delete, fetch the node and save its left index.
+	 * If a node has children, the delete will fail.
+	 *
+	 * @param int|int[] $id
+	 * @param bool $cascade
+	 * @return bool
+	 */
+	public function preDelete($id, &$cascade) {
+		if (!$this->config->onDelete) {
+			return true;
+		}
+
+		if ($node = $this->getNode($id)) {
+			$count = $this->getModel()->select()
+				->where($this->config->parentField, $id)
+				->count();
+
+			if ($count) {
+				return false;
+			}
+
+			$this->_deleteIndex = $node[$this->config->leftField];
+		}
+
+		return true;
+	}
+
+	/**
+	 * After a delete, shift all nodes up using the base index.
+	 *
+	 * @param int|int[] $id
+	 */
+	public function postDelete($id) {
+		if (!$this->config->onDelete || !$this->_deleteIndex) {
+			return;
+		}
+
+		$this->_removeNode($id, $this->_deleteIndex);
+		$this->_deleteIndex = null;
+
+		return;
+	}
+
+	/**
 	 * Before an insert, determine the correct left and right using the parent or root node as a base.
 	 * Do not shift the nodes until postSave() just in case the insert fails.
 	 *
 	 * Before an update, remove the left and right fields so that the tree cannot be modified.
-	 * Use moveUp(), moveDown(), moveTo(), sync() or reorder() to update existing nodes.
+	 * Use moveUp(), moveDown(), moveTo() or reOrder() to update existing nodes.
 	 *
 	 * @param int|int[] $id
 	 * @param array $data
@@ -455,13 +516,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 		$data = [];
 
 		// Remove the node and reset others
-		$model->query(Query::UPDATE)
-			->fields([
-				$left => Query::expr($left, '-', 2),
-				$right => Query::expr($right, '-', 2)
-			])
-			->where($right, '>', $node[$right])
-			->save();
+		$this->_removeNode($id, $node[$left]);
 
 		// Insert into parent
 		if ($parent_id && ($parentNode = $this->getNode($parent_id))) {
@@ -516,6 +571,28 @@ class HierarchicalBehavior extends AbstractBehavior {
 		foreach ([$this->config->leftField, $this->config->rightField] as $field) {
 			$query = $model->query(Query::UPDATE)
 				->fields([$field => Query::expr($field, '+', 2)])
+				->where($field, '>=', $index);
+
+			if ($id) {
+				$query->where($model->getPrimaryKey(), '!=', $id);
+			}
+
+			$query->save();
+		}
+	}
+
+	/**
+	 * Prepares a node for removal by moving all following nodes up.
+	 *
+	 * @param int $id
+	 * @param int $index
+	 */
+	protected function _removeNode($id, $index) {
+		$model = $this->getModel();
+
+		foreach ([$this->config->leftField, $this->config->rightField] as $field) {
+			$query = $model->query(Query::UPDATE)
+				->fields([$field => Query::expr($field, '-', 2)])
 				->where($field, '>=', $index);
 
 			if ($id) {
