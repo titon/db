@@ -184,6 +184,29 @@ class HierarchicalBehavior extends AbstractBehavior {
 	}
 
 	/**
+	 * Return the hierarchical path to the current node.
+	 *
+	 * @param int $id
+	 * @return array
+	 */
+	public function getPath($id) {
+		$node = $this->getNode($id);
+
+		if (!$node) {
+			return [];
+		}
+
+		$left = $this->config->leftField;
+		$right = $this->config->rightField;
+
+		return $this->getModel()->select()
+			->where($left, '<', $node[$left])
+			->where($right, '>', $node[$right])
+			->orderBy($left, 'asc')
+			->fetchAll(false);
+	}
+
+	/**
 	 * Return a tree of nested nodes. If no ID is provided, the top level root will be used.
 	 *
 	 * @param int $id

@@ -278,6 +278,23 @@ class HierarchicalBehaviorTest extends TestCase {
 	}
 
 	/**
+	 * Test direct path is returned.
+	 */
+	public function testGetPath() {
+		$this->loadFixtures('Categories');
+
+		$category = new Category();
+		$category->addBehavior(new HierarchicalBehavior());
+
+		$this->assertEquals([
+			['id' => 1, 'name' => 'Fruit', 'parent_id' => null, 'left' => 1, 'right' => 20],
+			['id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15]
+		], $category->getBehavior('Hierarchical')->getPath(8));
+
+		$this->assertEquals([], $category->getBehavior('Hierarchical')->getPath(20));
+	}
+
+	/**
 	 * Test child nodes can move down.
 	 */
 	public function testMoveDown() {
