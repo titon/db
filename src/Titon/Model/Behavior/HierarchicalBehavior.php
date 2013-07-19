@@ -296,35 +296,66 @@ class HierarchicalBehavior extends AbstractBehavior {
 	}
 
 	/**
-	 * Move all nodes down using the index as a base and the count as a multiplier.
-	 * If an ID is provided, that node will be excluded from shifting.
+	 * Move a child node down in the list and move up neighboring nodes.
+	 * If the node does not have a parent (is a root node), this method will not work.
 	 *
-	 * @param int $index
-	 * @param int $count
 	 * @param int $id
-	 * @return \Titon\Model\Behavior\HierarchicalBehavior
+	 * @param int $count
+	 * @return bool
 	 */
-	public function moveDown($index, $count = 1, $id = null) {
+	public function moveDown($id, $count = 1) {
 		$model = $this->getModel();
-		$inc = ($count * 2);
+		$node = $model->select()
+			->where($model->getAlias() . '.' . $model->getPrimaryKey(), $id)
+			->leftJoin([$model->getTable(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $model->getPrimaryKey()])
+			->fetch(false);
 
-		foreach ([$this->config->leftField, $this->config->rightField] as $field) {
-			$query = $model->query(Query::UPDATE)
-				->fields([$field => Query::expr($field, '+', $inc)])
-				->where($field, '>=', $index);
-
-			if ($id) {
-				$query->where($model->getPrimaryKey(), '!=', $id);
-			}
-
-			$query->save();
+		if (!$node || $node['Parent']) {
+			return false;
 		}
 
-		return $this;
-	}
+		$left = $this->config->leftField;
+		$right = $this->config->rightField;
+		$nodeLeft = $node[$left];
+		$nodeRight = $node[$right];
+		$inc = ($count * 2);
 
-	public function syncTree($parent_id = null, $left = 1) {
+		$newNodeLeft = $nodeLeft + $inc;
+		$newNodeRight = $nodeRight + $inc;
 
+		// Can't go outside of the parent
+		$parentRight = $node['Parent'][$right];
+
+		if ($newNodeLeft >= $parentRight) {
+			$newNodeLeft = $parentRight - 2;
+			$newNodeRight = $parentRight - 1;
+		}
+
+		// Exit early if the values are the same
+		if ($nodeLeft === $newNodeLeft) {
+			return true;
+		}
+
+		// Move following nodes up
+		$model->query(Query::UPDATE)
+			->fields([
+				$left => Query::expr($left, '-', 2),
+				$right => Query::expr($right, '-', 2)
+			])
+			->where($left, '>', $nodeRight)
+			->where($right, '<=', $newNodeRight)
+			->save();
+
+		// Move node down
+		$model->query(Query::UPDATE)
+			->fields([
+				$left => $newNodeLeft,
+				$right => $newNodeRight
+			])
+			->where($model->getPrimaryKey(), $id)
+			->save();
+
+		return true;
 	}
 
 }

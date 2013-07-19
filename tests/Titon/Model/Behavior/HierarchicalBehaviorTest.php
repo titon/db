@@ -277,4 +277,45 @@ class HierarchicalBehaviorTest extends TestCase {
 		], $category->getBehavior('Hierarchical')->getList(5, null, null, '- '));
 	}
 
+	/**
+	 * Test child nodes can move down.
+	 */
+	public function testMoveDown() {
+		$this->loadFixtures('Categories');
+
+		$category = new Category();
+		$category->addBehavior(new HierarchicalBehavior());
+
+		// Move wheat down 2 places
+		$category->getBehavior('Hierarchical')->moveDown(12, 2);
+
+		$this->assertEquals([
+			'id' => 11, 'name' => 'Grain', 'parent_id' => null, 'left' => 21, 'right' => 30, 'Nodes' => [
+				['id' => 13, 'name' => 'Bulgur', 'parent_id' => 11, 'left' => 22, 'right' => 23],
+				['id' => 14, 'name' => 'Barley', 'parent_id' => 11, 'left' => 24, 'right' => 25],
+				['id' => 12, 'name' => 'Wheat', 'parent_id' => 11, 'left' => 26, 'right' => 27],
+				['id' => 15, 'name' => 'Farro', 'parent_id' => 11, 'left' => 28, 'right' => 29],
+		]], $category->getBehavior('Hierarchical')->getTree(11));
+
+		// Move beef to outside the bottom
+		$category->getBehavior('Hierarchical')->moveDown(17, 8);
+
+		$this->assertEquals([
+			'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 38, 'Nodes' => [
+				['id' => 18, 'name' => 'Pork', 'parent_id' => 16, 'left' => 32, 'right' => 33],
+				['id' => 19, 'name' => 'Chicken', 'parent_id' => 16, 'left' => 34, 'right' => 35],
+				['id' => 17, 'name' => 'Beef', 'parent_id' => 16, 'left' => 36, 'right' => 37],
+		]], $category->getBehavior('Hierarchical')->getTree(16));
+
+		// Move strawberry down, but it wont since its already last
+		$category->getBehavior('Hierarchical')->moveDown(8, 2);
+
+		$this->assertEquals([
+			'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15, 'Nodes' => [
+				['id' => 6, 'name' => 'Blueberry', 'parent_id' => 5, 'left' => 9, 'right' => 10],
+				['id' => 7, 'name' => 'Blackberry', 'parent_id' => 5, 'left' => 11, 'right' => 12],
+				['id' => 8, 'name' => 'Strawberry', 'parent_id' => 5, 'left' => 13, 'right' => 14],
+		]], $category->getBehavior('Hierarchical')->getTree(5));
+	}
+
 }
