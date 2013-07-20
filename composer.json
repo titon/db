@@ -23,6 +23,10 @@
 		"psr/log": "*"
 	},
 	"suggest": {
+		"titon/model-mysql": "Enable MySQL database access",
+		"titon/model-sqlite": "Enable MySQL database access",
+		"titon/model-postgresql": "Enable MySQL database access",
+		"titon/model-mongodb": "Enable MongoDB database access",
 		"titon/cache": "Cache query results using a Storage engine",
 		"psr/log": "Log queries using a Logger"
 	},
