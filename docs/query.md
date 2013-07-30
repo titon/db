@@ -69,10 +69,10 @@ Use advanced operators as the second argument.
 ```php
 $query
 	->orWhere('color', 'in', ['red', 'green', 'blue']) // color IN ('red', 'green', 'blue')
-	->orWhere('color', 'like', '%black'%'); // OR color LIKE '%black%'
+	->orWhere('color', 'like', '%black%'); // OR color LIKE '%black%'
 ```
 
-The following operators are supported: = != > >= < <= <> isNull isNotNull like notLike in notIn between notBetween regexp notRegexp.
+The following operators are supported: =, !=, >, >=, <, <=, <>, isNull, isNotNull, like, notLike, in, notIn, between, notBetween, regexp, notRegexp.
 
 Advanced predicates can be built when a closure is provided. This also allows for nested predicates.
 
