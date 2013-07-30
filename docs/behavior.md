@@ -2,7 +2,7 @@
 
 A Behavior is a class that can be loaded into a model and will hook into the CRUD process to modify accordingly.
 
-The following callbacks are supported: prePost, postSave, preDelete, postDelete, preFetch, postFetch. View the Titon\Model\Model\Callback interface for method and argument definitions.
+The following callbacks are supported: preSave, postSave, preDelete, postDelete, preFetch, postFetch. View the `Titon\Model\Model\Callback` interface for method and argument definitions.
 
 A behavior can be loaded by calling `addBehavior()` within the model.
 
@@ -62,7 +62,7 @@ class Category extends Model {
 }
 ```
 
-Now after every node insertion and deletion, the tree is updated accordingly.
+Now after every record insertion and deletion, the tree is updated accordingly.
 
 To fetch the tree, use the following methods within the model.
 

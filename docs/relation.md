@@ -96,7 +96,7 @@ $user->create([
 	],
 	// many-to-many
 	'Groups' => [
-		['id' => 1'], // using groups.id
+		['id' => 1], // using groups.id
 		['group_id' => 1], // using junction user_groups.group_id
 	]
 ]);

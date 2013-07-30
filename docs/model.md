@@ -111,3 +111,5 @@ And a few other helpful methods.
 $model->exists(1); // returns a bool
 $model->upsert($data); // either update or insert, checks for primaryKey field in $data or 2nd argument
 ```
+
+For advanced query usage, view the query docs.
