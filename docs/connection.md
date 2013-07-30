@@ -4,10 +4,10 @@ The Connection class manages the loading and fetching of drivers. A driver repre
 Simply instantiate a Connection object and set the available drivers.
 
 ```php
-use Titon\Model\Connection;
+use Titon\Common\Registry;
 use Titon\Model\Mysql\MysqlDriver;
 
-$conn = new Connection();
+$conn = Registry::factory('Titon\Model\Connection'); // Registry required
 
 // Requires the model-mysql package
 $conn->addDriver(new MysqlDriver('default', [

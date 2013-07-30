@@ -8,7 +8,7 @@ Furthermore, a `Behavior` can be used to modify data or logic while performing C
 
 ### Setup ###
 
-Create a model for each database table and provide default configuration.
+Create a model for each database table and provide default configuration. View the base model class for the available configuration.
 
 ```php
 use Titon\Model\Model;
@@ -27,8 +27,6 @@ class User extends Model {
 	}
 }
 ```
-
-View the base model class for the available configuration.
 
 The configuration can also be set through the constructor. This allows for quick mocking.
 
