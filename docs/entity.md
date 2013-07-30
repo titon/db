@@ -1,4 +1,4 @@
-# Entity #
+# Entities #
 
 An Entity is a class that represents a set of data, usually an array. This class is instantiated for every row in a database result.
 

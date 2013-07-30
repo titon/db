@@ -1,4 +1,4 @@
-# Model #
+# Models #
 
 A Model represents a table in a database. It provides methods for interacting with data in that specific table by utilizing the loaded drivers.
 

@@ -1,4 +1,4 @@
-# Connection #
+# Connections #
 
 The Connection class manages the loading and fetching of drivers. A driver represents a type of database or external data source.
 Simply instantiate a Connection object and set the available drivers.

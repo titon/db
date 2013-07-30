@@ -1,4 +1,4 @@
-# Relation #
+# Relations #
 
 A Relation class represents a relationship between database tables. This provides support for RDBMS systems, but also works for schemaless systems like MongoDB since relational data doesn't use joins.
 
@@ -85,10 +85,22 @@ While creating parent records, define an array of data using the relation alias.
 $user->create([
 	'country_id' => 1,
 	'username' => 'foo',
+	// one-to-one
 	'Profile' => [
 		'signature' => 'bar'
 	]
+	// one-to-many
+	'Posts' => [
+		['content' => 'foo'],
+		['content' => 'bar']
+	],
+	// many-to-many
+	'Groups' => [
+		['id' => 1'], // using groups.id
+		['group_id' => 1], // using junction user_groups.group_id
+	]
 ]);
+```
 
 Include relational data using `with()` while reading parent records.
 
