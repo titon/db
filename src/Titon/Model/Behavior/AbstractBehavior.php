@@ -8,6 +8,8 @@
 namespace Titon\Model\Behavior;
 
 use Titon\Common\Base;
+use Titon\Event\Event;
+use Titon\Event\Listener;
 use Titon\Model\Behavior;
 use Titon\Model\Model;
 use Titon\Model\Query;
@@ -18,7 +20,7 @@ use Titon\Model\Traits\ModelAware;
  *
  * @package Titon\Model\Behavior
  */
-abstract class AbstractBehavior extends Base implements Behavior {
+abstract class AbstractBehavior extends Base implements Behavior, Listener {
 	use ModelAware;
 
 	/**
@@ -31,43 +33,57 @@ abstract class AbstractBehavior extends Base implements Behavior {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function preDelete($id, &$cascade) {
+	public function preDelete(Event $event, $id, &$cascade) {
 		return true;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function preFetch(Query $query, $fetchType) {
+	public function preFetch(Event $event, Query $query, $fetchType) {
 		return true;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function preSave($id, array $data) {
-		return $data;
+	public function preSave(Event $event, $id, array &$data) {
+		return true;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function postDelete($id) {
+	public function postDelete(Event $event, $id) {
 		return;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function postFetch(array $results, $fetchType) {
-		return $results;
+	public function postFetch(Event $event, array &$results, $fetchType) {
+		return;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function postSave($id, $created = false) {
+	public function postSave(Event $event, $id, $created = false) {
 		return;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function registerEvents() {
+		return [
+			'model.preSave' => 'preSave',
+			'model.postSave' => 'postSave',
+			'model.preDelete' => 'preDelete',
+			'model.postDelete' => 'postDelete',
+			'model.preFetch' => 'preFetch',
+			'model.postFetch' => 'postFetch'
+		];
 	}
 
 }

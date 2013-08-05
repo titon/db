@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Behavior;
 
+use Titon\Event\Event;
 use Titon\Model\Query;
 
 /**
@@ -53,11 +54,12 @@ class HierarchicalBehavior extends AbstractBehavior {
 	 * Before a delete, fetch the node and save its left index.
 	 * If a node has children, the delete will fail.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 * @param bool $cascade
 	 * @return bool
 	 */
-	public function preDelete($id, &$cascade) {
+	public function preDelete(Event $event, $id, &$cascade) {
 		if (!$this->config->onDelete) {
 			return true;
 		}
@@ -80,17 +82,16 @@ class HierarchicalBehavior extends AbstractBehavior {
 	/**
 	 * After a delete, shift all nodes up using the base index.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 */
-	public function postDelete($id) {
+	public function postDelete(Event $event, $id) {
 		if (!$this->config->onDelete || !$this->_deleteIndex) {
 			return;
 		}
 
 		$this->_removeNode($id, $this->_deleteIndex);
 		$this->_deleteIndex = null;
-
-		return;
 	}
 
 	/**
@@ -100,11 +101,12 @@ class HierarchicalBehavior extends AbstractBehavior {
 	 * Before an update, remove the left and right fields so that the tree cannot be modified.
 	 * Use moveUp(), moveDown(), moveTo() or reOrder() to update existing nodes.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 * @param array $data
-	 * @return array
+	 * @return bool
 	 */
-	public function preSave($id, array $data) {
+	public function preSave(Event $event, $id, array &$data) {
 		if (!$this->config->onSave) {
 			return $data;
 		}
@@ -150,16 +152,17 @@ class HierarchicalBehavior extends AbstractBehavior {
 			unset($data[$this->config->leftField], $data[$this->config->rightField]);
 		}
 
-		return $data;
+		return true;
 	}
 
 	/**
 	 * After an insert, shift all nodes down using the base index.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 * @param bool $created
 	 */
-	public function postSave($id, $created = false) {
+	public function postSave(Event $event, $id, $created = false) {
 		if (!$this->config->onSave || !$created || !$this->_saveIndex) {
 			return;
 		}

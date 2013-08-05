@@ -72,7 +72,12 @@ class AbstractUpdateTest extends TestCase {
 
 		$user = new User();
 
-		$this->assertEquals(0, $user->update(1, []));
+		try {
+			$this->assertEquals(0, $user->update(1, []));
+			$this->assertTrue(false);
+		} catch (Exception $e) {
+			$this->assertTrue(true);
+		}
 
 		// Relation without data
 		try {

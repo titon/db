@@ -7,6 +7,7 @@
 
 namespace Titon\Model\Model;
 
+use Titon\Event\Event;
 use Titon\Model\Query;
 
 /**
@@ -21,54 +22,59 @@ interface Callback {
 	 * Modify cascading by overwriting the value.
 	 * Return a falsey value to stop the process.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 * @param bool $cascade
-	 * @return mixed
+	 * @return bool
 	 */
-	public function preDelete($id, &$cascade);
+	public function preDelete(Event $event, $id, &$cascade);
 
 	/**
 	 * Callback called before a select query.
 	 * Return an array of data to use instead of the fetch results.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param \Titon\Model\Query $query
 	 * @param string $fetchType
-	 * @return mixed
+	 * @return bool
 	 */
-	public function preFetch(Query $query, $fetchType);
+	public function preFetch(Event $event, Query $query, $fetchType);
 
 	/**
 	 * Callback called before an insert or update query.
 	 * Return a falsey value to stop the process.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 * @param array $data
-	 * @return mixed
+	 * @return bool
 	 */
-	public function preSave($id, array $data);
+	public function preSave(Event $event, $id, array &$data);
 
 	/**
 	 * Callback called after a delete query.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 */
-	public function postDelete($id);
+	public function postDelete(Event $event, $id);
 
 	/**
 	 * Callback called after a select query.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param array $results The results of the query
 	 * @param string $fetchType Type of fetch used
-	 * @return array
 	 */
-	public function postFetch(array $results, $fetchType);
+	public function postFetch(Event $event, array &$results, $fetchType);
 
 	/**
 	 * Callback called after an insert or update query.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 * @param bool $created If the record was created
 	 */
-	public function postSave($id, $created = false);
+	public function postSave(Event $event, $id, $created = false);
 
 }

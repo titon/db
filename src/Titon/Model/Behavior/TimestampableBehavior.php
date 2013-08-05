@@ -7,6 +7,8 @@
 
 namespace Titon\Model\Behavior;
 
+use Titon\Event\Event;
+
 /**
  * The TimestampableBehavior will update a field with a timestamp anytime a record is created or updated.
  *
@@ -30,15 +32,16 @@ class TimestampableBehavior extends AbstractBehavior {
 	/**
 	 * Append the current timestamp to the data.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 * @param array $data
-	 * @return array
+	 * @return bool
 	 */
-	public function preSave($id, array $data) {
+	public function preSave(Event $event, $id, array &$data) {
 		$field = $id ? $this->config->updateField : $this->config->createField;
 		$data[$field] = time();
 
-		return $data;
+		return true;
 	}
 
 }

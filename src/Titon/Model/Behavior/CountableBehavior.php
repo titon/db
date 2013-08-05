@@ -8,6 +8,7 @@
 namespace Titon\Model\Behavior;
 
 use Titon\Common\Traits\Cacheable;
+use Titon\Event\Event;
 use Titon\Model\Exception\InvalidArgumentException;
 use Titon\Model\Relation;
 use Titon\Model\Relation\ManyToMany;
@@ -62,11 +63,12 @@ class CountableBehavior extends AbstractBehavior {
 	/**
 	 * Fetch records about to be deleted since they do not exist in postDelete().
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 * @param bool $cascade
 	 * @return mixed
 	 */
-	public function preDelete($id, &$cascade) {
+	public function preDelete(Event $event, $id, &$cascade) {
 		$model = $this->getModel();
 
 		foreach ($this->_counters as $alias => $counter) {
@@ -96,19 +98,21 @@ class CountableBehavior extends AbstractBehavior {
 	/**
 	 * Sync counters after a record is deleted.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 */
-	public function postDelete($id) {
+	public function postDelete(Event $event, $id) {
 		$this->syncCounters($id);
 	}
 
 	/**
 	 * Sync counters after a record is saved.
 	 *
+	 * @param \Titon\Event\Event $event
 	 * @param int|int[] $id
 	 * @param bool $created
 	 */
-	public function postSave($id, $created = false) {
+	public function postSave(Event $event, $id, $created = false) {
 		$this->syncCounters($id);
 	}
 

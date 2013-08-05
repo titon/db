@@ -12,6 +12,9 @@ use Titon\Common\Registry;
 use Titon\Common\Traits\Attachable;
 use Titon\Common\Traits\Cacheable;
 use Titon\Common\Traits\Instanceable;
+use Titon\Event\Event;
+use Titon\Event\Listener;
+use Titon\Event\Traits\Emittable;
 use Titon\Model\Driver\Dialect;
 use Titon\Model\Driver\Schema;
 use Titon\Model\Driver\Type\AbstractType;
@@ -42,8 +45,8 @@ use \Closure;
  *
  * @package Titon\Model
  */
-class Model extends Base implements Callback {
-	use Instanceable, Attachable, Cacheable;
+class Model extends Base implements Callback, Listener {
+	use Instanceable, Attachable, Cacheable, Emittable;
 
 	/**
 	 * ID of last updated or inserted record.
@@ -109,6 +112,17 @@ class Model extends Base implements Callback {
 	protected $_schema;
 
 	/**
+	 * Initialize class and events.
+	 *
+	 * @param array $config
+	 */
+	public function __construct(array $config = []) {
+		parent::__construct($config);
+
+		$this->on('model', $this);
+	}
+
+	/**
 	 * Add a behavior.
 	 *
 	 * @param \Titon\Model\Behavior $behavior
@@ -118,6 +132,10 @@ class Model extends Base implements Callback {
 		$behavior->setModel($this);
 
 		$this->_behaviors[$behavior->getAlias()] = $behavior;
+
+		if ($behavior instanceof Listener) {
+			$this->on('model', $behavior);
+		}
 
 		return $behavior;
 	}
@@ -777,42 +795,42 @@ class Model extends Base implements Callback {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function preDelete($id, &$cascade) {
+	public function preDelete(Event $event, $id, &$cascade) {
 		return true;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function preFetch(Query $query, $fetchType) {
+	public function preFetch(Event $event, Query $query, $fetchType) {
 		return true;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function preSave($id, array $data) {
-		return $data;
+	public function preSave(Event $event, $id, array &$data) {
+		return true;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function postDelete($id) {
+	public function postDelete(Event $event, $id) {
 		return;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function postFetch(array $results, $fetchType) {
-		return $results;
+	public function postFetch(Event $event, array &$results, $fetchType) {
+		return;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function postSave($id, $created = false) {
+	public function postSave(Event $event, $id, $created = false) {
 		return;
 	}
 
@@ -844,6 +862,20 @@ class Model extends Base implements Callback {
 			->where($this->getPrimaryKey(), $id)
 			->bindCallback($callback)
 			->fetch($options);
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function registerEvents() {
+		return [
+			'model.preSave' => ['method' => 'preSave', 'priority' => 1],
+			'model.postSave' => ['method' => 'postSave', 'priority' => 1],
+			'model.preDelete' => ['method' => 'preDelete', 'priority' => 1],
+			'model.postDelete' => ['method' => 'postDelete', 'priority' => 1],
+			'model.preFetch' => ['method' => 'preFetch', 'priority' => 1],
+			'model.postFetch' => ['method' => 'postFetch', 'priority' => 1]
+		];
 	}
 
 	/**
@@ -1221,9 +1253,10 @@ class Model extends Base implements Callback {
 		];
 
 		if ($options['preCallback']) {
-			$state = $this->_triggerPreDelete($id, $options['cascade']);
+			$event = $this->emit('model.preDelete', [$id, &$options['cascade']]);
+			$state = $event->getData();
 
-			if (!$state) {
+			if ($state !== null && !$state) {
 				return 0;
 			}
 		}
@@ -1266,7 +1299,7 @@ class Model extends Base implements Callback {
 		$this->data = [];
 
 		if ($options['postCallback']) {
-			$this->_triggerPostDelete($id);
+			$event = $this->emit('model.postDelete', [$id]);
 		}
 
 		return $count;
@@ -1306,15 +1339,16 @@ class Model extends Base implements Callback {
 
 		// Use the return of preFetch() if applicable
 		if ($options['preCallback']) {
-			$result = $this->_triggerPreFetch($query, $fetchType);
+			$event = $this->emit('model.preFetch', [$query, $fetchType]);
+			$state = $event->getData();
 
-			if (!$result) {
+			if ($state !== null && !$state) {
 				return [];
 			}
 		}
 
-		if (isset($result) && is_array($result)) {
-			$results = $result;
+		if (isset($state) && is_array($state)) {
+			$results = $state;
 
 			if (!isset($results[0])) {
 				$results = [$results];
@@ -1350,7 +1384,7 @@ class Model extends Base implements Callback {
 		}
 
 		if ($options['postCallback']) {
-			$results = $this->_triggerPostFetch($results, $fetchType);
+			$event = $this->emit('model.postFetch', [&$results, $fetchType]);
 		}
 
 		$this->data = $results;
@@ -1396,9 +1430,10 @@ class Model extends Base implements Callback {
 		];
 
 		if ($options['preCallback']) {
-			$data = $this->_triggerPreSave($id, $data);
+			$event = $this->emit('model.preSave', [$id, &$data]);
+			$state = $event->getData();
 
-			if (!$data) {
+			if ($state !== null && !$state) {
 				return 0;
 			}
 		}
@@ -1460,7 +1495,7 @@ class Model extends Base implements Callback {
 		}
 
 		if ($options['postCallback']) {
-			$this->_triggerPostSave($id, $isCreate);
+			$event = $this->emit('model.postSave', [$id, $isCreate]);
 		}
 
 		if ($isCreate) {
@@ -1468,129 +1503,6 @@ class Model extends Base implements Callback {
 		}
 
 		return $count;
-	}
-
-	/**
-	 * Triggers the "postDelete" callback on the model and behaviors.
-	 *
-	 * @param int|int[] $id
-	 */
-	protected function _triggerPostDelete($id) {
-		$this->postDelete($id);
-
-		foreach ($this->getBehaviors() as $behavior) {
-			$behavior->postDelete($id);
-		}
-	}
-
-	/**
-	 * Triggers the "postFetch" callback on the model and behaviors.
-	 * Will use the response of each callback to modify the results.
-	 *
-	 * @param array $results
-	 * @param string $fetchType
-	 * @return array
-	 */
-	protected function _triggerPostFetch(array $results, $fetchType) {
-		$results = $this->postFetch($results, $fetchType);
-
-		foreach ($this->getBehaviors() as $behavior) {
-			$behavior->postFetch($results, $fetchType);
-		}
-
-		return $results;
-	}
-
-	/**
-	 * Triggers the "postSave" callback on the model and behaviors.
-	 *
-	 * @param int|int[] $id
-	 * @param bool $created
-	 */
-	protected function _triggerPostSave($id, $created) {
-		$this->postSave($id, $created);
-
-		foreach ($this->getBehaviors() as $behavior) {
-			$behavior->postSave($id, $created);
-		}
-	}
-
-	/**
-	 * Triggers the "preDelete" callback on the model and behaviors.
-	 * Exit early if a falsey value is returned from teh callback.
-	 *
-	 * @param int|int[] $id
-	 * @param bool $cascade
-	 * @return mixed
-	 */
-	protected function _triggerPreDelete($id, &$cascade) {
-		$state = $this->preDelete($id, $cascade);
-
-		if (!$state) {
-			return false;
-		}
-
-		foreach ($this->getBehaviors() as $behavior) {
-			$state = $behavior->preDelete($id, $cascade);
-
-			if (!$state) {
-				return false;
-			}
-		}
-
-		return $state;
-	}
-
-	/**
-	 * Triggers the "preFetch" callback on the model and behaviors.
-	 * Exit early if a falsey value is returned from teh callback.
-	 *
-	 * @param \Titon\Model\Query $query
-	 * @param string $fetchType
-	 * @return mixed
-	 */
-	protected function _triggerPreFetch(Query $query, $fetchType) {
-		$state = $this->preFetch($query, $fetchType);
-
-		if (!$state) {
-			return false;
-		}
-
-		foreach ($this->getBehaviors() as $behavior) {
-			$state = $behavior->preFetch($query, $fetchType);
-
-			if (!$state) {
-				return false;
-			}
-		}
-
-		return $state;
-	}
-
-	/**
-	 * Triggers the "preSave" callback on the model and behaviors.
-	 * Exit early if a falsey value is returned from teh callback.
-	 *
-	 * @param int|int[] $id
-	 * @param array $data
-	 * @return mixed
-	 */
-	protected function _triggerPreSave($id, array $data) {
-		$data = $this->preSave($id, $data);
-
-		if (!$data) {
-			return false;
-		}
-
-		foreach ($this->getBehaviors() as $behavior) {
-			$data = $behavior->preSave($id, $data);
-
-			if (!$data) {
-				return false;
-			}
-		}
-
-		return $data;
 	}
 
 	/**
