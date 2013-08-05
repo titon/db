@@ -96,6 +96,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 */
 	public function commitTransaction() {
 		if ($this->_transactions === 1) {
+			$this->logQuery(new SqlResult('COMMIT'));
+
 			$status = $this->getConnection()->commit();
 		} else {
 			$status = true;
@@ -462,6 +464,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 */
 	public function rollbackTransaction() {
 		if ($this->_transactions === 1) {
+			$this->logQuery(new SqlResult('ROLLBACK'));
+
 			$status = $this->getConnection()->rollBack();
 
 			$this->_transactions = 0;
@@ -480,6 +484,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 	 */
 	public function startTransaction() {
 		if (!$this->_transactions) {
+			$this->logQuery(new SqlResult('BEGIN'));
+
 			$status = $this->getConnection()->beginTransaction();
 		} else {
 			$status = true;

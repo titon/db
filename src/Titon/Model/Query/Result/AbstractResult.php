@@ -87,6 +87,20 @@ abstract class AbstractResult implements Result {
 	/**
 	 * {@inheritdoc}
 	 */
+	public function close() {
+		return true;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function execute() {
+		return $this;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
 	public function getExecutionTime() {
 		return $this->_time;
 	}
