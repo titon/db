@@ -17,6 +17,7 @@ use Titon\Model\Query;
 use Titon\Model\Query\Expr;
 use Titon\Model\Query\Predicate;
 use Titon\Model\Query\Result\PdoResult;
+use Titon\Model\Query\Result\SqlResult;
 use Titon\Model\Query\SubQuery;
 use Titon\Utility\String;
 use \PDO;
