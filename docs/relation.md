@@ -47,19 +47,27 @@ When mapping the foreign keys, there is `setForeignKey()` which sets the field w
 $this->addRelation(new OneToOne('Profile', 'App\Model\Profile'))
 	->setRelatedForeignKey('user_id'); // profiles.user_id
 
+$this->hasOne('Profile', 'App\Model\Profile', 'user_id');
+
 // OneToMany - User has many Posts
 $this->addRelation(new OneToMany('Posts', 'App\Model\Post'))
 	->setRelatedForeignKey('user_id'); // posts.user_id
 
+$this->hasMany('Posts', 'App\Model\Post', 'user_id');
+
 // ManyToOne - User belongs to Country
 $this->addRelation(new ManyToOne('Country', 'App\Model\Country'))
 	->setForeignKey('country_id'); // users.country_id
+
+$this->belongsTo('Country', 'App\Model\Country', 'country_id');
 
 // ManyToMany - User has and belongs to many Groups
 $this->addRelation(new ManyToMany('Groups', 'App\Model\Group'))
 	->setJunctionClass('App\Model\UserGroup')
 	->setForeignKey('user_id') // user_groups.user_id
 	->setRelatedForeignKey('group_id'); // user_groups.group_id
+
+$this->belongsToMany('Groups', 'App\Model\Group', 'App\Model\UserGroup', 'user_id', 'group_id');
 ```
 
 When defining ManyToMany relations, the junction model and both foreign keys must be defined.
