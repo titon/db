@@ -9,7 +9,7 @@ namespace Titon\Model\Relation;
 
 use Titon\Common\Registry;
 use Titon\Model\Relation;
-use Titon\Utility\Loader;
+use Titon\Utility\Path;
 
 /**
  * Represents a many-to-many model relationship.
@@ -48,7 +48,7 @@ class ManyToMany extends AbstractRelation {
 	 */
 	public function getJunctionModel() {
 		$class = $this->getJunctionClass();
-		$alias = Loader::baseClass($class);
+		$alias = Path::className($class);
 		$model = $this->getModel();
 
 		if ($model->hasObject($alias)) {

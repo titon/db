@@ -3,7 +3,7 @@
 	"type": "library",
 	"description": "The Titon model package provides a basic database abstraction layer and an object relational mapper.",
 	"keywords": ["titon", "model", "entity", "database", "driver", "query", "connection", "relation", "schema", "predicate", "clause", "dialect", "type"],
-	"homepage": "https://github.com/titon/Model",
+	"homepage": "http://titon.io",
 	"license": "BSD-2",
 	"authors": [
 		{

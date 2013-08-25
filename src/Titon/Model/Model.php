@@ -27,7 +27,6 @@ use Titon\Model\Model\Callback;
 use Titon\Model\Query;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
-use Titon\Utility\Loader;
 use \Exception;
 use \Closure;
 
@@ -158,6 +157,10 @@ class Model extends Base implements Callback, Listener {
 		]);
 
 		return $relation;
+	}
+
+	public function belongsTo() {
+		
 	}
 
 	/**
