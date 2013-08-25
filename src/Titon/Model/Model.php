@@ -25,6 +25,9 @@ use Titon\Model\Exception\MissingRelationException;
 use Titon\Model\Exception\QueryFailureException;
 use Titon\Model\Model\Callback;
 use Titon\Model\Query;
+use Titon\Model\Relation\OneToOne;
+use Titon\Model\Relation\OneToMany;
+use Titon\Model\Relation\ManyToOne;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
 use \Exception;
@@ -159,8 +162,34 @@ class Model extends Base implements Callback, Listener {
 		return $relation;
 	}
 
-	public function belongsTo() {
-		
+	/**
+	 * Add a many-to-one relationship.
+	 *
+	 * @param string $alias
+	 * @param string $class
+	 * @param string $foreignKey
+	 * @return \Titon\Model\Relation\ManyToOne
+	 */
+	public function belongsTo($alias, $class, $foreignKey) {
+		return $this->addRelation(new ManyToOne($alias, $class))
+			->setForeignKey($foreignKey);
+	}
+
+	/**
+	 * Add a many-to-many relationship.
+	 *
+	 * @param string $alias
+	 * @param string $class
+	 * @param string $junction
+	 * @param string $foreignKey
+	 * @param string $relatedKey
+	 * @return \Titon\Model\Relation\ManyToMany
+	 */
+	public function belongsToMany($alias, $class, $junction, $foreignKey, $relatedKey) {
+		return $this->addRelation(new ManyToMany($alias, $class))
+			->setJunctionClass($junction)
+			->setForeignKey($foreignKey)
+			->setRelatedForeignKey($relatedKey);
 	}
 
 	/**
@@ -758,6 +787,32 @@ class Model extends Base implements Callback, Listener {
 	 */
 	public function hasBehaviors() {
 		return (count($this->_behaviors) > 0);
+	}
+
+	/**
+	 * Add a one-to-one relationship.
+	 *
+	 * @param string $alias
+	 * @param string $class
+	 * @param string $relatedKey
+	 * @return \Titon\Model\Relation\OneToOne
+	 */
+	public function hasOne($alias, $class, $relatedKey) {
+		return $this->addRelation(new OneToOne($alias, $class))
+			->setRelatedForeignKey($relatedKey);
+	}
+
+	/**
+	 * Add a one-to-many relationship.
+	 *
+	 * @param string $alias
+	 * @param string $class
+	 * @param string $relatedKey
+	 * @return \Titon\Model\Relation\OneToMany
+	 */
+	public function hasMany($alias, $class, $relatedKey) {
+		return $this->addRelation(new OneToMany($alias, $class))
+			->setRelatedForeignKey($relatedKey);
 	}
 
 	/**

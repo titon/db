@@ -50,7 +50,7 @@ class ModelTest extends TestCase {
 
 		$this->assertFalse($stub->hasRelation('User'));
 
-		$stub->addRelation(new OneToOne('User', 'Titon\Test\Stub\Model\User'));
+		$stub->hasOne('User', 'Titon\Test\Stub\Model\User');
 		$this->assertTrue($stub->hasRelation('User'));
 
 		$this->assertInstanceOf('Titon\Model\Model', $stub->User);
