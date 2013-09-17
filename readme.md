@@ -18,15 +18,15 @@ Supported drivers are implemented in external packages that can be installed thr
 * `Entity` - Single record of data
 * `Connection` - Driver manager
 * `Driver` - Interacts with a database or remote service (DBAL)
-	* `Dialect` - Driver specific SQL formatting
-	* `Type` - Data type mapping
-	* `Schema` - Table schema
+    * `Dialect` - Driver specific SQL formatting
+    * `Type` - Data type mapping
+    * `Schema` - Table schema
 * `Query` - Object oriented query builder
-	* `Expr` - Expression builder
-	* `Func` - Function builder
-	* `Join` - Join builder
-	* `Predicate` - Clause builder
-	* `Result` - Result set mapper
+    * `Expr` - Expression builder
+    * `Func` - Function builder
+    * `Join` - Join builder
+    * `Predicate` - Clause builder
+    * `Result` - Result set mapper
 
 ### Dependencies ###
 
@@ -37,4 +37,4 @@ Supported drivers are implemented in external packages that can be installed thr
 ### Requirements ###
 
 * PHP 5.4.0
-	* PDO
+    * PDO

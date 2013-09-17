@@ -18,17 +18,17 @@ use Titon\Model\Relation\ManyToOne;
 use Titon\Model\Behavior\CountableBehavior;
 
 class Post extends Model {
-	// ...
+    // ...
 
-	public function initialize() {
-		parent::initialize();
+    public function initialize() {
+        parent::initialize();
 
-		$this->addRelation(new ManyToOne('User', 'App\Model\User'))
-			->setForeignKey('user_id');
+        $this->addRelation(new ManyToOne('User', 'App\Model\User'))
+            ->setForeignKey('user_id');
 
-		$this->addBehavior(new CountableBehavior())
-			->addCounter('User', 'post_count'); // users.post_count
-	}
+        $this->addBehavior(new CountableBehavior())
+            ->addCounter('User', 'post_count'); // users.post_count
+    }
 }
 ```
 
@@ -45,20 +45,20 @@ use Titon\Model\Model;
 use Titon\Model\Behavior\HierarchicalBehavior;
 
 class Category extends Model {
-	// ...
+    // ...
 
-	public function initialize() {
-		parent::initialize();
+    public function initialize() {
+        parent::initialize();
 
-		$this->addBehavior(new HierarchicalBehavior());
+        $this->addBehavior(new HierarchicalBehavior());
 
-		// Or with custom field names
-		$this->addBehavior(new HierarchicalBehavior([
-			'parentField' => 'category_id',
-			'leftField' => 'lft',
-			'rightField' => 'rght'
-		]));
-	}
+        // Or with custom field names
+        $this->addBehavior(new HierarchicalBehavior([
+            'parentField' => 'category_id',
+            'leftField' => 'lft',
+            'rightField' => 'rght'
+        ]));
+    }
 }
 ```
 
@@ -81,18 +81,18 @@ use Titon\Model\Model;
 use Titon\Model\Behavior\TimestampableBehavior;
 
 class Post extends Model {
-	// ...
+    // ...
 
-	public function initialize() {
-		parent::initialize();
+    public function initialize() {
+        parent::initialize();
 
-		$this->addBehavior(new TimestampableBehavior());
+        $this->addBehavior(new TimestampableBehavior());
 
-		// Or with custom field names
-		$this->addBehavior(new TimestampableBehavior([
-			'createField' => 'dateCreated',
-			'updateField' => 'dateUpdated'
-		));
-	}
+        // Or with custom field names
+        $this->addBehavior(new TimestampableBehavior([
+            'createField' => 'dateCreated',
+            'updateField' => 'dateUpdated'
+        ));
+    }
 }
 ```

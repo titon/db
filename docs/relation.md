@@ -16,14 +16,14 @@ use Titon\Model\Model;
 use Titon\Model\Relation\OneToOne;
 
 class User extends Model {
-	// ...
+    // ...
 
-	public function initialize() {
-		parent::initialize();
+    public function initialize() {
+        parent::initialize();
 
-		$this->addRelation(new OneToOne('Profile', 'App\Model\Profile'))
-			->setRelatedForeignKey('user_id');
-	}
+        $this->addRelation(new OneToOne('Profile', 'App\Model\Profile'))
+            ->setRelatedForeignKey('user_id');
+    }
 }
 ```
 
@@ -45,27 +45,27 @@ When mapping the foreign keys, there is `setForeignKey()` which sets the field w
 ```php
 // OneToOne - User has one Profile
 $this->addRelation(new OneToOne('Profile', 'App\Model\Profile'))
-	->setRelatedForeignKey('user_id'); // profiles.user_id
+    ->setRelatedForeignKey('user_id'); // profiles.user_id
 
 $this->hasOne('Profile', 'App\Model\Profile', 'user_id');
 
 // OneToMany - User has many Posts
 $this->addRelation(new OneToMany('Posts', 'App\Model\Post'))
-	->setRelatedForeignKey('user_id'); // posts.user_id
+    ->setRelatedForeignKey('user_id'); // posts.user_id
 
 $this->hasMany('Posts', 'App\Model\Post', 'user_id');
 
 // ManyToOne - User belongs to Country
 $this->addRelation(new ManyToOne('Country', 'App\Model\Country'))
-	->setForeignKey('country_id'); // users.country_id
+    ->setForeignKey('country_id'); // users.country_id
 
 $this->belongsTo('Country', 'App\Model\Country', 'country_id');
 
 // ManyToMany - User has and belongs to many Groups
 $this->addRelation(new ManyToMany('Groups', 'App\Model\Group'))
-	->setJunctionClass('App\Model\UserGroup')
-	->setForeignKey('user_id') // user_groups.user_id
-	->setRelatedForeignKey('group_id'); // user_groups.group_id
+    ->setJunctionClass('App\Model\UserGroup')
+    ->setForeignKey('user_id') // user_groups.user_id
+    ->setRelatedForeignKey('group_id'); // user_groups.group_id
 
 $this->belongsToMany('Groups', 'App\Model\Group', 'App\Model\UserGroup', 'user_id', 'group_id');
 ```
@@ -76,11 +76,11 @@ Optional query conditions can be defined for each relation to filter the data. F
 
 ```php
 $this->addRelation(new OneToMany('Posts', 'App\Model\Post'))
-	->setRelatedForeignKey('user_id')
-	->setConditions(function() {
-		// Represents a query object
-		$this->where('active', true);
-	});
+    ->setRelatedForeignKey('user_id')
+    ->setConditions(function() {
+        // Represents a query object
+        $this->where('active', true);
+    });
 ```
 
 ### CRUD ###
@@ -91,22 +91,22 @@ While creating parent records, define an array of data using the relation alias.
 
 ```php
 $user->create([
-	'country_id' => 1,
-	'username' => 'foo',
-	// one-to-one
-	'Profile' => [
-		'signature' => 'bar'
-	]
-	// one-to-many
-	'Posts' => [
-		['content' => 'foo'],
-		['content' => 'bar']
-	],
-	// many-to-many
-	'Groups' => [
-		['id' => 1], // using groups.id
-		['group_id' => 1], // using junction user_groups.group_id
-	]
+    'country_id' => 1,
+    'username' => 'foo',
+    // one-to-one
+    'Profile' => [
+        'signature' => 'bar'
+    ]
+    // one-to-many
+    'Posts' => [
+        ['content' => 'foo'],
+        ['content' => 'bar']
+    ],
+    // many-to-many
+    'Groups' => [
+        ['id' => 1], // using groups.id
+        ['group_id' => 1], // using junction user_groups.group_id
+    ]
 ]);
 ```
 
@@ -114,27 +114,27 @@ Include relational data using `with()` while reading parent records.
 
 ```php
 $row = $user->select()
-	->with('Country')
-	->with('Profile', function() {
-		// with custom conditions
-	})
-	->fetch();
+    ->with('Country')
+    ->with('Profile', function() {
+        // with custom conditions
+    })
+    ->fetch();
 
 // Or a list
 $row = $user->select()
-	->with(['Country', 'Profile'])
-	->fetch();
+    ->with(['Country', 'Profile'])
+    ->fetch();
 ```
 
 Similar to creating, define an array of data using the relation alias that will be updated as well. The primary key is required else a new record will be created.
 
 ```php
 $user->update(1, [
-	'username' => 'bar',
-	'Profile' => [
-		'id' => 1,
-		'signature' => 'foo'
-	]
+    'username' => 'bar',
+    'Profile' => [
+        'id' => 1,
+        'signature' => 'foo'
+    ]
 ]);
 ```
 

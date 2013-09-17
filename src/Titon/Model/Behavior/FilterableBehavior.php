@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Behavior;
@@ -45,16 +45,16 @@ class FilterableBehavior extends AbstractBehavior {
         return $this;
     }
 
-	/**
-	 * Run the filters before each save.
-	 *
-	 * @param \Titon\Event\Event $event
-	 * @param int|int[] $id
-	 * @param array $data
-	 * @return bool
-	 */
-	public function preSave(Event $event, $id, array &$data) {
-		foreach ($data as $key => $value) {
+    /**
+     * Run the filters before each save.
+     *
+     * @param \Titon\Event\Event $event
+     * @param int|int[] $id
+     * @param array $data
+     * @return bool
+     */
+    public function preSave(Event $event, $id, array &$data) {
+        foreach ($data as $key => $value) {
             if (empty($this->_filters[$key])) {
                 continue;
             }
@@ -89,7 +89,7 @@ class FilterableBehavior extends AbstractBehavior {
             $data[$key] = $value;
         }
 
-		return true;
-	}
+        return true;
+    }
 
 }

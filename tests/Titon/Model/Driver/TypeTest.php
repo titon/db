@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Driver;
@@ -20,22 +20,22 @@ use \Exception;
  */
 class TypeTest extends TestCase {
 
-	/**
-	 * Test factory and exceptions are throwing for missing types.
-	 */
-	public function testFactory() {
-		$driver = new DriverStub('default', []);
+    /**
+     * Test factory and exceptions are throwing for missing types.
+     */
+    public function testFactory() {
+        $driver = new DriverStub('default', []);
 
-		$this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('int', $driver));
-		$this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('varchar', $driver));
-		$this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('longblob', $driver));
+        $this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('int', $driver));
+        $this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('varchar', $driver));
+        $this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('longblob', $driver));
 
-		try {
-			$this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('foobar', $driver));
-			$this->assertTrue(false);
-		} catch (Exception $e) {
-			$this->assertTrue(true);
-		}
-	}
+        try {
+            $this->assertInstanceOf('Titon\Model\Driver\Type', AbstractType::factory('foobar', $driver));
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
+    }
 
 }

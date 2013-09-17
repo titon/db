@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model;
@@ -16,26 +16,26 @@ use Titon\Model\Model\Callback;
  */
 interface Behavior extends Callback {
 
-	/**
-	 * Return the behavior alias name.
-	 *
-	 * @return string
-	 */
-	public function getAlias();
+    /**
+     * Return the behavior alias name.
+     *
+     * @return string
+     */
+    public function getAlias();
 
-	/**
-	 * Return the current model.
-	 *
-	 * @return \Titon\Model\Model
-	 */
-	public function getModel();
+    /**
+     * Return the current model.
+     *
+     * @return \Titon\Model\Model
+     */
+    public function getModel();
 
-	/**
-	 * Set the model this behavior is attached to.
-	 *
-	 * @param \Titon\Model\Model $model
-	 * @return \Titon\Model\Behavior
-	 */
-	public function setModel(Model $model);
+    /**
+     * Set the model this behavior is attached to.
+     *
+     * @param \Titon\Model\Model $model
+     * @return \Titon\Model\Behavior
+     */
+    public function setModel(Model $model);
 
 }

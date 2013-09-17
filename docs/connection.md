@@ -11,9 +11,9 @@ $conn = Registry::factory('Titon\Model\Connection'); // Registry required
 
 // Requires the model-mysql package
 $conn->addDriver(new MysqlDriver('default', [
-	'host' => '127.0.0.1',
-	'user' => 'user',
-	'pass' => 'pass'
+    'host' => '127.0.0.1',
+    'user' => 'user',
+    'pass' => 'pass'
 ]));
 ```
 

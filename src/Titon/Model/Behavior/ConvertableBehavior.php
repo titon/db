@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Behavior;
@@ -26,24 +26,24 @@ class ConvertableBehavior extends AbstractBehavior {
      */
     protected $_converters = [];
 
-	/**
-	 * Default converter settings.
-	 *
-	 * @type array
-	 */
-	protected $_defaults = [
-		'serialize' => [],
-		'json' => [
-			'object' => false
-		],
-		'html' => [
-			'decode' => false,
-			'encoding' => 'UTF-8',
-			'flags' => ENT_QUOTES
-		],
-		'base64' => [],
+    /**
+     * Default converter settings.
+     *
+     * @type array
+     */
+    protected $_defaults = [
+        'serialize' => [],
+        'json' => [
+            'object' => false
+        ],
+        'html' => [
+            'decode' => false,
+            'encoding' => 'UTF-8',
+            'flags' => ENT_QUOTES
+        ],
+        'base64' => [],
         'custom' => []
-	];
+    ];
 
     /**
      * Define a converter for a specific field.
@@ -65,18 +65,18 @@ class ConvertableBehavior extends AbstractBehavior {
         ], $this->_defaults[$type], $options);
     }
 
-	/**
-	 * Apply the encoding converter before a record is saved.
-	 *
-	 * @param \Titon\Event\Event $event
-	 * @param int|int[] $id
-	 * @param array $data
-	 * @return bool
-	 */
-	public function preSave(Event $event, $id, array &$data) {
+    /**
+     * Apply the encoding converter before a record is saved.
+     *
+     * @param \Titon\Event\Event $event
+     * @param int|int[] $id
+     * @param array $data
+     * @return bool
+     */
+    public function preSave(Event $event, $id, array &$data) {
         $model = $this->getModel();
 
-		foreach ($data as $key => $value) {
+        foreach ($data as $key => $value) {
             if (empty($this->_converters[$key])) {
                 continue;
             }
@@ -103,8 +103,8 @@ class ConvertableBehavior extends AbstractBehavior {
             $data[$key] = $value;
         }
 
-		return true;
-	}
+        return true;
+    }
 
     /**
      * Apply the decoding converter after a record is retrieved.
@@ -156,7 +156,7 @@ class ConvertableBehavior extends AbstractBehavior {
      * @return array
      */
     public function fromSerialize($value, array $options) {
-		return @unserialize($value);
+        return @unserialize($value);
     }
 
     /**

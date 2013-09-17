@@ -14,17 +14,17 @@ Create a model for each database table and provide default configuration. View t
 use Titon\Model\Model;
 
 class User extends Model {
-	protected $_config = [
-		'connection' => 'default', // key of driver to use
-		'table' => 'users',
-		'primaryKey' => 'id',
-		'displayField' => 'username'
-	];
+    protected $_config = [
+        'connection' => 'default', // key of driver to use
+        'table' => 'users',
+        'primaryKey' => 'id',
+        'displayField' => 'username'
+    ];
 
-	public function initialize() {
-		// Set behaviors
-		// Set relations
-	}
+    public function initialize() {
+        // Set behaviors
+        // Set relations
+    }
 }
 ```
 
@@ -32,8 +32,8 @@ The configuration can also be set through the constructor. This allows for quick
 
 ```php
 $model = new Model([
-	'table' => 'users',
-	'primaryKey' => 'id'
+    'table' => 'users',
+    'primaryKey' => 'id'
 ]);
 ```
 
@@ -43,15 +43,15 @@ The base model implements the singleton pattern through a singleton trait. All d
 
 ```php
 class User extends Model {
-	// ...
+    // ...
 
-	public static function getAll() {
-		return self::getInstance()->select()->fetchAll();
-	}
+    public static function getAll() {
+        return self::getInstance()->select()->fetchAll();
+    }
 
-	public static function getById($id) {
-		return self::getInstance()->read($id);
-	}
+    public static function getById($id) {
+        return self::getInstance()->read($id);
+    }
 }
 
 // In the application
@@ -68,8 +68,8 @@ Creating records.
 ```php
 $model->create(['username' => 'miles']); // returns new ID
 $model->createMany([
-	['username' => 'foo'],
-	['username' => 'bar']
+    ['username' => 'foo'],
+    ['username' => 'bar']
 ]); // returns inserted row count
 ```
 
@@ -90,8 +90,8 @@ Updating records.
 ```php
 $model->update(1, ['username' => 'miles']); // returns affected row count
 $model->updateMany(['active' => true], function() {
-	// Closure represents a query object
-	$this->where('active', false);
+    // Closure represents a query object
+    $this->where('active', false);
 });  // returns affected row count
 ```
 
@@ -100,8 +100,8 @@ Deleting records.
 ```php
 $model->delete(1); // returns affected row count
 $model->deleteMany(function() {
-	// Closure represents a query object
-	$this->where('active', true);
+    // Closure represents a query object
+    $this->where('active', true);
 });  // returns affected row count
 ```
 

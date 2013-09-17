@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Traits;
@@ -14,32 +14,32 @@ namespace Titon\Model\Traits;
  */
 trait AliasAware {
 
-	/**
-	 * Alias name.
-	 *
-	 * @type string
-	 */
-	protected $_alias;
+    /**
+     * Alias name.
+     *
+     * @type string
+     */
+    protected $_alias;
 
-	/**
-	 * Set the alias name.
-	 *
-	 * @param string $alias
-	 * @return \Titon\Model\Traits\AliasAware
-	 */
-	public function asAlias($alias) {
-		$this->_alias = $alias;
+    /**
+     * Set the alias name.
+     *
+     * @param string $alias
+     * @return \Titon\Model\Traits\AliasAware
+     */
+    public function asAlias($alias) {
+        $this->_alias = $alias;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Return the alias name.
-	 *
-	 * @return string
-	 */
-	public function getAlias() {
-		return $this->_alias;
-	}
+    /**
+     * Return the alias name.
+     *
+     * @return string
+     */
+    public function getAlias() {
+        return $this->_alias;
+    }
 
 }

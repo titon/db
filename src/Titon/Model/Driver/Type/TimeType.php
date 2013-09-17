@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Driver\Type;
@@ -16,16 +16,16 @@ use Titon\Utility\Time;
  */
 class TimeType extends DateType {
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public $format = 'H:i:s';
+    /**
+     * {@inheritdoc}
+     */
+    public $format = 'H:i:s';
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getName() {
-		return self::TIME;
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function getName() {
+        return self::TIME;
+    }
 
 }

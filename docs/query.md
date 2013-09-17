@@ -60,16 +60,16 @@ Call the method multiple times to add multiple expressions.
 
 ```php
 $query
-	->where('active', true) // active = true
-	->where('age', '>', 25); // AND age > 25
+    ->where('active', true) // active = true
+    ->where('age', '>', 25); // AND age > 25
 ```
 
 Use advanced operators as the second argument.
 
 ```php
 $query
-	->orWhere('color', 'in', ['red', 'green', 'blue']) // color IN ('red', 'green', 'blue')
-	->orWhere('color', 'like', '%black%'); // OR color LIKE '%black%'
+    ->orWhere('color', 'in', ['red', 'green', 'blue']) // color IN ('red', 'green', 'blue')
+    ->orWhere('color', 'like', '%black%'); // OR color LIKE '%black%'
 ```
 
 The following operators are supported: =, !=, >, >=, <, <=, <>, isNull, isNotNull, like, notLike, in, notIn, between, notBetween, regexp, notRegexp.
@@ -78,13 +78,13 @@ Advanced predicates can be built when a closure is provided. This also allows fo
 
 ```php
 $query->where(function() {
-	// Represents a Predicate object
-	$this
-		->in('color', ['red', 'green', 'blue'])
-		->notLike('size', '%small%')
-		->either(function() {
-			$this->gte('quantity', 5)->notEq('soldOut', 0);
-		});
+    // Represents a Predicate object
+    $this
+        ->in('color', ['red', 'green', 'blue'])
+        ->notLike('size', '%small%')
+        ->either(function() {
+            $this->gte('quantity', 5)->notEq('soldOut', 0);
+        });
 }); // color IN ('red', 'green', 'blue') AND size NOT LIKE '%small%' AND (quantity >= 5 OR soldOut != 0)
 ```
 
@@ -116,8 +116,8 @@ Expressions can be used by calling `expr()`.
 
 ```php
 $query->fields([
-	'foo' => 'bar', // foo = 'bar'
-	'count' => Query::expr('count', '+', 1) // count = count + 1
+    'foo' => 'bar', // foo = 'bar'
+    'count' => Query::expr('count', '+', 1) // count = count + 1
 ]);
 ```
 
@@ -125,9 +125,9 @@ Functions can be used by calling `func()`. Function literals, column fields and 
 
 ```php
 $query->fields([
-	'id',
-	'username',
-	Query::func('SUBSTRING', ['username' => Func::FIELD, 5])->asAlias('shortName') // SUBSTRING(username, 5) AS shortName
+    'id',
+    'username',
+    Query::func('SUBSTRING', ['username' => Func::FIELD, 5])->asAlias('shortName') // SUBSTRING(username, 5) AS shortName
 ]);
 ```
 

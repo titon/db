@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Query;
@@ -18,36 +18,36 @@ use Titon\Test\TestCase;
  */
 class FuncTest extends TestCase {
 
-	/**
-	 * Test data is persisted.
-	 */
-	public function testFunction() {
-		$func = new Func('SUBSTRING', ['TitonFramework', 5]);
+    /**
+     * Test data is persisted.
+     */
+    public function testFunction() {
+        $func = new Func('SUBSTRING', ['TitonFramework', 5]);
 
-		$this->assertEquals('SUBSTRING', $func->getName());
-		$this->assertEquals(', ', $func->getSeparator());
-		$this->assertEquals([
-			['type' => null, 'value' => 'TitonFramework'],
-			['type' => null, 'value' => 5],
-		], $func->getArguments());
+        $this->assertEquals('SUBSTRING', $func->getName());
+        $this->assertEquals(', ', $func->getSeparator());
+        $this->assertEquals([
+            ['type' => null, 'value' => 'TitonFramework'],
+            ['type' => null, 'value' => 5],
+        ], $func->getArguments());
 
-		$func = new Func('SUBSTRING', ['Titon', 'FROM -4 FOR 2' => Func::LITERAL], ' ');
+        $func = new Func('SUBSTRING', ['Titon', 'FROM -4 FOR 2' => Func::LITERAL], ' ');
 
-		$this->assertEquals('SUBSTRING', $func->getName());
-		$this->assertEquals(' ', $func->getSeparator());
-		$this->assertEquals([
-			['type' => null, 'value' => 'Titon'],
-			['type' => Func::LITERAL, 'value' => 'FROM -4 FOR 2'],
-		], $func->getArguments());
+        $this->assertEquals('SUBSTRING', $func->getName());
+        $this->assertEquals(' ', $func->getSeparator());
+        $this->assertEquals([
+            ['type' => null, 'value' => 'Titon'],
+            ['type' => Func::LITERAL, 'value' => 'FROM -4 FOR 2'],
+        ], $func->getArguments());
 
-		$func1 = new Func('CHAR', ['0x65 USING utf8' => Func::LITERAL]);
-		$func2 = new Func('CHARSET', $func1);
+        $func1 = new Func('CHAR', ['0x65 USING utf8' => Func::LITERAL]);
+        $func2 = new Func('CHARSET', $func1);
 
-		$this->assertEquals('CHARSET', $func2->getName());
-		$this->assertEquals(', ', $func2->getSeparator());
-		$this->assertEquals([
-			['type' => null, 'value' => $func1],
-		], $func2->getArguments());
-	}
+        $this->assertEquals('CHARSET', $func2->getName());
+        $this->assertEquals(', ', $func2->getSeparator());
+        $this->assertEquals([
+            ['type' => null, 'value' => $func1],
+        ], $func2->getArguments());
+    }
 
 }

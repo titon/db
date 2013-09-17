@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Relation;
@@ -19,20 +19,20 @@ use Titon\Model\Relation;
  */
 class ManyToOne extends AbstractRelation {
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getType() {
-		return Relation::MANY_TO_ONE;
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function getType() {
+        return Relation::MANY_TO_ONE;
+    }
 
-	/**
-	 * Belongs to should not delete parent records.
-	 *
-	 * @return bool
-	 */
-	public function isDependent() {
-		return false;
-	}
+    /**
+     * Belongs to should not delete parent records.
+     *
+     * @return bool
+     */
+    public function isDependent() {
+        return false;
+    }
 
 }

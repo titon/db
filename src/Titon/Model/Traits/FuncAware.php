@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Traits;
@@ -16,16 +16,16 @@ use Titon\Model\Query\Func;
  */
 trait FuncAware {
 
-	/**
-	 * Instantiate a new database function.
-	 *
-	 * @param string $name
-	 * @param string|array $arguments
-	 * @param string $separator
-	 * @return \Titon\Model\Query\Func
-	 */
-	public static function func($name, $arguments = [], $separator = ', ') {
-		return new Func($name, $arguments, $separator);
-	}
+    /**
+     * Instantiate a new database function.
+     *
+     * @param string $name
+     * @param string|array $arguments
+     * @param string $separator
+     * @return \Titon\Model\Query\Func
+     */
+    public static function func($name, $arguments = [], $separator = ', ') {
+        return new Func($name, $arguments, $separator);
+    }
 
 }

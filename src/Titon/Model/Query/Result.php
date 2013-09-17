@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Query;
@@ -14,95 +14,95 @@ namespace Titon\Model\Query;
  */
 interface Result {
 
-	/**
-	 * Close any open connection.
-	 *
-	 * @return bool
-	 */
-	public function close();
+    /**
+     * Close any open connection.
+     *
+     * @return bool
+     */
+    public function close();
 
-	/**
-	 * Return a count for the number of results. This assumes COUNT() was used.
-	 *
-	 * @return int
-	 */
-	public function count();
+    /**
+     * Return a count for the number of results. This assumes COUNT() was used.
+     *
+     * @return int
+     */
+    public function count();
 
-	/**
-	 * Execute the query and log the affected rows and execution time.
-	 *
-	 * @return \Titon\Model\Query\Result
-	 */
-	public function execute();
+    /**
+     * Execute the query and log the affected rows and execution time.
+     *
+     * @return \Titon\Model\Query\Result
+     */
+    public function execute();
 
-	/**
-	 * Return the first row in the results.
-	 *
-	 * @return array
-	 */
-	public function fetch();
+    /**
+     * Return the first row in the results.
+     *
+     * @return array
+     */
+    public function fetch();
 
-	/**
-	 * Return all rows in the results.
-	 *
-	 * @return array
-	 */
-	public function fetchAll();
+    /**
+     * Return all rows in the results.
+     *
+     * @return array
+     */
+    public function fetchAll();
 
-	/**
-	 * Return the time in milliseconds it took to execute the query.
-	 *
-	 * @return int
-	 */
-	public function getExecutionTime();
+    /**
+     * Return the time in milliseconds it took to execute the query.
+     *
+     * @return int
+     */
+    public function getExecutionTime();
 
-	/**
-	 * Return a list of params that were bound to the query.
-	 *
-	 * @return array
-	 */
-	public function getParams();
+    /**
+     * Return a list of params that were bound to the query.
+     *
+     * @return array
+     */
+    public function getParams();
 
-	/**
-	 * Return the query object for this result.
-	 *
-	 * @return \Titon\Model\Query
-	 */
-	public function getQuery();
+    /**
+     * Return the query object for this result.
+     *
+     * @return \Titon\Model\Query
+     */
+    public function getQuery();
 
-	/**
-	 * Return a count of how many affected rows.
-	 *
-	 * @return int
-	 */
-	public function getRowCount();
+    /**
+     * Return a count of how many affected rows.
+     *
+     * @return int
+     */
+    public function getRowCount();
 
-	/**
-	 * Return the final SQL statement.
-	 *
-	 * @return string
-	 */
-	public function getStatement();
+    /**
+     * Return the final SQL statement.
+     *
+     * @return string
+     */
+    public function getStatement();
 
-	/**
-	 * Has the query been executed.
-	 *
-	 * @return bool
-	 */
-	public function hasExecuted();
+    /**
+     * Has the query been executed.
+     *
+     * @return bool
+     */
+    public function hasExecuted();
 
-	/**
-	 * Was the query execution successful?
-	 *
-	 * @return bool
-	 */
-	public function isSuccessful();
+    /**
+     * Was the query execution successful?
+     *
+     * @return bool
+     */
+    public function isSuccessful();
 
-	/**
-	 * Return the affected row count or a boolean if not successful.
-	 *
-	 * @return int
-	 */
-	public function save();
+    /**
+     * Return the affected row count or a boolean if not successful.
+     *
+     * @return int
+     */
+    public function save();
 
 }

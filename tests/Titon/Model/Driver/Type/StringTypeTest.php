@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright	Copyright 2010-2013, The Titon Project
- * @license		http://opensource.org/licenses/bsd-license.php
- * @link		http://titon.io
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
  */
 
 namespace Titon\Model\Driver\Type;
@@ -19,56 +19,56 @@ use Titon\Test\TestCase;
  */
 class StringTypeTest extends TestCase {
 
-	/**
-	 * This method is called before a test is executed.
-	 */
-	protected function setUp() {
-		parent::setUp();
+    /**
+     * This method is called before a test is executed.
+     */
+    protected function setUp() {
+        parent::setUp();
 
-		$this->object = new StringType(new DriverStub('default', []));
-	}
+        $this->object = new StringType(new DriverStub('default', []));
+    }
 
-	/**
-	 * Test from database conversion.
-	 */
-	public function testFrom() {
-		$this->assertSame('123', $this->object->from(123));
-		$this->assertSame('abc', $this->object->from('abc'));
-		$this->assertSame('1', $this->object->from(true));
-		$this->assertSame('', $this->object->from(false));
-		$this->assertSame('', $this->object->from(null));
-	}
+    /**
+     * Test from database conversion.
+     */
+    public function testFrom() {
+        $this->assertSame('123', $this->object->from(123));
+        $this->assertSame('abc', $this->object->from('abc'));
+        $this->assertSame('1', $this->object->from(true));
+        $this->assertSame('', $this->object->from(false));
+        $this->assertSame('', $this->object->from(null));
+    }
 
-	/**
-	 * Test to database conversion.
-	 */
-	public function testTo() {
-		$this->assertSame('123', $this->object->to(123));
-		$this->assertSame('abc', $this->object->to('abc'));
-		$this->assertSame('1', $this->object->to(true));
-		$this->assertSame('', $this->object->to(false));
-		$this->assertSame('', $this->object->to(null));
-	}
+    /**
+     * Test to database conversion.
+     */
+    public function testTo() {
+        $this->assertSame('123', $this->object->to(123));
+        $this->assertSame('abc', $this->object->to('abc'));
+        $this->assertSame('1', $this->object->to(true));
+        $this->assertSame('', $this->object->to(false));
+        $this->assertSame('', $this->object->to(null));
+    }
 
-	/**
-	 * Test name string.
-	 */
-	public function testGetName() {
-		$this->assertEquals('string', $this->object->getName());
-	}
+    /**
+     * Test name string.
+     */
+    public function testGetName() {
+        $this->assertEquals('string', $this->object->getName());
+    }
 
-	/**
-	 * Test PDO type.
-	 */
-	public function testGetBindingType() {
-		$this->assertEquals(PDO::PARAM_STR, $this->object->getBindingType());
-	}
+    /**
+     * Test PDO type.
+     */
+    public function testGetBindingType() {
+        $this->assertEquals(PDO::PARAM_STR, $this->object->getBindingType());
+    }
 
-	/**
-	 * Test schema options.
-	 */
-	public function testGetDefaultOptions() {
-		$this->assertEquals(['length' => 255], $this->object->getDefaultOptions());
-	}
+    /**
+     * Test schema options.
+     */
+    public function testGetDefaultOptions() {
+        $this->assertEquals(['length' => 255], $this->object->getDefaultOptions());
+    }
 
 }

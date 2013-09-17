@@ -12,7 +12,7 @@ It's extremely helpful in evaluating keys that do not exist. Instead of throwing
 
 ```php
 if ($row->someValue) {
-	// Returns false since someValue doesn't exist in the array
+    // Returns false since someValue doesn't exist in the array
 }
 ```
 
@@ -23,9 +23,9 @@ use App\Model\User;
 use Titon\Model\Entity;
 
 class UserEntity extends Entity {
-	public function isActive() {
-		return ($this->status == User::ACTIVE);
-	}
+    public function isActive() {
+        return ($this->status == User::ACTIVE);
+    }
 }
 ```
 
@@ -35,7 +35,7 @@ Now see it in action!
 $row = new UserEntity(['user' => 'titon', 'active' => 1]);
 
 if ($row->isActive()) {
-	echo $row->user;
+    echo $row->user;
 }
 ```
 
