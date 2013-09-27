@@ -90,42 +90,6 @@ class ConvertableBehaviorTest extends TestCase {
     }
 
     /**
-     * Test field HTML conversion.
-     */
-    public function testHtml() {
-        $this->loadFixtures('Posts');
-
-        $post = new Post();
-
-        // No decoding
-        $post->addBehavior(new ConvertableBehavior())
-            ->convert('content', 'html', ['decode' => false]);
-
-        $data = [
-            'topic_id' => 3,
-            'active' => 1,
-            'content' => 'Lets add some "entities" & other things like <html>.'
-        ];
-
-        $post_id = $post->create($data);
-
-        $this->assertEquals([
-            'id' => $post_id,
-            'topic_id' => 3,
-            'active' => 1,
-            'content' => 'Lets add some &quot;entities&quot; &amp; other things like &lt;html&gt;.'
-        ], $post->read($post_id, false));
-
-        // With decoding
-        $post->getBehavior('Convertable')
-            ->convert('content', 'html', ['decode' => true]);
-
-        $data['id'] = $post_id;
-
-        $this->assertEquals($data, $post->read($post_id, false));
-    }
-
-    /**
      * Test field base64 conversion.
      */
     public function testBase64() {

@@ -19,6 +19,11 @@ use Titon\Utility\Sanitize;
  */
 class FilterableBehavior extends AbstractBehavior {
 
+    const HTML = 'html';
+    const NEWLINES = 'newlines';
+    const WHITESPACE = 'whitespace';
+    const XSS = 'xss';
+
     /**
      * Mapped filters per field.
      *
@@ -36,7 +41,7 @@ class FilterableBehavior extends AbstractBehavior {
      * @throws \Titon\Model\Exception\InvalidArgumentException
      */
     public function filter($field, $filter, array $options = []) {
-        if (!in_array($field, ['strip', 'html', 'newlines', 'whitespace', 'xss'])) {
+        if (!in_array($filter, [self::HTML, self::NEWLINES, self::WHITESPACE, self::XSS])) {
             throw new InvalidArgumentException(sprintf('Filter %s does not exist', $filter));
         }
 
@@ -60,11 +65,6 @@ class FilterableBehavior extends AbstractBehavior {
             }
 
             $filter = $this->_filters[$key];
-
-            // Strip tags
-            if (isset($filter['strip'])) {
-                $value = strip_tags($value, (string) $filter['strip']['allowed']);
-            }
 
             // HTML escape
             if (isset($filter['html'])) {

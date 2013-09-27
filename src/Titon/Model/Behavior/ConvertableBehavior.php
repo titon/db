@@ -19,6 +19,11 @@ use Titon\Utility\Hash;
  */
 class ConvertableBehavior extends AbstractBehavior {
 
+    const SERIALIZE = 'serialize';
+    const JSON = 'json';
+    const BASE64 = 'base64';
+    const CUSTOM = 'custom';
+
     /**
      * Mapped converters per field.
      *
@@ -32,17 +37,10 @@ class ConvertableBehavior extends AbstractBehavior {
      * @type array
      */
     protected $_defaults = [
-        'serialize' => [],
-        'json' => [
-            'object' => false
-        ],
-        'html' => [
-            'decode' => false,
-            'encoding' => 'UTF-8',
-            'flags' => ENT_QUOTES
-        ],
-        'base64' => [],
-        'custom' => []
+        self::SERIALIZE => [],
+        self::JSON => ['object' => false],
+        self::BASE64 => [],
+        self::CUSTOM => []
     ];
 
     /**
@@ -90,11 +88,10 @@ class ConvertableBehavior extends AbstractBehavior {
             }
 
             switch ($converter['type']) {
-                case 'serialize':   $value = $this->toSerialize($value, $converter); break;
-                case 'json':        $value = $this->toJson($value, $converter); break;
-                case 'html':        $value = $this->toHtml($value, $converter); break;
-                case 'base64':      $value = $this->toBase64($value, $converter); break;
-                case 'custom':
+                case self::SERIALIZE:   $value = $this->toSerialize($value, $converter); break;
+                case self::JSON:        $value = $this->toJson($value, $converter); break;
+                case self::BASE64:      $value = $this->toBase64($value, $converter); break;
+                case self::CUSTOM:
                     if (method_exists($model, $converter['encode'])) {
                         $value = call_user_func_array([$model, $converter['encode']], [$value, $converter]);
                     }
@@ -135,11 +132,10 @@ class ConvertableBehavior extends AbstractBehavior {
                 }
 
                 switch ($converter['type']) {
-                    case 'serialize':   $value = $this->fromSerialize($value, $converter); break;
-                    case 'json':        $value = $this->fromJson($value, $converter); break;
-                    case 'html':        $value = $this->fromHtml($value, $converter); break;
-                    case 'base64':      $value = $this->fromBase64($value, $converter); break;
-                    case 'custom':
+                    case self::SERIALIZE:   $value = $this->fromSerialize($value, $converter); break;
+                    case self::JSON:        $value = $this->fromJson($value, $converter); break;
+                    case self::BASE64:      $value = $this->fromBase64($value, $converter); break;
+                    case self::CUSTOM:
                         if (method_exists($model, $converter['decode'])) {
                             $value = call_user_func_array([$model, $converter['decode']], [$value, $converter]);
                         }
@@ -174,17 +170,6 @@ class ConvertableBehavior extends AbstractBehavior {
     }
 
     /**
-     * Decode HTML entities within the string.
-     *
-     * @param string $value
-     * @param array $options
-     * @return string
-     */
-    public function fromHtml($value, array $options) {
-        return html_entity_decode($value, $options['flags'], $options['encoding']);
-    }
-
-    /**
      * Decode the string from base64.
      *
      * @param string $value
@@ -215,17 +200,6 @@ class ConvertableBehavior extends AbstractBehavior {
      */
     public function toJson($value, array $options) {
         return json_encode($value);
-    }
-
-    /**
-     * Escape HTML entities within a string.
-     *
-     * @param mixed $value
-     * @param array $options
-     * @return string
-     */
-    public function toHtml($value, array $options) {
-        return htmlentities($value, $options['flags'], $options['encoding']);
     }
 
     /**
