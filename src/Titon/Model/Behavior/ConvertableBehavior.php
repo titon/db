@@ -55,13 +55,14 @@ class ConvertableBehavior extends AbstractBehavior {
      * @throws \Titon\Model\Exception\InvalidArgumentException
      */
     public function convert($field, $type, array $options) {
-        if (empty($this->_defaults[$type])) {
+        if (!isset($this->_defaults[$type])) {
             throw new InvalidArgumentException(sprintf('Converter %s does not exist', $type));
         }
 
         $this->_converters[$field] = Hash::merge([
             'encode' => true,
             'decode' => true,
+            'type' => $type,
         ], $this->_defaults[$type], $options);
     }
 
@@ -114,37 +115,39 @@ class ConvertableBehavior extends AbstractBehavior {
      * @param string $fetchType
      */
     public function postFetch(Event $event, array &$results, $fetchType) {
-        if ($fetchType !== 'fetchAll') {
+        if (!in_array($fetchType, ['fetch', 'fetchAll'])) {
             return;
         }
 
         $model = $this->getModel();
 
-        foreach ($results as $key => $value) {
-            if (empty($this->_converters[$key])) {
-                continue;
+        foreach ($results as $i => $result) {
+            foreach ($result as $key => $value) {
+                if (empty($this->_converters[$key])) {
+                    continue;
+                }
+
+                $converter = $this->_converters[$key];
+
+                // Exit if decoding should not happen
+                if (!$converter['decode']) {
+                    continue;
+                }
+
+                switch ($converter['type']) {
+                    case 'serialize':   $value = $this->fromSerialize($value, $converter); break;
+                    case 'json':        $value = $this->fromJson($value, $converter); break;
+                    case 'html':        $value = $this->fromHtml($value, $converter); break;
+                    case 'base64':      $value = $this->fromBase64($value, $converter); break;
+                    case 'custom':
+                        if (method_exists($model, $converter['decode'])) {
+                            $value = call_user_func_array([$model, $converter['decode']], [$value, $converter]);
+                        }
+                    break;
+                }
+
+                $results[$i][$key] = $value;
             }
-
-            $converter = $this->_converters[$key];
-
-            // Exit if decoding should not happen
-            if (!$converter['decode']) {
-                continue;
-            }
-
-            switch ($converter['type']) {
-                case 'serialize':   $value = $this->fromSerialize($value, $converter); break;
-                case 'json':        $value = $this->fromJson($value, $converter); break;
-                case 'html':        $value = $this->fromHtml($value, $converter); break;
-                case 'base64':      $value = $this->fromBase64($value, $converter); break;
-                case 'custom':
-                    if (method_exists($model, $converter['decode'])) {
-                        $value = call_user_func_array([$model, $converter['decode']], [$value, $converter]);
-                    }
-                break;
-            }
-
-            $results[$key] = $value;
         }
     }
 
