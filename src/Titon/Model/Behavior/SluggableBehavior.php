@@ -49,7 +49,6 @@ class SluggableBehavior extends AbstractBehavior {
      */
     public function preSave(Event $event, $id, array &$data) {
         $config = $this->config->all();
-        $model = $this->getModel();
 
         if (empty($data) || empty($data[$config['field']]) || !empty($data[$config['slug']])) {
             return true;
@@ -60,41 +59,23 @@ class SluggableBehavior extends AbstractBehavior {
 
         $slug = $data[$config['field']];
 
-        $model->emit('model.sluggable.pre', [&$slug]);
+        $this->getModel()->emit('model.preSlug', [&$slug]);
 
         $slug = $this->slugify($slug);
 
-        $model->emit('model.sluggable.post', [&$slug]);
+        $this->getModel()->emit('model.postSlug', [&$slug]);
 
-        if (mb_strlen($slug) > ($config['length'] - 3)) {
-            $slug = mb_substr($slug, 0, ($config['length'] - 3));
+        if (mb_strlen($slug) > ($config['length'] - 5)) {
+            $slug = mb_substr($slug, 0, ($config['length'] - 5));
         }
 
         if ($config['unique']) {
-            $slug = $this->_makeUnique($id, $slug);
+            $slug = $this->makeUnique($id, $slug);
         }
 
         $data[$config['slug']] = $slug;
 
         return true;
-    }
-
-    /**
-     * Return a slugged version of a string.
-     *
-     * @param string $string
-     * @return string
-     */
-    public function slugify($string) {
-        $string = strip_tags($string);
-        $string = str_replace(['&amp;', '&'], 'and', $string);
-        $string = str_replace('@', 'at', $string);
-
-        if (class_exists('Titon\G11n\Utility\Inflector')) {
-            return Titon\G11n\Utility\Inflector::slug($string);
-        }
-
-        return Inflector::slug($string);
     }
 
     /**
@@ -105,7 +86,7 @@ class SluggableBehavior extends AbstractBehavior {
      * @param string $slug
      * @return string
      */
-    protected function _makeUnique($id, $slug) {
+    public function makeUnique($id, $slug) {
         $model = $this->getModel();
         $query = $model->select()->where($this->config->slug, 'like', $slug . '%');
 
@@ -122,6 +103,24 @@ class SluggableBehavior extends AbstractBehavior {
         }
 
         return $slug;
+    }
+
+    /**
+     * Return a slugged version of a string.
+     *
+     * @param string $string
+     * @return string
+     */
+    public static function slugify($string) {
+        $string = strip_tags($string);
+        $string = str_replace(['&amp;', '&'], 'and', $string);
+        $string = str_replace('@', 'at', $string);
+
+        if (class_exists('Titon\G11n\Utility\Inflector')) {
+            return Titon\G11n\Utility\Inflector::slug($string);
+        }
+
+        return Inflector::slug($string);
     }
 
 }
