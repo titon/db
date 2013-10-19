@@ -47,6 +47,14 @@ class DatetimeTypeTest extends TestCase {
         $this->assertSame('2011-03-11 21:05:29', $this->object->to('2011-03-11 21:05:29'));
         $this->assertSame('1985-06-06 12:33:00', $this->object->to('June 6th 1985, 12:33pm'));
         $this->assertSame('1995-11-30 02:44:55', $this->object->to(new DateTime('1995-11-30 02:44:55')));
+        $this->assertSame('1988-02-26 09:32:45', $this->object->to([
+            'hour' => 9,
+            'minute' => 32,
+            'second' => 45,
+            'month' => 2,
+            'day' => 26,
+            'year' => 1988
+        ]));
     }
 
     /**

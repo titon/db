@@ -23,6 +23,15 @@ abstract class AbstractType implements Type {
     use DriverAware;
 
     /**
+     * Store the driver.
+     *
+     * @param \Titon\Model\Driver $driver
+     */
+    public function __construct(Driver $driver) {
+        $this->setDriver($driver);
+    }
+
+    /**
      * {@inheritdoc}
      *
      * @uses \Titon\Common\Registry
@@ -45,15 +54,6 @@ abstract class AbstractType implements Type {
         }
 
         throw new UnsupportedTypeException(sprintf('Unsupported data type %s', $type));
-    }
-
-    /**
-     * Store the driver.
-     *
-     * @param \Titon\Model\Driver $driver
-     */
-    public function __construct(Driver $driver) {
-        $this->setDriver($driver);
     }
 
     /**

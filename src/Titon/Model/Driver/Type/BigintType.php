@@ -32,6 +32,10 @@ class BigintType extends AbstractType {
      * {@inheritdoc}
      */
     public function to($value) {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
         return (string) $value;
     }
 

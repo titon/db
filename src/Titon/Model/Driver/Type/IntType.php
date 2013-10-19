@@ -41,6 +41,10 @@ class IntType extends AbstractType {
      * {@inheritdoc}
      */
     public function to($value) {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
         return (int) $value;
     }
 

@@ -562,7 +562,7 @@ class HierarchicalBehavior extends AbstractBehavior {
      * @param array $order
      * @return bool
      */
-    public function reOrder(array $order) {
+    public function reOrder(array $order = []) {
         $this->_reOrder(null, 0, $order);
 
         return true;

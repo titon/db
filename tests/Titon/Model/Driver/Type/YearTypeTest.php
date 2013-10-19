@@ -49,6 +49,9 @@ class YearTypeTest extends TestCase {
         $this->assertSame('1985', $this->object->to('June 6th 1985, 12:33pm'));
         $this->assertSame('1995', $this->object->to(new DateTime('1995-11-30 02:44:55')));
         $this->assertSame('2013', $this->object->to('Dec 24th 13, 02:15am'));
+        $this->assertSame('1988', $this->object->to([
+            'year' => 1988
+        ]));
     }
 
     /**

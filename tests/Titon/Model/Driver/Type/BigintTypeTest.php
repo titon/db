@@ -41,6 +41,8 @@ class BigintTypeTest extends TestCase {
      * Test to database conversion.
      */
     public function testTo() {
+        $this->assertSame(null, $this->object->to(''));
+        $this->assertSame(null, $this->object->to(null));
         $this->assertSame('1337', $this->object->to(1337));
         $this->assertSame('1234567890', $this->object->to(1234567890));
         $this->assertSame('12345678901234567890', $this->object->to('12345678901234567890'));

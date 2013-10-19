@@ -43,6 +43,8 @@ class IntTypeTest extends TestCase {
      * Test to database conversion.
      */
     public function testTo() {
+        $this->assertSame(null, $this->object->to(''));
+        $this->assertSame(null, $this->object->to(null));
         $this->assertSame(123, $this->object->to(123.5));
         $this->assertSame(456, $this->object->to(456));
         $this->assertSame(666, $this->object->to('666'));

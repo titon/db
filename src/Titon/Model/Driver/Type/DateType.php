@@ -48,6 +48,23 @@ class DateType extends AbstractType {
             return $value->format($this->format);
         }
 
+        // Convert array to UNIX timestamp
+        if (is_array($value)) {
+            $hour = isset($value['hour']) ? $value['hour'] : 0;
+
+            if (isset($value['meridiem']) && strtolower($value['meridiem']) === 'pm') {
+                $hour += 12;
+            }
+
+            $value = mktime(
+                $hour,
+                isset($value['minute']) ? $value['minute'] : 0,
+                isset($value['second']) ? $value['second'] : 0,
+                isset($value['month']) ? $value['month'] : date('m'),
+                isset($value['day']) ? $value['day'] : date('d'),
+                isset($value['year']) ? $value['year'] : date('Y'));
+        }
+
         return date($this->format, Time::toUnix($value));
     }
 

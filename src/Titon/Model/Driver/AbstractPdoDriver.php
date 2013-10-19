@@ -352,24 +352,27 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      * @return array
      */
     public function resolveBind($field, $value, array $schema = []) {
+        $type = null;
 
         // Don't convert expressions
         if ($value instanceof Expr) {
             return [$value->getValue(), $this->resolveType($value->getValue())];
 
-        // Don't convert null values
-        } else if ($value === null) {
-            return [null, PDO::PARAM_NULL];
-
         // Type cast using schema
-        } else if (isset($schema[$field]['type'])) {
+        } else if ($value !== null && isset($schema[$field]['type'])) {
             $dataType = AbstractType::factory($schema[$field]['type'], $this);
+            $value = $dataType->to($value);
+            $type = $dataType->getBindingType();
+        }
 
-            return [$dataType->to($value), $dataType->getBindingType()];
+        if ($value === null) {
+            $type = PDO::PARAM_NULL;
+        } else if (!$type) {
+            $type = $this->resolveType($value);
         }
 
         // Return scalar type
-        return [$value, $this->resolveType($value)];
+        return [$value, $type];
     }
 
     /**
