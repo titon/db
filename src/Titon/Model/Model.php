@@ -30,6 +30,7 @@ use Titon\Model\Relation\OneToMany;
 use Titon\Model\Relation\ManyToOne;
 use Titon\Model\Relation\ManyToMany;
 use Titon\Utility\Hash;
+use Titon\Utility\Path;
 use \Exception;
 use \Closure;
 
@@ -138,6 +139,8 @@ class Model extends Base implements Callback, Listener {
         if ($behavior instanceof Listener) {
             $this->on('model', $behavior);
         }
+
+        $this->attachObject(str_replace('Behavior', '', Path::className(get_class($behavior))), $behavior);
 
         return $behavior;
     }
