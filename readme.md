@@ -1,4 +1,4 @@
-# Model v0.7.0 [![Build Status](https://travis-ci.org/titon/model.png)](https://travis-ci.org/titon/model) #
+# Model v0.7.1 [![Build Status](https://travis-ci.org/titon/model.png)](https://travis-ci.org/titon/model) #
 
 The Titon model package provides a basic database abstraction layer and an object relational mapper.
 Supported drivers are implemented in external packages that can be installed through composer.
