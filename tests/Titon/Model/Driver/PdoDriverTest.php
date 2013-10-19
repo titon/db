@@ -148,8 +148,8 @@ class PdoDriverTest extends TestCase {
             ],
             'age' => [
                 'field' => 'age',
-                'type' => 'tinyint',
-                'length' => '4',
+                'type' => 'smallint',
+                'length' => '6',
                 'null' => true
             ],
             'created' => [

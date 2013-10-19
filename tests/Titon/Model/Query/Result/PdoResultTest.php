@@ -120,7 +120,7 @@ class PdoResultTest extends TestCase {
                 'email' => 'wolverine@email.com',
                 'firstName' => 'Logan',
                 'lastName' => null,
-                'age' => 127,
+                'age' => 355,
                 'created' => '2000-11-30 21:22:34',
                 'modified' => null
             ]
