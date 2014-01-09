@@ -84,7 +84,7 @@ class EntityTest extends TestCase {
      */
     public function testSerialize() {
         $data = serialize($this->object);
-        $this->assertEquals('C:18:"Titon\Db\Entity":442:{a:7:{s:2:"id";i:1;s:8:"username";s:5:"Miles";s:8:"password";s:10:"iamasecret";s:5:"email";s:16:"email@domain.com";s:7:"created";s:19:"1988-02-26 10:22:33";s:7:"Profile";C:18:"Titon\Db\Entity":58:{a:3:{s:2:"id";i:1;s:3:"age";i:25;s:7:"country";s:3:"USA";}}s:5:"Posts";a:2:{i:0;C:18:"Titon\Db\Entity":47:{a:2:{s:2:"id";i:666;s:5:"title";s:7:"Post #1";}}i:1;C:18:"Titon\Db\Entity":48:{a:2:{s:2:"id";i:1337;s:5:"title";s:7:"Post #2";}}}}}', $data);
+        $this->assertEquals('C:15:"Titon\Db\Entity":433:{a:7:{s:2:"id";i:1;s:8:"username";s:5:"Miles";s:8:"password";s:10:"iamasecret";s:5:"email";s:16:"email@domain.com";s:7:"created";s:19:"1988-02-26 10:22:33";s:7:"Profile";C:15:"Titon\Db\Entity":58:{a:3:{s:2:"id";i:1;s:3:"age";i:25;s:7:"country";s:3:"USA";}}s:5:"Posts";a:2:{i:0;C:15:"Titon\Db\Entity":47:{a:2:{s:2:"id";i:666;s:5:"title";s:7:"Post #1";}}i:1;C:15:"Titon\Db\Entity":48:{a:2:{s:2:"id";i:1337;s:5:"title";s:7:"Post #2";}}}}}', $data);
 
         $entity = unserialize($data);
         $this->assertEquals($this->object, $entity);
