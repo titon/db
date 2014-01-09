@@ -13,7 +13,7 @@ use Titon\Test\Stub\Table\UserSaveCallbacks;
 use Titon\Test\TestCase;
 
 /**
- * Test class for model callbacks.
+ * Test class for table callbacks.
  */
 class AbstractCallbackTest extends TestCase {
 

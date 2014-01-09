@@ -9,73 +9,73 @@ The following relationships are supported:
 * ManyToOne (Belongs to)
 * ManyToMany (Has and belongs to many)
 
-Relationships can be defined in models by calling the `addRelation()` method. The method returns the relation object allowing for continued modification.
+Relationships can be defined in tables by calling the `addRelation()` method. The method returns the relation object allowing for continued modification.
 
 ```php
-use Titon\Model\Model;
-use Titon\Model\Relation\OneToOne;
+use Titon\Db\Table;
+use Titon\Db\Relation\OneToOne;
 
-class User extends Model {
+class User extends Table {
     // ...
 
     public function initialize() {
         parent::initialize();
 
-        $this->addRelation(new OneToOne('Profile', 'App\Model\Profile'))
+        $this->addRelation(new OneToOne('Profile', 'App\Db\Profile'))
             ->setRelatedForeignKey('user_id');
     }
 }
 ```
 
-The previous example set a one-to-one relationship between the App\Model\User and App\Model\Profile model, through the Profile alias, and using the user_id in the profiles table as the foreign key.
+The previous example set a one-to-one relationship between the App\Table\User and App\Table\Profile table, through the Profile alias, and using the user_id in the profiles table as the foreign key.
 
-Once a relationship is defined, it can be accessed through the alias name on the model object. Nested relationships are also supported.
+Once a relationship is defined, it can be accessed through the alias name on the table object. Nested relationships are also supported.
 
 ```php
 $user = new User();
-$user->Profile; // Profile model
+$user->Profile; // Profile table
 ```
 
 ### Usage ###
 
 Each relation type must be defined in a certain manner. This assumes that foreign key and junction mapping is set correctly.
 
-When mapping the foreign keys, there is `setForeignKey()` which sets the field within the current model, and `setRelatedForeignKey()` which sets the field within the external related model.
+When mapping the foreign keys, there is `setForeignKey()` which sets the field within the current table, and `setRelatedForeignKey()` which sets the field within the external related table.
 
 ```php
 // OneToOne - User has one Profile
-$this->addRelation(new OneToOne('Profile', 'App\Model\Profile'))
+$this->addRelation(new OneToOne('Profile', 'App\Db\Profile'))
     ->setRelatedForeignKey('user_id'); // profiles.user_id
 
-$this->hasOne('Profile', 'App\Model\Profile', 'user_id');
+$this->hasOne('Profile', 'App\Db\Profile', 'user_id');
 
 // OneToMany - User has many Posts
-$this->addRelation(new OneToMany('Posts', 'App\Model\Post'))
+$this->addRelation(new OneToMany('Posts', 'App\Db\Post'))
     ->setRelatedForeignKey('user_id'); // posts.user_id
 
-$this->hasMany('Posts', 'App\Model\Post', 'user_id');
+$this->hasMany('Posts', 'App\Db\Post', 'user_id');
 
 // ManyToOne - User belongs to Country
-$this->addRelation(new ManyToOne('Country', 'App\Model\Country'))
+$this->addRelation(new ManyToOne('Country', 'App\Db\Country'))
     ->setForeignKey('country_id'); // users.country_id
 
-$this->belongsTo('Country', 'App\Model\Country', 'country_id');
+$this->belongsTo('Country', 'App\Db\Country', 'country_id');
 
 // ManyToMany - User has and belongs to many Groups
-$this->addRelation(new ManyToMany('Groups', 'App\Model\Group'))
-    ->setJunctionClass('App\Model\UserGroup')
+$this->addRelation(new ManyToMany('Groups', 'App\Db\Group'))
+    ->setJunctionClass('App\Db\UserGroup')
     ->setForeignKey('user_id') // user_groups.user_id
     ->setRelatedForeignKey('group_id'); // user_groups.group_id
 
-$this->belongsToMany('Groups', 'App\Model\Group', 'App\Model\UserGroup', 'user_id', 'group_id');
+$this->belongsToMany('Groups', 'App\Db\Group', 'App\Db\UserGroup', 'user_id', 'group_id');
 ```
 
-When defining ManyToMany relations, the junction model and both foreign keys must be defined.
+When defining ManyToMany relations, the junction table and both foreign keys must be defined.
 
 Optional query conditions can be defined for each relation to filter the data. For example, only include active posts.
 
 ```php
-$this->addRelation(new OneToMany('Posts', 'App\Model\Post'))
+$this->addRelation(new OneToMany('Posts', 'App\Db\Post'))
     ->setRelatedForeignKey('user_id')
     ->setConditions(function() {
         // Represents a query object
@@ -85,7 +85,7 @@ $this->addRelation(new OneToMany('Posts', 'App\Model\Post'))
 
 ### CRUD ###
 
-Relational data can be created, read, updated or deleted when the parent model executes a CRUD operation.
+Relational data can be created, read, updated or deleted when the parent table executes a CRUD operation.
 
 While creating parent records, define an array of data using the relation alias. ManyToOne relations will be ignored as they are technically the parent.
 

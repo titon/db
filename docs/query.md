@@ -1,6 +1,6 @@
 # Queries #
 
-A Query is an object oriented approach to SQL query building. A query can be instantiated through the model as so:
+A Query is an object oriented approach to SQL query building. A query can be instantiated through the table as so:
 
 ```php
 $query = $this->query(Query::UPDATE); // specify the type of query
@@ -17,7 +17,7 @@ $query->fields(['created'], true); // select merge or overwrite fields
 $query->fields(['username' => 'foo']); // update or insert
 ```
 
-Set the table to query. Defaults to the model table.
+Set the table to query. Defaults to the table name.
 
 ```php
 $query->from('users');

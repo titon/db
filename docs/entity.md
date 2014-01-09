@@ -16,11 +16,11 @@ if ($row->someValue) {
 }
 ```
 
-By default, all database results use a generic entity. Why not use a custom entity for each model? This allows for custom methods and logic.
+By default, all database results use a generic entity. Why not use a custom entity for each table? This allows for custom methods and logic.
 
 ```php
-use App\Model\User;
-use Titon\Model\Entity;
+use App\Db\User;
+use Titon\Db\Entity;
 
 class UserEntity extends Entity {
     public function isActive() {
@@ -39,4 +39,4 @@ if ($row->isActive()) {
 }
 ```
 
-To set the entity class used by models, update the `entity` configuration with the fully qualified class name.
+To set the entity class used by tables, update the `entity` configuration with the fully qualified class name.

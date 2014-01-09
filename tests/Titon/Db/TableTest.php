@@ -30,7 +30,7 @@ class TableTest extends TestCase {
     }
 
     /**
-     * Test model behavior management.
+     * Test table behavior management.
      */
     public function testAddHasBehaviors() {
         $stub = new TableStub();
@@ -42,7 +42,7 @@ class TableTest extends TestCase {
     }
 
     /**
-     * Test model relation management.
+     * Test table relation management.
      */
     public function testAddHasRelations() {
         $stub = new TableStub();

@@ -24,11 +24,11 @@ use \PDO;
 class PdoDriverTest extends TestCase {
 
     /**
-     * Stub model.
+     * Stub table.
      *
      * @type \Titon\Db\Table
      */
-    protected $model;
+    protected $table;
 
     /**
      * This method is called before a test is executed.
@@ -39,7 +39,7 @@ class PdoDriverTest extends TestCase {
         $this->object = new DriverStub('default', Config::get('db'));
         $this->object->connect();
 
-        $this->model = new User();
+        $this->table = new User();
     }
 
     /**
@@ -59,13 +59,13 @@ class PdoDriverTest extends TestCase {
 
         // Unsupported query
         try {
-            $this->object->buildStatement(new Query('someType', $this->model));
+            $this->object->buildStatement(new Query('someType', $this->table));
             $this->assertTrue(false);
         } catch (Exception $e) {
             $this->assertTrue(true);
         }
 
-        $statement = $this->object->buildStatement((new Query(Query::SELECT, $this->model))->fields('id')->from('users'));
+        $statement = $this->object->buildStatement((new Query(Query::SELECT, $this->table))->fields('id')->from('users'));
         $this->assertInstanceOf('PDOStatement', $statement);
         $statement->closeCursor();
     }
@@ -261,7 +261,7 @@ class PdoDriverTest extends TestCase {
     public function testQuery() {
         $this->loadFixtures('Users');
 
-        $query1 = (new Query(Query::SELECT, $this->model))->from('users');
+        $query1 = (new Query(Query::SELECT, $this->table))->from('users');
         $result = $this->object->query($query1);
 
         $this->assertInstanceOf('Titon\Db\Query\Result', $result);
@@ -302,7 +302,7 @@ class PdoDriverTest extends TestCase {
      * Should be in correct order.
      */
     public function testResolveParams() {
-        $query1 = new Query(Query::SELECT, $this->model);
+        $query1 = new Query(Query::SELECT, $this->table);
         $query1->where('id', 1)->where(function() {
             $this->like('name', 'Titon')->in('size', [1, 2, 3]);
         });
@@ -316,7 +316,7 @@ class PdoDriverTest extends TestCase {
         ], $this->object->resolveParams($query1));
 
         // Include fields
-        $query2 = new Query(Query::UPDATE, $this->model);
+        $query2 = new Query(Query::UPDATE, $this->table);
         $query2->fields([
             'username' => 'miles',
             'age' => 26
@@ -329,7 +329,7 @@ class PdoDriverTest extends TestCase {
         ], $this->object->resolveParams($query2));
 
         // All at once!
-        $query3 = new Query(Query::UPDATE, $this->model);
+        $query3 = new Query(Query::UPDATE, $this->table);
         $query3->fields([
             'username' => 'miles',
             'age' => 26

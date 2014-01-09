@@ -5,11 +5,11 @@ Simply instantiate a Connection object and set the available drivers.
 
 ```php
 use Titon\Common\Registry;
-use Titon\Model\Mysql\MysqlDriver;
+use Titon\Db\Mysql\MysqlDriver;
 
-$conn = Registry::factory('Titon\Model\Connection'); // Registry required
+$conn = Registry::factory('Titon\Db\Connection'); // Registry required
 
-// Requires the model-mysql package
+// Requires the db-mysql package
 $conn->addDriver(new MysqlDriver('default', [
     'host' => '127.0.0.1',
     'user' => 'user',
@@ -23,4 +23,4 @@ To retrieve the driver, use the key name.
 $driver = $conn->getDriver('default');
 ```
 
-The `connection` configuration in the Model represents the driver key.
+The `connection` configuration in the Table represents the driver key.

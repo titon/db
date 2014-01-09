@@ -50,7 +50,7 @@ class RelationTest extends TestCase {
     }
 
     /**
-     * Test model class names.
+     * Test table class names.
      */
     public function testClass() {
         $this->assertEquals('Titon\Test\Stub\Table\User', $this->object->getClass());
@@ -106,7 +106,7 @@ class RelationTest extends TestCase {
     }
 
     /**
-     * Test junction model class names.
+     * Test junction table class names.
      */
     public function testJunctionClass() {
         $this->assertEquals(null, $this->object->getJunctionClass());

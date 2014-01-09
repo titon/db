@@ -401,8 +401,8 @@ class QueryTest extends TestCase {
      * Test object serialization.
      */
     public function testSerialize() {
-        $model = new User();
-        $query = new Query(Query::SELECT, $model);
+        $table = new User();
+        $query = new Query(Query::SELECT, $table);
         $func = $query->func('COUNT', ['id' => Query\Func::FIELD])->asAlias('count');
 
         $query
@@ -420,7 +420,7 @@ class QueryTest extends TestCase {
             });
 
         $expected = unserialize(serialize($query));
-        $expected->setTable($model); // Asserting will fail unless we use the same model instance
+        $expected->setTable($table); // Asserting will fail unless we use the same table instance
 
         $this->assertEquals($expected, $query);
     }
