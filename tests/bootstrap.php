@@ -16,7 +16,7 @@ if (!file_exists(VENDOR_DIR . '/autoload.php')) {
 }
 
 $loader = require VENDOR_DIR . '/autoload.php';
-$loader->add('Titon\\Model', TEST_DIR);
+$loader->add('Titon\\Db', TEST_DIR);
 
 // Define database credentials
 $db = [
@@ -29,5 +29,5 @@ $db = [
 Titon\Common\Config::set('db', $db);
 
 // Used by models
-Titon\Common\Registry::factory('Titon\Model\Connection')
+Titon\Common\Registry::factory('Titon\Db\Connection')
     ->addDriver(new Titon\Test\Stub\DriverStub('default', $db));

@@ -746,10 +746,10 @@ class Table extends Base implements Callback, Listener {
         // Inspect database for columns
         // This approach should only be used for validating columns and types
         } else {
-            $columns = $this->getDriver()->describeTable($this->getTable());
+            $columns = $this->getDriver()->describeTable($this->getTableName());
         }
 
-        $this->setSchema(new Schema($this->getTable(), $columns));
+        $this->setSchema(new Schema($this->getTableName(), $columns));
 
         return $this->_schema;
     }
@@ -759,7 +759,7 @@ class Table extends Base implements Callback, Listener {
      *
      * @return string
      */
-    public function getTable() {
+    public function getTableName() {
         return $this->config->prefix . $this->config->table;
     }
 
@@ -904,7 +904,7 @@ class Table extends Base implements Callback, Listener {
         $this->data = [];
 
         $query = new Query($type, $this);
-        $query->from($this->getTable(), $this->getAlias());
+        $query->from($this->getTableName(), $this->getAlias());
 
         return $query;
     }

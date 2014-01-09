@@ -1,8 +1,8 @@
 {
-    "name": "titon/model",
+    "name": "titon/db",
     "type": "library",
-    "description": "The Titon model package provides a basic database abstraction layer and an object relational mapper.",
-    "keywords": ["titon", "model", "entity", "database", "driver", "query", "connection", "relation", "schema", "predicate", "clause", "dialect", "type"],
+    "description": "The Titon database package provides a basic database abstraction layer and an object relational mapper.",
+    "keywords": ["titon", "db", "database", "entity", "database", "driver", "query", "connection", "relation", "schema", "predicate", "clause", "dialect", "type"],
     "homepage": "http://titon.io",
     "license": "BSD-2",
     "authors": [
@@ -24,15 +24,15 @@
         "psr/log": "*"
     },
     "suggest": {
-        "titon/model-mysql": "Enable MySQL database access",
-        "titon/model-sqlite": "Enable SQLite database access",
-        "titon/model-postgresql": "Enable PostgreSQL database access",
-        "titon/model-mongodb": "Enable MongoDB database access",
+        "titon/db-mysql": "Enable MySQL database access",
+        "titon/db-sqlite": "Enable SQLite database access",
+        "titon/db-postgresql": "Enable PostgreSQL database access",
+        "titon/db-mongodb": "Enable MongoDB database access",
         "titon/cache": "Cache query results using a Storage engine",
         "titon/type": "Utilize enums in the EnumerableBehavior",
         "psr/log": "Log queries using a Logger"
     },
     "autoload": {
-        "psr-0": { "Titon\\Model": "src/" }
+        "psr-0": { "Titon\\Db": "src/" }
     }
 }

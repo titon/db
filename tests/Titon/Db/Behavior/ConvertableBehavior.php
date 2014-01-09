@@ -1,0 +1,128 @@
+<?php
+/**
+ * @copyright   2010-2013, The Titon Project
+ * @license     http://opensource.org/licenses/bsd-license.php
+ * @link        http://titon.io
+ */
+
+namespace Titon\Db\Behavior;
+
+use Titon\Test\Stub\Table\Post;
+use Titon\Test\TestCase;
+
+/**
+ * Test class for Titon\Db\Behavior\ConvertableBehavior.
+ *
+ * @property \Titon\Db\Behavior\ConvertableBehavior $object
+ */
+class ConvertableBehaviorTest extends TestCase {
+
+    /**
+     * Test field serialization.
+     */
+    public function testSerialize() {
+        $this->loadFixtures('Posts');
+
+        $post = new Post();
+
+        // No decoding
+        $post->addBehavior(new ConvertableBehavior())
+            ->convert('content', 'serialize', ['decode' => false]);
+
+        $data = [
+            'topic_id' => 3,
+            'active' => 1,
+            'content' => ['foo' => 'bar']
+        ];
+
+        $post_id = $post->create($data);
+
+        $this->assertEquals([
+            'id' => $post_id,
+            'topic_id' => 3,
+            'active' => 1,
+            'content' => 'a:1:{s:3:"foo";s:3:"bar";}'
+        ], $post->read($post_id, false));
+
+        // With decoding
+        $post->getBehavior('Convertable')
+            ->convert('content', 'serialize', ['decode' => true]);
+
+        $data['id'] = $post_id;
+
+        $this->assertEquals($data, $post->read($post_id, false));
+    }
+
+    /**
+     * Test field JSON conversion.
+     */
+    public function testJson() {
+        $this->loadFixtures('Posts');
+
+        $post = new Post();
+
+        // No decoding
+        $post->addBehavior(new ConvertableBehavior())
+            ->convert('content', 'json', ['decode' => false]);
+
+        $data = [
+            'topic_id' => 3,
+            'active' => 1,
+            'content' => ['foo' => 'bar']
+        ];
+
+        $post_id = $post->create($data);
+
+        $this->assertEquals([
+            'id' => $post_id,
+            'topic_id' => 3,
+            'active' => 1,
+            'content' => '{"foo":"bar"}'
+        ], $post->read($post_id, false));
+
+        // With decoding
+        $post->getBehavior('Convertable')
+            ->convert('content', 'json', ['decode' => true]);
+
+        $data['id'] = $post_id;
+
+        $this->assertEquals($data, $post->read($post_id, false));
+    }
+
+    /**
+     * Test field base64 conversion.
+     */
+    public function testBase64() {
+        $this->loadFixtures('Posts');
+
+        $post = new Post();
+
+        // No decoding
+        $post->addBehavior(new ConvertableBehavior())
+            ->convert('content', 'base64', ['decode' => false]);
+
+        $data = [
+            'topic_id' => 3,
+            'active' => 1,
+            'content' => 'This data will be base64 encoded'
+        ];
+
+        $post_id = $post->create($data);
+
+        $this->assertEquals([
+            'id' => $post_id,
+            'topic_id' => 3,
+            'active' => 1,
+            'content' => 'VGhpcyBkYXRhIHdpbGwgYmUgYmFzZTY0IGVuY29kZWQ='
+        ], $post->read($post_id, false));
+
+        // With decoding
+        $post->getBehavior('Convertable')
+            ->convert('content', 'base64', ['decode' => true]);
+
+        $data['id'] = $post_id;
+
+        $this->assertEquals($data, $post->read($post_id, false));
+    }
+
+}

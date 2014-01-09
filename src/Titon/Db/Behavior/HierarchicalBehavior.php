@@ -244,7 +244,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         if ($withParent) {
             $query
                 ->where($table->getAlias() . '.' . $pk, $id)
-                ->leftJoin([$table->getTable(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $pk]);
+                ->leftJoin([$table->getTableName(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $pk]);
         } else {
             $query->where($pk, $id);
         }

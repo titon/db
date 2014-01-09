@@ -884,7 +884,7 @@ class Query implements Serializable, JsonSerializable {
      * @throws \Titon\Db\Exception\InvalidRelationQueryException
      */
     protected function _addJoin($type, $table, $fields = [], $on = []) {
-        $table = $this->getTable();
+        $tableObj = $this->getTable();
         $join = new Join($type);
 
         if ($table instanceof Relation) {
@@ -896,15 +896,15 @@ class Query implements Serializable, JsonSerializable {
             }
 
             $join
-                ->from($relatedTable->getTable(), $relatedTable->getAlias())
+                ->from($relatedTable->getTableName(), $relatedTable->getAlias())
                 ->fields($fields);
 
             switch ($relation->getType()) {
                 case Relation::MANY_TO_ONE:
-                    $join->on($table->getAlias() . '.' . $relation->getForeignKey(), $relatedTable->getAlias() . '.' . $relatedTable->getPrimaryKey());
+                    $join->on($tableObj->getAlias() . '.' . $relation->getForeignKey(), $relatedTable->getAlias() . '.' . $relatedTable->getPrimaryKey());
                 break;
                 case Relation::ONE_TO_ONE:
-                    $join->on($table->getAlias() . '.' . $table->getPrimaryKey(), $relatedTable->getAlias() . '.' . $relation->getRelatedForeignKey());
+                    $join->on($tableObj->getAlias() . '.' . $tableObj->getPrimaryKey(), $relatedTable->getAlias() . '.' . $relation->getRelatedForeignKey());
                 break;
                 default:
                     throw new InvalidRelationQueryException('Only many-to-one and one-to-one relations can join data');
@@ -922,7 +922,7 @@ class Query implements Serializable, JsonSerializable {
 
             foreach ($on as $pfk => $rfk) {
                 if (strpos($pfk, '.') === false) {
-                    $pfk = $table->getAlias() . '.' . $pfk;
+                    $pfk = $tableObj->getAlias() . '.' . $pfk;
                 }
 
                 if (strpos($rfk, '.') === false) {
