@@ -112,7 +112,7 @@ class Join implements Serializable, JsonSerializable {
      *
      * @return string
      */
-    public function getTable() {
+    public function getTableName() {
         return $this->_table;
     }
 
@@ -182,7 +182,7 @@ class Join implements Serializable, JsonSerializable {
      */
     public function jsonSerialize() {
         return [
-            'table' => $this->getTable(),
+            'table' => $this->getTableName(),
             'alias' => $this->getAlias(),
             'fields' => $this->getFields(),
             'type' => $this->getType(),

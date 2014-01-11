@@ -261,10 +261,10 @@ class Query implements Serializable, JsonSerializable {
      * Pass the query to the table to interact with the database.
      * Return the first record from the results.
      *
-     * @param mixed $options
+     * @param array $options
      * @return \Titon\Db\Entity
      */
-    public function fetch($options = true) {
+    public function fetch(array $options = []) {
         $this->limit(1);
 
         return $this->getTable()->fetch($this, $options);
@@ -274,10 +274,10 @@ class Query implements Serializable, JsonSerializable {
      * Pass the query to the table to interact with the database.
      * Return all records from the results.
      *
-     * @param mixed $options
+     * @param array $options
      * @return \Titon\Db\Entity[]
      */
-    public function fetchAll($options = true) {
+    public function fetchAll(array $options = []) {
         return $this->getTable()->fetchAll($this, $options);
     }
 

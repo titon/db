@@ -8,6 +8,9 @@
 namespace Titon\Db;
 
 use Titon\Test\Stub\BehaviorStub;
+use Titon\Test\Stub\Table\Author;
+use Titon\Test\Stub\Table\Book;
+use Titon\Test\Stub\Table\Series;
 use Titon\Test\Stub\Table\User;
 use Titon\Test\Stub\TableStub;
 use Titon\Test\TestCase;
@@ -424,6 +427,45 @@ class TableTest extends TestCase {
         $query->from($this->object->getTableName(), 'User')->fields('id', 'username');
 
         $this->assertEquals($query, $this->object->select('id', 'username'));
+    }
+
+    public function testShit() {
+        /*// MANY TO ONE
+        $this->loadFixtures('Books', 'Series', 'Genres', 'BookGenres');
+
+        $book = new Book();
+        $record = $book->select()->where('id', 1)->with(['Series', 'Genres'])->fetch();
+
+        var_dump($record);
+        var_dump($record->Series);*/
+
+        /*// ONE TO ONE
+        $this->loadFixtures('Series', 'Authors');
+
+        $author = new Author();
+        $record = $author->select()->where('id', 1)->with('Series')->fetch();
+
+        var_dump($record);
+        var_dump($record->Series);*/
+
+        /*// MANY TO ONE
+        $this->loadFixtures('Series', 'Authors', 'Books');
+
+        $series = new Series();
+        $record = $series->select()->where('id', 1)->with(['Author', 'Books'])->fetch();
+
+        var_dump($record);
+        var_dump($record->Author);
+        var_dump($record->Books);*/
+
+        // MANY TO MANY
+        $this->loadFixtures('Books', 'Genres', 'BookGenres');
+
+        $book = new Book();
+        $record = $book->select()->where('id', 1)->with(['Genres'])->fetch();
+
+        var_dump($record);
+        var_dump($record->Genres);
     }
 
 }

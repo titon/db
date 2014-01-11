@@ -406,10 +406,10 @@ class Table extends Base implements Callback, Listener {
      * Return an entity for the first result from the query.
      *
      * @param \Titon\Db\Query $query
-     * @param mixed $options
+     * @param array $options
      * @return \Titon\Db\Entity|array
      */
-    public function fetch(Query $query, $options = true) {
+    public function fetch(Query $query, array $options = []) {
         return $this->_processFetch($query, __FUNCTION__, $options);
     }
 
@@ -417,10 +417,10 @@ class Table extends Base implements Callback, Listener {
      * Return a list of entities from the results of the query.
      *
      * @param \Titon\Db\Query $query
-     * @param mixed $options
+     * @param array $options
      * @return \Titon\Db\Entity[]|array
      */
-    public function fetchAll(Query $query, $options = true) {
+    public function fetchAll(Query $query, array $options = []) {
         return $this->_processFetch($query, __FUNCTION__, $options);
     }
 
@@ -434,7 +434,6 @@ class Table extends Base implements Callback, Listener {
      * @return array
      */
     public function fetchList(Query $query, $key = null, $value = null, array $options = []) {
-        $options['wrap'] = false;
         $results = $this->_processFetch($query, __FUNCTION__, $options);
 
         $key = $key ?: $this->getPrimaryKey();
@@ -442,7 +441,8 @@ class Table extends Base implements Callback, Listener {
         $list = [];
 
         foreach ($results as $result) {
-            $list[Hash::extract($result, $key)] = Hash::extract($result, $value);
+            $data = $result->toArray();
+            $list[Hash::extract($data, $key)] = Hash::extract($data, $value);
         }
 
         return $list;
@@ -457,11 +457,11 @@ class Table extends Base implements Callback, Listener {
      * @uses Titon\Utility\Hash
      *
      * @param \Titon\Db\Query $query
-     * @param array $result
-     * @param mixed $options
-     * @return array
+     * @param Entity $result
+     * @param array $options
+     * @return \Titon\Db\Entity
      */
-    public function fetchRelations(Query $query, array $result, $options = true) {
+    public function fetchRelations(Query $query, Entity $result, array $options = []) {
         $queries = $query->getRelationQueries();
 
         if (!$queries) {
@@ -483,15 +483,14 @@ class Table extends Base implements Callback, Listener {
                 case Relation::ONE_TO_ONE:
                     $foreignValue = $result[$this->getPrimaryKey()];
 
-                    if ($foreignValue) {
-                        $result[$alias] = $newQuery
-                            ->where($relation->getRelatedForeignKey(), $foreignValue)
-                            ->cache([$relatedClass, 'fetchOneToOne', $foreignValue])
-                            ->limit(1)
-                            ->fetch($options);
-                    } else {
-                        $result[$alias] = [];
-                    }
+                    $newQuery
+                        ->where($relation->getRelatedForeignKey(), $foreignValue)
+                        ->cache([$relatedClass, 'fetchOneToOne', $foreignValue])
+                        ->limit(1);
+
+                    $result->set($alias, function() use ($newQuery, $options) {
+                        return $newQuery->fetch($options);
+                    });
                 break;
 
                 // Has Many
@@ -501,14 +500,13 @@ class Table extends Base implements Callback, Listener {
                 case Relation::ONE_TO_MANY:
                     $foreignValue = $result[$this->getPrimaryKey()];
 
-                    if ($foreignValue) {
-                        $result[$alias] = $newQuery
-                            ->where($relation->getRelatedForeignKey(), $foreignValue)
-                            ->cache([$relatedClass, 'fetchOneToMany', $foreignValue])
-                            ->fetchAll($options);
-                    } else {
-                        $result[$alias] = [];
-                    }
+                    $newQuery
+                        ->where($relation->getRelatedForeignKey(), $foreignValue)
+                        ->cache([$relatedClass, 'fetchOneToMany', $foreignValue]);
+
+                    $result->set($alias, function() use ($newQuery, $options) {
+                        return $newQuery->fetchAll($options);
+                    });
                 break;
 
                 // Belongs To
@@ -518,15 +516,14 @@ class Table extends Base implements Callback, Listener {
                 case Relation::MANY_TO_ONE:
                     $foreignValue = $result[$relation->getForeignKey()];
 
-                    if ($foreignValue) {
-                        $result[$alias] = $newQuery
-                            ->where($relatedTable->getPrimaryKey(), $foreignValue)
-                            ->cache([$relatedClass, 'manyToOne', $foreignValue])
-                            ->limit(1)
-                            ->fetch($options);
-                    } else {
-                        $result[$alias] = [];
-                    }
+                    $newQuery
+                        ->where($relatedTable->getPrimaryKey(), $foreignValue)
+                        ->cache([$relatedClass, 'fetchManyToOne', $foreignValue])
+                        ->limit(1);
+
+                    $result->set($alias, function() use ($newQuery, $options) {
+                        return $newQuery->fetch($options);
+                    });
                 break;
 
                 // Has And Belongs To Many
@@ -536,39 +533,46 @@ class Table extends Base implements Callback, Listener {
                     $foreignValue = $result[$this->getPrimaryKey()];
 
                     if (!$foreignValue) {
-                        $result[$alias] = [];
                         continue;
                     }
 
-                    // Fetch the related records using the junction IDs
-                    $junctionTable = $relation->getJunctionTable();
-                    $junctionResults = $junctionTable
-                        ->select()
-                        ->where($relation->getForeignKey(), $foreignValue)
-                        ->cache([get_class($junctionTable), 'manyToMany', $foreignValue])
-                        ->fetchAll(false);
+                    $result->set($alias, function() use ($relation, $newQuery, $foreignValue, $options) {
+                        $relatedTable = $relation->getRelatedTable();
+                        $relatedClass = get_class($relatedTable);
+                        $lookupIDs = [];
 
-                    if (!$junctionResults) {
-                        $result[$alias] = [];
-                        continue;
-                    }
+                        // Fetch the related records using the junction IDs
+                        $junctionTable = $relation->getJunctionTable();
+                        $junctionResults = $junctionTable
+                            ->select()
+                            ->where($relation->getForeignKey(), $foreignValue)
+                            ->cache([get_class($junctionTable), 'fetchManyToMany', $foreignValue])
+                            ->fetchAll();
 
-                    $lookupIDs = Hash::pluck($junctionResults, $relation->getRelatedForeignKey());
-                    $m2mResults = $newQuery
-                        ->where($relatedTable->getPrimaryKey(), $lookupIDs)
-                        ->cache([$relatedClass, 'manyToMany', $lookupIDs])
-                        ->fetchAll($options);
+                        if (!$junctionResults) {
+                            return [];
+                        }
 
-                    // Include the junction data
-                    foreach ($m2mResults as $i => $m2mResult) {
-                        foreach ($junctionResults as $junctionResult) {
-                            if ($junctionResult[$relation->getRelatedForeignKey()] == $m2mResult[$relatedTable->getPrimaryKey()]) {
-                                $m2mResults[$i]['Junction'] = $junctionResult;
+                        foreach ($junctionResults as $result) {
+                            $lookupIDs[] = $result->get($relation->getRelatedForeignKey());
+                        }
+
+                        $m2mResults = $newQuery
+                            ->where($relatedTable->getPrimaryKey(), $lookupIDs)
+                            ->cache([$relatedClass, 'fetchManyToMany', $lookupIDs])
+                            ->fetchAll($options);
+
+                        // Include the junction data
+                        foreach ($m2mResults as $i => $m2mResult) {
+                            foreach ($junctionResults as $junctionResult) {
+                                if ($junctionResult[$relation->getRelatedForeignKey()] == $m2mResult[$relatedTable->getPrimaryKey()]) {
+                                    $m2mResults[$i]->set('Junction', $junctionResult);
+                                }
                             }
                         }
-                    }
 
-                    $result[$alias] = $m2mResults;
+                        return $m2mResults;
+                    });
                 break;
             }
 
@@ -1207,20 +1211,20 @@ class Table extends Base implements Callback, Listener {
     /**
      * Wrap results in the defined entity class and wrap joined data in the originating tables entity class.
      *
+     * @param \Titon\Db\Query $query
      * @param array $results
+     * @param mixed $options
      * @return \Titon\Db\Entity[]
      */
-    public function wrapEntities(array $results) {
-        $entity = $this->getEntity();
-
-        if (!$entity) {
-            return $results;
-        }
+    public function wrapEntities(Query $query, array $results, $options) {
+        $entityClass = $this->getEntity() ?: 'Titon\Db\Entity';
 
         foreach ($results as $i => $result) {
+            $entity = new $entityClass($result);
+            $entity = $this->fetchRelations($query, $entity, $options);
 
             // Wrap data pulled through a join
-            foreach ($result as $key => $value) {
+            /*foreach ($result as $key => $value) {
                 if (!is_array($value)) {
                     continue;
                 }
@@ -1235,9 +1239,9 @@ class Table extends Base implements Callback, Listener {
 
                     $result[$key] = new $relatedEntity($value);
                 }
-            }
+            }*/
 
-            $results[$i] = new $entity($result);
+            $results[$i] = $entity;
         }
 
         return $results;
@@ -1381,19 +1385,13 @@ class Table extends Base implements Callback, Listener {
      * @param \Titon\Db\Query $query
      * @param string $fetchType
      * @param mixed $options {
-     *      @type bool $wrap            Will wrap results in an Entity class
      *      @type bool $preCallback     Will trigger before callbacks
      *      @type bool $postCallback    Will trigger after callbacks
      * }
      * @return array|\Titon\Db\Entity|\Titon\Db\Entity[]
      */
-    protected function _processFetch(Query $query, $fetchType, $options = []) {
-        if (is_bool($options)) {
-            $options = ['wrap' => $options];
-        }
-
+    protected function _processFetch(Query $query, $fetchType, array $options = []) {
         $options = $options + [
-            'wrap' => true,
             'preCallback' => true,
             'postCallback' => true
         ];
@@ -1423,7 +1421,7 @@ class Table extends Base implements Callback, Listener {
         }
 
         // Apply relations and type casting before postFetch()
-        $schema = $this->getSchema()->getColumns();
+        /*$schema = $this->getSchema()->getColumns();
         $isSelect = ($query->getType() === Query::SELECT);
 
         foreach ($results as $i => $result) {
@@ -1442,18 +1440,14 @@ class Table extends Base implements Callback, Listener {
             }
 
             $results[$i] = $this->fetchRelations($query, $result, $options);
-        }
+        }*/
 
         if ($options['postCallback']) {
             $event = $this->emit('db.postFetch', [&$results, $fetchType]);
         }
 
-        $this->data = $results;
-
         // Wrap the results in entities
-        if ($options['wrap']) {
-            $results = $this->wrapEntities($results);
-        }
+        $this->data = $results = $this->wrapEntities($query, $results, $options);
 
         // Reset the driver local cache
         $this->getDriver()->reset();

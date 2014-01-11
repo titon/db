@@ -13,6 +13,7 @@ use \JsonSerializable;
 use \Iterator;
 use \ArrayAccess;
 use \Countable;
+use \Closure;
 
 /**
  * Represents a single entity of data, usually a record from a database.
@@ -34,6 +35,23 @@ class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, C
      */
     public function __construct(array $data = []) {
         $this->mapData($data);
+    }
+
+    /**
+     * Magic method for get().
+     *
+     * @param string $key
+     * @return mixed
+     */
+    public function __get($key) {
+        $value = $this->get($key);
+
+        if ($value instanceof Closure) {
+            $value = $value();
+            $this->set($key, $value);
+        }
+
+        return $value;
     }
 
     /**
