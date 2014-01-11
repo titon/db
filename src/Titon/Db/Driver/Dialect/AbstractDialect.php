@@ -557,7 +557,7 @@ abstract class AbstractDialect extends Base implements Dialect {
                 }
 
                 $output[] = sprintf($this->getClause($join->getType()),
-                    $this->formatTable($join->getTable(), $join->getAlias()),
+                    $this->formatTable($join->getTableName(), $join->getAlias()),
                     implode(' ' . $this->getKeyword(self::ALSO) . ' ', $conditions));
             }
 

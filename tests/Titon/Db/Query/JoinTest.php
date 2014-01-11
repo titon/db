@@ -30,7 +30,7 @@ class JoinTest extends TestCase {
      */
     public function testFrom() {
         $this->object->from('users');
-        $this->assertEquals('users', $this->object->getTable());
+        $this->assertEquals('users', $this->object->getTableName());
     }
 
     /**
