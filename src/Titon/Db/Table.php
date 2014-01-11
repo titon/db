@@ -11,7 +11,6 @@ use Titon\Common\Base;
 use Titon\Common\Registry;
 use Titon\Common\Traits\Attachable;
 use Titon\Common\Traits\Cacheable;
-use Titon\Common\Traits\Instanceable;
 use Titon\Event\Event;
 use Titon\Event\Listener;
 use Titon\Event\Traits\Emittable;
@@ -48,7 +47,7 @@ use \Closure;
  * @package Titon\Db
  */
 class Table extends Base implements Callback, Listener {
-    use Instanceable, Attachable, Cacheable, Emittable;
+    use Attachable, Cacheable, Emittable;
 
     /**
      * ID of last updated or inserted record.
@@ -1420,27 +1419,18 @@ class Table extends Base implements Callback, Listener {
             return [];
         }
 
-        // Apply relations and type casting before postFetch()
-        /*$schema = $this->getSchema()->getColumns();
-        $isSelect = ($query->getType() === Query::SELECT);
+        // Apply type casting before postFetch()
+        if ($query->getType() === Query::SELECT) {
+            $schema = $this->getSchema()->getColumns();
 
-        foreach ($results as $i => $result) {
-
-            // Only type cast on results from a select query
-            if ($isSelect) {
+            foreach ($results as $result) {
                 foreach ($result as $field => $value) {
-                    if ($value === null) {
-                        continue;
-                    }
-
                     if (isset($schema[$field])) {
                         $result[$field] = AbstractType::factory($schema[$field]['type'], $this->getDriver())->from($value);
                     }
                 }
             }
-
-            $results[$i] = $this->fetchRelations($query, $result, $options);
-        }*/
+        }
 
         if ($options['postCallback']) {
             $event = $this->emit('db.postFetch', [&$results, $fetchType]);
@@ -1614,6 +1604,3 @@ class Table extends Base implements Callback, Listener {
     }
 
 }
-
-// We should use a single table instance
-Table::$singleton = true;
