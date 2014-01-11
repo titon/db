@@ -95,7 +95,7 @@ interface Relation {
     /**
      * Set the related class name.
      *
-     * @param string $class
+     * @param string|\Titon\Db\Table $class
      * @return \Titon\Db\Relation
      */
     public function setClass($class);
@@ -139,5 +139,13 @@ interface Relation {
      * @return \Titon\Db\Relation
      */
     public function setRelatedForeignKey($key);
+
+    /**
+     * Set the related table instance.
+     *
+     * @param \Titon\Db\Table $table
+     * @return \Titon\Db\Relation
+     */
+    public function setRelatedTable(Table $table);
 
 }

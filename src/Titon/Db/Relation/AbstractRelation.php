@@ -8,7 +8,9 @@
 namespace Titon\Db\Relation;
 
 use Titon\Common\Base;
+use Titon\Db\Exception\InvalidTableException;
 use Titon\Db\Relation;
+use Titon\Db\Table;
 use Titon\Db\Traits\TableAware;
 use \Closure;
 
@@ -47,17 +49,25 @@ abstract class AbstractRelation extends Base implements Relation {
     protected $_conditions;
 
     /**
+     * Related table instance.
+     *
+     * @type \Titon\Db\Table
+     */
+    protected $_relatedTable;
+
+    /**
      * Store the alias and class name.
      *
      * @param string $alias
-     * @param string $class
+     * @param string|\Titon\Db\Table $table
      * @param array $config
+     * @throws \Titon\Db\Exception\InvalidTableException
      */
-    public function __construct($alias, $class, array $config = []) {
+    public function __construct($alias, $table, array $config = []) {
         parent::__construct($config);
 
         $this->setAlias($alias);
-        $this->setClass($class);
+        $this->setClass($table);
     }
 
     /**
@@ -99,7 +109,14 @@ abstract class AbstractRelation extends Base implements Relation {
      * {@inheritdoc}
      */
     public function getRelatedTable() {
-        return $this->getTable()->getObject($this->getAlias());
+        if ($table = $this->_relatedTable) {
+            return $table;
+        }
+
+        $class = $this->getClass();
+        $this->_relatedTable = new $class();
+
+        return $this->_relatedTable;
     }
 
     /**
@@ -122,7 +139,15 @@ abstract class AbstractRelation extends Base implements Relation {
      * {@inheritdoc}
      */
     public function setClass($class) {
-        $this->config->class = $class;
+        if (is_string($class)) {
+            $this->config->class = $class;
+
+        } else if ($class instanceof Table) {
+            $this->setRelatedTable($class);
+
+        } else {
+            throw new InvalidTableException(sprintf('Invalid %s relation, must be an instance of Table or a fully qualified class name', $this->getAlias()));
+        }
 
         return $this;
     }
@@ -159,6 +184,15 @@ abstract class AbstractRelation extends Base implements Relation {
      */
     public function setRelatedForeignKey($key) {
         $this->config->relatedForeignKey = $key;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setRelatedTable(Table $table) {
+        $this->_relatedTable = $table;
 
         return $this;
     }

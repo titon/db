@@ -157,9 +157,10 @@ class Table extends Base implements Callback, Listener {
 
         $this->attachObject([
             'alias' => $relation->getAlias(),
-            'class' => $relation->getClass(),
             'interface' => 'Titon\Db\Table'
-        ]);
+        ], function() use ($relation) {
+            return $relation->getRelatedTable();
+        });
 
         return $relation;
     }
@@ -168,12 +169,12 @@ class Table extends Base implements Callback, Listener {
      * Add a many-to-one relationship.
      *
      * @param string $alias
-     * @param string $class
+     * @param string|\Titon\Db\Table $table
      * @param string $foreignKey
      * @return \Titon\Db\Relation\ManyToOne
      */
-    public function belongsTo($alias, $class, $foreignKey) {
-        return $this->addRelation(new ManyToOne($alias, $class))
+    public function belongsTo($alias, $table, $foreignKey) {
+        return $this->addRelation(new ManyToOne($alias, $table))
             ->setForeignKey($foreignKey);
     }
 
@@ -181,14 +182,14 @@ class Table extends Base implements Callback, Listener {
      * Add a many-to-many relationship.
      *
      * @param string $alias
-     * @param string $class
+     * @param string|\Titon\Db\Table $table
      * @param string $junction
      * @param string $foreignKey
      * @param string $relatedKey
      * @return \Titon\Db\Relation\ManyToMany
      */
-    public function belongsToMany($alias, $class, $junction, $foreignKey, $relatedKey) {
-        return $this->addRelation(new ManyToMany($alias, $class))
+    public function belongsToMany($alias, $table, $junction, $foreignKey, $relatedKey) {
+        return $this->addRelation(new ManyToMany($alias, $table))
             ->setJunctionClass($junction)
             ->setForeignKey($foreignKey)
             ->setRelatedForeignKey($relatedKey);
@@ -795,12 +796,12 @@ class Table extends Base implements Callback, Listener {
      * Add a one-to-one relationship.
      *
      * @param string $alias
-     * @param string $class
+     * @param string|\Titon\Db\Table $table
      * @param string $relatedKey
      * @return \Titon\Db\Relation\OneToOne
      */
-    public function hasOne($alias, $class, $relatedKey) {
-        return $this->addRelation(new OneToOne($alias, $class))
+    public function hasOne($alias, $table, $relatedKey) {
+        return $this->addRelation(new OneToOne($alias, $table))
             ->setRelatedForeignKey($relatedKey);
     }
 
@@ -808,12 +809,12 @@ class Table extends Base implements Callback, Listener {
      * Add a one-to-many relationship.
      *
      * @param string $alias
-     * @param string $class
+     * @param string|\Titon\Db\Table $table
      * @param string $relatedKey
      * @return \Titon\Db\Relation\OneToMany
      */
-    public function hasMany($alias, $class, $relatedKey) {
-        return $this->addRelation(new OneToMany($alias, $class))
+    public function hasMany($alias, $table, $relatedKey) {
+        return $this->addRelation(new OneToMany($alias, $table))
             ->setRelatedForeignKey($relatedKey);
     }
 

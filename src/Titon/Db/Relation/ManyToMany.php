@@ -8,7 +8,9 @@
 namespace Titon\Db\Relation;
 
 use Titon\Common\Registry;
+use Titon\Db\Exception\InvalidTableException;
 use Titon\Db\Relation;
+use Titon\Db\Table;
 use Titon\Utility\Path;
 
 /**
@@ -25,12 +27,30 @@ class ManyToMany extends AbstractRelation {
      * Configuration.
      *
      * @type array {
+     *      @type string $junctionAlias Alias name based on class name
      *      @type string $junctionClass Fully qualified table class name for the junction table
      * }
      */
     protected $_config = [
+        'junctionAlias' => '',
         'junctionClass' => ''
     ];
+
+    /**
+     * Junction table instance.
+     *
+     * @type \Titon\Db\Table
+     */
+    protected $_junctionTable;
+
+    /**
+     * Return the junction alias name.
+     *
+     * @return string
+     */
+    public function getJunctionAlias() {
+        return $this->config->junctionAlias;
+    }
 
     /**
      * Return the junction class name.
@@ -47,17 +67,14 @@ class ManyToMany extends AbstractRelation {
      * @return \Titon\Db\Table
      */
     public function getJunctionTable() {
-        $class = $this->getJunctionClass();
-        $alias = Path::className($class);
-        $table = $this->getTable();
-
-        if ($table->hasObject($alias)) {
-            return $table->getObject($alias);
+        if ($table = $this->_junctionTable) {
+            return $table;
         }
 
-        $table->attachObject($alias, Registry::factory($class));
+        $class = $this->getJunctionClass();
+        $this->setJunctionTable(new $class());
 
-        return $table->getObject($alias);
+        return $this->_junctionTable;
     }
 
     /**
@@ -77,13 +94,50 @@ class ManyToMany extends AbstractRelation {
     }
 
     /**
-     * Set the junction class name.
+     * Set the junction alias.
      *
-     * @param string $class
+     * @param string $alias
      * @return \Titon\Db\Relation\ManyToMany
      */
+    public function setJunctionAlias($alias) {
+        $this->config->junctionAlias = $alias;
+
+        return $this;
+    }
+
+    /**
+     * Set the junction class name.
+     *
+     * @param string|\Titon\Db\Table $class
+     * @return \Titon\Db\Relation\ManyToMany
+     * @throws \Titon\Db\Exception\InvalidTableException
+     */
     public function setJunctionClass($class) {
-        $this->config->junctionClass = $class;
+        if (is_string($class)) {
+            $this->config->junctionClass = $class;
+
+        } else if ($class instanceof Table) {
+            $this->setJunctionTable($class);
+            $class = get_class($class);
+
+        } else {
+            throw new InvalidTableException(sprintf('Invalid junction relation for %s, must be an instance of Table or a fully qualified class name', $this->getAlias()));
+        }
+
+        $this->setJunctionAlias(Path::className($class));
+
+        return $this;
+    }
+
+    /**
+     * Set the junction table as an alias on the primary table.
+     *
+     * @param \Titon\Db\Table $table
+     * @return \Titon\Db\Relation\ManyToMany
+     */
+    public function setJunctionTable(Table $table) {
+        $this->_junctionTable = $table;
+        $this->getTable()->attachObject($this->getJunctionAlias(), $table);
 
         return $this;
     }
