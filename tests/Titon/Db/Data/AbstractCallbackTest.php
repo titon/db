@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Data;
 
+use Titon\Db\Entity;
 use Titon\Test\Stub\Table\UserDeleteCallbacks;
 use Titon\Test\Stub\Table\UserFetchCallbacks;
 use Titon\Test\Stub\Table\UserSaveCallbacks;
@@ -77,19 +78,19 @@ class AbstractCallbackTest extends TestCase {
 
         // Create
         $this->assertEquals(6, $user->create(['username' => 'foo']));
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 6,
             'username' => 'foo',
             'firstName' => 'CREATE'
-        ], $user->select('id', 'username', 'firstName')->where('id', 6)->fetch(false));
+        ]), $user->select('id', 'username', 'firstName')->where('id', 6)->fetch());
 
         // Update
         $this->assertEquals(1, $user->update(5, ['username' => 'bar']));
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 5,
             'username' => 'bar',
             'firstName' => 'UPDATE'
-        ], $user->select('id', 'username', 'firstName')->where('id', 5)->fetch(false));
+        ]), $user->select('id', 'username', 'firstName')->where('id', 5)->fetch());
     }
 
     /**
@@ -125,16 +126,16 @@ class AbstractCallbackTest extends TestCase {
         $this->assertEquals([], $user->select()->fetchList());
 
         // Return custom data for fetch
-        $this->assertEquals(['custom' => 'data'], $user->select()->fetch(false));
+        $this->assertEquals(new Entity(['custom' => 'data']), $user->select()->fetch());
 
         // Modify fields for fetch all
         $this->assertEquals([
-            ['id' => 1, 'username' => 'miles'],
-            ['id' => 2, 'username' => 'batman'],
-            ['id' => 3, 'username' => 'superman'],
-            ['id' => 4, 'username' => 'spiderman'],
-            ['id' => 5, 'username' => 'wolverine'],
-        ], $user->select('id', 'username', 'firstName', 'lastName')->orderBy('id', 'asc')->fetchAll(false));
+            new Entity(['id' => 1, 'username' => 'miles']),
+            new Entity(['id' => 2, 'username' => 'batman']),
+            new Entity(['id' => 3, 'username' => 'superman']),
+            new Entity(['id' => 4, 'username' => 'spiderman']),
+            new Entity(['id' => 5, 'username' => 'wolverine']),
+        ], $user->select('id', 'username', 'firstName', 'lastName')->orderBy('id', 'asc')->fetchAll());
     }
 
     /**
@@ -148,12 +149,12 @@ class AbstractCallbackTest extends TestCase {
 
         // Modify results after fetch
         $this->assertEquals([
-            ['id' => 1, 'username' => 'miles'],
-            ['id' => 2, 'username' => 'batman', 'foo' => 'bar'],
-            ['id' => 3, 'username' => 'superman'],
-            ['id' => 4, 'username' => 'spiderman', 'foo' => 'bar'],
-            ['id' => 5, 'username' => 'wolverine'],
-        ], $user->select('id', 'username', 'firstName', 'lastName')->orderBy('id', 'asc')->fetchAll(false));
+            new Entity(['id' => 1, 'username' => 'miles']),
+            new Entity(['id' => 2, 'username' => 'batman', 'foo' => 'bar']),
+            new Entity(['id' => 3, 'username' => 'superman']),
+            new Entity(['id' => 4, 'username' => 'spiderman', 'foo' => 'bar']),
+            new Entity(['id' => 5, 'username' => 'wolverine']),
+        ], $user->select('id', 'username', 'firstName', 'lastName')->orderBy('id', 'asc')->fetchAll());
     }
 
 }

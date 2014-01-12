@@ -327,7 +327,7 @@ class Table extends Base implements Callback, Listener {
                             $results = $relatedTable
                                 ->select($relatedTable->getPrimaryKey())
                                 ->where($relation->getRelatedForeignKey(), $id)
-                                ->fetchAll(false);
+                                ->fetchAll();
                         }
 
                         // Delete all records at once
@@ -338,7 +338,13 @@ class Table extends Base implements Callback, Listener {
 
                         // Loop through the records and cascade delete dependents
                         if ($results) {
-                            $count += $relatedTable->deleteDependents(Hash::pluck($results, $relatedTable->getPrimaryKey()), $cascade);
+                            $dependentIDs = [];
+
+                            foreach ($results as $result) {
+                                $dependentIDs[] = $result->get($relatedTable->getPrimaryKey());
+                            }
+
+                            $count += $relatedTable->deleteDependents($dependentIDs, $cascade);
                         }
                     break;
 
