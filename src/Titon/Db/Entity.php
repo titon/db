@@ -38,13 +38,14 @@ class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, C
     }
 
     /**
-     * Magic method for get().
+     * Override the original get method to execute closure values.
+     * Will allow for lazy-loaded properties to be fetched.
      *
      * @param string $key
      * @return mixed
      */
-    public function __get($key) {
-        $value = $this->get($key);
+    public function get($key) {
+        $value = isset($this->_data[$key]) ? $this->_data[$key] : null;
 
         if ($value instanceof Closure) {
             $value = $value();

@@ -581,6 +581,11 @@ class Table extends Base implements Callback, Listener {
                 break;
             }
 
+            // Trigger query immediately
+            if (!empty($options['eager'])) {
+                $result->get($alias);
+            }
+
             unset($newQuery);
         }
 
@@ -1390,6 +1395,7 @@ class Table extends Base implements Callback, Listener {
      * @param \Titon\Db\Query $query
      * @param string $fetchType
      * @param mixed $options {
+     *      @type bool $eager           Will eager load relational queries immediately
      *      @type bool $preCallback     Will trigger before callbacks
      *      @type bool $postCallback    Will trigger after callbacks
      * }
@@ -1397,6 +1403,7 @@ class Table extends Base implements Callback, Listener {
      */
     protected function _processFetch(Query $query, $fetchType, array $options = []) {
         $options = $options + [
+            'eager' => false,
             'preCallback' => true,
             'postCallback' => true
         ];
