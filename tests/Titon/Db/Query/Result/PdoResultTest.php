@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Query\Result;
 
+use Titon\Db\Entity;
 use Titon\Db\Query;
 use Titon\Test\Stub\Table\User;
 use Titon\Test\TestCase;
@@ -49,7 +50,7 @@ class PdoResultTest extends TestCase {
      * Test a single result is returned.
      */
     public function testFetch() {
-        $this->assertSame([
+        $this->assertEquals(new Entity([
             'id' => 1,
             'country_id' => 1,
             'username' => 'miles',
@@ -60,15 +61,15 @@ class PdoResultTest extends TestCase {
             'age' => 25,
             'created' => '1988-02-26 21:22:34',
             'modified' => null
-        ], $this->object->select()->fetch(false));
+        ]), $this->object->select()->fetch());
     }
 
     /**
      * Test all results are returned.
      */
     public function testFetchAll() {
-        $this->assertSame([
-            [
+        $this->assertEquals([
+            new Entity([
                 'id' => 1,
                 'country_id' => 1,
                 'username' => 'miles',
@@ -79,7 +80,8 @@ class PdoResultTest extends TestCase {
                 'age' => 25,
                 'created' => '1988-02-26 21:22:34',
                 'modified' => null
-            ], [
+            ]),
+            new Entity([
                 'id' => 2,
                 'country_id' => 3,
                 'username' => 'batman',
@@ -90,7 +92,8 @@ class PdoResultTest extends TestCase {
                 'age' => 35,
                 'created' => '1960-05-11 21:22:34',
                 'modified' => null
-            ], [
+            ]),
+            new Entity([
                 'id' => 3,
                 'country_id' => 2,
                 'username' => 'superman',
@@ -101,7 +104,8 @@ class PdoResultTest extends TestCase {
                 'age' => 33,
                 'created' => '1970-09-18 21:22:34',
                 'modified' => null
-            ], [
+            ]),
+            new Entity([
                 'id' => 4,
                 'country_id' => 5,
                 'username' => 'spiderman',
@@ -112,7 +116,8 @@ class PdoResultTest extends TestCase {
                 'age' => 22,
                 'created' => '1990-01-05 21:22:34',
                 'modified' => null
-            ], [
+            ]),
+            new Entity([
                 'id' => 5,
                 'country_id' => 4,
                 'username' => 'wolverine',
@@ -123,8 +128,8 @@ class PdoResultTest extends TestCase {
                 'age' => 355,
                 'created' => '2000-11-30 21:22:34',
                 'modified' => null
-            ]
-        ], $this->object->select()->fetchAll(false));
+            ])
+        ], $this->object->select()->fetchAll());
     }
 
     /**

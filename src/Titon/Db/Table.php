@@ -670,7 +670,7 @@ class Table extends Base implements Callback, Listener {
      * @return string
      */
     public function getEntity() {
-        return $this->config->entity;
+        return $this->config->entity ?: 'Titon\Db\Entity';
     }
 
     /**
@@ -917,11 +917,11 @@ class Table extends Base implements Callback, Listener {
      * Fetch a single record by ID.
      *
      * @param int $id
-     * @param mixed $options
+     * @param array $options
      * @param \Closure $callback
      * @return \Titon\Db\Entity|array
      */
-    public function read($id, $options = true, Closure $callback = null) {
+    public function read($id, array $options = [], Closure $callback = null) {
         return $this->select()
             ->where($this->getPrimaryKey(), $id)
             ->bindCallback($callback)
@@ -1216,7 +1216,7 @@ class Table extends Base implements Callback, Listener {
      * @return \Titon\Db\Entity[]
      */
     public function wrapEntities(Query $query, array $results, $options) {
-        $entityClass = $this->getEntity() ?: 'Titon\Db\Entity';
+        $entityClass = $this->getEntity();
 
         foreach ($results as $i => $result) {
             $entity = new $entityClass($result);

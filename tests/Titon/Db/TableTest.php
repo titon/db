@@ -101,7 +101,6 @@ class TableTest extends TestCase {
             'created' => '1988-02-26 21:22:34',
             'modified' => null
         ];
-        $this->assertEquals($result, $this->object->query(Query::SELECT)->fetch(false)); // no wrap
         $this->assertEquals(new Entity($result), $this->object->query(Query::SELECT)->fetch());
 
         // Return by ID
@@ -117,11 +116,9 @@ class TableTest extends TestCase {
             'created' => '1970-09-18 21:22:34',
             'modified' => null
         ];
-        $this->assertEquals($result, $this->object->query(Query::SELECT)->where('id', 3)->fetch(false)); // no wrap
         $this->assertEquals(new Entity($result), $this->object->query(Query::SELECT)->where('id', 3)->fetch());
 
         // No results
-        $this->assertEquals([], $this->object->query(Query::SELECT)->where('id', 15)->fetch(false)); // no wrap
         $this->assertEquals([], $this->object->query(Query::SELECT)->where('id', 15)->fetch());
     }
 
@@ -190,7 +187,7 @@ class TableTest extends TestCase {
                 'modified' => null
             ]
         ];
-        $this->assertEquals($results, $this->object->query(Query::SELECT)->fetchAll(false)); // no wrap
+
         $this->assertEquals(array_map(function($value) {
             return new Entity($value);
         }, $results), $this->object->query(Query::SELECT)->fetchAll());
@@ -199,10 +196,6 @@ class TableTest extends TestCase {
         unset($results[0], $results[1], $results[2]);
         $results = array_values($results);
 
-        $this->assertEquals($results, $this->object->query(Query::SELECT)->where(function() {
-            $this->gte('id', 4);
-        })->fetchAll(false)); // no wrap
-
         $this->assertEquals(array_map(function($value) {
             return new Entity($value);
         }, $results), $this->object->query(Query::SELECT)->where(function() {
@@ -210,7 +203,6 @@ class TableTest extends TestCase {
         })->fetchAll());
 
         // No results
-        $this->assertEquals([], $this->object->query(Query::SELECT)->where('country_id', 15)->fetchAll(false)); // no wrap
         $this->assertEquals([], $this->object->query(Query::SELECT)->where('country_id', 15)->fetchAll());
     }
 
@@ -427,45 +419,6 @@ class TableTest extends TestCase {
         $query->from($this->object->getTableName(), 'User')->fields('id', 'username');
 
         $this->assertEquals($query, $this->object->select('id', 'username'));
-    }
-
-    public function testShit() {
-        /*// MANY TO ONE
-        $this->loadFixtures('Books', 'Series', 'Genres', 'BookGenres');
-
-        $book = new Book();
-        $record = $book->select()->where('id', 1)->with(['Series', 'Genres'])->fetch();
-
-        var_dump($record);
-        var_dump($record->Series);*/
-
-        /*// ONE TO ONE
-        $this->loadFixtures('Series', 'Authors');
-
-        $author = new Author();
-        $record = $author->select()->where('id', 1)->with('Series')->fetch();
-
-        var_dump($record);
-        var_dump($record->Series);*/
-
-        /*// MANY TO ONE
-        $this->loadFixtures('Series', 'Authors', 'Books');
-
-        $series = new Series();
-        $record = $series->select()->where('id', 1)->with(['Author', 'Books'])->fetch();
-
-        var_dump($record);
-        var_dump($record->Author);
-        var_dump($record->Books);*/
-
-        // MANY TO MANY
-        $this->loadFixtures('Books', 'Genres', 'BookGenres');
-
-        $book = new Book();
-        $record = $book->select()->where('id', 1)->with(['Genres'])->fetch();
-
-        var_dump($record);
-        var_dump($record->Genres);
     }
 
 }
