@@ -148,6 +148,9 @@ $query->fetchAll(); // return multiple rows
 $query->fetchList(); // return rows as list
 $query->count(); // return count
 
+// Custom finders
+$query->find('threaded');
+
 // Other queries
 $query->save(); // return affected row count
 ```

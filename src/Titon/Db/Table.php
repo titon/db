@@ -408,6 +408,18 @@ class Table extends Base implements Callback, Listener {
     }
 
     /**
+     * Find records in the database using a custom finder.
+     *
+     * @param Query $query
+     * @param string $type
+     * @param array $options
+     * @return mixed
+     */
+    public function find(Query $query, $type, array $options = []) {
+        return $this->_processFind($query, $type, $options);
+    }
+
+    /**
      * Return an entity for the first result from the query.
      *
      * @param \Titon\Db\Query $query
@@ -415,7 +427,7 @@ class Table extends Base implements Callback, Listener {
      * @return \Titon\Db\Entity|array
      */
     public function fetch(Query $query, array $options = []) {
-        return $this->_processFetch($query, __FUNCTION__, $options);
+        return $this->find($query, 'first', $options);
     }
 
     /**
@@ -426,7 +438,7 @@ class Table extends Base implements Callback, Listener {
      * @return \Titon\Db\Entity[]|array
      */
     public function fetchAll(Query $query, array $options = []) {
-        return $this->_processFetch($query, __FUNCTION__, $options);
+        return $this->find($query, 'all', $options);
     }
 
     /**
@@ -439,18 +451,10 @@ class Table extends Base implements Callback, Listener {
      * @return array
      */
     public function fetchList(Query $query, $key = null, $value = null, array $options = []) {
-        $results = $this->_processFetch($query, __FUNCTION__, $options);
+        $options['key'] = $key ?: $this->getPrimaryKey();
+        $options['value'] = $value ?: $this->getDisplayField();
 
-        $key = $key ?: $this->getPrimaryKey();
-        $value = $value ?: $this->getDisplayField();
-        $list = [];
-
-        foreach ($results as $result) {
-            $data = $result->toArray();
-            $list[Hash::extract($data, $key)] = Hash::extract($data, $value);
-        }
-
-        return $list;
+        return $this->find($query, 'list', $options);
     }
 
     /**
@@ -877,7 +881,7 @@ class Table extends Base implements Callback, Listener {
     /**
      * {@inheritdoc}
      */
-    public function preFetch(Event $event, Query $query, $fetchType) {
+    public function preFind(Event $event, Query $query, $finder) {
         return true;
     }
 
@@ -898,7 +902,7 @@ class Table extends Base implements Callback, Listener {
     /**
      * {@inheritdoc}
      */
-    public function postFetch(Event $event, array &$results, $fetchType) {
+    public function postFind(Event $event, array &$results, $finder) {
         return;
     }
 
@@ -948,8 +952,8 @@ class Table extends Base implements Callback, Listener {
             'db.postSave' => ['method' => 'postSave', 'priority' => 1],
             'db.preDelete' => ['method' => 'preDelete', 'priority' => 1],
             'db.postDelete' => ['method' => 'postDelete', 'priority' => 1],
-            'db.preFetch' => ['method' => 'preFetch', 'priority' => 1],
-            'db.postFetch' => ['method' => 'postFetch', 'priority' => 1]
+            'db.preFind' => ['method' => 'preFind', 'priority' => 1],
+            'db.postFind' => ['method' => 'postFind', 'priority' => 1]
         ];
     }
 
@@ -1393,18 +1397,16 @@ class Table extends Base implements Callback, Listener {
 
     /**
      * All-in-one method for fetching results from a query.
-     * Before the query is executed, the preFetch() method is called.
-     * After the query is executed, relations will be fetched, and then postFetch() will be called.
+     * Before the query is executed, the preFind() method is called.
+     * After the query is executed, relations will be fetched, and then postFind() will be called.
      * If wrap option is true, all results will be wrapped in an Entity class.
      *
-     * Depending on the $fetchType, the returned results will differ.
-     * If the type is "fetch" a single item will be returned, either an array or entity.
-     * All other types currently return an array or an array of entities.
+     * Depending on the $finder, the returned results will differ.
      *
      * @uses Titon\Db\Type\AbstractType
      *
      * @param \Titon\Db\Query $query
-     * @param string $fetchType
+     * @param string $finderType
      * @param mixed $options {
      *      @type bool $eager           Will eager load relational queries immediately
      *      @type bool $preCallback     Will trigger before callbacks
@@ -1412,16 +1414,18 @@ class Table extends Base implements Callback, Listener {
      * }
      * @return array|\Titon\Db\Entity|\Titon\Db\Entity[]
      */
-    protected function _processFetch(Query $query, $fetchType, array $options = []) {
+    protected function _processFind(Query $query, $finderType, array $options = []) {
         $options = $options + [
             'eager' => false,
             'preCallback' => true,
             'postCallback' => true
         ];
 
-        // Use the return of preFetch() if applicable
+        $finder = $this->getDriver()->getFinder($finderType);
+
+        // Use the return of preFind() if applicable
         if ($options['preCallback']) {
-            $event = $this->emit('db.preFetch', [$query, $fetchType]);
+            $event = $this->emit('db.preFind', [$query, $finderType]);
             $state = $event->getData();
 
             if ($state !== null && !$state) {
@@ -1429,21 +1433,26 @@ class Table extends Base implements Callback, Listener {
             }
         }
 
+        // If the event returns custom data, use it
         if (isset($state) && is_array($state)) {
             $results = $state;
 
             if (!isset($results[0])) {
                 $results = [$results];
             }
+
+        // Else find new records
         } else {
-            $results = $this->getDriver()->query($query)->fetchAll();
+            $finder->before($query, $options);
+
+            $results = $this->getDriver()->query($query)->find();
         }
 
         if (!$results) {
             return [];
         }
 
-        // Apply type casting before postFetch()
+        // Apply type casting before postFind()
         if ($query->getType() === Query::SELECT) {
             $schema = $this->getSchema()->getColumns();
 
@@ -1457,7 +1466,7 @@ class Table extends Base implements Callback, Listener {
         }
 
         if ($options['postCallback']) {
-            $event = $this->emit('db.postFetch', [&$results, $fetchType]);
+            $event = $this->emit('db.postFind', [&$results, $finderType]);
         }
 
         // Wrap the results in entities
@@ -1466,12 +1475,7 @@ class Table extends Base implements Callback, Listener {
         // Reset the driver local cache
         $this->getDriver()->reset();
 
-        // Return early for single records
-        if ($fetchType === 'fetch') {
-            return $results[0];
-        }
-
-        return $results;
+        return $finder->after($results, $options);
     }
 
     /**

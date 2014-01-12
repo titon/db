@@ -258,6 +258,17 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
+     * Pass the find query to the table to interact with the database.
+     *
+     * @param string $type
+     * @param array $options
+     * @return mixed
+     */
+    public function find($type, array $options = []) {
+        return $this->getTable()->find($this, $type, $options);
+    }
+
+    /**
      * Pass the query to the table to interact with the database.
      * Return the first record from the results.
      *

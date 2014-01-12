@@ -272,7 +272,7 @@ class PdoDriverTest extends TestCase {
         $this->assertEquals(false, $result->hasExecuted());
         $this->assertEquals(false, $result->isSuccessful());
 
-        $results = $result->fetchAll();
+        $results = $result->find();
 
         $this->assertEquals(5, count($results));
         $this->assertNotEquals(0, $result->getExecutionTime());

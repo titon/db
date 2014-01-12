@@ -115,12 +115,12 @@ class AbstractCallbackTest extends TestCase {
     }
 
     /**
-     * Test Table::preFetch() callbacks.
+     * Test Table::preFind() callbacks.
      */
-    public function testPreFetch() {
+    public function testPreFind() {
         $this->loadFixtures(['Users', 'Profiles']);
 
-        $user = new UserFetchCallbacks();
+        $user = new UserFindCallbacks();
 
         // Exit early for list fetches
         $this->assertEquals([], $user->select()->fetchList());
@@ -139,12 +139,12 @@ class AbstractCallbackTest extends TestCase {
     }
 
     /**
-     * Test Table::postFetch() callbacks.
+     * Test Table::postFind() callbacks.
      */
-    public function testPostFetch() {
+    public function testPostFind() {
         $this->loadFixtures(['Users', 'Profiles']);
 
-        $user = new UserFetchCallbacks();
+        $user = new UserFindCallbacks();
         $user->testApply = true;
 
         // Modify results after fetch

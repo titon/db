@@ -40,14 +40,7 @@ class SqlResult extends AbstractResult {
     /**
      * {@inheritdoc}
      */
-    public function fetch() {
-        return [];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function fetchAll() {
+    public function find() {
         return [];
     }
 

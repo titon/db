@@ -12,7 +12,12 @@ use Titon\Common\Base;
 use Titon\Common\Traits\Cacheable;
 use Titon\Cache\Storage;
 use Titon\Db\Driver;
+use Titon\Db\Driver\Finder\FirstFinder;
+use Titon\Db\Driver\Finder\AllFinder;
+use Titon\Db\Driver\Finder\ListFinder;
+use Titon\Db\Exception\MissingFinderException;
 use Titon\Db\Query\Result;
+use Titon\Utility\Path;
 
 /**
  * Implements basic driver functionality.
@@ -73,6 +78,13 @@ abstract class AbstractDriver extends Base implements Driver {
     protected $_dialect;
 
     /**
+     * List of finders.
+     *
+     * @type \Titon\Db\Driver\Finder[]
+     */
+    protected $_finders = [];
+
+    /**
      * Logger object instance.
      *
      * @type \Psr\Log\LoggerInterface
@@ -116,6 +128,10 @@ abstract class AbstractDriver extends Base implements Driver {
     public function __construct($key, array $config) {
         $this->_key = $key;
 
+        $this->addFinder(new FirstFinder());
+        $this->addFinder(new AllFinder());
+        $this->addFinder(new ListFinder());
+
         parent::__construct($config);
     }
 
@@ -124,6 +140,17 @@ abstract class AbstractDriver extends Base implements Driver {
      */
     public function __destruct() {
         $this->disconnect();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addFinder(Finder $finder) {
+        $key = strtolower(str_replace('Finder', '', Path::className(get_class($finder))));
+
+        $this->_finders[$key] = $finder;
+
+        return $this;
     }
 
     /**
@@ -170,6 +197,19 @@ abstract class AbstractDriver extends Base implements Driver {
      */
     public function getEncoding() {
         return $this->config->encoding;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @throws \Titon\Db\Exception\MissingFinderException
+     */
+    public function getFinder($key) {
+        if (isset($this->_finders[$key])) {
+            return $this->_finders[$key];
+        }
+
+        throw new MissingFinderException(sprintf('Finder %s does not exist', $key));
     }
 
     /**

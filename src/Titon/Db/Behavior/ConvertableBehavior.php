@@ -109,10 +109,10 @@ class ConvertableBehavior extends AbstractBehavior {
      *
      * @param \Titon\Event\Event $event
      * @param array $results
-     * @param string $fetchType
+     * @param string $finder
      */
-    public function postFetch(Event $event, array &$results, $fetchType) {
-        if (!in_array($fetchType, ['fetch', 'fetchAll'])) {
+    public function postFind(Event $event, array &$results, $finder) {
+        if (!in_array($finder, ['first', 'all'])) {
             return;
         }
 

@@ -114,7 +114,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      */
     public function describeTable($table) {
         return $this->cache([__METHOD__, $table], function() use ($table) {
-            $columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->fetchAll();
+            $columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->find();
             $schema = [];
 
             if (!$columns) {
@@ -251,7 +251,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         $database = $database ?: $this->getDatabase();
 
         return $this->cache([__METHOD__, $database], function() use ($database) {
-            $tables = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->fetchAll();
+            $tables = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->find();
             $schema = [];
 
             if (!$tables) {

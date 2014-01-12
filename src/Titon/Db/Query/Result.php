@@ -36,18 +36,11 @@ interface Result {
     public function execute();
 
     /**
-     * Return the first row in the results.
+     * Return rows from the database query.
      *
      * @return array
      */
-    public function fetch();
-
-    /**
-     * Return all rows in the results.
-     *
-     * @return array
-     */
-    public function fetchAll();
+    public function find();
 
     /**
      * Return the time in milliseconds it took to execute the query.

@@ -39,7 +39,7 @@ abstract class AbstractBehavior extends Base implements Behavior, Listener {
     /**
      * {@inheritdoc}
      */
-    public function preFetch(Event $event, Query $query, $fetchType) {
+    public function preFind(Event $event, Query $query, $finder) {
         return true;
     }
 
@@ -60,7 +60,7 @@ abstract class AbstractBehavior extends Base implements Behavior, Listener {
     /**
      * {@inheritdoc}
      */
-    public function postFetch(Event $event, array &$results, $fetchType) {
+    public function postFind(Event $event, array &$results, $finder) {
         return;
     }
 
@@ -80,8 +80,8 @@ abstract class AbstractBehavior extends Base implements Behavior, Listener {
             'db.postSave' => 'postSave',
             'db.preDelete' => 'preDelete',
             'db.postDelete' => 'postDelete',
-            'db.preFetch' => 'preFetch',
-            'db.postFetch' => 'postFetch'
+            'db.preFind' => 'preFind',
+            'db.postFind' => 'postFind'
         ];
     }
 

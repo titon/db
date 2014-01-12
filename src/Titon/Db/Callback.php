@@ -35,10 +35,10 @@ interface Callback {
      *
      * @param \Titon\Event\Event $event
      * @param \Titon\Db\Query $query
-     * @param string $fetchType
+     * @param string $finder
      * @return bool
      */
-    public function preFetch(Event $event, Query $query, $fetchType);
+    public function preFind(Event $event, Query $query, $finder);
 
     /**
      * Callback called before an insert or update query.
@@ -63,10 +63,10 @@ interface Callback {
      * Callback called after a select query.
      *
      * @param \Titon\Event\Event $event
-     * @param array $results The results of the query
-     * @param string $fetchType Type of fetch used
+     * @param array $results
+     * @param string $finder
      */
-    public function postFetch(Event $event, array &$results, $fetchType);
+    public function postFind(Event $event, array &$results, $finder);
 
     /**
      * Callback called after an insert or update query.

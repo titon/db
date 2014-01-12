@@ -92,20 +92,7 @@ class PdoResult extends AbstractResult implements Result {
     /**
      * {@inheritdoc}
      */
-    public function fetch() {
-        $results = $this->fetchAll();
-
-        if (isset($results[0])) {
-            return $results[0];
-        }
-
-        return $results;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function fetchAll() {
+    public function find() {
         $this->execute();
 
         $statement = $this->_statement;
