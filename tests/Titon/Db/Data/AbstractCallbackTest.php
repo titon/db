@@ -9,7 +9,7 @@ namespace Titon\Db\Data;
 
 use Titon\Db\Entity;
 use Titon\Test\Stub\Table\UserDeleteCallbacks;
-use Titon\Test\Stub\Table\UserFetchCallbacks;
+use Titon\Test\Stub\Table\UserFindCallbacks;
 use Titon\Test\Stub\Table\UserSaveCallbacks;
 use Titon\Test\TestCase;
 
