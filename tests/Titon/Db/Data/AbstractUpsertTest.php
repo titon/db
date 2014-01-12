@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Data;
 
+use Titon\Db\Entity;
 use Titon\Test\Stub\Table\Book;
 use Titon\Test\Stub\Table\Series;
 use Titon\Test\Stub\Table\User;
@@ -114,12 +115,12 @@ class AbstractUpsertTest extends TestCase {
         $time = time();
 
         // Update
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 4,
             'user_id' => 1,
             'lastLogin' => '2012-02-15 21:22:34',
             'currentLogin' => '2013-06-06 19:11:03'
-        ], $user->Profile->select()->where('id', 4)->fetch(false));
+        ]), $user->Profile->select()->where('id', 4)->fetch());
 
         $this->assertEquals(1, $user->upsertRelations(1, [
             'Profile' => [
@@ -128,12 +129,12 @@ class AbstractUpsertTest extends TestCase {
             ]
         ]));
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 4,
             'user_id' => 1,
             'lastLogin' => date('Y-m-d H:i:s', $time),
             'currentLogin' => '2013-06-06 19:11:03'
-        ], $user->Profile->select()->where('id', 4)->fetch(false));
+        ]), $user->Profile->select()->where('id', 4)->fetch());
 
         // Create
         $this->assertFalse($user->Profile->exists(6));
@@ -144,12 +145,12 @@ class AbstractUpsertTest extends TestCase {
             ]
         ]));
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 6,
             'user_id' => 1,
             'lastLogin' => date('Y-m-d H:i:s', $time),
             'currentLogin' => null
-        ], $user->Profile->select()->where('id', 6)->fetch(false));
+        ]), $user->Profile->select()->where('id', 6)->fetch());
     }
 
     /**
@@ -160,18 +161,22 @@ class AbstractUpsertTest extends TestCase {
 
         $series = new Series();
 
-        $this->assertEquals([
+        // Trigger lazy-loaded queries
+        $results = $series->select()->where('id', 1)->with('Books')->fetch();
+        $results->Books;
+
+        $this->assertEquals(new Entity([
             'id' => 1,
             'author_id' => 1,
             'name' => 'A Song of Ice and Fire',
             'Books' => [
-                ['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones', 'isbn' => '0-553-10354-7', 'released' => '1996-08-02'],
-                ['id' => 2, 'series_id' => 1, 'name' => 'A Clash of Kings', 'isbn' => '0-553-10803-4', 'released' => '1999-02-25'],
-                ['id' => 3, 'series_id' => 1, 'name' => 'A Storm of Swords', 'isbn' => '0-553-10663-5', 'released' => '2000-11-11'],
-                ['id' => 4, 'series_id' => 1, 'name' => 'A Feast for Crows', 'isbn' => '0-553-80150-3', 'released' => '2005-11-02'],
-                ['id' => 5, 'series_id' => 1, 'name' => 'A Dance with Dragons', 'isbn' => '0-553-80147-3', 'released' => '2011-07-19']
+                new Entity(['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones', 'isbn' => '0-553-10354-7', 'released' => '1996-08-02']),
+                new Entity(['id' => 2, 'series_id' => 1, 'name' => 'A Clash of Kings', 'isbn' => '0-553-10803-4', 'released' => '1999-02-25']),
+                new Entity(['id' => 3, 'series_id' => 1, 'name' => 'A Storm of Swords', 'isbn' => '0-553-10663-5', 'released' => '2000-11-11']),
+                new Entity(['id' => 4, 'series_id' => 1, 'name' => 'A Feast for Crows', 'isbn' => '0-553-80150-3', 'released' => '2005-11-02']),
+                new Entity(['id' => 5, 'series_id' => 1, 'name' => 'A Dance with Dragons', 'isbn' => '0-553-80147-3', 'released' => '2011-07-19'])
             ]
-        ], $series->select()->where('id', 1)->with('Books')->fetch(false));
+        ]), $results);
 
         $this->assertEquals(3, $series->upsertRelations(1, [
             'Books' => [
@@ -181,64 +186,77 @@ class AbstractUpsertTest extends TestCase {
             ]
         ]));
 
-        $this->assertEquals([
+        // Trigger lazy-loaded queries
+        $results = $series->select()->where('id', 1)->with('Books')->fetch();
+        $results->Books;
+
+        $this->assertEquals(new Entity([
             'id' => 1,
             'author_id' => 1,
             'name' => 'A Song of Ice and Fire',
             'Books' => [
-                ['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones (Updated)', 'isbn' => '0-553-10354-7', 'released' => '1996-08-02'],
-                ['id' => 2, 'series_id' => 1, 'name' => 'A Clash of Kings', 'isbn' => '0-553-10803-4', 'released' => '1999-02-25'],
-                ['id' => 3, 'series_id' => 1, 'name' => 'A Storm of Swords', 'isbn' => '0-553-10663-5', 'released' => '2000-11-11'],
-                ['id' => 4, 'series_id' => 1, 'name' => 'A Feast for Crows', 'isbn' => '0-553-80150-3', 'released' => '2005-11-02'],
-                ['id' => 5, 'series_id' => 1, 'name' => 'A Dance with Dragons', 'isbn' => '0-553-80147-3', 'released' => '2011-07-19'],
-                ['id' => 16, 'series_id' => 1, 'name' => 'The Winds of Winter', 'isbn' => '', 'released' => ''],
-                ['id' => 17, 'series_id' => 1, 'name' => 'A Dream of Spring', 'isbn' => '', 'released' => '']
+                new Entity(['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones (Updated)', 'isbn' => '0-553-10354-7', 'released' => '1996-08-02']),
+                new Entity(['id' => 2, 'series_id' => 1, 'name' => 'A Clash of Kings', 'isbn' => '0-553-10803-4', 'released' => '1999-02-25']),
+                new Entity(['id' => 3, 'series_id' => 1, 'name' => 'A Storm of Swords', 'isbn' => '0-553-10663-5', 'released' => '2000-11-11']),
+                new Entity(['id' => 4, 'series_id' => 1, 'name' => 'A Feast for Crows', 'isbn' => '0-553-80150-3', 'released' => '2005-11-02']),
+                new Entity(['id' => 5, 'series_id' => 1, 'name' => 'A Dance with Dragons', 'isbn' => '0-553-80147-3', 'released' => '2011-07-19']),
+                new Entity(['id' => 16, 'series_id' => 1, 'name' => 'The Winds of Winter', 'isbn' => '', 'released' => '']),
+                new Entity(['id' => 17, 'series_id' => 1, 'name' => 'A Dream of Spring', 'isbn' => '', 'released' => ''])
             ]
-        ], $series->select()->where('id', 1)->with('Books')->fetch(false));
+        ]), $results);
     }
 
+    /**
+     * Test upserting for many-to-many relations.
+     */
     public function testUpsertWithManyToMany() {
         $this->loadFixtures(['Genres', 'Books', 'BookGenres']);
 
         $book = new Book();
 
-        $this->assertEquals([
+        // Trigger lazy-loaded queries
+        $results = $book->select()->where('id', 10)->with('Genres')->fetch();
+        $results->Genres;
+
+        $this->assertEquals(new Entity([
             'id' => 10,
             'series_id' => 2,
             'name' => 'Harry Potter and the Order of the Phoenix',
             'isbn' => '0-7475-5100-6',
             'released' => '2003-06-21',
             'Genres' => [
-                [
+                new Entity([
                     'id' => 2,
                     'name' => 'Adventure',
                     'book_count' => 7,
-                    'Junction' => [
+                    'Junction' => new Entity([
                         'id' => 29,
                         'book_id' => 10,
                         'genre_id' => 2
-                    ]
-                ], [
+                    ])
+                ]),
+                new Entity([
                     'id' => 7,
                     'name' => 'Mystery',
                     'book_count' => 7,
-                    'Junction' => [
+                    'Junction' => new Entity([
                         'id' => 30,
                         'book_id' => 10,
                         'genre_id' => 7
-                    ]
-                ], [
+                    ])
+                ]),
+                new Entity([
                     'id' => 8,
                     'name' => 'Fantasy',
                     'book_count' => 15,
-                    'Junction' => [
+                    'Junction' => new Entity([
                         'id' => 28,
                         'book_id' => 10,
                         'genre_id' => 8
-                    ]
-                ]
+                    ])
+                ])
             ]
-        ], $book->select()->where('id', 10)->with('Genres')->fetch(false));
+        ]), $results);
 
         $this->assertEquals(4, $book->upsertRelations(10, [
             'Genres' => [
@@ -248,6 +266,12 @@ class AbstractUpsertTest extends TestCase {
                 ['genre_id' => 8, 'name' => 'Fantasy (Updated)'] // Updated because of direct foreign key
             ]
         ]));
+
+        // Trigger lazy-loaded queries
+        $results = $book->select()->where('id', 10)->with('Genres', function() {
+            $this->orderBy('id', 'asc');
+        })->fetch();
+        $results->Genres;
 
         $this->assertEquals([
             'id' => 10,
@@ -303,9 +327,7 @@ class AbstractUpsertTest extends TestCase {
                     ]
                 ]
             ]
-        ], $book->select()->where('id', 10)->with('Genres', function() {
-            $this->orderBy('id', 'asc');
-        })->fetch(false));
+        ], $results->toArray());
     }
 
 }
