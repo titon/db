@@ -1173,7 +1173,7 @@ class Table extends Base implements Callback, Listener {
                             $exists = $junctionTable->select()
                                 ->where($fk, $id)
                                 ->where($rfk, $foreign_id)
-                                ->fetch(false);
+                                ->fetch();
 
                             if (!$exists) {
                                 $junctionData[$jpk] = $junctionTable->upsert($junctionData, null, $options);
