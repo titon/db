@@ -1,4 +1,4 @@
-# Database v0.9.1 [![Build Status](https://travis-ci.org/titon/db.png)](https://travis-ci.org/titon/db) #
+# Database v0.9.2 [![Build Status](https://travis-ci.org/titon/db.png)](https://travis-ci.org/titon/db) #
 
 The Titon database package provides a basic database abstraction layer and an object relational mapper.
 Supported drivers are implemented in external packages that can be installed through composer.
