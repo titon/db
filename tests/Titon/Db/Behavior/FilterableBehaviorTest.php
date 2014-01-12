@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Behavior;
 
+use Titon\Db\Entity;
 use Titon\Test\Stub\Table\Post;
 use Titon\Test\TestCase;
 
@@ -33,12 +34,12 @@ class FilterableBehaviorTest extends TestCase {
             'content' => 'These <b>html</b> tags should be <i>stripped!</i>'
         ]);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
             'content' => 'These html tags should be stripped!'
-        ], $post->read($post_id, false));
+        ]), $post->read($post_id));
     }
 
     /**
@@ -57,12 +58,12 @@ class FilterableBehaviorTest extends TestCase {
             'content' => 'These <b>html</b> tags should be <i>escaped!</i>'
         ]);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
             'content' => 'These &lt;b&gt;html&lt;/b&gt; tags should be &lt;i&gt;escaped!&lt;/i&gt;'
-        ], $post->read($post_id, false));
+        ]), $post->read($post_id));
     }
 
     /**
@@ -81,12 +82,12 @@ class FilterableBehaviorTest extends TestCase {
             'content' => "These\r\n\r\n\r\nextraneous newlines should be\n\nremoved"
         ]);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
             'content' => "These\r\nextraneous newlines should be\nremoved"
-        ], $post->read($post_id, false));
+        ]), $post->read($post_id));
     }
 
     /**
@@ -105,12 +106,12 @@ class FilterableBehaviorTest extends TestCase {
             'content' => "These     extraneous whitespace should be\t\t\tremoved"
         ]);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
             'content' => "These extraneous whitespace should be\tremoved"
-        ], $post->read($post_id, false));
+        ]), $post->read($post_id));
     }
 
     /**
@@ -129,12 +130,12 @@ class FilterableBehaviorTest extends TestCase {
             'content' => 'These <iframe></iframe> <div onclick="">html</div> <i>tags</i> should <ns:b>be</ns:b> removed!'
         ]);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
             'content' => 'These  &lt;div&gt;html&lt;/div&gt; &lt;i&gt;tags&lt;/i&gt; should be removed!'
-        ], $post->read($post_id, false));
+        ]), $post->read($post_id));
     }
 
 }
