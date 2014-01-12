@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Behavior;
 
+use Titon\Db\Entity;
 use Titon\Test\Stub\Table\Topic;
 use Titon\Test\TestCase;
 
@@ -28,17 +29,17 @@ class SluggableBehaviorTest extends TestCase {
 
         $topic_id = $topic->create(['title' => 'Bruce Wayne']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'title' => 'Bruce Wayne',
             'slug' => 'bruce-wayne'
-        ], $topic->select('title', 'slug')->where('id', $topic_id)->fetch(false));
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
 
         $topic_id = $topic->create(['title' => 'Bruce Wayne']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'title' => 'Bruce Wayne',
             'slug' => 'bruce-wayne-1'
-        ], $topic->select('title', 'slug')->where('id', $topic_id)->fetch(false));
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
     }
 
     /**
@@ -52,17 +53,17 @@ class SluggableBehaviorTest extends TestCase {
 
         $topic_id = $topic->create(['title' => 'Bruce Wayne']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'title' => 'Bruce Wayne',
             'slug' => 'bruce-wayne'
-        ], $topic->select('title', 'slug')->where('id', $topic_id)->fetch(false));
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
 
         $topic_id = $topic->create(['title' => 'Bruce Wayne']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'title' => 'Bruce Wayne',
             'slug' => 'bruce-wayne'
-        ], $topic->select('title', 'slug')->where('id', $topic_id)->fetch(false));
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
     }
 
     /**
@@ -76,11 +77,11 @@ class SluggableBehaviorTest extends TestCase {
 
         $topic_id = $topic->create(['content' => 'Testing with no title or slug.']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'title' => '',
             'slug' => '',
             'content' => 'Testing with no title or slug.'
-        ], $topic->select('title', 'slug', 'content')->where('id', $topic_id)->fetch(false));
+        ]), $topic->select('title', 'slug', 'content')->where('id', $topic_id)->fetch());
     }
 
     /**
@@ -94,10 +95,10 @@ class SluggableBehaviorTest extends TestCase {
 
         $topic_id = $topic->create(['title' => 'This is the title', 'slug' => 'and-different-slug']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'title' => 'This is the title',
             'slug' => 'and-different-slug'
-        ], $topic->select('title', 'slug')->where('id', $topic_id)->fetch(false));
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
     }
 
     /**
@@ -111,10 +112,10 @@ class SluggableBehaviorTest extends TestCase {
 
         $topic->update(1, ['title' => 'Batman vs Ironman']);
 
-        $this->assertNotEquals([
+        $this->assertNotEquals(new Entity([
             'title' => 'Batman vs Superman?',
             'slug' => 'batman-vs-superman'
-        ], $topic->select('title', 'slug')->where('id', 1)->fetch(false));
+        ]), $topic->select('title', 'slug')->where('id', 1)->fetch());
     }
 
     /**
@@ -128,10 +129,10 @@ class SluggableBehaviorTest extends TestCase {
 
         $topic->update(1, ['title' => 'Batman vs Ironman']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'title' => 'Batman vs Ironman',
             'slug' => 'batman-vs-superman'
-        ], $topic->select('title', 'slug')->where('id', 1)->fetch(false));
+        ]), $topic->select('title', 'slug')->where('id', 1)->fetch());
     }
 
     /**
@@ -145,10 +146,10 @@ class SluggableBehaviorTest extends TestCase {
 
         $topic->update(1, ['title' => 'Batman vs Superman']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'title' => 'Batman vs Superman',
             'slug' => 'batman-vs-superman'
-        ], $topic->select('title', 'slug')->where('id', 1)->fetch(false));
+        ]), $topic->select('title', 'slug')->where('id', 1)->fetch());
     }
 
     /**
@@ -165,10 +166,10 @@ class SluggableBehaviorTest extends TestCase {
         $topic_id = $topic->create(['title' => 'Batman vs Superman']);
 
         // Should not increment since other records do not meet scope
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'title' => 'Batman vs Superman',
             'slug' => 'batman-vs-superman'
-        ], $topic->select('title', 'slug')->where('id', $topic_id)->fetch(false));
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
     }
 
     /**
