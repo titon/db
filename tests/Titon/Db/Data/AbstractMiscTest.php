@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Data;
 
+use Titon\Db\Entity;
 use Titon\Db\Query;
 use Titon\Db\Query\SubQuery;
 use Titon\Test\Stub\Table\User;
@@ -60,7 +61,7 @@ class AbstractMiscTest extends TestCase {
 
         $user = new User();
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 1,
             'country_id' => 1,
             'username' => 'miles',
@@ -71,13 +72,8 @@ class AbstractMiscTest extends TestCase {
             'age' => 25,
             'created' => '1988-02-26 21:22:34',
             'modified' => null,
-            'Profile' => [
-                'id' => 4,
-                'user_id' => 1,
-                'lastLogin' => '2012-02-15 21:22:34',
-                'currentLogin' => '2013-06-06 19:11:03'
-            ]
-        ], $user->select()->with('Profile')->where('id', 1)->fetch(false));
+            'Profile' => function() {} // lazy-loaded
+        ]), $user->select()->with('Profile')->where('id', 1)->fetch());
 
         // Update user and profile
         $time = time();
@@ -90,7 +86,11 @@ class AbstractMiscTest extends TestCase {
             ]
         ]));
 
-        $this->assertEquals([
+        // Trigger lazy-loaded queries
+        $result = $user->select()->with('Profile')->where('id', 1)->fetch();
+        $result->Profile;
+
+        $this->assertEquals(new Entity([
             'id' => 1,
             'country_id' => 1,
             'username' => 'miles',
@@ -101,13 +101,13 @@ class AbstractMiscTest extends TestCase {
             'age' => 25,
             'created' => '1988-02-26 21:22:34',
             'modified' => date('Y-m-d H:i:s', $time),
-            'Profile' => [
+            'Profile' => new Entity([
                 'id' => 4,
                 'user_id' => 1,
                 'lastLogin' => date('Y-m-d H:i:s', $time),
                 'currentLogin' => '2013-06-06 19:11:03'
-            ]
-        ], $user->select()->with('Profile')->where('id', 1)->fetch(false));
+            ])
+        ]), $result);
     }
 
     /**
@@ -117,7 +117,7 @@ class AbstractMiscTest extends TestCase {
         $this->loadFixtures(['Users', 'Profiles']);
 
         $user = new User();
-        $data = [
+        $data = new Entity([
             'id' => 1,
             'country_id' => 1,
             'username' => 'miles',
@@ -128,15 +128,19 @@ class AbstractMiscTest extends TestCase {
             'age' => 25,
             'created' => '1988-02-26 21:22:34',
             'modified' => null,
-            'Profile' => [
+            'Profile' => new Entity([
                 'id' => 4,
                 'user_id' => 1,
                 'lastLogin' => '2012-02-15 21:22:34',
                 'currentLogin' => '2013-06-06 19:11:03'
-            ]
-        ];
+            ])
+        ]);
 
-        $this->assertEquals($data, $user->select()->with('Profile')->where('id', 1)->fetch(false));
+        // Trigger lazy-loaded queries
+        $result = $user->select()->with('Profile')->where('id', 1)->fetch();
+        $result->Profile;
+
+        $this->assertEquals($data, $result);
 
         // Update user and profile
         $time = time();
@@ -155,7 +159,11 @@ class AbstractMiscTest extends TestCase {
             $this->assertTrue(true);
         }
 
-        $this->assertEquals($data, $user->select()->with('Profile')->where('id', 1)->fetch(false));
+        // Trigger lazy-loaded queries
+        $result = $user->select()->with('Profile')->where('id', 1)->fetch();
+        $result->Profile;
+
+        $this->assertEquals($data, $result);
     }
 
     /**
@@ -171,20 +179,20 @@ class AbstractMiscTest extends TestCase {
         $query->where('country_id', '=', $query->subQuery('id')->from('countries')->withFilter(SubQuery::ANY))->orderBy('id', 'asc');
 
         $this->assertEquals([
-            ['id' => 1, 'country_id' => 1, 'username' => 'miles'],
-            ['id' => 2, 'country_id' => 3, 'username' => 'batman'],
-            ['id' => 3, 'country_id' => 2, 'username' => 'superman'],
-            ['id' => 4, 'country_id' => 5, 'username' => 'spiderman'],
-            ['id' => 5, 'country_id' => 4, 'username' => 'wolverine'],
-        ], $query->fetchAll(false));
+            new Entity(['id' => 1, 'country_id' => 1, 'username' => 'miles']),
+            new Entity(['id' => 2, 'country_id' => 3, 'username' => 'batman']),
+            new Entity(['id' => 3, 'country_id' => 2, 'username' => 'superman']),
+            new Entity(['id' => 4, 'country_id' => 5, 'username' => 'spiderman']),
+            new Entity(['id' => 5, 'country_id' => 4, 'username' => 'wolverine']),
+        ], $query->fetchAll());
 
         // Single record
         $query = $user->select('id', 'country_id', 'username');
         $query->where('country_id', '=', $query->subQuery('id')->from('countries')->where('iso', 'USA'));
 
         $this->assertEquals([
-            ['id' => 1, 'country_id' => 1, 'username' => 'miles']
-        ], $query->fetchAll(false));
+            new Entity(['id' => 1, 'country_id' => 1, 'username' => 'miles'])
+        ], $query->fetchAll());
     }
 
 }
