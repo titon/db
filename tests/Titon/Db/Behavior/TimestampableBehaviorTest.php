@@ -42,7 +42,9 @@ class TimestampableBehaviorTest extends TestCase {
         ]), $this->object->select('id', 'username', 'created')->where('id', $id)->fetch());
 
         // Now with behavior
-        $this->object->addBehavior(new TimestampableBehavior());
+        $this->object->addBehavior(new TimestampableBehavior([
+            'createField' => 'created'
+        ]));
 
         $time = time();
         $id = $this->object->create(['username' => 'bar']);

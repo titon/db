@@ -25,8 +25,8 @@ class TimestampableBehavior extends AbstractBehavior {
      * }
      */
     protected $_config = [
-        'createField' => 'created',
-        'updateField' => 'updated'
+        'createField' => 'created_at',
+        'updateField' => 'updated_at'
     ];
 
     /**
