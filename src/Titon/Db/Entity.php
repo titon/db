@@ -90,4 +90,37 @@ class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, C
         return $this->_data;
     }
 
+    /**
+     * Convert all entities and nested entities to arrays.
+     *
+     * @return array
+     */
+    public function toArray() {
+        return $this->_toArray($this);
+    }
+
+    /**
+     * Apply array casting recursively.
+     *
+     * @param mixed $data
+     * @return array
+     */
+    protected function _toArray($data) {
+        $array = [];
+
+        foreach ($data as $key => $value) {
+            if ($value instanceof Entity) {
+                $array[$key] = $value->toArray();
+
+            } else if (is_array($value)) {
+                $array[$key] = $this->_toArray($value);
+
+            } else {
+                $array[$key] = $value;
+            }
+        }
+
+        return $array;
+    }
+
 }

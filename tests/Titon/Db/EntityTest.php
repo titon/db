@@ -126,4 +126,50 @@ class EntityTest extends TestCase {
         $this->assertEquals($keys, $this->object->keys());
     }
 
+    /**
+     * Test that closures are executed and the value is returned.
+     */
+    public function testClosureReading() {
+        $this->object = new Entity([
+            'id' => 1,
+            'username' => function() {
+                return 'Miles';
+            }
+        ]);
+
+        $this->assertEquals('Miles', $this->object->username);
+        $this->assertEquals([
+            'id' => 1,
+            'username' => 'Miles'
+        ], $this->object->toArray());
+    }
+
+    /**
+     * Test nested entities are converted to arrays.
+     */
+    public function testNestedToArray() {
+        $this->assertEquals([
+            'id' => 1,
+            'username' => 'Miles',
+            'password' => 'iamasecret',
+            'email' => 'email@domain.com',
+            'created' => '1988-02-26 10:22:33',
+            'Profile' => [
+                'id' => 1,
+                'age' => 25,
+                'country' => 'USA'
+            ],
+            'Posts' => [
+                [
+                    'id' => 666,
+                    'title' => 'Post #1'
+                ],
+                [
+                    'id' => 1337,
+                    'title' => 'Post #2'
+                ]
+            ]
+        ], $this->object->toArray());
+    }
+
 }
