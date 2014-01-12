@@ -198,7 +198,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         return $this->getTable()->select()
             ->orderBy($this->config->rightField, 'desc')
             ->limit(1)
-            ->fetch(false);
+            ->fetch();
     }
 
     /**
@@ -226,7 +226,7 @@ class HierarchicalBehavior extends AbstractBehavior {
             }
         }
 
-        return $this->mapList($query->fetchAll(false), $key, $value, $spacer);
+        return $this->mapList($query->fetchAll(), $key, $value, $spacer);
     }
 
     /**
@@ -249,7 +249,7 @@ class HierarchicalBehavior extends AbstractBehavior {
             $query->where($pk, $id);
         }
 
-        return $query->fetch(false);
+        return $query->fetch();
     }
 
     /**
@@ -272,7 +272,7 @@ class HierarchicalBehavior extends AbstractBehavior {
             ->where($left, '<', $node[$left])
             ->where($right, '>', $node[$right])
             ->orderBy($left, 'asc')
-            ->fetchAll(false);
+            ->fetchAll();
     }
 
     /**
@@ -296,7 +296,7 @@ class HierarchicalBehavior extends AbstractBehavior {
             }
         }
 
-        $nodes = $query->fetchAll(false);
+        $nodes = $query->fetchAll();
 
         if (!$nodes) {
             return [];
@@ -631,7 +631,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         $children = $table->select()
             ->where($parent, $parent_id)
             ->orderBy($order)
-            ->fetchAll(false);
+            ->fetchAll();
 
         foreach ($children as $child) {
             $right = $this->_reOrder($child[$pk], $right, $order);
