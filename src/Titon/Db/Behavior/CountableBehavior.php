@@ -81,12 +81,12 @@ class CountableBehavior extends AbstractBehavior {
                             ->select()
                             ->where($relation->getForeignKey(), $value)
                             ->bindCallback($counter['scope'])
-                            ->fetchAll(false);
+                            ->fetchAll();
 
                         $this->setCache(['Junction', $alias, $value], $results);
                     break;
                     case Relation::MANY_TO_ONE:
-                        $this->setCache(['Record', $alias, $value], $table->read($value, false));
+                        $this->setCache(['Record', $alias, $value], $table->read($value));
                     break;
                 }
             }
@@ -172,7 +172,7 @@ class CountableBehavior extends AbstractBehavior {
                 $results = $junctionTable->select()
                     ->where($fk, $id)
                     ->bindCallback($counter['scope'])
-                    ->fetchAll(false);
+                    ->fetchAll();
             }
 
             // Loop over each junction record and update the related record
@@ -223,7 +223,7 @@ class CountableBehavior extends AbstractBehavior {
         $relatedTable = $relation->getRelatedTable();
 
         foreach ((array) $ids as $id) {
-            $result = $this->getCache(['Record', $alias, $id]) ?: $table->read($id, false);
+            $result = $this->getCache(['Record', $alias, $id]) ?: $table->read($id);
             $foreign_id = $result[$fk];
             $cacheKey = [$alias, $fk, $foreign_id];
 
