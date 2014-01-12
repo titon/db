@@ -97,7 +97,14 @@ class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, C
      * @return array
      */
     public function toArray() {
-        return $this->_toArray($this);
+        $data = [];
+
+        // Loop and trigger any closures
+        foreach ($this->keys() as $key) {
+            $data[$key] = $this->get($key);
+        }
+
+        return $this->_toArray($data);
     }
 
     /**
