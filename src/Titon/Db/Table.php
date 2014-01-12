@@ -1230,11 +1230,9 @@ class Table extends Base implements Callback, Listener {
         $entityClass = $this->getEntity();
 
         foreach ($results as $i => $result) {
-            $entity = new $entityClass($result);
-            $entity = $this->fetchRelations($query, $entity, $options);
 
             // Wrap data pulled through a join
-            /*foreach ($result as $key => $value) {
+            foreach ($result as $key => $value) {
                 if (!is_array($value)) {
                     continue;
                 }
@@ -1245,11 +1243,15 @@ class Table extends Base implements Callback, Listener {
                 }
 
                 if ($this->hasRelation($key)) {
-                    $relatedEntity = $this->getRelation($key)->getRelatedTable()->getEntity() ?: $entity;
+                    $relatedEntity = $this->getRelation($key)->getRelatedTable()->getEntity() ?: $entityClass;
 
                     $result[$key] = new $relatedEntity($value);
                 }
-            }*/
+            }
+
+            // Wrap with entity and fetch relations
+            $entity = new $entityClass($result);
+            $entity = $this->fetchRelations($query, $entity, $options);
 
             $results[$i] = $entity;
         }
