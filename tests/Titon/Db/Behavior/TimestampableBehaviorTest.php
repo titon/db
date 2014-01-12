@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Behavior;
 
+use Titon\Db\Entity;
 use Titon\Test\Stub\Table\User;
 use Titon\Test\TestCase;
 
@@ -34,11 +35,11 @@ class TimestampableBehaviorTest extends TestCase {
 
         $id = $this->object->create(['username' => 'foo']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 6,
             'username' => 'foo',
             'created' => null
-        ], $this->object->select('id', 'username', 'created')->where('id', $id)->fetch(false));
+        ]), $this->object->select('id', 'username', 'created')->where('id', $id)->fetch());
 
         // Now with behavior
         $this->object->addBehavior(new TimestampableBehavior());
@@ -46,11 +47,11 @@ class TimestampableBehaviorTest extends TestCase {
         $time = time();
         $id = $this->object->create(['username' => 'bar']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 7,
             'username' => 'bar',
             'created' => date('Y-m-d H:i:s', $time)
-        ], $this->object->select('id', 'username', 'created')->where('id', $id)->fetch(false));
+        ]), $this->object->select('id', 'username', 'created')->where('id', $id)->fetch());
     }
 
     /**
@@ -61,11 +62,11 @@ class TimestampableBehaviorTest extends TestCase {
 
         $this->object->update(1, ['username' => 'foo']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 1,
             'username' => 'foo',
             'modified' => null
-        ], $this->object->select('id', 'username', 'modified')->where('id', 1)->fetch(false));
+        ]), $this->object->select('id', 'username', 'modified')->where('id', 1)->fetch());
 
         // Now with behavior
         $this->object->addBehavior(new TimestampableBehavior([
@@ -75,11 +76,11 @@ class TimestampableBehaviorTest extends TestCase {
         $time = time();
         $this->object->update(1, ['username' => 'bar']);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => 1,
             'username' => 'bar',
             'modified' => date('Y-m-d H:i:s', $time)
-        ], $this->object->select('id', 'username', 'modified')->where('id', 1)->fetch(false));
+        ]), $this->object->select('id', 'username', 'modified')->where('id', 1)->fetch());
     }
 
 }
