@@ -112,7 +112,7 @@ class Predicate implements Serializable, JsonSerializable {
      */
     public function bindCallback(Closure $callback, $query = null) {
         $callback = $callback->bindTo($this, 'Titon\Db\Query\Predicate');
-        $callback($query);
+        $callback($this, $query);
 
         return $this;
     }

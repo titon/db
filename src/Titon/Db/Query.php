@@ -219,7 +219,7 @@ class Query implements Serializable, JsonSerializable {
     public function bindCallback($callback, $argument = null) {
         if ($callback instanceof Closure) {
             $callback = $callback->bindTo($this, 'Titon\Db\Query');
-            $callback($argument);
+            $callback($this, $argument);
         }
 
         return $this;
@@ -265,9 +265,7 @@ class Query implements Serializable, JsonSerializable {
      * @return \Titon\Db\Entity
      */
     public function fetch(array $options = []) {
-        $this->limit(1);
-
-        return $this->getTable()->fetch($this, $options);
+        return $this->limit(1)->getTable()->fetch($this, $options);
     }
 
     /**

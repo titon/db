@@ -7,7 +7,6 @@
 
 namespace Titon\Db\Relation;
 
-use Titon\Common\Registry;
 use Titon\Db\Exception\InvalidTableException;
 use Titon\Db\Relation;
 use Titon\Db\Table;

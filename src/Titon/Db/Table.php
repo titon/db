@@ -999,6 +999,15 @@ class Table extends Base implements Callback, Listener {
     }
 
     /**
+     * Truncate a database and remove all records.
+     *
+     * @return bool
+     */
+    public function truncate() {
+        return (bool) $this->query(Query::TRUNCATE)->save();
+    }
+
+    /**
      * Update a database record based on ID.
      *
      * @param int $id

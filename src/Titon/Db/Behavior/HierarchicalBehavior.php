@@ -186,7 +186,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         return $this->getTable()->select()
             ->orderBy($this->config->leftField, 'asc')
             ->limit(1)
-            ->fetch(false);
+            ->fetch();
     }
 
     /**

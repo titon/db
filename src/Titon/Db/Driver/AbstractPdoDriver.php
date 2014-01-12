@@ -114,7 +114,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      */
     public function describeTable($table) {
         return $this->cache([__METHOD__, $table], function() use ($table) {
-            $columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->fetchAll(false);
+            $columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->fetchAll();
             $schema = [];
 
             if (!$columns) {
@@ -251,7 +251,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         $database = $database ?: $this->getDatabase();
 
         return $this->cache([__METHOD__, $database], function() use ($database) {
-            $tables = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->fetchAll(false);
+            $tables = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->fetchAll();
             $schema = [];
 
             if (!$tables) {
@@ -275,9 +275,10 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         $storage = $this->getStorage();
         $cacheKey = null;
         $cacheLength = null;
+        $isQuery = ($query instanceof Query);
 
         // Determine cache key and lengths
-        if ($query instanceof Query) {
+        if ($isQuery) {
             $cacheKey = $query->getCacheKey();
             $cacheLength = $query->getCacheLength();
 
@@ -298,7 +299,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         }
 
         // Prepare statement and bind parameters
-        if ($query instanceof Query) {
+        if ($isQuery) {
             $statement = $this->buildStatement($query);
             $binds = $this->resolveParams($query);
 
@@ -318,9 +319,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         $statement->params = $binds;
 
         // Gather and log result
-        if ($query instanceof Query) {
+        if ($isQuery) {
             $this->_result = new PdoResult($statement, $query);
-
         } else {
             $this->_result = new PdoResult($statement);
         }

@@ -356,8 +356,8 @@ class QueryTest extends TestCase {
             $this->assertTrue(true);
         }
 
-        $this->object->with('Profile', function(Relation $relation) {
-            $this->where($relation->getRelatedForeignKey(), 1);
+        $this->object->with('Profile', function(Query $query, Relation $relation) {
+            $query->where($relation->getRelatedForeignKey(), 1);
         });
 
         $query = new Query(Query::SELECT, new Profile());
