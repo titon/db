@@ -28,7 +28,7 @@ trait TableAware {
      *
      * @return \Titon\Db\Table
      */
-    public function getTable() {
+    final public function getTable() {
         return $this->_table;
     }
 
@@ -38,7 +38,7 @@ trait TableAware {
      * @param \Titon\Db\Table $table
      * @return \Titon\Db\Traits\TableAware
      */
-    public function setTable(Table $table) {
+    final public function setTable(Table $table) {
         $this->_table = $table;
 
         return $this;

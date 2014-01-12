@@ -70,8 +70,7 @@ class ManyToMany extends AbstractRelation {
             return $table;
         }
 
-        $class = $this->getJunctionClass();
-        $this->setJunctionTable(new $class());
+        $this->setJunctionTable($this->_getTable($this->getJunctionClass()));
 
         return $this->_junctionTable;
     }

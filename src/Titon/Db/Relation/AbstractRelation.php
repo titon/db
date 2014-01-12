@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Relation;
 
+use Titon\Common\Augment\InfoAugment;
 use Titon\Common\Base;
 use Titon\Db\Exception\InvalidTableException;
 use Titon\Db\Relation;
@@ -113,8 +114,7 @@ abstract class AbstractRelation extends Base implements Relation {
             return $table;
         }
 
-        $class = $this->getClass();
-        $this->_relatedTable = new $class();
+        $this->setRelatedTable($this->_getTable($this->getClass()));
 
         return $this->_relatedTable;
     }
@@ -195,6 +195,28 @@ abstract class AbstractRelation extends Base implements Relation {
         $this->_relatedTable = $table;
 
         return $this;
+    }
+
+    /**
+     * Attempt to find the Table object based on the class name.
+     * If the class is not an instance of Table, but is TableAware, use that instance.
+     *
+     * @param string $class
+     * @return \Titon\Db\Table
+     * @throws \Titon\Db\Exception\InvalidTableException
+     */
+    protected function _getTable($class) {
+        $table = new $class();
+
+        if (!($table instanceof Table)) {
+            if (in_array('Titon\Db\Traits\TableAware', (new InfoAugment($table))->traits())) {
+                $table = $table->getTable();
+            } else {
+                throw new InvalidTableException(sprintf('%s relation must return a Table instance', $this->getAlias()));
+            }
+        }
+
+        return $table;
     }
 
 }
