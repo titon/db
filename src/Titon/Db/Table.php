@@ -1182,7 +1182,7 @@ class Table extends Base implements Callback, Listener {
                                     throw new QueryFailureException(sprintf('Failed to upsert %s junction data', $alias));
                                 }
                             } else {
-                                $junctionData = $exists;
+                                $junctionData = $exists->toArray();
                             }
 
                             $habtmData['Junction'] = $junctionData;
@@ -1429,10 +1429,10 @@ class Table extends Base implements Callback, Listener {
         if ($query->getType() === Query::SELECT) {
             $schema = $this->getSchema()->getColumns();
 
-            foreach ($results as $result) {
+            foreach ($results as $i => $result) {
                 foreach ($result as $field => $value) {
                     if (isset($schema[$field])) {
-                        $result[$field] = AbstractType::factory($schema[$field]['type'], $this->getDriver())->from($value);
+                        $results[$i][$field] = AbstractType::factory($schema[$field]['type'], $this->getDriver())->from($value);
                     }
                 }
             }
