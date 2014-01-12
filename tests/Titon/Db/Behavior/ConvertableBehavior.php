@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Behavior;
 
+use Titon\Db\Entity;
 use Titon\Test\Stub\Table\Post;
 use Titon\Test\TestCase;
 
@@ -37,12 +38,12 @@ class ConvertableBehaviorTest extends TestCase {
 
         $post_id = $post->create($data);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 3,
             'active' => 1,
             'content' => 'a:1:{s:3:"foo";s:3:"bar";}'
-        ], $post->read($post_id, false));
+        ]), $post->read($post_id));
 
         // With decoding
         $post->getBehavior('Convertable')
@@ -50,7 +51,7 @@ class ConvertableBehaviorTest extends TestCase {
 
         $data['id'] = $post_id;
 
-        $this->assertEquals($data, $post->read($post_id, false));
+        $this->assertEquals(new Entity($data), $post->read($post_id));
     }
 
     /**
@@ -73,12 +74,12 @@ class ConvertableBehaviorTest extends TestCase {
 
         $post_id = $post->create($data);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 3,
             'active' => 1,
             'content' => '{"foo":"bar"}'
-        ], $post->read($post_id, false));
+        ]), $post->read($post_id));
 
         // With decoding
         $post->getBehavior('Convertable')
@@ -86,7 +87,7 @@ class ConvertableBehaviorTest extends TestCase {
 
         $data['id'] = $post_id;
 
-        $this->assertEquals($data, $post->read($post_id, false));
+        $this->assertEquals(new Entity($data), $post->read($post_id));
     }
 
     /**
@@ -109,12 +110,12 @@ class ConvertableBehaviorTest extends TestCase {
 
         $post_id = $post->create($data);
 
-        $this->assertEquals([
+        $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 3,
             'active' => 1,
             'content' => 'VGhpcyBkYXRhIHdpbGwgYmUgYmFzZTY0IGVuY29kZWQ='
-        ], $post->read($post_id, false));
+        ]), $post->read($post_id));
 
         // With decoding
         $post->getBehavior('Convertable')
@@ -122,7 +123,7 @@ class ConvertableBehaviorTest extends TestCase {
 
         $data['id'] = $post_id;
 
-        $this->assertEquals($data, $post->read($post_id, false));
+        $this->assertEquals(new Entity($data), $post->read($post_id));
     }
 
 }
