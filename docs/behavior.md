@@ -8,14 +8,14 @@ A behavior can be loaded by calling `addBehavior()` within the table.
 
 The following behaviors are supported. All examples will borrow from the relation docs.
 
-### Countable ###
+### Counter ###
 
-The CountableBehavior provides a way for many-to-one|many relations to track a count of how many related records exist.
+The CounterBehavior provides a way for many-to-one|many relations to track a count of how many related records exist.
 
 ```php
 use Titon\Db\Repository;
 use Titon\Db\Relation\ManyToOne;
-use Titon\Db\Behavior\CountableBehavior;
+use Titon\Db\Behavior\CounterBehavior;
 
 class Post extends Repository {
     // ...
@@ -26,7 +26,7 @@ class Post extends Repository {
         $this->addRelation(new ManyToOne('User', 'App\Db\User'))
             ->setForeignKey('user_id');
 
-        $this->addBehavior(new CountableBehavior())
+        $this->addBehavior(new CounterBehavior())
             ->addCounter('User', 'post_count'); // users.post_count
     }
 }
@@ -34,15 +34,15 @@ class Post extends Repository {
 
 Each time a post is created, updated or deleted, the post_count will be updated in the user record.
 
-### Hierarchical ###
+### Hierarchy ###
 
-The HierarchicalBehavior implements a pattern of tree traversal which allows for a nested hierarchy of nodes. The tree is based off the Modified Preorder Tree Traversal (MPTT) pattern: http://www.sitepoint.com/hierarchical-data-database-2/
+The HierarchyBehavior implements a pattern of tree traversal which allows for a nested hierarchy of nodes. The tree is based off the Modified Preorder Tree Traversal (MPTT) pattern: http://www.sitepoint.com/hierarchical-data-database-2/
 
 Any table that implements this behavior will require a parent_id, left and right column.
 
 ```php
 use Titon\Db\Repository;
-use Titon\Db\Behavior\HierarchicalBehavior;
+use Titon\Db\Behavior\HierarchyBehavior;
 
 class Category extends Repository {
     // ...
@@ -50,10 +50,10 @@ class Category extends Repository {
     public function initialize() {
         parent::initialize();
 
-        $this->addBehavior(new HierarchicalBehavior());
+        $this->addBehavior(new HierarchyBehavior());
 
         // Or with custom field names
-        $this->addBehavior(new HierarchicalBehavior([
+        $this->addBehavior(new HierarchyBehavior([
             'parentField' => 'category_id',
             'leftField' => 'lft',
             'rightField' => 'rght'
@@ -72,13 +72,13 @@ $this->getBehavior('Hierarchical')->getTree(); // returns a nested array tree
 $this->getBehavior('Hierarchical')->getPath($id); // returns the tree path to the node
 ```
 
-### Timestampable ###
+### Timestamp ###
 
-The TimestampableBehavior will update a field with a timestamp anytime a record is created or updated. Columns default to created and updated.
+The TimestampBehavior will update a field with a timestamp anytime a record is created or updated. Columns default to created and updated.
 
 ```php
 use Titon\Db\Repository;
-use Titon\Db\Behavior\TimestampableBehavior;
+use Titon\Db\Behavior\TimestampBehavior;
 
 class Post extends Repository {
     // ...
@@ -86,13 +86,19 @@ class Post extends Repository {
     public function initialize() {
         parent::initialize();
 
-        $this->addBehavior(new TimestampableBehavior());
+        $this->addBehavior(new TimestampBehavior());
 
         // Or with custom field names
-        $this->addBehavior(new TimestampableBehavior([
+        $this->addBehavior(new TimestampBehavior([
             'createField' => 'dateCreated',
             'updateField' => 'dateUpdated'
         ));
     }
 }
 ```
+
+### Converter ###
+
+### Filter ###
+
+### Slug ###

@@ -14,11 +14,11 @@ use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\CountableBehavior.
+ * Test class for Titon\Db\Behavior\CounterBehavior.
  *
- * @property \Titon\Db\Behavior\CountableBehavior $object
+ * @property \Titon\Db\Behavior\CounterBehavior $object
  */
-class CountableBehaviorTest extends TestCase {
+class CounterBehaviorTest extends TestCase {
 
     /**
      * Test that counts are synced on create or update.
@@ -28,7 +28,7 @@ class CountableBehaviorTest extends TestCase {
 
         $genre = new Genre();
         $book = new Book();
-        $book->addBehavior(new CountableBehavior())
+        $book->addBehavior(new CounterBehavior())
             ->addCounter('Genres', 'book_count');
 
         $record = $genre->read(3);
@@ -66,7 +66,7 @@ class CountableBehaviorTest extends TestCase {
 
         $genre = new Genre();
         $book = new Book();
-        $book->addBehavior(new CountableBehavior())
+        $book->addBehavior(new CounterBehavior())
             ->addCounter('Genres', 'book_count');
 
         $record = $genre->read(8);
@@ -95,7 +95,7 @@ class CountableBehaviorTest extends TestCase {
 
         $topic = new Topic();
         $post = new Post();
-        $post->addBehavior(new CountableBehavior())
+        $post->addBehavior(new CounterBehavior())
             ->addCounter('Topic', 'post_count', function() {
                 $this->where('active', 1);
             });
@@ -124,7 +124,7 @@ class CountableBehaviorTest extends TestCase {
 
         $topic = new Topic();
         $post = new Post();
-        $post->addBehavior(new CountableBehavior())
+        $post->addBehavior(new CounterBehavior())
             ->addCounter('Topic', 'post_count', function() {
                 $this->where('active', 1);
             });
@@ -161,7 +161,7 @@ class CountableBehaviorTest extends TestCase {
 
         $topic = new Topic();
         $post = new Post();
-        $post->addBehavior(new CountableBehavior())
+        $post->addBehavior(new CounterBehavior())
             ->addCounter('Topic', 'post_count', function() {
                 $this->where('active', 1);
             });

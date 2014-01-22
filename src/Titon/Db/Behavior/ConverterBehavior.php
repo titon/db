@@ -12,12 +12,12 @@ use Titon\Db\Exception\InvalidArgumentException;
 use Titon\Utility\Hash;
 
 /**
- * The ConvertableBehavior will convert a field into a specific type before an insert or update,
+ * The ConverterBehavior will convert a field into a specific type before an insert or update,
  * and then convert the field back to its original type when the record is retrieved.
  *
  * @package Titon\Db\Behavior
  */
-class ConvertableBehavior extends AbstractBehavior {
+class ConverterBehavior extends AbstractBehavior {
 
     const SERIALIZE = 'serialize';
     const JSON = 'json';
@@ -49,7 +49,7 @@ class ConvertableBehavior extends AbstractBehavior {
      * @param string $field
      * @param string $type
      * @param array $options
-     * @return \Titon\Db\Behavior\ConvertableBehavior
+     * @return \Titon\Db\Behavior\ConverterBehavior
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function convert($field, $type, array $options) {

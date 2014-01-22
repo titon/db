@@ -10,11 +10,11 @@ namespace Titon\Db\Behavior;
 use Titon\Event\Event;
 
 /**
- * The TimestampableBehavior will update a field with a timestamp anytime a record is created or updated.
+ * The TimestampBehavior will update a field with a timestamp anytime a record is created or updated.
  *
  * @package Titon\Db\Behavior
  */
-class TimestampableBehavior extends AbstractBehavior {
+class TimestampBehavior extends AbstractBehavior {
 
     /**
      * Configuration.

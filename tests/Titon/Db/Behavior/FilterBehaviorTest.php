@@ -12,11 +12,11 @@ use Titon\Test\Stub\Repository\Post;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\FilterableBehavior.
+ * Test class for Titon\Db\Behavior\FilterBehavior.
  *
- * @property \Titon\Db\Behavior\FilterableBehavior $object
+ * @property \Titon\Db\Behavior\FilterBehavior $object
  */
-class FilterableBehaviorTest extends TestCase {
+class FilterBehaviorTest extends TestCase {
 
     /**
      * Test that HTML is stripped.
@@ -25,7 +25,7 @@ class FilterableBehaviorTest extends TestCase {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterableBehavior())
+        $post->addBehavior(new FilterBehavior())
             ->filter('content', 'html');
 
         $post_id = $post->create([
@@ -49,7 +49,7 @@ class FilterableBehaviorTest extends TestCase {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterableBehavior())
+        $post->addBehavior(new FilterBehavior())
             ->filter('content', 'html', ['strip' => false]);
 
         $post_id = $post->create([
@@ -73,7 +73,7 @@ class FilterableBehaviorTest extends TestCase {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterableBehavior())
+        $post->addBehavior(new FilterBehavior())
             ->filter('content', 'newlines');
 
         $post_id = $post->create([
@@ -97,7 +97,7 @@ class FilterableBehaviorTest extends TestCase {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterableBehavior())
+        $post->addBehavior(new FilterBehavior())
             ->filter('content', 'whitespace');
 
         $post_id = $post->create([
@@ -121,7 +121,7 @@ class FilterableBehaviorTest extends TestCase {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterableBehavior())
+        $post->addBehavior(new FilterBehavior())
             ->filter('content', 'xss', ['strip' => false]);
 
         $post_id = $post->create([

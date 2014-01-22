@@ -11,7 +11,7 @@ use Titon\Event\Event;
 use Titon\Db\Query;
 
 /**
- * The HierarchicalBehavior implements a pattern of tree traversal which allows for a nested hierarchy of nodes.
+ * The HierarchyBehavior implements a pattern of tree traversal which allows for a nested hierarchy of nodes.
  * After every node insertion and deletion, the tree is updated accordingly.
  * The tree is based off the Modified Preorder Tree Traversal (MPTT) pattern.
  *
@@ -20,7 +20,7 @@ use Titon\Db\Query;
  *
  * @package Titon\Db\Behavior
  */
-class HierarchicalBehavior extends AbstractBehavior {
+class HierarchyBehavior extends AbstractBehavior {
 
     /**
      * Configuration.

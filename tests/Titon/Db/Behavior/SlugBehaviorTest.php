@@ -12,11 +12,11 @@ use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\SluggableBehavior.
+ * Test class for Titon\Db\Behavior\SlugBehavior.
  *
- * @property \Titon\Db\Behavior\SluggableBehavior $object
+ * @property \Titon\Db\Behavior\SlugBehavior $object
  */
-class SluggableBehaviorTest extends TestCase {
+class SlugBehaviorTest extends TestCase {
 
     /**
      * Test unique slugs increment.
@@ -25,7 +25,7 @@ class SluggableBehaviorTest extends TestCase {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SluggableBehavior());
+        $topic->addBehavior(new SlugBehavior());
 
         $topic_id = $topic->create(['title' => 'Bruce Wayne']);
 
@@ -49,7 +49,7 @@ class SluggableBehaviorTest extends TestCase {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SluggableBehavior(['unique' => false]));
+        $topic->addBehavior(new SlugBehavior(['unique' => false]));
 
         $topic_id = $topic->create(['title' => 'Bruce Wayne']);
 
@@ -73,7 +73,7 @@ class SluggableBehaviorTest extends TestCase {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SluggableBehavior());
+        $topic->addBehavior(new SlugBehavior());
 
         $topic_id = $topic->create(['content' => 'Testing with no title or slug.']);
 
@@ -91,7 +91,7 @@ class SluggableBehaviorTest extends TestCase {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SluggableBehavior());
+        $topic->addBehavior(new SlugBehavior());
 
         $topic_id = $topic->create(['title' => 'This is the title', 'slug' => 'and-different-slug']);
 
@@ -108,7 +108,7 @@ class SluggableBehaviorTest extends TestCase {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SluggableBehavior());
+        $topic->addBehavior(new SlugBehavior());
 
         $topic->update(1, ['title' => 'Batman vs Ironman']);
 
@@ -125,7 +125,7 @@ class SluggableBehaviorTest extends TestCase {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SluggableBehavior(['onUpdate' => false]));
+        $topic->addBehavior(new SlugBehavior(['onUpdate' => false]));
 
         $topic->update(1, ['title' => 'Batman vs Ironman']);
 
@@ -142,7 +142,7 @@ class SluggableBehaviorTest extends TestCase {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SluggableBehavior(['onUpdate' => false]));
+        $topic->addBehavior(new SlugBehavior(['onUpdate' => false]));
 
         $topic->update(1, ['title' => 'Batman vs Superman']);
 
@@ -159,7 +159,7 @@ class SluggableBehaviorTest extends TestCase {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SluggableBehavior(['scope' => function() {
+        $topic->addBehavior(new SlugBehavior(['scope' => function() {
             $this->where('post_count', '<=', 3);
         }]));
 
@@ -176,10 +176,10 @@ class SluggableBehaviorTest extends TestCase {
      * Test that certain words are slugged.
      */
     public function testSlugify() {
-        $this->assertEquals('batman-and-robin', SluggableBehavior::slugify('Batman & Robin'));
-        $this->assertEquals('batman-and-robin', SluggableBehavior::slugify('Batman &amp; Robin'));
-        $this->assertEquals('this-is-some-kind-of-html', SluggableBehavior::slugify('This is <b>some</b> kind of HTML'));
-        $this->assertEquals('game-starts-at-1030pm', SluggableBehavior::slugify('Game starts @ 10:30pm'));
+        $this->assertEquals('batman-and-robin', SlugBehavior::slugify('Batman & Robin'));
+        $this->assertEquals('batman-and-robin', SlugBehavior::slugify('Batman &amp; Robin'));
+        $this->assertEquals('this-is-some-kind-of-html', SlugBehavior::slugify('This is <b>some</b> kind of HTML'));
+        $this->assertEquals('game-starts-at-1030pm', SlugBehavior::slugify('Game starts @ 10:30pm'));
     }
 
 }

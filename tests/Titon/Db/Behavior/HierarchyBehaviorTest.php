@@ -12,11 +12,11 @@ use Titon\Test\Stub\Repository\Category;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\HierarchicalBehavior.
+ * Test class for Titon\Db\Behavior\HierarchyBehavior.
  *
- * @property \Titon\Db\Behavior\HierarchicalBehavior $object
+ * @property \Titon\Db\Behavior\HierarchyBehavior $object
  */
-class HierarchicalBehaviorTest extends TestCase {
+class HierarchyBehaviorTest extends TestCase {
 
     /**
      * Test that inserting nodes shifts other nodes around properly.
@@ -25,7 +25,7 @@ class HierarchicalBehaviorTest extends TestCase {
         $this->loadFixtures('Categories');
 
         $category = new Category();
-        $category->addBehavior(new HierarchicalBehavior());
+        $category->addBehavior(new HierarchyBehavior());
 
         // Add as a child
         $category->create([
@@ -45,7 +45,7 @@ class HierarchicalBehaviorTest extends TestCase {
                 ]]),
                 new Entity(['id' => 26, 'name' => 'Calamari', 'parent_id' => 20, 'left' => 52, 'right' => 53])
             ]])
-        , $category->Hierarchical->getTree(20));
+        , $category->Hierarchy->getTree(20));
 
         // Add to root
         $category->create([
@@ -59,7 +59,7 @@ class HierarchicalBehaviorTest extends TestCase {
             'name' => 'Vegetables',
             'left' => 55,
             'right' => 56
-        ]), $category->Hierarchical->getLastNode());
+        ]), $category->Hierarchy->getLastNode());
 
         // Add some children
         $category->create(['parent_id' => 28, 'name' => 'Broccoli']);
@@ -110,7 +110,7 @@ class HierarchicalBehaviorTest extends TestCase {
                 new Entity(['id' => 29, 'name' => 'Broccoli', 'parent_id' => 28, 'left' => 62, 'right' => 63]),
                 new Entity(['id' => 30, 'name' => 'Spinach', 'parent_id' => 28, 'left' => 64, 'right' => 65])
             ]]),
-        ], $category->Hierarchical->getTree());
+        ], $category->Hierarchy->getTree());
 
         // Add a child with custom left and right (should be removed)
         $category->create([
@@ -155,7 +155,7 @@ class HierarchicalBehaviorTest extends TestCase {
             29 => '    Broccoli',
             30 => '    Spinach',
             34 => '    Corn'
-        ], $category->Hierarchical->getList());
+        ], $category->Hierarchy->getList());
     }
 
     /**
@@ -165,7 +165,7 @@ class HierarchicalBehaviorTest extends TestCase {
         $this->loadFixtures('Categories');
 
         $category = new Category();
-        $category->addBehavior(new HierarchicalBehavior());
+        $category->addBehavior(new HierarchyBehavior());
 
         // Delete pork
         $category->delete(18);
@@ -174,7 +174,7 @@ class HierarchicalBehaviorTest extends TestCase {
             'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 36, 'Nodes' => [
                 new Entity(['id' => 17, 'name' => 'Beef', 'parent_id' => 16, 'left' => 32, 'right' => 33]),
                 new Entity(['id' => 19, 'name' => 'Chicken', 'parent_id' => 16, 'left' => 34, 'right' => 35]),
-        ]]), $category->Hierarchical->getTree(16));
+        ]]), $category->Hierarchy->getTree(16));
 
         // Attempt to delete meat, should fail
         $this->assertEquals(0, $category->delete(16));
@@ -183,7 +183,7 @@ class HierarchicalBehaviorTest extends TestCase {
             'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 36, 'Nodes' => [
                 new Entity(['id' => 17, 'name' => 'Beef', 'parent_id' => 16, 'left' => 32, 'right' => 33]),
                 new Entity(['id' => 19, 'name' => 'Chicken', 'parent_id' => 16, 'left' => 34, 'right' => 35]),
-        ]]), $category->Hierarchical->getTree(16));
+        ]]), $category->Hierarchy->getTree(16));
     }
 
     /**
@@ -193,7 +193,7 @@ class HierarchicalBehaviorTest extends TestCase {
         $this->loadFixtures('Categories');
 
         $category = new Category();
-        $category->addBehavior(new HierarchicalBehavior());
+        $category->addBehavior(new HierarchyBehavior());
 
         $this->assertEquals([
             new Entity(['id' => 1, 'name' => 'Fruit', 'parent_id' => null, 'left' => 1, 'right' => 20, 'Nodes' => [
@@ -228,20 +228,20 @@ class HierarchicalBehaviorTest extends TestCase {
                 ]]),
                 new Entity(['id' => 26, 'name' => 'Calamari', 'parent_id' => 20, 'left' => 50, 'right' => 51])
             ]]),
-        ], $category->Hierarchical->getTree());
+        ], $category->Hierarchy->getTree());
 
         $this->assertEquals(
             new Entity(['id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 38, 'Nodes' => [
                 new Entity(['id' => 17, 'name' => 'Beef', 'parent_id' => 16, 'left' => 32, 'right' => 33]),
                 new Entity(['id' => 18, 'name' => 'Pork', 'parent_id' => 16, 'left' => 34, 'right' => 35]),
                 new Entity(['id' => 19, 'name' => 'Chicken', 'parent_id' => 16, 'left' => 36, 'right' => 37]),
-            ]]), $category->Hierarchical->getTree(16));
+            ]]), $category->Hierarchy->getTree(16));
 
         $this->assertEquals(new Entity([
             'id' => 10, 'name' => 'Watermelon', 'parent_id' => 1, 'left' => 18, 'right' => 19
-        ]), $category->Hierarchical->getTree(10));
+        ]), $category->Hierarchy->getTree(10));
 
-        $this->assertEquals([], $category->Hierarchical->getTree(100));
+        $this->assertEquals([], $category->Hierarchy->getTree(100));
     }
 
     /**
@@ -251,7 +251,7 @@ class HierarchicalBehaviorTest extends TestCase {
         $this->loadFixtures('Categories');
 
         $category = new Category();
-        $category->addBehavior(new HierarchicalBehavior());
+        $category->addBehavior(new HierarchyBehavior());
 
         $this->assertEquals([
             1 => 'Fruit',
@@ -280,21 +280,21 @@ class HierarchicalBehaviorTest extends TestCase {
             24 => '        Crab',
             25 => '        Lobster',
             26 => '    Calamari'
-        ], $category->Hierarchical->getList());
+        ], $category->Hierarchy->getList());
 
         $this->assertEquals([
             5 => 'Berry',
             6 => '    Blueberry',
             7 => '    Blackberry',
             8 => '    Strawberry',
-        ], $category->Hierarchical->getList(5));
+        ], $category->Hierarchy->getList(5));
 
         $this->assertEquals([
             5 => 'Berry',
             6 => '- Blueberry',
             7 => '- Blackberry',
             8 => '- Strawberry',
-        ], $category->Hierarchical->getList(5, null, null, '- '));
+        ], $category->Hierarchy->getList(5, null, null, '- '));
     }
 
     /**
@@ -304,14 +304,14 @@ class HierarchicalBehaviorTest extends TestCase {
         $this->loadFixtures('Categories');
 
         $category = new Category();
-        $category->addBehavior(new HierarchicalBehavior());
+        $category->addBehavior(new HierarchyBehavior());
 
         $this->assertEquals([
             new Entity(['id' => 1, 'name' => 'Fruit', 'parent_id' => null, 'left' => 1, 'right' => 20]),
             new Entity(['id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15])
-        ], $category->Hierarchical->getPath(8));
+        ], $category->Hierarchy->getPath(8));
 
-        $this->assertEquals([], $category->Hierarchical->getPath(20));
+        $this->assertEquals([], $category->Hierarchy->getPath(20));
     }
 
     /**
@@ -321,10 +321,10 @@ class HierarchicalBehaviorTest extends TestCase {
         $this->loadFixtures('Categories');
 
         $category = new Category();
-        $category->addBehavior(new HierarchicalBehavior());
+        $category->addBehavior(new HierarchyBehavior());
 
         // Move wheat down 2 places
-        $category->Hierarchical->moveDown(12, 2);
+        $category->Hierarchy->moveDown(12, 2);
 
         $this->assertEquals(new Entity([
             'id' => 11, 'name' => 'Grain', 'parent_id' => null, 'left' => 21, 'right' => 30, 'Nodes' => [
@@ -332,27 +332,27 @@ class HierarchicalBehaviorTest extends TestCase {
                 new Entity(['id' => 14, 'name' => 'Barley', 'parent_id' => 11, 'left' => 24, 'right' => 25]),
                 new Entity(['id' => 12, 'name' => 'Wheat', 'parent_id' => 11, 'left' => 26, 'right' => 27]),
                 new Entity(['id' => 15, 'name' => 'Farro', 'parent_id' => 11, 'left' => 28, 'right' => 29]),
-        ]]), $category->Hierarchical->getTree(11));
+        ]]), $category->Hierarchy->getTree(11));
 
         // Move beef to outside the bottom
-        $category->Hierarchical->moveDown(17, 8);
+        $category->Hierarchy->moveDown(17, 8);
 
         $this->assertEquals(new Entity([
             'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 38, 'Nodes' => [
                 new Entity(['id' => 18, 'name' => 'Pork', 'parent_id' => 16, 'left' => 32, 'right' => 33]),
                 new Entity(['id' => 19, 'name' => 'Chicken', 'parent_id' => 16, 'left' => 34, 'right' => 35]),
                 new Entity(['id' => 17, 'name' => 'Beef', 'parent_id' => 16, 'left' => 36, 'right' => 37]),
-        ]]), $category->Hierarchical->getTree(16));
+        ]]), $category->Hierarchy->getTree(16));
 
         // Move strawberry down, but it wont since its already last
-        $category->Hierarchical->moveDown(8);
+        $category->Hierarchy->moveDown(8);
 
         $this->assertEquals(new Entity([
             'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15, 'Nodes' => [
                 new Entity(['id' => 6, 'name' => 'Blueberry', 'parent_id' => 5, 'left' => 9, 'right' => 10]),
                 new Entity(['id' => 7, 'name' => 'Blackberry', 'parent_id' => 5, 'left' => 11, 'right' => 12]),
                 new Entity(['id' => 8, 'name' => 'Strawberry', 'parent_id' => 5, 'left' => 13, 'right' => 14]),
-        ]]), $category->Hierarchical->getTree(5));
+        ]]), $category->Hierarchy->getTree(5));
     }
 
     /**
@@ -362,20 +362,20 @@ class HierarchicalBehaviorTest extends TestCase {
         $this->loadFixtures('Categories');
 
         $category = new Category();
-        $category->addBehavior(new HierarchicalBehavior());
+        $category->addBehavior(new HierarchyBehavior());
 
         // Move lobster up
-        $category->Hierarchical->moveUp(25);
+        $category->Hierarchy->moveUp(25);
 
         $this->assertEquals(new Entity([
             'id' => 22, 'name' => 'Shellfish', 'parent_id' => 20, 'left' => 42, 'right' => 49, 'Nodes' => [
                 new Entity(['id' => 23, 'name' => 'Shrimp', 'parent_id' => 22, 'left' => 43, 'right' => 44]),
                 new Entity(['id' => 25, 'name' => 'Lobster', 'parent_id' => 22, 'left' => 45, 'right' => 46]),
                 new Entity(['id' => 24, 'name' => 'Crab', 'parent_id' => 22, 'left' => 47, 'right' => 48]),
-        ]]), $category->Hierarchical->getTree(22));
+        ]]), $category->Hierarchy->getTree(22));
 
         // Move farro to the top
-        $category->Hierarchical->moveUp(15, 4);
+        $category->Hierarchy->moveUp(15, 4);
 
         $this->assertEquals(new Entity([
             'id' => 11, 'name' => 'Grain', 'parent_id' => null, 'left' => 21, 'right' => 30, 'Nodes' => [
@@ -383,17 +383,17 @@ class HierarchicalBehaviorTest extends TestCase {
                 new Entity(['id' => 12, 'name' => 'Wheat', 'parent_id' => 11, 'left' => 24, 'right' => 25]),
                 new Entity(['id' => 13, 'name' => 'Bulgur', 'parent_id' => 11, 'left' => 26, 'right' => 27]),
                 new Entity(['id' => 14, 'name' => 'Barley', 'parent_id' => 11, 'left' => 28, 'right' => 29]),
-        ]]), $category->Hierarchical->getTree(11));
+        ]]), $category->Hierarchy->getTree(11));
 
         // Move Blueberry up, but it wont since its already first
-        $category->Hierarchical->moveUp(6);
+        $category->Hierarchy->moveUp(6);
 
         $this->assertEquals(new Entity([
             'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15, 'Nodes' => [
                 new Entity(['id' => 6, 'name' => 'Blueberry', 'parent_id' => 5, 'left' => 9, 'right' => 10]),
                 new Entity(['id' => 7, 'name' => 'Blackberry', 'parent_id' => 5, 'left' => 11, 'right' => 12]),
                 new Entity(['id' => 8, 'name' => 'Strawberry', 'parent_id' => 5, 'left' => 13, 'right' => 14]),
-        ]]), $category->Hierarchical->getTree(5));
+        ]]), $category->Hierarchy->getTree(5));
     }
 
     /**
@@ -403,10 +403,10 @@ class HierarchicalBehaviorTest extends TestCase {
         $this->loadFixtures('Categories');
 
         $category = new Category();
-        $category->addBehavior(new HierarchicalBehavior());
+        $category->addBehavior(new HierarchyBehavior());
 
         // Move banana to berry list
-        $category->Hierarchical->moveTo(2, 5);
+        $category->Hierarchy->moveTo(2, 5);
 
         $this->assertEquals(new Entity([
             'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 6, 'right' => 15, 'Nodes' => [
@@ -414,10 +414,10 @@ class HierarchicalBehaviorTest extends TestCase {
                 new Entity(['id' => 7, 'name' => 'Blackberry', 'parent_id' => 5, 'left' => 9, 'right' => 10]),
                 new Entity(['id' => 8, 'name' => 'Strawberry', 'parent_id' => 5, 'left' => 11, 'right' => 12]),
                 new Entity(['id' => 2, 'name' => 'Banana', 'parent_id' => 5, 'left' => 13, 'right' => 14]),
-        ]]), $category->Hierarchical->getTree(5));
+        ]]), $category->Hierarchy->getTree(5));
 
         // Move barley to the root
-        $category->Hierarchical->moveTo(14, null);
+        $category->Hierarchy->moveTo(14, null);
 
         $this->assertEquals(new Entity([
             'id' => 14,
@@ -425,7 +425,7 @@ class HierarchicalBehaviorTest extends TestCase {
             'name' => 'Barley',
             'left' => 51,
             'right' => 52
-        ]), $category->Hierarchical->getLastNode());
+        ]), $category->Hierarchy->getLastNode());
     }
 
     /**
@@ -435,10 +435,10 @@ class HierarchicalBehaviorTest extends TestCase {
         $this->loadFixtures('Categories');
 
         $category = new Category();
-        $category->addBehavior(new HierarchicalBehavior());
+        $category->addBehavior(new HierarchyBehavior());
 
         // Reorder by name
-        $category->Hierarchical->reOrder(['name' => 'asc']);
+        $category->Hierarchy->reOrder(['name' => 'asc']);
 
         $this->assertEquals([
             new Entity(['id' => 1, 'name' => 'Fruit', 'parent_id' => null, 'left' => 1, 'right' => 20, 'Nodes' => [
@@ -473,7 +473,7 @@ class HierarchicalBehaviorTest extends TestCase {
                     new Entity(['id' => 23, 'name' => 'Shrimp', 'parent_id' => 22, 'left' => 49, 'right' => 50]),
                 ]])
             ]]),
-        ], $category->Hierarchical->getTree());
+        ], $category->Hierarchy->getTree());
     }
 
 }

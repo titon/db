@@ -16,12 +16,12 @@ use Titon\Db\Relation\ManyToOne;
 use \Closure;
 
 /**
- * The CountableBehavior provides a way for many-to-one|many relations to track a count of how many related records exist.
+ * The CounterBehavior provides a way for many-to-one|many relations to track a count of how many related records exist.
  * Each time a record is created, updated or deleted, the count will be updated in the related record.
  *
  * @package Titon\Db\Behavior
  */
-class CountableBehavior extends AbstractBehavior {
+class CounterBehavior extends AbstractBehavior {
     use Cacheable;
 
     /**
@@ -37,7 +37,7 @@ class CountableBehavior extends AbstractBehavior {
      * @param string|\Titon\Db\Relation $alias
      * @param string $field
      * @param \Closure $scope
-     * @return \Titon\Db\Behavior\CountableBehavior
+     * @return \Titon\Db\Behavior\CounterBehavior
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function addCounter($alias, $field, Closure $scope = null) {

@@ -12,12 +12,12 @@ use Titon\Db\Exception\InvalidArgumentException;
 use Titon\Utility\Sanitize;
 
 /**
- * The FilterableBehavior will run sanitization filters on specific fields during an insert or update.
+ * The FilterBehavior will run sanitization filters on specific fields during an insert or update.
  * The currently supported filters are: html stripping, html escaping, newline cleaning, whitespace cleaning and xss filtering.
  *
  * @package Titon\Db\Behavior
  */
-class FilterableBehavior extends AbstractBehavior {
+class FilterBehavior extends AbstractBehavior {
 
     const HTML = 'html';
     const NEWLINES = 'newlines';
@@ -37,7 +37,7 @@ class FilterableBehavior extends AbstractBehavior {
      * @param string $field
      * @param string $filter
      * @param array $options
-     * @return \Titon\Db\Behavior\FilterableBehavior
+     * @return \Titon\Db\Behavior\FilterBehavior
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function filter($field, $filter, array $options = []) {

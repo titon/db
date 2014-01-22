@@ -12,11 +12,11 @@ use Titon\Test\Stub\Repository\Post;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\ConvertableBehavior.
+ * Test class for Titon\Db\Behavior\ConverterBehavior.
  *
- * @property \Titon\Db\Behavior\ConvertableBehavior $object
+ * @property \Titon\Db\Behavior\ConverterBehavior $object
  */
-class ConvertableBehaviorTest extends TestCase {
+class ConverterBehaviorTest extends TestCase {
 
     /**
      * Test field serialization.
@@ -27,7 +27,7 @@ class ConvertableBehaviorTest extends TestCase {
         $post = new Post();
 
         // No decoding
-        $post->addBehavior(new ConvertableBehavior())
+        $post->addBehavior(new ConverterBehavior())
             ->convert('content', 'serialize', ['decode' => false]);
 
         $data = [
@@ -63,7 +63,7 @@ class ConvertableBehaviorTest extends TestCase {
         $post = new Post();
 
         // No decoding
-        $post->addBehavior(new ConvertableBehavior())
+        $post->addBehavior(new ConverterBehavior())
             ->convert('content', 'json', ['decode' => false]);
 
         $data = [
@@ -99,7 +99,7 @@ class ConvertableBehaviorTest extends TestCase {
         $post = new Post();
 
         // No decoding
-        $post->addBehavior(new ConvertableBehavior())
+        $post->addBehavior(new ConverterBehavior())
             ->convert('content', 'base64', ['decode' => false]);
 
         $data = [

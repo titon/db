@@ -11,11 +11,11 @@ use Titon\Event\Event;
 use Titon\Utility\Inflector;
 
 /**
- * The SluggableBehavior will generate a unique slug for each record before an insert or update occurs.
+ * The SlugBehavior will generate a unique slug for each record before an insert or update occurs.
  *
  * @package Titon\Db\Behavior
  */
-class SluggableBehavior extends AbstractBehavior {
+class SlugBehavior extends AbstractBehavior {
 
     /**
      * Configuration.

@@ -12,11 +12,11 @@ use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\TimestampableBehavior.
+ * Test class for Titon\Db\Behavior\TimestampBehavior.
  *
  * @property \Titon\Db\Repository $object
  */
-class TimestampableBehaviorTest extends TestCase {
+class TimestampBehaviorTest extends TestCase {
 
     /**
      * This method is called before a test is executed.
@@ -42,7 +42,7 @@ class TimestampableBehaviorTest extends TestCase {
         ]), $this->object->select('id', 'username', 'created')->where('id', $id)->fetch());
 
         // Now with behavior
-        $this->object->addBehavior(new TimestampableBehavior([
+        $this->object->addBehavior(new TimestampBehavior([
             'createField' => 'created'
         ]));
 
@@ -71,7 +71,7 @@ class TimestampableBehaviorTest extends TestCase {
         ]), $this->object->select('id', 'username', 'modified')->where('id', 1)->fetch());
 
         // Now with behavior
-        $this->object->addBehavior(new TimestampableBehavior([
+        $this->object->addBehavior(new TimestampBehavior([
             'updateField' => 'modified'
         ]));
 
