@@ -263,8 +263,8 @@ class TableTest extends TestCase {
     /**
      * Test connection config.
      */
-    public function testGetConnection() {
-        $this->assertEquals('default', $this->object->getConnection());
+    public function testGetConnectionKey() {
+        $this->assertEquals('default', $this->object->getConnectionKey());
     }
 
     /**

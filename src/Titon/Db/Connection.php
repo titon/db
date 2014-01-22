@@ -7,6 +7,7 @@
 
 namespace Titon\Db;
 
+use Titon\Common\Traits\FactoryAware;
 use Titon\Db\Exception\MissingDriverException;
 use Titon\Db\Driver;
 
@@ -16,6 +17,7 @@ use Titon\Db\Driver;
  * @package Titon\Db
  */
 class Connection {
+    use FactoryAware;
 
     /**
      * Driver mappings.

@@ -14,6 +14,7 @@ use Titon\Common\Traits\Cacheable;
 use Titon\Event\Event;
 use Titon\Event\Listener;
 use Titon\Event\Traits\Emittable;
+use Titon\Db\Connection;
 use Titon\Db\Driver\Dialect;
 use Titon\Db\Driver\Schema;
 use Titon\Db\Driver\Type\AbstractType;
@@ -90,6 +91,13 @@ class Table extends Base implements Callback, Listener {
         'displayField' => ['title', 'name', 'id'],
         'entity' => 'Titon\Db\Entity'
     ];
+
+    /**
+     * Connection instance.
+     *
+     * @type \Titon\Db\Connection
+     */
+    protected $_connection;
 
     /**
      * Driver instance.
@@ -630,11 +638,25 @@ class Table extends Base implements Callback, Listener {
     }
 
     /**
+     * Return the connection class.
+     * If none has been defined, register one.
+     *
+     * @return \Titon\Db\Connection
+     */
+    public function getConnection() {
+        if (!$this->_connection) {
+            $this->setConnection(Connection::registry());
+        }
+
+        return $this->_connection;
+    }
+
+    /**
      * Return the connection driver key.
      *
      * @return string
      */
-    public function getConnection() {
+    public function getConnectionKey() {
         return $this->config->connection;
     }
 
@@ -670,8 +692,7 @@ class Table extends Base implements Callback, Listener {
             return $this->_driver;
         }
 
-        /** @type \Titon\Db\Driver $driver */
-        $driver = Registry::factory('Titon\Db\Connection')->getDriver($this->getConnection());
+        $driver = $this->getConnection()->getDriver($this->getConnectionKey());
         $driver->connect();
 
         $this->_driver = $driver;
@@ -974,6 +995,18 @@ class Table extends Base implements Callback, Listener {
      */
     public function select() {
         return $this->query(Query::SELECT)->fields(func_get_args());
+    }
+
+    /**
+     * Set the connection class.
+     *
+     * @param \Titon\Db\Connection $connection
+     * @return \Titon\Db\Table
+     */
+    public function setConnection(Connection $connection) {
+        $this->_connection = $connection;
+
+        return $this;
     }
 
     /**
