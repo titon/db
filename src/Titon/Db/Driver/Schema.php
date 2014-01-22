@@ -71,11 +71,11 @@ class Schema implements Serializable, JsonSerializable {
     /**
      * Set the table and add optional columns.
      *
-     * @param string $table
+     * @param string $repo
      * @param array $columns
      */
-    public function __construct($table, array $columns = []) {
-        $this->_table = $table;
+    public function __construct($repo, array $columns = []) {
+        $this->_table = $repo;
 
         $this->addColumns($columns);
     }
@@ -305,7 +305,7 @@ class Schema implements Serializable, JsonSerializable {
             return $this->_columns[$name];
         }
 
-        throw new MissingColumnException(sprintf('Table column %s does not exist', $name));
+        throw new MissingColumnException(sprintf('Repository column %s does not exist', $name));
     }
 
     /**

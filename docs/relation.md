@@ -12,10 +12,10 @@ The following relationships are supported:
 Relationships can be defined in tables by calling the `addRelation()` method. The method returns the relation object allowing for continued modification.
 
 ```php
-use Titon\Db\Table;
+use Titon\Db\Repository;
 use Titon\Db\Relation\OneToOne;
 
-class User extends Table {
+class User extends Repository {
     // ...
 
     public function initialize() {
@@ -27,7 +27,7 @@ class User extends Table {
 }
 ```
 
-The previous example set a one-to-one relationship between the App\Table\User and App\Table\Profile table, through the Profile alias, and using the user_id in the profiles table as the foreign key.
+The previous example set a one-to-one relationship between the App\Repository\User and App\Repository\Profile table, through the Profile alias, and using the user_id in the profiles table as the foreign key.
 
 Once a relationship is defined, it can be accessed through the alias name on the table object. Nested relationships are also supported.
 

@@ -8,9 +8,9 @@
 namespace Titon\Db\Data;
 
 use Titon\Db\Entity;
-use Titon\Test\Stub\Table\UserDeleteCallbacks;
-use Titon\Test\Stub\Table\UserFindCallbacks;
-use Titon\Test\Stub\Table\UserSaveCallbacks;
+use Titon\Test\Stub\Repository\UserDeleteCallbacks;
+use Titon\Test\Stub\Repository\UserFindCallbacks;
+use Titon\Test\Stub\Repository\UserSaveCallbacks;
 use Titon\Test\TestCase;
 
 /**
@@ -19,7 +19,7 @@ use Titon\Test\TestCase;
 class AbstractCallbackTest extends TestCase {
 
     /**
-     * Test Table::preDelete() callbacks.
+     * Test Repository::preDelete() callbacks.
      */
     public function testPreDelete() {
         $this->loadFixtures(['Users', 'Profiles']);
@@ -49,7 +49,7 @@ class AbstractCallbackTest extends TestCase {
     }
 
     /**
-     * Test Table::postDelete() callbacks.
+     * Test Repository::postDelete() callbacks.
      */
     public function testPostDelete() {
         $this->loadFixtures(['Users', 'Profiles']);
@@ -66,7 +66,7 @@ class AbstractCallbackTest extends TestCase {
     }
 
     /**
-     * Test Table::preSave() callbacks.
+     * Test Repository::preSave() callbacks.
      */
     public function testPreSave() {
         $this->loadFixtures(['Users', 'Profiles']);
@@ -94,7 +94,7 @@ class AbstractCallbackTest extends TestCase {
     }
 
     /**
-     * Test Table::postSave() callbacks.
+     * Test Repository::postSave() callbacks.
      */
     public function testPostSave() {
         $this->loadFixtures(['Users', 'Profiles']);
@@ -115,7 +115,7 @@ class AbstractCallbackTest extends TestCase {
     }
 
     /**
-     * Test Table::preFind() callbacks.
+     * Test Repository::preFind() callbacks.
      */
     public function testPreFind() {
         $this->loadFixtures(['Users', 'Profiles']);
@@ -139,7 +139,7 @@ class AbstractCallbackTest extends TestCase {
     }
 
     /**
-     * Test Table::postFind() callbacks.
+     * Test Repository::postFind() callbacks.
      */
     public function testPostFind() {
         $this->loadFixtures(['Users', 'Profiles']);

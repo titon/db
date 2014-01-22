@@ -337,7 +337,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
             case Query::SELECT:
                 if ($joins) {
-                    $columns = $this->formatSelectFields($fields, $query->getTable()->getAlias());
+                    $columns = $this->formatSelectFields($fields, $query->getRepository()->getAlias());
 
                     foreach ($joins as $join) {
                         $columns = array_merge($columns, $this->formatSelectFields($join->getFields(), $join->getAlias()));
@@ -355,7 +355,7 @@ abstract class AbstractDialect extends Base implements Dialect {
                 }
 
                 if ($joins) {
-                    $values = $this->formatUpdateFields($fields, $query->getTable()->getAlias());
+                    $values = $this->formatUpdateFields($fields, $query->getRepository()->getAlias());
 
                     foreach ($joins as $join) {
                         $values = array_merge($values, $this->formatUpdateFields($join->getFields(), $join->getAlias()));
@@ -557,7 +557,7 @@ abstract class AbstractDialect extends Base implements Dialect {
                 }
 
                 $output[] = sprintf($this->getClause($join->getType()),
-                    $this->formatTable($join->getTableName(), $join->getAlias()),
+                    $this->formatTable($join->getTable(), $join->getAlias()),
                     implode(' ' . $this->getKeyword(self::ALSO) . ' ', $conditions));
             }
 
@@ -674,19 +674,19 @@ abstract class AbstractDialect extends Base implements Dialect {
     /**
      * Format the table name and alias name.
      *
-     * @param string $table
+     * @param string $repo
      * @param string $alias
      * @return string
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
-    public function formatTable($table, $alias = null) {
-        if (!$table) {
+    public function formatTable($repo, $alias = null) {
+        if (!$repo) {
             throw new InvalidQueryException('Missing table for query');
         }
 
-        $output = $this->quote($table);
+        $output = $this->quote($repo);
 
-        if ($alias && $table !== $alias) {
+        if ($alias && $repo !== $alias) {
             $output = sprintf($this->getClause(self::AS_ALIAS), $output, $this->quote($alias));
         }
 
@@ -971,13 +971,13 @@ abstract class AbstractDialect extends Base implements Dialect {
      */
     public function quote($value) {
         if (strpos($value, '.') !== false) {
-            list($table, $field) = explode('.', $value);
+            list($repo, $field) = explode('.', $value);
 
             if ($field !== '*') {
                 $field = $this->quote($field);
             }
 
-            return $this->quote($table) . '.' . $field;
+            return $this->quote($repo) . '.' . $field;
         }
 
         $char = $this->config->quoteCharacter;

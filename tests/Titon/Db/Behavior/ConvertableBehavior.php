@@ -8,7 +8,7 @@
 namespace Titon\Db\Behavior;
 
 use Titon\Db\Entity;
-use Titon\Test\Stub\Table\Post;
+use Titon\Test\Stub\Repository\Post;
 use Titon\Test\TestCase;
 
 /**

@@ -13,11 +13,11 @@ The following behaviors are supported. All examples will borrow from the relatio
 The CountableBehavior provides a way for many-to-one|many relations to track a count of how many related records exist.
 
 ```php
-use Titon\Db\Table;
+use Titon\Db\Repository;
 use Titon\Db\Relation\ManyToOne;
 use Titon\Db\Behavior\CountableBehavior;
 
-class Post extends Table {
+class Post extends Repository {
     // ...
 
     public function initialize() {
@@ -41,10 +41,10 @@ The HierarchicalBehavior implements a pattern of tree traversal which allows for
 Any table that implements this behavior will require a parent_id, left and right column.
 
 ```php
-use Titon\Db\Table;
+use Titon\Db\Repository;
 use Titon\Db\Behavior\HierarchicalBehavior;
 
-class Category extends Table {
+class Category extends Repository {
     // ...
 
     public function initialize() {
@@ -77,10 +77,10 @@ $this->getBehavior('Hierarchical')->getPath($id); // returns the tree path to th
 The TimestampableBehavior will update a field with a timestamp anytime a record is created or updated. Columns default to created and updated.
 
 ```php
-use Titon\Db\Table;
+use Titon\Db\Repository;
 use Titon\Db\Behavior\TimestampableBehavior;
 
-class Post extends Table {
+class Post extends Repository {
     // ...
 
     public function initialize() {

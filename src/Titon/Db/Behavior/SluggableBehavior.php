@@ -59,11 +59,11 @@ class SluggableBehavior extends AbstractBehavior {
 
         $slug = $data[$config['field']];
 
-        $this->getTable()->emit('db.preSlug', [&$slug]);
+        $this->getRepository()->emit('db.preSlug', [&$slug]);
 
         $slug = $this->slugify($slug);
 
-        $this->getTable()->emit('db.postSlug', [&$slug]);
+        $this->getRepository()->emit('db.postSlug', [&$slug]);
 
         if (mb_strlen($slug) > ($config['length'] - 5)) {
             $slug = mb_substr($slug, 0, ($config['length'] - 5));
@@ -87,15 +87,15 @@ class SluggableBehavior extends AbstractBehavior {
      * @return string
      */
     public function makeUnique($id, $slug) {
-        $table = $this->getTable();
-        $query = $table->select()->where($this->config->slug, 'like', $slug . '%');
+        $repo = $this->getRepository();
+        $query = $repo->select()->where($this->config->slug, 'like', $slug . '%');
 
         if ($scope = $this->config->scope) {
             $query->bindCallback($scope);
         }
 
         if ($id) {
-            $query->where($table->getPrimaryKey(), '!=', $id);
+            $query->where($repo->getPrimaryKey(), '!=', $id);
         }
 
         if ($count = $query->count()) {

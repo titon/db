@@ -45,7 +45,7 @@ class CountableBehavior extends AbstractBehavior {
             $relation = $alias;
             $alias = $relation->getAlias();
         } else {
-            $relation = $this->getTable()->getRelation($alias);
+            $relation = $this->getRepository()->getRelation($alias);
         }
 
         if (!in_array($relation->getType(), [Relation::MANY_TO_ONE, Relation::MANY_TO_MANY])) {
@@ -69,15 +69,15 @@ class CountableBehavior extends AbstractBehavior {
      * @return mixed
      */
     public function preDelete(Event $event, $id, &$cascade) {
-        $table = $this->getTable();
+        $repo = $this->getRepository();
 
         foreach ($this->_counters as $alias => $counter) {
             foreach ((array) $id as $value) {
-                $relation = $table->getRelation($alias);
+                $relation = $repo->getRelation($alias);
 
                 switch ($relation->getType()) {
                     case Relation::MANY_TO_MANY:
-                        $results = $relation->getJunctionTable()
+                        $results = $relation->getJunctionRepository()
                             ->select()
                             ->where($relation->getForeignKey(), $value)
                             ->bindCallback($counter['scope'])
@@ -86,7 +86,7 @@ class CountableBehavior extends AbstractBehavior {
                         $this->setCache(['Junction', $alias, $value], $results);
                     break;
                     case Relation::MANY_TO_ONE:
-                        $this->setCache(['Record', $alias, $value], $table->read($value));
+                        $this->setCache(['Record', $alias, $value], $repo->read($value));
                     break;
                 }
             }
@@ -125,7 +125,7 @@ class CountableBehavior extends AbstractBehavior {
      */
     public function syncCounters($ids) {
         foreach ($this->_counters as $alias => $counter) {
-            $relation = $this->getTable()->getRelation($alias);
+            $relation = $this->getRepository()->getRelation($alias);
 
             switch ($relation->getType()) {
                 case Relation::MANY_TO_MANY:
@@ -162,14 +162,14 @@ class CountableBehavior extends AbstractBehavior {
         $alias = $relation->getAlias();
         $fk = $relation->getForeignKey();
         $rfk = $relation->getRelatedForeignKey();
-        $junctionTable = $relation->getJunctionTable();
-        $relatedTable = $relation->getRelatedTable();
+        $junctionRepo = $relation->getJunctionRepository();
+        $relatedRepo = $relation->getRelatedRepository();
 
         foreach ((array) $ids as $id) {
             $results = $this->getCache(['Junction', $alias, $id]);
 
             if (!$results) {
-                $results = $junctionTable->select()
+                $results = $junctionRepo->select()
                     ->where($fk, $id)
                     ->bindCallback($counter['scope'])
                     ->fetchAll();
@@ -186,12 +186,12 @@ class CountableBehavior extends AbstractBehavior {
                 }
 
                 // Get a count of all junction records
-                $count = $junctionTable->select()
+                $count = $junctionRepo->select()
                     ->where($rfk, $foreign_id)
                     ->count();
 
                 // Update the related table's count field
-                $relatedTable->update($foreign_id, [
+                $relatedRepo->update($foreign_id, [
                     $counter['field'] => $count
                 ]);
 
@@ -217,13 +217,13 @@ class CountableBehavior extends AbstractBehavior {
      * @param array $counter
      */
     protected function _syncManyToOne(ManyToOne $relation, $ids, array $counter) {
-        $table = $this->getTable();
+        $repo = $this->getRepository();
         $alias = $relation->getAlias();
         $fk = $relation->getForeignKey();
-        $relatedTable = $relation->getRelatedTable();
+        $relatedRepo = $relation->getRelatedRepository();
 
         foreach ((array) $ids as $id) {
-            $result = $this->getCache(['Record', $alias, $id]) ?: $table->read($id);
+            $result = $this->getCache(['Record', $alias, $id]) ?: $repo->read($id);
             $foreign_id = $result[$fk];
             $cacheKey = [$alias, $fk, $foreign_id];
 
@@ -233,13 +233,13 @@ class CountableBehavior extends AbstractBehavior {
             }
 
             // Get a count of all current records
-            $count = $table->select()
+            $count = $repo->select()
                 ->where($fk, $foreign_id)
                 ->bindCallback($counter['scope'])
                 ->count();
 
             // Update the related table's count field
-            $relatedTable->update($foreign_id, [
+            $relatedRepo->update($foreign_id, [
                 $counter['field'] => $count
             ]);
 

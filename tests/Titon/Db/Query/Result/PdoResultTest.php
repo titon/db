@@ -9,13 +9,13 @@ namespace Titon\Db\Query\Result;
 
 use Titon\Db\Entity;
 use Titon\Db\Query;
-use Titon\Test\Stub\Table\User;
+use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 
 /**
  * Test class for Titon\Db\Query\Result\PdoResult.
  *
- * @property \Titon\Db\Table $object
+ * @property \Titon\Db\Repository $object
  */
 class PdoResultTest extends TestCase {
 

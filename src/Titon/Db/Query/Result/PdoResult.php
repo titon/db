@@ -224,14 +224,14 @@ class PdoResult extends AbstractResult implements Result {
 
             $alias = $query->getAlias();
             $map = [
-                $query->getTableName() => $alias,
+                $query->getTable() => $alias,
                 strtolower($alias) => $alias
             ];
 
             foreach ($query->getJoins() as $join) {
                 $joinAlias = $join->getAlias();
 
-                $map[$join->getTableName()] = $joinAlias;
+                $map[$join->getTable()] = $joinAlias;
                 $map[strtolower($joinAlias)] = $joinAlias;
             }
 

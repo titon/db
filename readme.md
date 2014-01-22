@@ -12,7 +12,7 @@ Supported drivers are implemented in external packages that can be installed thr
 
 ### Features ###
 
-* `Table` - Queries drivers, maps relations and returns entities
+* `Repository` - Queries drivers, maps relations and returns entities
 * `Behavior` - Executes logic during database callbacks
 * `Relation` - Object relation mapper (ORM)
 * `Entity` - Single record of data
@@ -20,7 +20,7 @@ Supported drivers are implemented in external packages that can be installed thr
 * `Driver` - Interacts with a database or remote service (DBAL)
     * `Dialect` - Driver specific SQL formatting
     * `Type` - Data type mapping
-    * `Schema` - Table schema
+    * `Schema` - Repository schema
 * `Query` - Object oriented query builder
     * `Expr` - Expression builder
     * `Func` - Function builder

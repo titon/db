@@ -7,10 +7,10 @@
 
 namespace Titon\Db\Behavior;
 
-use Titon\Test\Stub\Table\Book;
-use Titon\Test\Stub\Table\Genre;
-use Titon\Test\Stub\Table\Post;
-use Titon\Test\Stub\Table\Topic;
+use Titon\Test\Stub\Repository\Book;
+use Titon\Test\Stub\Repository\Genre;
+use Titon\Test\Stub\Repository\Post;
+use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\TestCase;
 
 /**

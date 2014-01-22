@@ -23,4 +23,4 @@ To retrieve the driver, use the key name.
 $driver = $conn->getDriver('default');
 ```
 
-The `connection` configuration in the Table represents the driver key.
+The `connection` configuration in the Repository represents the driver key.

@@ -11,7 +11,7 @@ use Titon\Db\Driver\Type\AbstractType;
 use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Exception\MissingDriverException;
 use Titon\Db\Exception\UnsupportedQueryStatementException;
-use Titon\Db\Table;
+use Titon\Db\Repository;
 use Titon\Db\Query;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Predicate;
@@ -112,9 +112,9 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      *
      * @uses Titon\Db\Type\AbstractType
      */
-    public function describeTable($table) {
-        return $this->cache([__METHOD__, $table], function() use ($table) {
-            $columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->find();
+    public function describeTable($repo) {
+        return $this->cache([__METHOD__, $repo], function() use ($repo) {
+            $columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $repo])->find();
             $schema = [];
 
             if (!$columns) {
@@ -202,7 +202,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
     /**
      * {@inheritdoc}
      */
-    public function getLastInsertID(Table $table) {
+    public function getLastInsertID(Repository $repo) {
         return $this->getConnection()->lastInsertId();
     }
 
@@ -251,15 +251,15 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         $database = $database ?: $this->getDatabase();
 
         return $this->cache([__METHOD__, $database], function() use ($database) {
-            $tables = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->find();
+            $repos = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->find();
             $schema = [];
 
-            if (!$tables) {
+            if (!$repos) {
                 return $schema;
             }
 
-            foreach ($tables as $table) {
-                $schema[] = $table['TABLE_NAME'];
+            foreach ($repos as $repo) {
+                $schema[] = $repo['TABLE_NAME'];
             }
 
             return $schema;
@@ -382,7 +382,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
     public function resolveParams(Query $query) {
         $binds = [];
         $type = $query->getType();
-        $schema = $query->getTable()->getSchema()->getColumns();
+        $schema = $query->getRepository()->getSchema()->getColumns();
 
         // Grab the values from insert and update queries
         if ($type === Query::INSERT || $type === Query::UPDATE) {

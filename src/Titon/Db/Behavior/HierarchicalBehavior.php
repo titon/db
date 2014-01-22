@@ -71,7 +71,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         }
 
         if ($node = $this->getNode($id)) {
-            $count = $this->getTable()->select()
+            $count = $this->getRepository()->select()
                 ->where($this->config->parentField, $id)
                 ->count();
 
@@ -183,7 +183,7 @@ class HierarchicalBehavior extends AbstractBehavior {
      * @return array
      */
     public function getFirstNode() {
-        return $this->getTable()->select()
+        return $this->getRepository()->select()
             ->orderBy($this->config->leftField, 'asc')
             ->limit(1)
             ->fetch();
@@ -195,7 +195,7 @@ class HierarchicalBehavior extends AbstractBehavior {
      * @return array
      */
     public function getLastNode() {
-        return $this->getTable()->select()
+        return $this->getRepository()->select()
             ->orderBy($this->config->rightField, 'desc')
             ->limit(1)
             ->fetch();
@@ -216,7 +216,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         $left = $this->config->leftField;
         $right = $this->config->rightField;
 
-        $query = $this->getTable()->select()->orderBy($left, 'asc');
+        $query = $this->getRepository()->select()->orderBy($left, 'asc');
 
         if ($id) {
             if ($parentNode = $this->getNode($id)) {
@@ -237,14 +237,14 @@ class HierarchicalBehavior extends AbstractBehavior {
      * @return array
      */
     public function getNode($id, $withParent = false) {
-        $table = $this->getTable();
-        $pk = $table->getPrimaryKey();
-        $query = $table->select();
+        $repo = $this->getRepository();
+        $pk = $repo->getPrimaryKey();
+        $query = $repo->select();
 
         if ($withParent) {
             $query
-                ->where($table->getAlias() . '.' . $pk, $id)
-                ->leftJoin([$table->getTableName(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $pk]);
+                ->where($repo->getAlias() . '.' . $pk, $id)
+                ->leftJoin([$repo->getTable(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $pk]);
         } else {
             $query->where($pk, $id);
         }
@@ -268,7 +268,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         $left = $this->config->leftField;
         $right = $this->config->rightField;
 
-        return $this->getTable()->select()
+        return $this->getRepository()->select()
             ->where($left, '<', $node[$left])
             ->where($right, '>', $node[$right])
             ->orderBy($left, 'asc')
@@ -286,7 +286,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         $left = $this->config->leftField;
         $right = $this->config->rightField;
 
-        $query = $this->getTable()->select()->orderBy($left, 'asc');
+        $query = $this->getRepository()->select()->orderBy($left, 'asc');
 
         if ($id) {
             if ($parentNode = $this->getNode($id)) {
@@ -304,7 +304,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 
         $map = [];
         $stack = [];
-        $pk = $this->getTable()->getPrimaryKey();
+        $pk = $this->getRepository()->getPrimaryKey();
 
         foreach ($nodes as $node) {
             if ($node[$parent] && $node[$pk] != $id) {
@@ -336,8 +336,8 @@ class HierarchicalBehavior extends AbstractBehavior {
     public function mapList(array $nodes, $key, $value, $spacer) {
         $tree = [];
         $stack = [];
-        $key = $key ?: $this->getTable()->getPrimaryKey();
-        $value = $value ?: $this->getTable()->getDisplayField();
+        $key = $key ?: $this->getRepository()->getPrimaryKey();
+        $value = $value ?: $this->getRepository()->getDisplayField();
         $right = $this->config->rightField;
 
         foreach ($nodes as $node) {
@@ -369,7 +369,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         }
 
         $tree = [];
-        $pk = $this->getTable()->getPrimaryKey();
+        $pk = $this->getRepository()->getPrimaryKey();
 
         foreach ($nodes as $node) {
             $id = $node[$pk];
@@ -393,7 +393,7 @@ class HierarchicalBehavior extends AbstractBehavior {
      * @return bool
      */
     public function moveDown($id, $count = 1) {
-        $table = $this->getTable();
+        $repo = $this->getRepository();
         $node = $this->getNode($id, true);
 
         if (!$node || empty($node['Parent'])) {
@@ -423,7 +423,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         }
 
         // Move following nodes up
-        $table->query(Query::UPDATE)
+        $repo->query(Query::UPDATE)
             ->fields([
                 $left => Query::expr($left, '-', 2),
                 $right => Query::expr($right, '-', 2)
@@ -433,12 +433,12 @@ class HierarchicalBehavior extends AbstractBehavior {
             ->save();
 
         // Move node down
-        $table->query(Query::UPDATE)
+        $repo->query(Query::UPDATE)
             ->fields([
                 $left => $newNodeLeft,
                 $right => $newNodeRight
             ])
-            ->where($table->getPrimaryKey(), $id)
+            ->where($repo->getPrimaryKey(), $id)
             ->save();
 
         return true;
@@ -453,7 +453,7 @@ class HierarchicalBehavior extends AbstractBehavior {
      * @return bool
      */
     public function moveUp($id, $count = 1) {
-        $table = $this->getTable();
+        $repo = $this->getRepository();
         $node = $this->getNode($id, true);
 
         if (!$node || empty($node['Parent'])) {
@@ -483,7 +483,7 @@ class HierarchicalBehavior extends AbstractBehavior {
         }
 
         // Move previous nodes down
-        $table->query(Query::UPDATE)
+        $repo->query(Query::UPDATE)
             ->fields([
                 $left => Query::expr($left, '+', 2),
                 $right => Query::expr($right, '+', 2)
@@ -493,12 +493,12 @@ class HierarchicalBehavior extends AbstractBehavior {
             ->save();
 
         // Move node up
-        $table->query(Query::UPDATE)
+        $repo->query(Query::UPDATE)
             ->fields([
                 $left => $newNodeLeft,
                 $right => $newNodeRight
             ])
-            ->where($table->getPrimaryKey(), $id)
+            ->where($repo->getPrimaryKey(), $id)
             ->save();
 
         return true;
@@ -513,7 +513,7 @@ class HierarchicalBehavior extends AbstractBehavior {
      * @return bool
      */
     public function moveTo($id, $parent_id) {
-        $table = $this->getTable();
+        $repo = $this->getRepository();
         $node = $this->getNode($id);
 
         if (!$node || $node[$this->config->parentField] == $parent_id) {
@@ -546,9 +546,9 @@ class HierarchicalBehavior extends AbstractBehavior {
             return false;
         }
 
-        $table->query(Query::UPDATE)
+        $repo->query(Query::UPDATE)
             ->fields($data + [$this->config->parentField => $parent_id])
-            ->where($table->getPrimaryKey(), $id)
+            ->where($repo->getPrimaryKey(), $id)
             ->save();
 
         $this->_insertNode($id, $data[$left]);
@@ -575,15 +575,15 @@ class HierarchicalBehavior extends AbstractBehavior {
      * @param int $index
      */
     protected function _insertNode($id, $index) {
-        $table = $this->getTable();
+        $repo = $this->getRepository();
 
         foreach ([$this->config->leftField, $this->config->rightField] as $field) {
-            $query = $table->query(Query::UPDATE)
+            $query = $repo->query(Query::UPDATE)
                 ->fields([$field => Query::expr($field, '+', 2)])
                 ->where($field, '>=', $index);
 
             if ($id) {
-                $query->where($table->getPrimaryKey(), '!=', $id);
+                $query->where($repo->getPrimaryKey(), '!=', $id);
             }
 
             $query->save();
@@ -597,15 +597,15 @@ class HierarchicalBehavior extends AbstractBehavior {
      * @param int $index
      */
     protected function _removeNode($id, $index) {
-        $table = $this->getTable();
+        $repo = $this->getRepository();
 
         foreach ([$this->config->leftField, $this->config->rightField] as $field) {
-            $query = $table->query(Query::UPDATE)
+            $query = $repo->query(Query::UPDATE)
                 ->fields([$field => Query::expr($field, '-', 2)])
                 ->where($field, '>=', $index);
 
             if ($id) {
-                $query->where($table->getPrimaryKey(), '!=', $id);
+                $query->where($repo->getPrimaryKey(), '!=', $id);
             }
 
             $query->save();
@@ -623,12 +623,12 @@ class HierarchicalBehavior extends AbstractBehavior {
      */
     protected function _reOrder($parent_id, $left, array $order = []) {
         $parent = $this->config->parentField;
-        $table = $this->getTable();
-        $pk = $table->getPrimaryKey();
+        $repo = $this->getRepository();
+        $pk = $repo->getPrimaryKey();
         $right = $left + 1;
 
         // Get children and sort
-        $children = $table->select()
+        $children = $repo->select()
             ->where($parent, $parent_id)
             ->orderBy($order)
             ->fetchAll();
@@ -639,7 +639,7 @@ class HierarchicalBehavior extends AbstractBehavior {
 
         // Update parent node
         if ($parent_id) {
-            $table->query(Query::UPDATE)
+            $repo->query(Query::UPDATE)
                 ->fields([
                     $this->config->leftField => $left,
                     $this->config->rightField => $right

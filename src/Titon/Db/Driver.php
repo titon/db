@@ -47,10 +47,10 @@ interface Driver {
      * Inspect a table and describe all the columns within it.
      * Return an array of values that are usable in a schema.
      *
-     * @param string $table
+     * @param string $repo
      * @return array
      */
-    public function describeTable($table);
+    public function describeTable($repo);
 
     /**
      * Disconnect from the driver.
@@ -106,10 +106,10 @@ interface Driver {
     /**
      * Return the ID of the last inserted record.
      *
-     * @param \Titon\Db\Table
+     * @param \Titon\Db\Repository
      * @return int
      */
-    public function getLastInsertID(Table $table);
+    public function getLastInsertID(Repository $repo);
 
     /**
      * Return a list of logged query statements.

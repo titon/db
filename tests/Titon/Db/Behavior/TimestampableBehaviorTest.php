@@ -8,13 +8,13 @@
 namespace Titon\Db\Behavior;
 
 use Titon\Db\Entity;
-use Titon\Test\Stub\Table\User;
+use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 
 /**
  * Test class for Titon\Db\Behavior\TimestampableBehavior.
  *
- * @property \Titon\Db\Table $object
+ * @property \Titon\Db\Repository $object
  */
 class TimestampableBehaviorTest extends TestCase {
 

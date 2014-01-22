@@ -1,6 +1,6 @@
 # Tables #
 
-A Table class represents a table in a database. It provides methods for interacting with data in that specific table by utilizing the loaded drivers.
+A Repository class represents a table in a database. It provides methods for interacting with data in that specific table by utilizing the loaded drivers.
 
 Database relationships can be mapped through the table layer using `Relation` classes. Jump to the relation docs on how to support this.
 
@@ -11,9 +11,9 @@ Furthermore, a `Behavior` can be used to modify data or logic while performing C
 Create a table class for each database table and provide default configuration. View the base table class for the available configuration.
 
 ```php
-use Titon\Db\Table;
+use Titon\Db\Repository;
 
-class User extends Table {
+class User extends Repository {
     protected $_config = [
         'connection' => 'default', // key of driver to use
         'table' => 'users',
@@ -31,7 +31,7 @@ class User extends Table {
 The configuration can also be set through the constructor. This allows for quick mocking.
 
 ```php
-$table = new Table([
+$table = new Repository([
     'table' => 'users',
     'primaryKey' => 'id'
 ]);
@@ -42,7 +42,7 @@ $table = new Table([
 The base table implements the singleton pattern through a singleton trait. All data fetching or saving methods can be called statically.
 
 ```php
-class User extends Table {
+class User extends Repository {
     // ...
 
     public static function getAll() {

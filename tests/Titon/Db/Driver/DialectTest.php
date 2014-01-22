@@ -15,7 +15,7 @@ use Titon\Db\Query\Predicate;
 use Titon\Db\Query;
 use Titon\Test\Stub\DialectStub;
 use Titon\Test\Stub\DriverStub;
-use Titon\Test\Stub\Table\User;
+use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 use \Exception;
 

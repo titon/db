@@ -9,10 +9,10 @@ namespace Titon\Db\Data;
 
 use Titon\Db\Entity;
 use Titon\Db\Query;
-use Titon\Test\Stub\Table\Book;
-use Titon\Test\Stub\Table\BookGenre;
-use Titon\Test\Stub\Table\Series;
-use Titon\Test\Stub\Table\User;
+use Titon\Test\Stub\Repository\Book;
+use Titon\Test\Stub\Repository\BookGenre;
+use Titon\Test\Stub\Repository\Series;
+use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 use \Exception;
 

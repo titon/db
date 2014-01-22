@@ -87,12 +87,12 @@ class Join implements Serializable, JsonSerializable {
     /**
      * Set the table to join against.
      *
-     * @param string $table
+     * @param string $repo
      * @param string $alias
      * @return \Titon\Db\Query\Join
      */
-    public function from($table, $alias = null) {
-        $this->_table = (string) $table;
+    public function from($repo, $alias = null) {
+        $this->_table = (string) $repo;
         $this->asAlias($alias);
 
         return $this;
@@ -112,7 +112,7 @@ class Join implements Serializable, JsonSerializable {
      *
      * @return string
      */
-    public function getTableName() {
+    public function getTable() {
         return $this->_table;
     }
 
@@ -182,7 +182,7 @@ class Join implements Serializable, JsonSerializable {
      */
     public function jsonSerialize() {
         return [
-            'table' => $this->getTableName(),
+            'table' => $this->getTable(),
             'alias' => $this->getAlias(),
             'fields' => $this->getFields(),
             'type' => $this->getType(),

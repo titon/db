@@ -8,7 +8,7 @@
 namespace Titon\Db;
 
 /**
- * A Behavior can be attached to a table and triggered during callbacks to modify functionality.
+ * A Behavior can be attached to a repository and triggered during callbacks to modify functionality.
  *
  * @package Titon\Db
  */
@@ -22,18 +22,18 @@ interface Behavior extends Callback {
     public function getAlias();
 
     /**
-     * Return the current table.
+     * Return the current repository.
      *
-     * @return \Titon\Db\Table
+     * @return \Titon\Db\Repository
      */
-    public function getTable();
+    public function getRepository();
 
     /**
-     * Set the table this behavior is attached to.
+     * Set the repository this behavior is attached to.
      *
-     * @param \Titon\Db\Table $table
+     * @param \Titon\Db\Repository $repo
      * @return \Titon\Db\Behavior
      */
-    public function setTable(Table $table);
+    public function setRepository(Repository $repo);
 
 }

@@ -50,11 +50,11 @@ interface Relation {
     public function getForeignKey();
 
     /**
-     * Return the primary table instance.
+     * Return the primary repository instance.
      *
-     * @return \Titon\Db\Table
+     * @return \Titon\Db\Repository
      */
-    public function getTable();
+    public function getRepository();
 
     /**
      * Return the name of the related foreign key.
@@ -64,11 +64,11 @@ interface Relation {
     public function getRelatedForeignKey();
 
     /**
-     * Return the related table instance.
+     * Return the related repository instance.
      *
-     * @return \Titon\Db\Table
+     * @return \Titon\Db\Repository
      */
-    public function getRelatedTable();
+    public function getRelatedRepository();
 
     /**
      * Return the type of relation.
@@ -95,7 +95,7 @@ interface Relation {
     /**
      * Set the related class name.
      *
-     * @param string|\Titon\Db\Table $class
+     * @param string|\Titon\Db\Repository $class
      * @return \Titon\Db\Relation
      */
     public function setClass($class);
@@ -125,12 +125,12 @@ interface Relation {
     public function setForeignKey($key);
 
     /**
-     * Set the primary table instance.
+     * Set the primary repository instance.
      *
-     * @param \Titon\Db\Table $table
+     * @param \Titon\Db\Repository $repo
      * @return \Titon\Db\Relation
      */
-    public function setTable(Table $table);
+    public function setRepository(Repository $repo);
 
     /**
      * Set the foreign key for the related table.
@@ -141,11 +141,11 @@ interface Relation {
     public function setRelatedForeignKey($key);
 
     /**
-     * Set the related table instance.
+     * Set the related repository instance.
      *
-     * @param \Titon\Db\Table $table
+     * @param \Titon\Db\Repository $repo
      * @return \Titon\Db\Relation
      */
-    public function setRelatedTable(Table $table);
+    public function setRelatedRepository(Repository $repo);
 
 }

@@ -11,9 +11,9 @@ use Titon\Event\Event;
 use Titon\Db\Query;
 
 /**
- * Provides a set of callbacks that tables and behaviors should implement.
+ * Provides a set of callbacks that repositories and behaviors should implement.
  *
- * @package Titon\Db\Table
+ * @package Titon\Db\Repository
  */
 interface Callback {
 

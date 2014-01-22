@@ -8,7 +8,6 @@
 namespace Titon\Db;
 
 use Titon\Common\Base;
-use Titon\Common\Registry;
 use Titon\Common\Traits\Attachable;
 use Titon\Common\Traits\Cacheable;
 use Titon\Event\Event;
@@ -47,7 +46,7 @@ use \Closure;
  *
  * @package Titon\Db
  */
-class Table extends Base implements Callback, Listener {
+class Repository extends Base implements Callback, Listener {
     use Attachable, Cacheable, Emittable;
 
     /**
@@ -76,7 +75,7 @@ class Table extends Base implements Callback, Listener {
      *
      * @type array {
      *      @type $string $connection   The connection driver key
-     *      @type $string $table        Database table name
+     *      @type $string $repo        Database table name
      *      @type $string $prefix       Prefix to prepend to the table name
      *      @type $string $primaryKey   The field representing the primary key
      *      @type $string $displayField The field representing a readable label
@@ -107,7 +106,7 @@ class Table extends Base implements Callback, Listener {
     protected $_driver;
 
     /**
-     * Table to table relationships.
+     * Repository to repository relationships.
      *
      * @type \Titon\Db\Relation[]
      */
@@ -138,7 +137,7 @@ class Table extends Base implements Callback, Listener {
      * @return \Titon\Db\Behavior
      */
     public function addBehavior(Behavior $behavior) {
-        $behavior->setTable($this);
+        $behavior->setRepository($this);
 
         $this->_behaviors[$behavior->getAlias()] = $behavior;
 
@@ -152,21 +151,21 @@ class Table extends Base implements Callback, Listener {
     }
 
     /**
-     * Add a relation between another table.
+     * Add a relation between another repository.
      *
      * @param \Titon\Db\Relation $relation
      * @return \Titon\Db\Relation|\Titon\Db\Relation\ManyToMany
      */
     public function addRelation(Relation $relation) {
-        $relation->setTable($this);
+        $relation->setRepository($this);
 
         $this->_relations[$relation->getAlias()] = $relation;
 
         $this->attachObject([
             'alias' => $relation->getAlias(),
-            'interface' => 'Titon\Db\Table'
+            'interface' => 'Titon\Db\Repository'
         ], function() use ($relation) {
-            return $relation->getRelatedTable();
+            return $relation->getRelatedRepository();
         });
 
         return $relation;
@@ -176,12 +175,12 @@ class Table extends Base implements Callback, Listener {
      * Add a many-to-one relationship.
      *
      * @param string $alias
-     * @param string|\Titon\Db\Table $table
+     * @param string|\Titon\Db\Repository $repo
      * @param string $foreignKey
      * @return \Titon\Db\Relation\ManyToOne
      */
-    public function belongsTo($alias, $table, $foreignKey) {
-        return $this->addRelation(new ManyToOne($alias, $table))
+    public function belongsTo($alias, $repo, $foreignKey) {
+        return $this->addRelation(new ManyToOne($alias, $repo))
             ->setForeignKey($foreignKey);
     }
 
@@ -189,14 +188,14 @@ class Table extends Base implements Callback, Listener {
      * Add a many-to-many relationship.
      *
      * @param string $alias
-     * @param string|\Titon\Db\Table $table
+     * @param string|\Titon\Db\Repository $repo
      * @param string $junction
      * @param string $foreignKey
      * @param string $relatedKey
      * @return \Titon\Db\Relation\ManyToMany
      */
-    public function belongsToMany($alias, $table, $junction, $foreignKey, $relatedKey) {
-        return $this->addRelation(new ManyToMany($alias, $table))
+    public function belongsToMany($alias, $repo, $junction, $foreignKey, $relatedKey) {
+        return $this->addRelation(new ManyToMany($alias, $repo))
             ->setJunctionClass($junction)
             ->setForeignKey($foreignKey)
             ->setRelatedForeignKey($relatedKey);
@@ -326,20 +325,20 @@ class Table extends Base implements Callback, Listener {
                 switch ($relation->getType()) {
                     case Relation::ONE_TO_ONE:
                     case Relation::ONE_TO_MANY:
-                        $relatedTable = $relation->getRelatedTable();
+                        $relatedRepo = $relation->getRelatedRepository();
                         $results = [];
 
                         // Fetch IDs before deletion
                         // Only delete if relations exist
-                        if ($cascade && $relatedTable->hasRelations()) {
-                            $results = $relatedTable
-                                ->select($relatedTable->getPrimaryKey())
+                        if ($cascade && $relatedRepo->hasRelations()) {
+                            $results = $relatedRepo
+                                ->select($relatedRepo->getPrimaryKey())
                                 ->where($relation->getRelatedForeignKey(), $id)
                                 ->fetchAll();
                         }
 
                         // Delete all records at once
-                        $count += $relatedTable
+                        $count += $relatedRepo
                             ->query(Query::DELETE)
                             ->where($relation->getRelatedForeignKey(), $id)
                             ->save();
@@ -349,20 +348,20 @@ class Table extends Base implements Callback, Listener {
                             $dependentIDs = [];
 
                             foreach ($results as $result) {
-                                $dependentIDs[] = $result->get($relatedTable->getPrimaryKey());
+                                $dependentIDs[] = $result->get($relatedRepo->getPrimaryKey());
                             }
 
-                            $count += $relatedTable->deleteDependents($dependentIDs, $cascade);
+                            $count += $relatedRepo->deleteDependents($dependentIDs, $cascade);
                         }
                     break;
 
                     case Relation::MANY_TO_MANY:
-                        /** @type \Titon\Db\Table $junctionTable */
-                        $junctionTable = $relation->getJunctionTable();
+                        /** @type \Titon\Db\Repository $junctionRepo */
+                        $junctionRepo = $relation->getJunctionRepository();
 
                         // Only delete the junction records
                         // The related records should stay
-                        $count += $junctionTable
+                        $count += $junctionRepo
                             ->query(Query::DELETE)
                             ->where($relation->getForeignKey(), $id)
                             ->save();
@@ -488,8 +487,8 @@ class Table extends Base implements Callback, Listener {
         foreach ($queries as $alias => $subQuery) {
             $newQuery = clone $subQuery;
             $relation = $this->getRelation($alias);
-            $relatedTable = $relation->getRelatedTable();
-            $relatedClass = get_class($relatedTable);
+            $relatedRepo = $relation->getRelatedRepository();
+            $relatedClass = get_class($relatedRepo);
 
             switch ($relation->getType()) {
 
@@ -534,7 +533,7 @@ class Table extends Base implements Callback, Listener {
                     $foreignValue = $result[$relation->getForeignKey()];
 
                     $newQuery
-                        ->where($relatedTable->getPrimaryKey(), $foreignValue)
+                        ->where($relatedRepo->getPrimaryKey(), $foreignValue)
                         ->cache([$relatedClass, 'fetchManyToOne', $foreignValue])
                         ->limit(1);
 
@@ -554,16 +553,16 @@ class Table extends Base implements Callback, Listener {
                     }
 
                     $result->set($alias, function() use ($relation, $newQuery, $foreignValue, $options) {
-                        $relatedTable = $relation->getRelatedTable();
-                        $relatedClass = get_class($relatedTable);
+                        $relatedRepo = $relation->getRelatedRepository();
+                        $relatedClass = get_class($relatedRepo);
                         $lookupIDs = [];
 
                         // Fetch the related records using the junction IDs
-                        $junctionTable = $relation->getJunctionTable();
-                        $junctionResults = $junctionTable
+                        $junctionRepo = $relation->getJunctionRepository();
+                        $junctionResults = $junctionRepo
                             ->select()
                             ->where($relation->getForeignKey(), $foreignValue)
-                            ->cache([get_class($junctionTable), 'fetchManyToMany', $foreignValue])
+                            ->cache([get_class($junctionRepo), 'fetchManyToMany', $foreignValue])
                             ->fetchAll();
 
                         if (!$junctionResults) {
@@ -575,14 +574,14 @@ class Table extends Base implements Callback, Listener {
                         }
 
                         $m2mResults = $newQuery
-                            ->where($relatedTable->getPrimaryKey(), $lookupIDs)
+                            ->where($relatedRepo->getPrimaryKey(), $lookupIDs)
                             ->cache([$relatedClass, 'fetchManyToMany', $lookupIDs])
                             ->fetchAll($options);
 
                         // Include the junction data
                         foreach ($m2mResults as $i => $m2mResult) {
                             foreach ($junctionResults as $junctionResult) {
-                                if ($junctionResult[$relation->getRelatedForeignKey()] == $m2mResult[$relatedTable->getPrimaryKey()]) {
+                                if ($junctionResult[$relation->getRelatedForeignKey()] == $m2mResult[$relatedRepo->getPrimaryKey()]) {
                                     $m2mResults[$i]->set('Junction', $junctionResult);
                                 }
                             }
@@ -743,7 +742,7 @@ class Table extends Base implements Callback, Listener {
             return $this->_relations[$alias];
         }
 
-        throw new MissingRelationException(sprintf('Table relation %s does not exist', $alias));
+        throw new MissingRelationException(sprintf('Repository relation %s does not exist', $alias));
     }
 
     /**
@@ -786,10 +785,10 @@ class Table extends Base implements Callback, Listener {
         // Inspect database for columns
         // This approach should only be used for validating columns and types
         } else {
-            $columns = $this->getDriver()->describeTable($this->getTableName());
+            $columns = $this->getDriver()->describeTable($this->getTable());
         }
 
-        $this->setSchema(new Schema($this->getTableName(), $columns));
+        $this->setSchema(new Schema($this->getTable(), $columns));
 
         return $this->_schema;
     }
@@ -799,7 +798,7 @@ class Table extends Base implements Callback, Listener {
      *
      * @return string
      */
-    public function getTableName() {
+    public function getTable() {
         return $this->config->prefix . $this->config->table;
     }
 
@@ -835,12 +834,12 @@ class Table extends Base implements Callback, Listener {
      * Add a one-to-one relationship.
      *
      * @param string $alias
-     * @param string|\Titon\Db\Table $table
+     * @param string|\Titon\Db\Repository $repo
      * @param string $relatedKey
      * @return \Titon\Db\Relation\OneToOne
      */
-    public function hasOne($alias, $table, $relatedKey) {
-        return $this->addRelation(new OneToOne($alias, $table))
+    public function hasOne($alias, $repo, $relatedKey) {
+        return $this->addRelation(new OneToOne($alias, $repo))
             ->setRelatedForeignKey($relatedKey);
     }
 
@@ -848,12 +847,12 @@ class Table extends Base implements Callback, Listener {
      * Add a one-to-many relationship.
      *
      * @param string $alias
-     * @param string|\Titon\Db\Table $table
+     * @param string|\Titon\Db\Repository $repo
      * @param string $relatedKey
      * @return \Titon\Db\Relation\OneToMany
      */
-    public function hasMany($alias, $table, $relatedKey) {
-        return $this->addRelation(new OneToMany($alias, $table))
+    public function hasMany($alias, $repo, $relatedKey) {
+        return $this->addRelation(new OneToMany($alias, $repo))
             ->setRelatedForeignKey($relatedKey);
     }
 
@@ -944,7 +943,7 @@ class Table extends Base implements Callback, Listener {
         $this->data = [];
 
         $query = new Query($type, $this);
-        $query->from($this->getTableName(), $this->getAlias());
+        $query->from($this->getTable(), $this->getAlias());
 
         return $query;
     }
@@ -1001,7 +1000,7 @@ class Table extends Base implements Callback, Listener {
      * Set the connection class.
      *
      * @param \Titon\Db\Connection $connection
-     * @return \Titon\Db\Table
+     * @return \Titon\Db\Repository
      */
     public function setConnection(Connection $connection) {
         $this->_connection = $connection;
@@ -1010,12 +1009,12 @@ class Table extends Base implements Callback, Listener {
     }
 
     /**
-     * Set and merge result data into the table.
+     * Set and merge result data into the repository.
      *
      * @uses Titon\Utility\Hash
      *
      * @param array $data
-     * @return \Titon\Db\Table
+     * @return \Titon\Db\Repository
      */
     public function setData(array $data) {
         $this->data = Hash::merge($this->_mapDefaults(), $this->data, $data);
@@ -1024,10 +1023,10 @@ class Table extends Base implements Callback, Listener {
     }
 
     /**
-     * Set the schema for this table.
+     * Set the schema for this repository table.
      *
      * @param \Titon\Db\Driver\Schema $schema
-     * @return \Titon\Db\Table
+     * @return \Titon\Db\Repository
      */
     public function setSchema(Schema $schema) {
         $this->_schema = $schema;
@@ -1123,7 +1122,7 @@ class Table extends Base implements Callback, Listener {
     }
 
     /**
-     * Either update or insert related data for the primary table's ID.
+     * Either update or insert related data for the primary repository's ID.
      * Each relation will handle upserting differently.
      *
      * @param int $id
@@ -1152,22 +1151,22 @@ class Table extends Base implements Callback, Listener {
                 }
 
                 $relation = $this->getRelation($alias);
-                $relatedTable = $relation->getRelatedTable();
+                $relatedRepo = $relation->getRelatedRepository();
                 $fk = $relation->getForeignKey();
                 $rfk = $relation->getRelatedForeignKey();
-                $rpk = $relatedTable->getPrimaryKey();
+                $rpk = $relatedRepo->getPrimaryKey();
 
                 switch ($relation->getType()) {
                     // Append the foreign key with the current ID
                     case Relation::ONE_TO_ONE:
                         $relatedData[$rfk] = $id;
-                        $relatedData[$rpk] = $relatedTable->upsert($relatedData, null, $options);
+                        $relatedData[$rpk] = $relatedRepo->upsert($relatedData, null, $options);
 
                         if (!$relatedData[$rpk]) {
                             throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
                         }
 
-                        $relatedData = $relatedTable->data;
+                        $relatedData = $relatedRepo->data;
 
                         $upserted++;
                     break;
@@ -1176,13 +1175,13 @@ class Table extends Base implements Callback, Listener {
                     case Relation::ONE_TO_MANY:
                         foreach ($relatedData as $i => $hasManyData) {
                             $hasManyData[$rfk] = $id;
-                            $hasManyData[$rpk] = $relatedTable->upsert($hasManyData, null, $options);
+                            $hasManyData[$rpk] = $relatedRepo->upsert($hasManyData, null, $options);
 
                             if (!$hasManyData[$rpk]) {
                                 throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
                             }
 
-                            $hasManyData = $relatedTable->data;
+                            $hasManyData = $relatedRepo->data;
                             $relatedData[$i] = $hasManyData;
 
                             $upserted++;
@@ -1192,8 +1191,8 @@ class Table extends Base implements Callback, Listener {
                     // Loop through each set of data and upsert to gather an ID
                     // Use that foreign ID with the current ID and save in the junction table
                     case Relation::MANY_TO_MANY:
-                        $junctionTable = $relation->getJunctionTable();
-                        $jpk = $junctionTable->getPrimaryKey();
+                        $junctionRepo = $relation->getJunctionRepository();
+                        $jpk = $junctionRepo->getPrimaryKey();
 
                         foreach ($relatedData as $i => $habtmData) {
                             $junctionData = [$fk => $id];
@@ -1204,14 +1203,14 @@ class Table extends Base implements Callback, Listener {
                                 unset($habtmData[$rfk]);
 
                                 if ($habtmData) {
-                                    $foreign_id = $relatedTable->upsert($habtmData, $foreign_id, $options);
+                                    $foreign_id = $relatedRepo->upsert($habtmData, $foreign_id, $options);
                                 }
 
                             // Existing record by relation primary key
                             // New record
                             } else {
-                                $foreign_id = $relatedTable->upsert($habtmData, null, $options);
-                                $habtmData = $relatedTable->data;
+                                $foreign_id = $relatedRepo->upsert($habtmData, null, $options);
+                                $habtmData = $relatedRepo->data;
                             }
 
                             if (!$foreign_id) {
@@ -1221,13 +1220,13 @@ class Table extends Base implements Callback, Listener {
                             $junctionData[$rfk] = $foreign_id;
 
                             // Only create the record if the junction doesn't already exist
-                            $exists = $junctionTable->select()
+                            $exists = $junctionRepo->select()
                                 ->where($fk, $id)
                                 ->where($rfk, $foreign_id)
                                 ->fetch();
 
                             if (!$exists) {
-                                $junctionData[$jpk] = $junctionTable->upsert($junctionData, null, $options);
+                                $junctionData[$jpk] = $junctionRepo->upsert($junctionData, null, $options);
 
                                 if (!$junctionData[$jpk]) {
                                     throw new QueryFailureException(sprintf('Failed to upsert %s junction data', $alias));
@@ -1289,7 +1288,7 @@ class Table extends Base implements Callback, Listener {
                 }
 
                 if ($this->hasRelation($key)) {
-                    $relatedEntity = $this->getRelation($key)->getRelatedTable()->getEntity() ?: $entityClass;
+                    $relatedEntity = $this->getRelation($key)->getRelatedRepository()->getEntity() ?: $entityClass;
 
                     $result[$key] = new $relatedEntity($value);
                 }

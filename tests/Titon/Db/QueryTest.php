@@ -11,8 +11,8 @@ use Titon\Db\Query;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Join;
 use Titon\Db\Query\Predicate;
-use Titon\Test\Stub\Table\Profile;
-use Titon\Test\Stub\Table\User;
+use Titon\Test\Stub\Repository\Profile;
+use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 use \Exception;
 
@@ -94,7 +94,7 @@ class QueryTest extends TestCase {
 
         // Now with joins
         $query = new Query(Query::SELECT, new User());
-        $query->innerJoin($query->getTable()->getRelation('Profile'), []);
+        $query->innerJoin($query->getRepository()->getRelation('Profile'), []);
 
         $this->assertEquals(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], $query->getFields());
     }
@@ -104,7 +104,7 @@ class QueryTest extends TestCase {
      */
     public function testFrom() {
         $this->object->from('users');
-        $this->assertEquals('users', $this->object->getTableName());
+        $this->assertEquals('users', $this->object->getTable());
     }
 
     /**
@@ -183,7 +183,7 @@ class QueryTest extends TestCase {
         $j3 = new Join(Join::INNER);
         $j3->from('profiles', 'Profile')->on('User.id', 'Profile.user_id')->fields('id', 'user_id', 'lastLogin', 'currentLogin');
 
-        $this->object->innerJoin($this->object->getTable()->getRelation('Profile'), []);
+        $this->object->innerJoin($this->object->getRepository()->getRelation('Profile'), []);
         $this->assertEquals($j3, $this->object->getJoins()[2]);
     }
 
@@ -401,8 +401,8 @@ class QueryTest extends TestCase {
      * Test object serialization.
      */
     public function testSerialize() {
-        $table = new User();
-        $query = new Query(Query::SELECT, $table);
+        $repo = new User();
+        $query = new Query(Query::SELECT, $repo);
         $func = $query->func('COUNT', ['id' => Query\Func::FIELD])->asAlias('count');
 
         $query
@@ -420,7 +420,7 @@ class QueryTest extends TestCase {
             });
 
         $expected = unserialize(serialize($query));
-        $expected->setTable($table); // Asserting will fail unless we use the same table instance
+        $expected->setRepository($repo); // Asserting will fail unless we use the same repository instance
 
         $this->assertEquals($expected, $query);
     }
@@ -482,12 +482,12 @@ class QueryTest extends TestCase {
                 ]
             ],
             'limit' => 5,
-            'table' => 'Titon\Test\Stub\Table\User',
+            'repository' => 'Titon\Test\Stub\Repository\User',
             'offset' => 10,
             'orderBy' => ['id' => 'asc'],
             'relationQueries' => [],
             'schema' => null,
-            'tableName' => 'users',
+            'table' => 'users',
             'type' => 'select',
             'where' => [
                 'type' => 'and',
@@ -531,12 +531,12 @@ class QueryTest extends TestCase {
             ],
             'joins' => [],
             'limit' => null,
-            'table' => 'Titon\Test\Stub\Table\User',
+            'repository' => 'Titon\Test\Stub\Repository\User',
             'offset' => null,
             'orderBy' => [],
             'relationQueries' => [],
             'schema' => null,
-            'tableName' => 'users',
+            'table' => 'users',
             'type' => 'update',
             'where' => [
                 'type' => 'and',

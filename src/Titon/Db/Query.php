@@ -21,20 +21,20 @@ use Titon\Db\Query\SubQuery;
 use Titon\Db\Traits\AliasAware;
 use Titon\Db\Traits\ExprAware;
 use Titon\Db\Traits\FuncAware;
-use Titon\Db\Traits\TableAware;
+use Titon\Db\Traits\RepositoryAware;
 use \Closure;
 use \Serializable;
 use \JsonSerializable;
 
 /**
  * Provides an object oriented interface for building an SQL query.
- * Once the query params have been defined, the query can call the parent table to prepare the SQL statement,
+ * Once the query params have been defined, the query can call the parent repository to prepare the SQL statement,
  * and finally execute the query and return the results.
  *
  * @package Titon\Db
  */
 class Query implements Serializable, JsonSerializable {
-    use AliasAware, ExprAware, FuncAware, TableAware;
+    use AliasAware, ExprAware, FuncAware, RepositoryAware;
 
     // Order directions
     const ASC = Dialect::ASC;
@@ -142,7 +142,7 @@ class Query implements Serializable, JsonSerializable {
      *
      * @type string
      */
-    protected $_tableName;
+    protected $_table;
 
     /**
      * The type of database query.
@@ -162,16 +162,16 @@ class Query implements Serializable, JsonSerializable {
      * Set the type of query.
      *
      * @param int $type
-     * @param \Titon\Db\Table $table
+     * @param \Titon\Db\Repository $repo
      */
-    public function __construct($type, Table $table) {
+    public function __construct($type, Repository $repo) {
         $this->_type = $type;
-        $this->setTable($table);
+        $this->setRepository($repo);
     }
 
     /**
      * When cloning, be sure to clone the sub-objects.
-     * Leave the table instance intact however.
+     * Leave the repository instance intact however.
      */
     public function __clone() {
         if ($this->_where) {
@@ -244,54 +244,54 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
-     * Pass the query to the table to interact with the database.
+     * Pass the query to the repository to interact with the database.
      * Return the count of how many records exist.
      *
      * @return int
      */
     public function count() {
         $this
-            ->fields($this->func('COUNT', [$this->getTable()->getPrimaryKey() => Func::FIELD]))
+            ->fields($this->func('COUNT', [$this->getRepository()->getPrimaryKey() => Func::FIELD]))
             ->limit(0);
 
-        return $this->getTable()->count($this);
+        return $this->getRepository()->count($this);
     }
 
     /**
-     * Pass the find query to the table to interact with the database.
+     * Pass the find query to the repository to interact with the database.
      *
      * @param string $type
      * @param array $options
      * @return mixed
      */
     public function find($type, array $options = []) {
-        return $this->getTable()->find($this, $type, $options);
+        return $this->getRepository()->find($this, $type, $options);
     }
 
     /**
-     * Pass the query to the table to interact with the database.
+     * Pass the query to the repository to interact with the database.
      * Return the first record from the results.
      *
      * @param array $options
      * @return \Titon\Db\Entity
      */
     public function fetch(array $options = []) {
-        return $this->limit(1)->getTable()->fetch($this, $options);
+        return $this->limit(1)->getRepository()->fetch($this, $options);
     }
 
     /**
-     * Pass the query to the table to interact with the database.
+     * Pass the query to the repository to interact with the database.
      * Return all records from the results.
      *
      * @param array $options
      * @return \Titon\Db\Entity[]
      */
     public function fetchAll(array $options = []) {
-        return $this->getTable()->fetchAll($this, $options);
+        return $this->getRepository()->fetchAll($this, $options);
     }
 
     /**
-     * Pass the query to the table to interact with the database.
+     * Pass the query to the repository to interact with the database.
      * Return all records as a key value list.
      *
      * @param string $key
@@ -300,7 +300,7 @@ class Query implements Serializable, JsonSerializable {
      * @return array
      */
     public function fetchList($key = null, $value = null, array $options = []) {
-        return $this->getTable()->fetchList($this, $key, $value, $options);
+        return $this->getRepository()->fetchList($this, $key, $value, $options);
     }
 
     /**
@@ -332,12 +332,12 @@ class Query implements Serializable, JsonSerializable {
     /**
      * Set the table to query against.
      *
-     * @param string $table
+     * @param string $repo
      * @param string $alias
      * @return \Titon\Db\Query
      */
-    public function from($table, $alias = null) {
-        $this->_tableName = (string) $table;
+    public function from($repo, $alias = null) {
+        $this->_table = (string) $repo;
         $this->asAlias($alias);
 
         return $this;
@@ -393,7 +393,7 @@ class Query implements Serializable, JsonSerializable {
         $fields = $this->_fields;
 
         if ($this->getJoins() && !$fields && $this->getType() === self::SELECT) {
-            return $this->_mapTableFields($this->getTable());
+            return $this->_mapTableFields($this->getRepository());
         }
 
         return $fields;
@@ -476,8 +476,8 @@ class Query implements Serializable, JsonSerializable {
      *
      * @return string
      */
-    public function getTableName() {
-        return $this->_tableName;
+    public function getTable() {
+        return $this->_table;
     }
 
     /**
@@ -531,25 +531,25 @@ class Query implements Serializable, JsonSerializable {
     /**
      * Add a new INNER join.
      *
-     * @param string|array|\Titon\Db\Relation $table
+     * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
      * @return \Titon\Db\Query
      */
-    public function innerJoin($table, array $fields, array $on = []) {
-        return $this->_addJoin(Join::INNER, $table, $fields, $on);
+    public function innerJoin($repo, array $fields, array $on = []) {
+        return $this->_addJoin(Join::INNER, $repo, $fields, $on);
     }
 
     /**
      * Add a new LEFT join.
      *
-     * @param string|array|\Titon\Db\Relation $table
+     * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
      * @return \Titon\Db\Query
      */
-    public function leftJoin($table, array $fields, array $on = []) {
-        return $this->_addJoin(Join::LEFT, $table, $fields, $on);
+    public function leftJoin($repo, array $fields, array $on = []) {
+        return $this->_addJoin(Join::LEFT, $repo, $fields, $on);
     }
 
     /**
@@ -641,35 +641,35 @@ class Query implements Serializable, JsonSerializable {
     /**
      * Add a new OUTER join.
      *
-     * @param string|array|\Titon\Db\Relation $table
+     * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
      * @return \Titon\Db\Query
      */
-    public function outerJoin($table, array $fields, array $on = []) {
-        return $this->_addJoin(Join::OUTER, $table, $fields, $on);
+    public function outerJoin($repo, array $fields, array $on = []) {
+        return $this->_addJoin(Join::OUTER, $repo, $fields, $on);
     }
 
     /**
      * Add a new RIGHT join.
      *
-     * @param string|array|\Titon\Db\Relation $table
+     * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
      * @return \Titon\Db\Query
      */
-    public function rightJoin($table, array $fields, array $on = []) {
-        return $this->_addJoin(Join::RIGHT, $table, $fields, $on);
+    public function rightJoin($repo, array $fields, array $on = []) {
+        return $this->_addJoin(Join::RIGHT, $repo, $fields, $on);
     }
 
     /**
-     * Pass the query to the table to interact with the database.
+     * Pass the query to the repository to interact with the database.
      * Return the count of how many records were affected.
      *
      * @return int
      */
     public function save() {
-        return $this->getTable()->save($this);
+        return $this->getRepository()->save($this);
     }
 
     /**
@@ -687,13 +687,13 @@ class Query implements Serializable, JsonSerializable {
     /**
      * Add a new STRAIGHT join.
      *
-     * @param string|array|\Titon\Db\Relation $table
+     * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
      * @return \Titon\Db\Query
      */
-    public function straightJoin($table, array $fields, array $on = []) {
-        return $this->_addJoin(Join::STRAIGHT, $table, $fields, $on);
+    public function straightJoin($repo, array $fields, array $on = []) {
+        return $this->_addJoin(Join::STRAIGHT, $repo, $fields, $on);
     }
 
     /**
@@ -702,7 +702,7 @@ class Query implements Serializable, JsonSerializable {
      * @return \Titon\Db\Query\SubQuery
      */
     public function subQuery() {
-        $query = new SubQuery(Query::SELECT, $this->getTable());
+        $query = new SubQuery(Query::SELECT, $this->getRepository());
         $query->fields(func_get_args());
 
         return $query;
@@ -730,7 +730,7 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
-     * Include a table relation by querying and joining the records.
+     * Include a repository relation by querying and joining the records.
      *
      * @param string|string[] $alias
      * @param \Titon\Db\Query|\Closure $query
@@ -751,7 +751,7 @@ class Query implements Serializable, JsonSerializable {
             return $this;
         }
 
-        $relation = $this->getTable()->getRelation($alias); // Do relation check
+        $relation = $this->getRepository()->getRelation($alias); // Do relation check
 
         if ($query instanceof Query) {
             $relatedQuery = $query;
@@ -760,7 +760,7 @@ class Query implements Serializable, JsonSerializable {
                 throw new InvalidRelationQueryException('Only select sub-queries are permitted for related data');
             }
         } else {
-            $relatedQuery = $relation->getRelatedTable()->select();
+            $relatedQuery = $relation->getRelatedRepository()->select();
 
             // Apply relation conditions
             if ($conditions = $relation->getConditions()) {
@@ -828,7 +828,7 @@ class Query implements Serializable, JsonSerializable {
     public function unserialize($data) {
         $data = unserialize($data);
 
-        $this->_table = Registry::factory($data['table']);
+        $this->_repository = Registry::factory($data['repository']);
         $this->_alias = $data['alias'];
         $this->_attributes = $data['attributes'];
         $this->_cacheKey = $data['cacheKey'];
@@ -842,7 +842,7 @@ class Query implements Serializable, JsonSerializable {
         $this->_orderBy = $data['orderBy'];
         $this->_relationQueries = $data['relationQueries'];
         $this->_schema = $data['schema'];
-        $this->_tableName = $data['tableName'];
+        $this->_table = $data['table'];
         $this->_type = $data['type'];
         $this->_where = $data['where'];
     }
@@ -871,12 +871,12 @@ class Query implements Serializable, JsonSerializable {
             'having' => $this->getHaving(),
             'joins' => $this->getJoins(),
             'limit' => $this->getLimit(),
-            'table' => get_class($this->getTable()),
+            'repository' => get_class($this->getRepository()),
             'offset' => $this->getOffset(),
             'orderBy' => $this->getOrderBy(),
             'relationQueries' => $this->getRelationQueries(),
             'schema' => $this->getSchema(),
-            'tableName' => $this->getTableName(),
+            'table' => $this->getTable(),
             'type' => $this->getType(),
             'where' => $this->getWhere()
         ];
@@ -893,27 +893,27 @@ class Query implements Serializable, JsonSerializable {
      * @throws \Titon\Db\Exception\InvalidRelationQueryException
      */
     protected function _addJoin($type, $table, $fields = [], $on = []) {
-        $tableObj = $this->getTable();
+        $repo = $this->getRepository();
         $join = new Join($type);
 
         if ($table instanceof Relation) {
             $relation = $table;
-            $relatedTable = $relation->getRelatedTable();
+            $relatedRepo = $relation->getRelatedRepository();
 
             if (!$fields && $this->getType() === self::SELECT) {
-                $fields = $this->_mapTableFields($relatedTable);
+                $fields = $this->_mapTableFields($relatedRepo);
             }
 
             $join
-                ->from($relatedTable->getTableName(), $relatedTable->getAlias())
+                ->from($relatedRepo->getTable(), $relatedRepo->getAlias())
                 ->fields($fields);
 
             switch ($relation->getType()) {
                 case Relation::MANY_TO_ONE:
-                    $join->on($tableObj->getAlias() . '.' . $relation->getForeignKey(), $relatedTable->getAlias() . '.' . $relatedTable->getPrimaryKey());
+                    $join->on($repo->getAlias() . '.' . $relation->getForeignKey(), $relatedRepo->getAlias() . '.' . $relatedRepo->getPrimaryKey());
                 break;
                 case Relation::ONE_TO_ONE:
-                    $join->on($tableObj->getAlias() . '.' . $tableObj->getPrimaryKey(), $relatedTable->getAlias() . '.' . $relation->getRelatedForeignKey());
+                    $join->on($repo->getAlias() . '.' . $repo->getPrimaryKey(), $relatedRepo->getAlias() . '.' . $relation->getRelatedForeignKey());
                 break;
                 default:
                     throw new InvalidRelationQueryException('Only many-to-one and one-to-one relations can join data');
@@ -931,7 +931,7 @@ class Query implements Serializable, JsonSerializable {
 
             foreach ($on as $pfk => $rfk) {
                 if (strpos($pfk, '.') === false) {
-                    $pfk = $tableObj->getAlias() . '.' . $pfk;
+                    $pfk = $repo->getAlias() . '.' . $pfk;
                 }
 
                 if (strpos($rfk, '.') === false) {
@@ -952,13 +952,13 @@ class Query implements Serializable, JsonSerializable {
     /**
      * Return all fields for a table. This is required for joins and complex queries.
      *
-     * @param \Titon\Db\Table $table
+     * @param \Titon\Db\Repository $repo
      * @return array
      */
-    protected function _mapTableFields(Table $table) {
+    protected function _mapTableFields(Repository $repo) {
         $fields = [];
 
-        if ($schema = $table->getSchema()) {
+        if ($schema = $repo->getSchema()) {
             $fields = array_keys($schema->getColumns());
         }
 

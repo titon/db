@@ -27,7 +27,7 @@ class AbstractPdoDialect extends AbstractDialect {
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::CREATE_INDEX));
         $params = $params + [
             'index' => $this->formatTable($query->getAlias()),
-            'table' => $this->formatTable($query->getTableName()),
+            'table' => $this->formatTable($query->getTable()),
             'fields' => $this->formatFields($query)
         ];
 
@@ -45,7 +45,7 @@ class AbstractPdoDialect extends AbstractDialect {
         $schema = $query->getSchema();
 
         if (!$schema) {
-            throw new InvalidSchemaException('Table creation requires a valid schema object');
+            throw new InvalidSchemaException('Repository creation requires a valid schema object');
         }
 
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::CREATE_TABLE));
@@ -68,7 +68,7 @@ class AbstractPdoDialect extends AbstractDialect {
     public function buildDelete(Query $query) {
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DELETE));
         $params = $params + [
-            'table' => $this->formatTable($query->getTableName(), $query->getAlias()),
+            'table' => $this->formatTable($query->getTable(), $query->getAlias()),
             'joins' => $this->formatJoins($query->getJoins()),
             'where' => $this->formatWhere($query->getWhere()),
             'orderBy' => $this->formatOrderBy($query->getOrderBy()),
@@ -88,7 +88,7 @@ class AbstractPdoDialect extends AbstractDialect {
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DROP_INDEX));
         $params = $params + [
             'index' => $this->formatTable($query->getAlias()),
-            'table' => $this->formatTable($query->getTableName())
+            'table' => $this->formatTable($query->getTable())
         ];
 
         return $this->renderStatement($this->getStatement(Query::DROP_INDEX), $params);
@@ -103,7 +103,7 @@ class AbstractPdoDialect extends AbstractDialect {
     public function buildDropTable(Query $query) {
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DROP_TABLE));
         $params = $params + [
-            'table' => $this->formatTable($query->getTableName())
+            'table' => $this->formatTable($query->getTable())
         ];
 
         return $this->renderStatement($this->getStatement(Query::DROP_TABLE), $params);
@@ -118,7 +118,7 @@ class AbstractPdoDialect extends AbstractDialect {
     public function buildInsert(Query $query) {
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
         $params = $params + [
-            'table' => $this->formatTable($query->getTableName()),
+            'table' => $this->formatTable($query->getTable()),
             'fields' => $this->formatFields($query),
             'values' => $this->formatValues($query)
         ];
@@ -135,7 +135,7 @@ class AbstractPdoDialect extends AbstractDialect {
     public function buildMultiInsert(Query $query) {
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
         $params = $params + [
-            'table' => $this->formatTable($query->getTableName()),
+            'table' => $this->formatTable($query->getTable()),
             'fields' => $this->formatFields($query),
             'values' => $this->formatValues($query)
         ];
@@ -153,7 +153,7 @@ class AbstractPdoDialect extends AbstractDialect {
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::SELECT));
         $params = $params + [
             'fields' => $this->formatFields($query),
-            'table' => $this->formatTable($query->getTableName(), $query->getAlias()),
+            'table' => $this->formatTable($query->getTable(), $query->getAlias()),
             'joins' => $this->formatJoins($query->getJoins()),
             'where' => $this->formatWhere($query->getWhere()),
             'groupBy' => $this->formatGroupBy($query->getGroupBy()),
@@ -174,7 +174,7 @@ class AbstractPdoDialect extends AbstractDialect {
     public function buildTruncate(Query $query) {
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::TRUNCATE));
         $params = $params + [
-            'table' => $this->formatTable($query->getTableName())
+            'table' => $this->formatTable($query->getTable())
         ];
 
         return $this->renderStatement($this->getStatement(Query::TRUNCATE), $params);
@@ -190,7 +190,7 @@ class AbstractPdoDialect extends AbstractDialect {
         $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::UPDATE));
         $params = $params + [
             'fields' => $this->formatFields($query),
-            'table' => $this->formatTable($query->getTableName(), $query->getAlias()),
+            'table' => $this->formatTable($query->getTable(), $query->getAlias()),
             'joins' => $this->formatJoins($query->getJoins()),
             'where' => $this->formatWhere($query->getWhere()),
             'orderBy' => $this->formatOrderBy($query->getOrderBy()),

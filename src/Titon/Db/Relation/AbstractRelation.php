@@ -11,8 +11,8 @@ use Titon\Common\Augment\InfoAugment;
 use Titon\Common\Base;
 use Titon\Db\Exception\InvalidTableException;
 use Titon\Db\Relation;
-use Titon\Db\Table;
-use Titon\Db\Traits\TableAware;
+use Titon\Db\Repository;
+use Titon\Db\Traits\RepositoryAware;
 use \Closure;
 
 /**
@@ -21,7 +21,7 @@ use \Closure;
  * @package Titon\Db\Relation
  */
 abstract class AbstractRelation extends Base implements Relation {
-    use TableAware;
+    use RepositoryAware;
 
     /**
      * Configuration.
@@ -52,23 +52,23 @@ abstract class AbstractRelation extends Base implements Relation {
     /**
      * Related table instance.
      *
-     * @type \Titon\Db\Table
+     * @type \Titon\Db\Repository
      */
-    protected $_relatedTable;
+    protected $_relatedRepository;
 
     /**
      * Store the alias and class name.
      *
      * @param string $alias
-     * @param string|\Titon\Db\Table $table
+     * @param string|\Titon\Db\Repository $repo
      * @param array $config
      * @throws \Titon\Db\Exception\InvalidTableException
      */
-    public function __construct($alias, $table, array $config = []) {
+    public function __construct($alias, $repo, array $config = []) {
         parent::__construct($config);
 
         $this->setAlias($alias);
-        $this->setClass($table);
+        $this->setClass($repo);
     }
 
     /**
@@ -109,14 +109,14 @@ abstract class AbstractRelation extends Base implements Relation {
     /**
      * {@inheritdoc}
      */
-    public function getRelatedTable() {
-        if ($table = $this->_relatedTable) {
-            return $table;
+    public function getRelatedRepository() {
+        if ($repo = $this->_relatedRepository) {
+            return $repo;
         }
 
-        $this->setRelatedTable($this->_getTable($this->getClass()));
+        $this->setRelatedRepository($this->_loadRepository($this->getClass()));
 
-        return $this->_relatedTable;
+        return $this->_relatedRepository;
     }
 
     /**
@@ -142,11 +142,11 @@ abstract class AbstractRelation extends Base implements Relation {
         if (is_string($class)) {
             $this->config->class = $class;
 
-        } else if ($class instanceof Table) {
-            $this->setRelatedTable($class);
+        } else if ($class instanceof Repository) {
+            $this->setRelatedRepository($class);
 
         } else {
-            throw new InvalidTableException(sprintf('Invalid %s relation, must be an instance of Table or a fully qualified class name', $this->getAlias()));
+            throw new InvalidTableException(sprintf('Invalid %s relation, must be an instance of Repository or a fully qualified class name', $this->getAlias()));
         }
 
         return $this;
@@ -191,32 +191,32 @@ abstract class AbstractRelation extends Base implements Relation {
     /**
      * {@inheritdoc}
      */
-    public function setRelatedTable(Table $table) {
-        $this->_relatedTable = $table;
+    public function setRelatedRepository(Repository $repo) {
+        $this->_relatedRepository = $repo;
 
         return $this;
     }
 
     /**
-     * Attempt to find the Table object based on the class name.
-     * If the class is not an instance of Table, but is TableAware, use that instance.
+     * Attempt to find the Repository object based on the class name.
+     * If the class is not an instance of Repository, but is RepositoryAware, use that instance.
      *
      * @param string $class
-     * @return \Titon\Db\Table
+     * @return \Titon\Db\Repository
      * @throws \Titon\Db\Exception\InvalidTableException
      */
-    protected function _getTable($class) {
-        $table = new $class();
+    protected function _loadRepository($class) {
+        $repo = new $class();
 
-        if (!($table instanceof Table)) {
-            if (in_array('Titon\Db\Traits\TableAware', (new InfoAugment($table))->traits())) {
-                $table = $table->getTable();
+        if (!($repo instanceof Repository)) {
+            if (in_array('Titon\Db\Traits\RepositoryAware', (new InfoAugment($repo))->traits())) {
+                $repo = $repo->getRepository();
             } else {
-                throw new InvalidTableException(sprintf('%s relation must return a Table instance', $this->getAlias()));
+                throw new InvalidTableException(sprintf('%s relation must return a Repository instance', $this->getAlias()));
             }
         }
 
-        return $table;
+        return $repo;
     }
 
 }

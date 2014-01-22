@@ -8,20 +8,20 @@
 namespace Titon\Db;
 
 use Titon\Test\Stub\BehaviorStub;
-use Titon\Test\Stub\Table\Author;
-use Titon\Test\Stub\Table\Book;
-use Titon\Test\Stub\Table\Series;
-use Titon\Test\Stub\Table\User;
-use Titon\Test\Stub\TableStub;
+use Titon\Test\Stub\Repository\Author;
+use Titon\Test\Stub\Repository\Book;
+use Titon\Test\Stub\Repository\Series;
+use Titon\Test\Stub\Repository\User;
+use Titon\Test\Stub\RepositoryStub;
 use Titon\Test\TestCase;
 use \Exception;
 
 /**
- * Test class for Titon\Db\Table.
+ * Test class for Titon\Db\Repository.
  *
- * @property \Titon\Db\Table $object
+ * @property \Titon\Db\Repository $object
  */
-class TableTest extends TestCase {
+class RepositoryTest extends TestCase {
 
     /**
      * This method is called before a test is executed.
@@ -36,7 +36,7 @@ class TableTest extends TestCase {
      * Test table behavior management.
      */
     public function testAddHasBehaviors() {
-        $stub = new TableStub();
+        $stub = new RepositoryStub();
 
         $this->assertFalse($stub->hasBehavior('Stub'));
 
@@ -48,15 +48,15 @@ class TableTest extends TestCase {
      * Test table relation management.
      */
     public function testAddHasRelations() {
-        $stub = new TableStub();
+        $stub = new RepositoryStub();
 
         $this->assertFalse($stub->hasRelation('User'));
 
-        $stub->hasOne('User', 'Titon\Test\Stub\Table\User', 'user_id');
+        $stub->hasOne('User', 'Titon\Test\Stub\Repository\User', 'user_id');
         $this->assertTrue($stub->hasRelation('User'));
 
-        $this->assertInstanceOf('Titon\Db\Table', $stub->User);
-        $this->assertInstanceOf('Titon\Db\Table', $stub->getObject('User'));
+        $this->assertInstanceOf('Titon\Db\Repository', $stub->User);
+        $this->assertInstanceOf('Titon\Db\Repository', $stub->getObject('User'));
     }
 
     /**
@@ -365,10 +365,10 @@ class TableTest extends TestCase {
      * Test table config.
      */
     public function testGetTable() {
-        $this->assertEquals('users', $this->object->getTableName());
+        $this->assertEquals('users', $this->object->getTable());
 
         $this->object->config->prefix = 'test_';
-        $this->assertEquals('test_users', $this->object->getTableName());
+        $this->assertEquals('test_users', $this->object->getTable());
     }
 
     /**
@@ -416,7 +416,7 @@ class TableTest extends TestCase {
      */
     public function testSelect() {
         $query = new Query(Query::SELECT, $this->object);
-        $query->from($this->object->getTableName(), 'User')->fields('id', 'username');
+        $query->from($this->object->getTable(), 'User')->fields('id', 'username');
 
         $this->assertEquals($query, $this->object->select('id', 'username'));
     }

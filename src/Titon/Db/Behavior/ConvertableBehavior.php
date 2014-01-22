@@ -73,7 +73,7 @@ class ConvertableBehavior extends AbstractBehavior {
      * @return bool
      */
     public function preSave(Event $event, $id, array &$data) {
-        $table = $this->getTable();
+        $repo = $this->getRepository();
 
         foreach ($data as $key => $value) {
             if (empty($this->_converters[$key])) {
@@ -92,8 +92,8 @@ class ConvertableBehavior extends AbstractBehavior {
                 case self::JSON:        $value = $this->toJson($value, $converter); break;
                 case self::BASE64:      $value = $this->toBase64($value, $converter); break;
                 case self::CUSTOM:
-                    if (method_exists($table, $converter['encode'])) {
-                        $value = call_user_func_array([$table, $converter['encode']], [$value, $converter]);
+                    if (method_exists($repo, $converter['encode'])) {
+                        $value = call_user_func_array([$repo, $converter['encode']], [$value, $converter]);
                     }
                 break;
             }
@@ -116,7 +116,7 @@ class ConvertableBehavior extends AbstractBehavior {
             return;
         }
 
-        $table = $this->getTable();
+        $repo = $this->getRepository();
 
         foreach ($results as $i => $result) {
             foreach ($result as $key => $value) {
@@ -136,8 +136,8 @@ class ConvertableBehavior extends AbstractBehavior {
                     case self::JSON:        $value = $this->fromJson($value, $converter); break;
                     case self::BASE64:      $value = $this->fromBase64($value, $converter); break;
                     case self::CUSTOM:
-                        if (method_exists($table, $converter['decode'])) {
-                            $value = call_user_func_array([$table, $converter['decode']], [$value, $converter]);
+                        if (method_exists($repo, $converter['decode'])) {
+                            $value = call_user_func_array([$repo, $converter['decode']], [$value, $converter]);
                         }
                     break;
                 }

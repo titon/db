@@ -12,7 +12,7 @@ use Titon\Event\Event;
 use Titon\Event\Listener;
 use Titon\Db\Behavior;
 use Titon\Db\Query;
-use Titon\Db\Traits\TableAware;
+use Titon\Db\Traits\RepositoryAware;
 
 /**
  * Provides shared functionality for behaviors.
@@ -20,7 +20,7 @@ use Titon\Db\Traits\TableAware;
  * @package Titon\Db\Behavior
  */
 abstract class AbstractBehavior extends Base implements Behavior, Listener {
-    use TableAware;
+    use RepositoryAware;
 
     /**
      * {@inheritdoc}

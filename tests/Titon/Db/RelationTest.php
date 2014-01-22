@@ -10,7 +10,7 @@ namespace Titon\Db;
 use Titon\Db\Query\Expr;
 use Titon\Db\Relation\ManyToMany;
 use Titon\Db\Relation\OneToOne;
-use Titon\Test\Stub\Table\User;
+use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 
 /**
@@ -26,7 +26,7 @@ class RelationTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new ManyToMany('User', 'Titon\Test\Stub\Table\User');
+        $this->object = new ManyToMany('User', 'Titon\Test\Stub\Repository\User');
     }
 
     /**
@@ -53,10 +53,10 @@ class RelationTest extends TestCase {
      * Test table class names.
      */
     public function testClass() {
-        $this->assertEquals('Titon\Test\Stub\Table\User', $this->object->getClass());
+        $this->assertEquals('Titon\Test\Stub\Repository\User', $this->object->getClass());
 
-        $this->object->setClass('Titon\Test\Stub\Table\Profile');
-        $this->assertEquals('Titon\Test\Stub\Table\Profile', $this->object->getClass());
+        $this->object->setClass('Titon\Test\Stub\Repository\Profile');
+        $this->assertEquals('Titon\Test\Stub\Repository\Profile', $this->object->getClass());
     }
 
     /**
@@ -79,7 +79,7 @@ class RelationTest extends TestCase {
         $this->object->setDependent(false);
         $this->assertTrue($this->object->isDependent());
 
-        $o2o = new OneToOne('User', 'Titon\Test\Stub\Table\User');
+        $o2o = new OneToOne('User', 'Titon\Test\Stub\Repository\User');
 
         $this->assertTrue($o2o->isDependent());
         $o2o->setDependent(false);
@@ -111,8 +111,8 @@ class RelationTest extends TestCase {
     public function testJunctionClass() {
         $this->assertEquals(null, $this->object->getJunctionClass());
 
-        $this->object->setJunctionClass('Titon\Test\Stub\Table\Profile');
-        $this->assertEquals('Titon\Test\Stub\Table\Profile', $this->object->getJunctionClass());
+        $this->object->setJunctionClass('Titon\Test\Stub\Repository\Profile');
+        $this->assertEquals('Titon\Test\Stub\Repository\Profile', $this->object->getJunctionClass());
     }
 
 }

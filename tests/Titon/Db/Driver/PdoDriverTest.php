@@ -10,8 +10,8 @@ namespace Titon\Db\Driver;
 use Titon\Common\Config;
 use Titon\Db\Query;
 use Titon\Test\Stub\DriverStub;
-use Titon\Test\Stub\Table\Stat;
-use Titon\Test\Stub\Table\User;
+use Titon\Test\Stub\Repository\Stat;
+use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 use \Exception;
 use \PDO;
@@ -26,7 +26,7 @@ class PdoDriverTest extends TestCase {
     /**
      * Stub table.
      *
-     * @type \Titon\Db\Table
+     * @type \Titon\Db\Repository
      */
     protected $table;
 
@@ -166,7 +166,7 @@ class PdoDriverTest extends TestCase {
                 'null' => true,
                 'default' => null
             ],
-        ], $user->getDriver()->describeTable($user->getTableName()));
+        ], $user->getDriver()->describeTable($user->getTable()));
 
         $stat = new Stat();
         $this->assertEquals([
@@ -228,7 +228,7 @@ class PdoDriverTest extends TestCase {
                 'length' => '',
                 'null' => true
             ],
-        ], $user->getDriver()->describeTable($stat->getTableName()));
+        ], $user->getDriver()->describeTable($stat->getTable()));
     }
 
     /**
