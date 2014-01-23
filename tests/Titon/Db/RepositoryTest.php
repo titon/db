@@ -8,6 +8,7 @@
 namespace Titon\Db;
 
 use Titon\Test\Stub\BehaviorStub;
+use Titon\Test\Stub\MapperStub;
 use Titon\Test\Stub\Repository\Author;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\Series;
@@ -42,6 +43,18 @@ class RepositoryTest extends TestCase {
 
         $stub->addBehavior(new BehaviorStub());
         $this->assertTrue($stub->hasBehavior('Stub'));
+    }
+
+    /**
+     * Test data mapper management.
+     */
+    public function testAddHasMappers() {
+        $stub = new RepositoryStub();
+
+        $this->assertFalse($stub->hasMapper('Stub'));
+
+        $stub->addMapper(new MapperStub());
+        $this->assertTrue($stub->hasMapper('Stub'));
     }
 
     /**

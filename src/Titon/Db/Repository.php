@@ -13,15 +13,15 @@ use Titon\Common\Traits\Cacheable;
 use Titon\Event\Event;
 use Titon\Event\Listener;
 use Titon\Event\Traits\Emittable;
-use Titon\Db\Connection;
 use Titon\Db\Driver\Dialect;
 use Titon\Db\Driver\Schema;
-use Titon\Db\Driver\Type\AbstractType;
 use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Exception\InvalidRelationStructureException;
 use Titon\Db\Exception\MissingBehaviorException;
+use Titon\Db\Exception\MissingMapperException;
 use Titon\Db\Exception\MissingRelationException;
 use Titon\Db\Exception\QueryFailureException;
+use Titon\Db\Mapper\TypeCastMapper;
 use Titon\Db\Query;
 use Titon\Db\Relation\OneToOne;
 use Titon\Db\Relation\OneToMany;
@@ -106,6 +106,13 @@ class Repository extends Base implements Callback, Listener {
     protected $_driver;
 
     /**
+     * List of data mappers.
+     *
+     * @type \Titon\Db\Mapper[]
+     */
+    protected $_mappers = [];
+
+    /**
      * Repository to repository relationships.
      *
      * @type \Titon\Db\Relation[]
@@ -128,6 +135,7 @@ class Repository extends Base implements Callback, Listener {
         parent::__construct($config);
 
         $this->on('db', $this);
+        $this->addMapper(new TypeCastMapper());
     }
 
     /**
@@ -141,13 +149,29 @@ class Repository extends Base implements Callback, Listener {
 
         $this->_behaviors[$behavior->getAlias()] = $behavior;
 
+        $this->attachObject($behavior->getAlias(), $behavior);
+
         if ($behavior instanceof Listener) {
             $this->on('db', $behavior);
         }
 
-        $this->attachObject(str_replace('Behavior', '', Path::className(get_class($behavior))), $behavior);
-
         return $behavior;
+    }
+
+    /**
+     * Add a mapper.
+     *
+     * @param \Titon\Db\Mapper $mapper
+     * @return \Titon\Db\Mapper
+     */
+    public function addMapper(Mapper $mapper) {
+        $mapper->setRepository($this);
+
+        $alias = str_replace('Mapper', '', Path::className(get_class($mapper)));
+
+        $this->_mappers[$alias] = $mapper;
+
+        return $mapper;
     }
 
     /**
@@ -709,6 +733,30 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
+     * Return a mapper by short class name.
+     *
+     * @param string $key
+     * @return \Titon\Db\Mapper
+     * @throws \Titon\Db\Exception\MissingMapperException
+     */
+    public function getMapper($key) {
+        if ($this->hasMapper($key)) {
+            return $this->_mappers[$key];
+        }
+
+        throw new MissingMapperException(sprintf('Mapper %s does not exist', $key));
+    }
+
+    /**
+     * Return all mappers.
+     *
+     * @return \Titon\Db\Mapper[]
+     */
+    public function getMappers() {
+        return $this->_mappers;
+    }
+
+    /**
      * Return the field used as the primary, usually the ID.
      *
      * @return string
@@ -857,6 +905,25 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
+     * Check if the mapper exists.
+     *
+     * @param string $key
+     * @return bool
+     */
+    public function hasMapper($key) {
+        return isset($this->_mappers[$key]);
+    }
+
+    /**
+     * Check if any mapper has been set.
+     *
+     * @return bool
+     */
+    public function hasMappers() {
+        return (count($this->_mappers) > 0);
+    }
+
+    /**
      * Check if the relation exists.
      *
      * @param string $alias
@@ -909,6 +976,10 @@ class Repository extends Base implements Callback, Listener {
      * {@inheritdoc}
      */
     public function preSave(Event $event, $id, array &$data) {
+        foreach ($this->getMappers() as $mapper) {
+            $data = $mapper->before($data);
+        }
+
         return true;
     }
 
@@ -923,6 +994,10 @@ class Repository extends Base implements Callback, Listener {
      * {@inheritdoc}
      */
     public function postFind(Event $event, array &$results, $finder) {
+        foreach ($this->getMappers() as $mapper) {
+            $results = $mapper->after($results);
+        }
+
         return;
     }
 
@@ -1482,19 +1557,6 @@ class Repository extends Base implements Callback, Listener {
 
         if (!$results) {
             return [];
-        }
-
-        // Apply type casting before postFind()
-        if ($query->getType() === Query::SELECT) {
-            $schema = $this->getSchema()->getColumns();
-
-            foreach ($results as $i => $result) {
-                foreach ($result as $field => $value) {
-                    if (isset($schema[$field])) {
-                        $results[$i][$field] = AbstractType::factory($schema[$field]['type'], $this->getDriver())->from($value);
-                    }
-                }
-            }
         }
 
         if ($options['postCallback']) {

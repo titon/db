@@ -16,6 +16,7 @@ Supported drivers are implemented in external packages that can be installed thr
 * `Behavior` - Executes logic during database callbacks
 * `Relation` - Object relation mapper (ORM)
 * `Entity` - Single record of data
+* `Mapper` - Modify data before save and after find
 * `Connection` - Driver manager
 * `Driver` - Interacts with a database or remote service (DBAL)
     * `Dialect` - Driver specific SQL formatting
@@ -31,6 +32,7 @@ Supported drivers are implemented in external packages that can be installed thr
 ### Dependencies ###
 
 * `Common`
+* `Event`
 * `Cache` (optional)
 * `Psr\Log` (optional)
 
