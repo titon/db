@@ -210,6 +210,22 @@ class Predicate implements Serializable, JsonSerializable {
     }
 
     /**
+     * Return true if a field has been used in a param.
+     *
+     * @param string $field
+     * @return bool
+     */
+    public function hasParam($field) {
+        foreach ($this->getParams() as $param) {
+            if ($param instanceof Expr && $param->getField() === $field) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Adds an in array "IN()" expression.
      *
      * @param string $field

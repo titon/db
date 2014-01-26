@@ -20,12 +20,14 @@ interface Callback {
     /**
      * Callback called before a delete query.
      * Modify cascading by overwriting the value.
-     * Return a falsey value to stop the process.
      *
      * @param \Titon\Event\Event $event
      * @param int|int[] $id
      * @param bool $cascade
-     * @return bool
+     * @return bool|int
+     *      If true is returned, continue with the delete
+     *      If false is returned, exit the delete
+     *      if int is returned, exit the delete with the count
      */
     public function preDelete(Event $event, $id, &$cascade);
 
@@ -36,7 +38,9 @@ interface Callback {
      * @param \Titon\Event\Event $event
      * @param \Titon\Db\Query $query
      * @param string $finder
-     * @return bool
+     * @return bool|array
+     *      If false is returned, return empty results
+     *      If an array is returned, use the array as the results
      */
     public function preFind(Event $event, Query $query, $finder);
 
@@ -48,6 +52,7 @@ interface Callback {
      * @param int|int[] $id
      * @param array $data
      * @return bool
+     *      If false is returned, return a 0 (no affected records) and exit the save
      */
     public function preSave(Event $event, $id, array &$data);
 

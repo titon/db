@@ -1449,12 +1449,18 @@ class Repository extends Base implements Callback, Listener {
             'postCallback' => true
         ];
 
+        // If a falsey value is returned, exit early
+        // If an integer is returned, return it
         if ($options['preCallback']) {
             $event = $this->emit('db.preDelete', [$id, &$options['cascade']]);
             $state = $event->getData();
 
-            if ($state !== null && !$state) {
-                return 0;
+            if ($state !== null) {
+                if (!$state) {
+                    return 0;
+                } else if (is_numeric($state)) {
+                    return $state;
+                }
             }
         }
 
