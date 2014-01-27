@@ -5,9 +5,10 @@ Simply instantiate a Connection object and set the available drivers.
 
 ```php
 use Titon\Common\Registry;
+use Titon\Db\Connection;
 use Titon\Db\Mysql\MysqlDriver;
 
-$conn = Registry::factory('Titon\Db\Connection'); // Registry required
+$conn = Connection::registry(); // Registry required
 
 // Requires the db-mysql package
 $conn->addDriver(new MysqlDriver('default', [

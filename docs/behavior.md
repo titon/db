@@ -102,3 +102,5 @@ class Post extends Repository {
 ### Filter ###
 
 ### Slug ###
+
+### SoftDelete ###
