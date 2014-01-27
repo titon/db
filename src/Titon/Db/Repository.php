@@ -310,6 +310,30 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
+     * Decrement the value of a field(s) using a step number.
+     * Will update all records, or a single record.
+     *
+     * @param int|int[] $id
+     * @param array $fields
+     * @return int
+     */
+    public function decrement($id, array $fields) {
+        $query = $this->query(Query::UPDATE);
+
+        if ($id) {
+            $query->where($this->getPrimaryKey(), $id);
+        }
+
+        $data = [];
+
+        foreach ($fields as $field => $step) {
+            $data[$field] = Query::expr($field, '-', $step);
+        }
+
+        return $query->fields($data)->save();
+    }
+
+    /**
      * Delete a record by ID.
      *
      * @param int|int[] $id
@@ -940,6 +964,30 @@ class Repository extends Base implements Callback, Listener {
      */
     public function hasRelations() {
         return (count($this->_relations) > 0);
+    }
+
+    /**
+     * Increment the value of a field(s) using a step number.
+     * Will update all records, or a single record.
+     *
+     * @param int|int[] $id
+     * @param array $fields
+     * @return int
+     */
+    public function increment($id, array $fields) {
+        $query = $this->query(Query::UPDATE);
+
+        if ($id) {
+            $query->where($this->getPrimaryKey(), $id);
+        }
+
+        $data = [];
+
+        foreach ($fields as $field => $step) {
+            $data[$field] = Query::expr($field, '+', $step);
+        }
+
+        return $query->fields($data)->save();
     }
 
     /**

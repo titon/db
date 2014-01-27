@@ -12,6 +12,7 @@ use Titon\Test\Stub\MapperStub;
 use Titon\Test\Stub\Repository\Author;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\Series;
+use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\Stub\Repository\User;
 use Titon\Test\Stub\RepositoryStub;
 use Titon\Test\TestCase;
@@ -83,6 +84,47 @@ class RepositoryTest extends TestCase {
         $this->object->query(Query::DELETE)->where('id', 1)->save();
 
         $this->assertEquals(4, $this->object->query(Query::SELECT)->count());
+    }
+
+    /**
+     * Test decrementing a field for a record.
+     */
+    public function testDecrement() {
+        $this->loadFixtures('Topics');
+
+        $topic = new Topic();
+
+        $this->assertEquals(new Entity(['post_count' => 4]), $topic->select('post_count')->where('id', 1)->fetch());
+
+        $topic->decrement(1, ['post_count' => 1]);
+
+        $this->assertEquals(new Entity(['post_count' => 3]), $topic->select('post_count')->where('id', 1)->fetch());
+
+        // with step
+        $topic->decrement(1, ['post_count' => 3]);
+
+        $this->assertEquals(new Entity(['post_count' => 0]), $topic->select('post_count')->where('id', 1)->fetch());
+    }
+
+    /**
+     * Test decrementing a field for multiple record.
+     */
+    public function testDecrementMany() {
+        $this->loadFixtures('Topics');
+
+        $topic = new Topic();
+
+        $this->assertEquals([
+            new Entity(['post_count' => 4]),
+            new Entity(['post_count' => 1])
+        ], $topic->select('post_count')->fetchAll());
+
+        $topic->decrement(null, ['post_count' => 1]);
+
+        $this->assertEquals([
+            new Entity(['post_count' => 3]),
+            new Entity(['post_count' => 0])
+        ], $topic->select('post_count')->fetchAll());
     }
 
     /**
@@ -392,6 +434,47 @@ class RepositoryTest extends TestCase {
 
         $this->object->config->prefix = 'test_';
         $this->assertEquals('test_', $this->object->getTablePrefix());
+    }
+
+    /**
+     * Test incrementing a field for a record.
+     */
+    public function testIncrement() {
+        $this->loadFixtures('Topics');
+
+        $topic = new Topic();
+
+        $this->assertEquals(new Entity(['post_count' => 4]), $topic->select('post_count')->where('id', 1)->fetch());
+
+        $topic->increment(1, ['post_count' => 1]);
+
+        $this->assertEquals(new Entity(['post_count' => 5]), $topic->select('post_count')->where('id', 1)->fetch());
+
+        // with step
+        $topic->increment(1, ['post_count' => 3]);
+
+        $this->assertEquals(new Entity(['post_count' => 8]), $topic->select('post_count')->where('id', 1)->fetch());
+    }
+
+    /**
+     * Test incrementing a field for multiple record.
+     */
+    public function testIncrementMany() {
+        $this->loadFixtures('Topics');
+
+        $topic = new Topic();
+
+        $this->assertEquals([
+            new Entity(['post_count' => 4]),
+            new Entity(['post_count' => 1])
+        ], $topic->select('post_count')->fetchAll());
+
+        $topic->increment(null, ['post_count' => 3]);
+
+        $this->assertEquals([
+            new Entity(['post_count' => 7]),
+            new Entity(['post_count' => 4])
+        ], $topic->select('post_count')->fetchAll());
     }
 
     /**
