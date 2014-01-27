@@ -65,6 +65,10 @@ class Predicate implements Serializable, JsonSerializable {
 
         if (is_array($value)) {
             $key .= json_encode($value);
+
+        } else if ($value instanceof \DateTime) {
+            $key .= $value->getTimestamp();
+
         } else {
             $key .= $value;
         }

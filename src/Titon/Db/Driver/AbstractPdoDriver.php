@@ -14,6 +14,7 @@ use Titon\Db\Exception\UnsupportedQueryStatementException;
 use Titon\Db\Repository;
 use Titon\Db\Query;
 use Titon\Db\Query\Expr;
+use Titon\Db\Query\Func;
 use Titon\Db\Query\Predicate;
 use Titon\Db\Query\Result\PdoResult;
 use Titon\Db\Query\Result\SqlResult;
@@ -352,20 +353,27 @@ abstract class AbstractPdoDriver extends AbstractDriver {
     public function resolveBind($field, $value, array $schema = []) {
         $type = null;
 
-        // Don't convert expressions
-        if ($value instanceof Expr) {
-            return [$value->getValue(), $this->resolveType($value->getValue())];
+        // Exit early for functions since we don't have a valid field
+        if ($field instanceof Func) {
+            return [$value, $this->resolveType($value)];
+        }
 
-        // Type cast using schema
-        } else if ($value !== null && isset($schema[$field]['type'])) {
+        // Use the raw value for binding
+        if ($value instanceof Expr) {
+            $value = $value->getValue();
+        }
+
+        // Type cast
+        if ($value === null) {
+            $type = PDO::PARAM_NULL;
+
+        } else if (isset($schema[$field]['type'])) {
             $dataType = AbstractType::factory($schema[$field]['type'], $this);
             $value = $dataType->to($value);
             $type = $dataType->getBindingType();
         }
 
-        if ($value === null) {
-            $type = PDO::PARAM_NULL;
-        } else if (!$type) {
+        if (!$type) {
             $type = $this->resolveType($value);
         }
 
@@ -400,7 +408,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
         // Grab values from the where and having predicate
         $driver = $this;
-        $resolvePredicate = function(Predicate $predicate) use (&$resolvePredicate, &$binds, $driver) {
+        $resolvePredicate = function(Predicate $predicate) use (&$resolvePredicate, &$binds, $driver, $schema) {
             foreach ($predicate->getParams() as $param) {
                 if ($param instanceof Predicate) {
                     $resolvePredicate($param);
@@ -410,7 +418,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
                     if (is_array($values)) {
                         foreach ($values as $value) {
-                            $binds[] = [$value, $driver->resolveType($value)];
+                            $binds[] = $this->resolveBind($param->getField(), $value, $schema);
                         }
 
                     } else if ($values instanceof SubQuery) {
@@ -418,7 +426,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
                         $resolvePredicate($values->getHaving());
 
                     } else if ($param->useValue()) {
-                        $binds[] = [$values, $driver->resolveType($values)];
+                        $binds[] = $this->resolveBind($param->getField(), $values, $schema);
                     }
                 }
             }

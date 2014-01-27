@@ -258,6 +258,15 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
+     * Mark a query with a distinct attribute.
+     *
+     * @return \Titon\Db\Query
+     */
+    public function distinct() {
+        return $this->attribute('distinct', true);
+    }
+
+    /**
      * Pass the find query to the repository to interact with the database.
      *
      * @param string $type
@@ -987,8 +996,11 @@ class Query implements Serializable, JsonSerializable {
         if ($field instanceof Closure) {
             $predicate->bindCallback($field, $this);
 
-        } else if ($value !== null || in_array($op, [Expr::NULL, Expr::NOT_NULL])) {
+        } else if ($value !== null || in_array($op, [Expr::NULL, Expr::NOT_NULL], true)) {
             $predicate->add($field, $op, $value);
+
+        } else if ($op === '!=') {
+            $predicate->notEq($field, $value);
 
         } else {
             $predicate->eq($field, $op);

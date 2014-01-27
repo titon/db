@@ -298,7 +298,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         if ($isSubQuery) {
 
             // EXISTS and NOT EXISTS doesn't have a field or operator
-            if (in_array($value->getFilter(), [SubQuery::EXISTS, SubQuery::NOT_EXISTS])) {
+            if (in_array($value->getFilter(), [SubQuery::EXISTS, SubQuery::NOT_EXISTS], true)) {
                 $clause = $this->formatSubQuery($value);
 
             } else {
