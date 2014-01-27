@@ -84,9 +84,10 @@ class SoftDeleteBehavior extends AbstractBehavior {
         if ($config['filterDeleted']) {
             $where = $query->getWhere();
 
-            if ($config['useFlag'] && !$where->hasParam($config['flagField'])) {
-                $query->where($config['flagField'], false);
-
+            if ($config['useFlag']) {
+                if (!$where->hasParam($config['flagField'])) {
+                    $query->where($config['flagField'], false);
+                }
             } else if (!$where->hasParam($config['deleteField'])) {
                 $query->where($config['deleteField'], null);
             }

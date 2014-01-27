@@ -38,7 +38,10 @@ class FilterBehaviorTest extends TestCase {
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
-            'content' => 'These html tags should be stripped!'
+            'deleted' => 0,
+            'content' => 'These html tags should be stripped!',
+            'created_at' => null,
+            'deleted_at' => null
         ]), $post->read($post_id));
     }
 
@@ -62,7 +65,10 @@ class FilterBehaviorTest extends TestCase {
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
-            'content' => 'These &lt;b&gt;html&lt;/b&gt; tags should be &lt;i&gt;escaped!&lt;/i&gt;'
+            'deleted' => 0,
+            'content' => 'These &lt;b&gt;html&lt;/b&gt; tags should be &lt;i&gt;escaped!&lt;/i&gt;',
+            'created_at' => null,
+            'deleted_at' => null
         ]), $post->read($post_id));
     }
 
@@ -86,7 +92,10 @@ class FilterBehaviorTest extends TestCase {
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
-            'content' => "These\r\nextraneous newlines should be\nremoved"
+            'deleted' => 0,
+            'content' => "These\r\nextraneous newlines should be\nremoved",
+            'created_at' => null,
+            'deleted_at' => null
         ]), $post->read($post_id));
     }
 
@@ -110,7 +119,10 @@ class FilterBehaviorTest extends TestCase {
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
-            'content' => "These extraneous whitespace should be\tremoved"
+            'deleted' => 0,
+            'content' => "These extraneous whitespace should be\tremoved",
+            'created_at' => null,
+            'deleted_at' => null
         ]), $post->read($post_id));
     }
 
@@ -134,7 +146,10 @@ class FilterBehaviorTest extends TestCase {
             'id' => $post_id,
             'topic_id' => 5,
             'active' => 0,
-            'content' => 'These  &lt;div&gt;html&lt;/div&gt; &lt;i&gt;tags&lt;/i&gt; should be removed!'
+            'deleted' => 0,
+            'content' => 'These  &lt;div&gt;html&lt;/div&gt; &lt;i&gt;tags&lt;/i&gt; should be removed!',
+            'created_at' => null,
+            'deleted_at' => null
         ]), $post->read($post_id));
     }
 
