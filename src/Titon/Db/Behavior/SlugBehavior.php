@@ -88,18 +88,24 @@ class SlugBehavior extends AbstractBehavior {
      */
     public function makeUnique($id, $slug) {
         $repo = $this->getRepository();
-        $query = $repo->select()->where($this->config->slug, 'like', $slug . '%');
+        $scope = $this->config->scope;
 
-        if ($scope = $this->config->scope) {
-            $query->bindCallback($scope);
-        }
+        /** @type \Titon\Db\Query $query */
+        foreach ([
+            $repo->select()->where($this->config->slug, $slug),
+            $repo->select()->where($this->config->slug, 'like', $slug . '%')
+        ] as $i => $query) {
+            if ($scope) {
+                $query->bindCallback($scope);
+            }
 
-        if ($id) {
-            $query->where($repo->getPrimaryKey(), '!=', $id);
-        }
+            $count = $query->count();
 
-        if ($count = $query->count()) {
-            $slug .= '-' . $count;
+            if ($count <= 0) {
+                return $slug;
+            } else if ($i) {
+                return $slug . '-' . $count;
+            }
         }
 
         return $slug;
