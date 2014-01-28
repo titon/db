@@ -99,10 +99,15 @@ class SlugBehavior extends AbstractBehavior {
                 $query->bindCallback($scope);
             }
 
+            if ($id) {
+                $query->where($repo->getPrimaryKey(), '!=', $id);
+            }
+
             $count = $query->count();
 
             if ($count <= 0) {
                 return $slug;
+
             } else if ($i) {
                 return $slug . '-' . $count;
             }
