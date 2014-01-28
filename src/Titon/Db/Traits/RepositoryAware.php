@@ -28,7 +28,7 @@ trait RepositoryAware {
      *
      * @return \Titon\Db\Repository
      */
-    final public function getRepository() {
+    public function getRepository() {
         return $this->_repository;
     }
 
@@ -38,7 +38,7 @@ trait RepositoryAware {
      * @param \Titon\Db\Repository $repository
      * @return \Titon\Db\Traits\RepositoryAware
      */
-    final public function setRepository(Repository $repository) {
+    public function setRepository(Repository $repository) {
         $this->_repository = $repository;
 
         return $this;
