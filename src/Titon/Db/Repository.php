@@ -75,7 +75,7 @@ class Repository extends Base implements Callback, Listener {
      *
      * @type array {
      *      @type $string $connection   The connection driver key
-     *      @type $string $repo        Database table name
+     *      @type $string $repo         Database table name
      *      @type $string $prefix       Prefix to prepend to the table name
      *      @type $string $primaryKey   The field representing the primary key
      *      @type $string $displayField The field representing a readable label
@@ -124,7 +124,7 @@ class Repository extends Base implements Callback, Listener {
      *
      * @type \Titon\Db\Driver\Schema|array
      */
-    protected $_schema;
+    protected $_schema = [];
 
     /**
      * Initialize class and events.
