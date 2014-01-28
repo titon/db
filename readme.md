@@ -1,4 +1,4 @@
-# Database v0.10.0 [![Build Status](https://travis-ci.org/titon/db.png)](https://travis-ci.org/titon/db) #
+# Database v0.10.1 [![Build Status](https://travis-ci.org/titon/db.png)](https://travis-ci.org/titon/db) #
 
 The Titon Database package provides a lightweight and low-level interface for interacting with database engines (known as drivers).
 The DB package comes bundled with a robust database abstraction layer (DBAL), an object oriented query builder,
