@@ -143,9 +143,9 @@ After a query is built, it needs to be executed to return data or the affected r
 
 ```php
 // Select queries
-$query->fetch(); // return single row
-$query->fetchAll(); // return multiple rows
-$query->fetchList(); // return rows as list
+$query->first(); // return single row
+$query->all(); // return multiple rows
+$query->lists(); // return rows as a key value list
 $query->count(); // return count
 
 // Custom finders

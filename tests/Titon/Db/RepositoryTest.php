@@ -94,16 +94,16 @@ class RepositoryTest extends TestCase {
 
         $topic = new Topic();
 
-        $this->assertEquals(new Entity(['post_count' => 4]), $topic->select('post_count')->where('id', 1)->fetch());
+        $this->assertEquals(new Entity(['post_count' => 4]), $topic->select('post_count')->where('id', 1)->first());
 
         $topic->decrement(1, ['post_count' => 1]);
 
-        $this->assertEquals(new Entity(['post_count' => 3]), $topic->select('post_count')->where('id', 1)->fetch());
+        $this->assertEquals(new Entity(['post_count' => 3]), $topic->select('post_count')->where('id', 1)->first());
 
         // with step
         $topic->decrement(1, ['post_count' => 3]);
 
-        $this->assertEquals(new Entity(['post_count' => 0]), $topic->select('post_count')->where('id', 1)->fetch());
+        $this->assertEquals(new Entity(['post_count' => 0]), $topic->select('post_count')->where('id', 1)->first());
     }
 
     /**
@@ -117,14 +117,14 @@ class RepositoryTest extends TestCase {
         $this->assertEquals([
             new Entity(['post_count' => 4]),
             new Entity(['post_count' => 1])
-        ], $topic->select('post_count')->fetchAll());
+        ], $topic->select('post_count')->all());
 
         $topic->decrement(null, ['post_count' => 1]);
 
         $this->assertEquals([
             new Entity(['post_count' => 3]),
             new Entity(['post_count' => 0])
-        ], $topic->select('post_count')->fetchAll());
+        ], $topic->select('post_count')->all());
     }
 
     /**
@@ -140,7 +140,7 @@ class RepositoryTest extends TestCase {
     /**
      * Test single record fetching.
      */
-    public function testFetch() {
+    public function testFirst() {
         $this->loadFixtures('Users');
 
         // Return first from a list of many
@@ -156,7 +156,7 @@ class RepositoryTest extends TestCase {
             'created' => '1988-02-26 21:22:34',
             'modified' => null
         ];
-        $this->assertEquals(new Entity($result), $this->object->query(Query::SELECT)->fetch());
+        $this->assertEquals(new Entity($result), $this->object->query(Query::SELECT)->first());
 
         // Return by ID
         $result = [
@@ -171,16 +171,16 @@ class RepositoryTest extends TestCase {
             'created' => '1970-09-18 21:22:34',
             'modified' => null
         ];
-        $this->assertEquals(new Entity($result), $this->object->query(Query::SELECT)->where('id', 3)->fetch());
+        $this->assertEquals(new Entity($result), $this->object->query(Query::SELECT)->where('id', 3)->first());
 
         // No results
-        $this->assertEquals([], $this->object->query(Query::SELECT)->where('id', 15)->fetch());
+        $this->assertEquals([], $this->object->query(Query::SELECT)->where('id', 15)->first());
     }
 
     /**
      * Test multiple record fetching.
      */
-    public function testFetchAll() {
+    public function testAll() {
         $this->loadFixtures('Users');
 
         // Return all items
@@ -245,7 +245,7 @@ class RepositoryTest extends TestCase {
 
         $this->assertEquals(array_map(function($value) {
             return new Entity($value);
-        }, $results), $this->object->query(Query::SELECT)->fetchAll());
+        }, $results), $this->object->query(Query::SELECT)->all());
 
         // With conditions
         unset($results[0], $results[1], $results[2]);
@@ -255,16 +255,16 @@ class RepositoryTest extends TestCase {
             return new Entity($value);
         }, $results), $this->object->query(Query::SELECT)->where(function() {
             $this->gte('id', 4);
-        })->fetchAll());
+        })->all());
 
         // No results
-        $this->assertEquals([], $this->object->query(Query::SELECT)->where('country_id', 15)->fetchAll());
+        $this->assertEquals([], $this->object->query(Query::SELECT)->where('country_id', 15)->all());
     }
 
     /**
      * Test multiple records are returned as a key value list.
      */
-    public function testFetchList() {
+    public function testList() {
         $this->loadFixtures('Users');
 
         $this->assertEquals([
@@ -273,7 +273,7 @@ class RepositoryTest extends TestCase {
             3 => 'superman',
             4 => 'spiderman',
             5 => 'wolverine'
-        ], $this->object->query(Query::SELECT)->fetchList('id', 'username'));
+        ], $this->object->query(Query::SELECT)->lists('username'));
 
         $this->assertEquals([
             'miles' => 'Miles',
@@ -281,7 +281,7 @@ class RepositoryTest extends TestCase {
             'superman' => 'Clark',
             'spiderman' => 'Peter',
             'wolverine' => 'Logan'
-        ], $this->object->query(Query::SELECT)->fetchList('username', 'firstName'));
+        ], $this->object->query(Query::SELECT)->lists('firstName', 'username'));
 
         // Falls back to ID and display field (ID)
         $this->assertEquals([
@@ -290,10 +290,10 @@ class RepositoryTest extends TestCase {
             3 => 3,
             4 => 4,
             5 => 5
-        ], $this->object->query(Query::SELECT)->fetchList());
+        ], $this->object->query(Query::SELECT)->lists());
 
         // No results
-        $this->assertEquals([], $this->object->query(Query::SELECT)->where('country_id', 15)->fetchList());
+        $this->assertEquals([], $this->object->query(Query::SELECT)->where('country_id', 15)->lists());
     }
 
     /**
@@ -444,16 +444,16 @@ class RepositoryTest extends TestCase {
 
         $topic = new Topic();
 
-        $this->assertEquals(new Entity(['post_count' => 4]), $topic->select('post_count')->where('id', 1)->fetch());
+        $this->assertEquals(new Entity(['post_count' => 4]), $topic->select('post_count')->where('id', 1)->first());
 
         $topic->increment(1, ['post_count' => 1]);
 
-        $this->assertEquals(new Entity(['post_count' => 5]), $topic->select('post_count')->where('id', 1)->fetch());
+        $this->assertEquals(new Entity(['post_count' => 5]), $topic->select('post_count')->where('id', 1)->first());
 
         // with step
         $topic->increment(1, ['post_count' => 3]);
 
-        $this->assertEquals(new Entity(['post_count' => 8]), $topic->select('post_count')->where('id', 1)->fetch());
+        $this->assertEquals(new Entity(['post_count' => 8]), $topic->select('post_count')->where('id', 1)->first());
     }
 
     /**
@@ -467,14 +467,14 @@ class RepositoryTest extends TestCase {
         $this->assertEquals([
             new Entity(['post_count' => 4]),
             new Entity(['post_count' => 1])
-        ], $topic->select('post_count')->fetchAll());
+        ], $topic->select('post_count')->all());
 
         $topic->increment(null, ['post_count' => 3]);
 
         $this->assertEquals([
             new Entity(['post_count' => 7]),
             new Entity(['post_count' => 4])
-        ], $topic->select('post_count')->fetchAll());
+        ], $topic->select('post_count')->all());
     }
 
     /**

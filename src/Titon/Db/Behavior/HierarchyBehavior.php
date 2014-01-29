@@ -178,7 +178,7 @@ class HierarchyBehavior extends AbstractBehavior {
     }
 
     /**
-     * Return the first node in the tree.
+     * Return the fetch node in the tree.
      *
      * @return array
      */
@@ -186,7 +186,7 @@ class HierarchyBehavior extends AbstractBehavior {
         return $this->getRepository()->select()
             ->orderBy($this->config->leftField, 'asc')
             ->limit(1)
-            ->fetch();
+            ->first();
     }
 
     /**
@@ -198,7 +198,7 @@ class HierarchyBehavior extends AbstractBehavior {
         return $this->getRepository()->select()
             ->orderBy($this->config->rightField, 'desc')
             ->limit(1)
-            ->fetch();
+            ->first();
     }
 
     /**
@@ -226,7 +226,7 @@ class HierarchyBehavior extends AbstractBehavior {
             }
         }
 
-        return $this->mapList($query->fetchAll(), $key, $value, $spacer);
+        return $this->mapList($query->all(), $key, $value, $spacer);
     }
 
     /**
@@ -249,7 +249,7 @@ class HierarchyBehavior extends AbstractBehavior {
             $query->where($pk, $id);
         }
 
-        return $query->fetch();
+        return $query->first();
     }
 
     /**
@@ -272,7 +272,7 @@ class HierarchyBehavior extends AbstractBehavior {
             ->where($left, '<', $node[$left])
             ->where($right, '>', $node[$right])
             ->orderBy($left, 'asc')
-            ->fetchAll();
+            ->all();
     }
 
     /**
@@ -296,7 +296,7 @@ class HierarchyBehavior extends AbstractBehavior {
             }
         }
 
-        $nodes = $query->fetchAll();
+        $nodes = $query->all();
 
         if (!$nodes) {
             return [];
@@ -631,7 +631,7 @@ class HierarchyBehavior extends AbstractBehavior {
         $children = $repo->select()
             ->where($parent, $parent_id)
             ->orderBy($order)
-            ->fetchAll();
+            ->all();
 
         foreach ($children as $child) {
             $right = $this->_reOrder($child[$pk], $right, $order);

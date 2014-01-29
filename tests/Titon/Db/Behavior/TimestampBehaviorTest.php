@@ -39,7 +39,7 @@ class TimestampBehaviorTest extends TestCase {
             'id' => 6,
             'username' => 'foo',
             'created' => null
-        ]), $this->object->select('id', 'username', 'created')->where('id', $id)->fetch());
+        ]), $this->object->select('id', 'username', 'created')->where('id', $id)->first());
 
         // Now with behavior
         $this->object->addBehavior(new TimestampBehavior([
@@ -53,7 +53,7 @@ class TimestampBehaviorTest extends TestCase {
             'id' => 7,
             'username' => 'bar',
             'created' => date('Y-m-d H:i:s', $time)
-        ]), $this->object->select('id', 'username', 'created')->where('id', $id)->fetch());
+        ]), $this->object->select('id', 'username', 'created')->where('id', $id)->first());
     }
 
     /**
@@ -68,7 +68,7 @@ class TimestampBehaviorTest extends TestCase {
             'id' => 1,
             'username' => 'foo',
             'modified' => null
-        ]), $this->object->select('id', 'username', 'modified')->where('id', 1)->fetch());
+        ]), $this->object->select('id', 'username', 'modified')->where('id', 1)->first());
 
         // Now with behavior
         $this->object->addBehavior(new TimestampBehavior([
@@ -82,7 +82,7 @@ class TimestampBehaviorTest extends TestCase {
             'id' => 1,
             'username' => 'bar',
             'modified' => date('Y-m-d H:i:s', $time)
-        ]), $this->object->select('id', 'username', 'modified')->where('id', 1)->fetch());
+        ]), $this->object->select('id', 'username', 'modified')->where('id', 1)->first());
     }
 
 }

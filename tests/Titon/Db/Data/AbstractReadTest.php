@@ -41,7 +41,7 @@ class AbstractReadTest extends TestCase {
             'name' => 'A Dance with Dragons',
             'isbn' => '0-553-80147-3',
             'released' => '2011-07-19'
-        ]), $book->select()->where('id', 5)->fetch());
+        ]), $book->select()->where('id', 5)->first());
 
         // Multiple
         $this->assertEquals([
@@ -66,7 +66,7 @@ class AbstractReadTest extends TestCase {
                 'isbn' => '',
                 'released' => '1955-10-25'
             ]),
-        ], $book->select()->where('series_id', 3)->orderBy('id', 'asc')->fetchAll());
+        ], $book->select()->where('series_id', 3)->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -86,7 +86,7 @@ class AbstractReadTest extends TestCase {
                 'author_id' => 1,
                 'name' => 'A Song of Ice and Fire'
             ])
-        ]), $author->select()->where('id', 1)->with('Series')->fetch(['eager' => true]));
+        ]), $author->select()->where('id', 1)->with('Series')->first(['eager' => true]));
 
         // Multiple
         $this->assertEquals([
@@ -117,7 +117,7 @@ class AbstractReadTest extends TestCase {
                     'name' => 'The Lord of the Rings'
                 ])
             ])
-        ], $author->select()->with('Series')->fetchAll(['eager' => true]));
+        ], $author->select()->with('Series')->all(['eager' => true]));
     }
 
     /**
@@ -140,7 +140,7 @@ class AbstractReadTest extends TestCase {
                 new Entity(['id' => 4, 'series_id' => 1, 'name' => 'A Feast for Crows', 'isbn' => '0-553-80150-3', 'released' => '2005-11-02']),
                 new Entity(['id' => 5, 'series_id' => 1, 'name' => 'A Dance with Dragons', 'isbn' => '0-553-80147-3', 'released' => '2011-07-19']),
             ]
-        ]), $series->select()->where('id', 1)->with('Books')->fetch(['eager' => true]));
+        ]), $series->select()->where('id', 1)->with('Books')->first(['eager' => true]));
 
         // Multiple
         $this->assertEquals([
@@ -180,7 +180,7 @@ class AbstractReadTest extends TestCase {
                     new Entity(['id' => 5, 'series_id' => 1, 'name' => 'A Dance with Dragons', 'isbn' => '0-553-80147-3', 'released' => '2011-07-19']),
                 ]
             ])
-        ], $series->select()->orderBy('id', 'desc')->with('Books')->fetchAll(['eager' => true]));
+        ], $series->select()->orderBy('id', 'desc')->with('Books')->all(['eager' => true]));
     }
 
     /**
@@ -203,7 +203,7 @@ class AbstractReadTest extends TestCase {
                 'author_id' => 1,
                 'name' => 'A Song of Ice and Fire'
             ])
-        ]), $book->select()->where('id', 5)->with('Series')->orderBy('id', 'asc')->fetch(['eager' => true]));
+        ]), $book->select()->where('id', 5)->with('Series')->orderBy('id', 'asc')->first(['eager' => true]));
 
         // Multiple
         $this->assertEquals([
@@ -243,7 +243,7 @@ class AbstractReadTest extends TestCase {
                     'name' => 'The Lord of the Rings'
                 ])
             ]),
-        ], $book->select()->where('series_id', 3)->with('Series')->orderBy('id', 'asc')->fetchAll(['eager' => true]));
+        ], $book->select()->where('series_id', 3)->with('Series')->orderBy('id', 'asc')->all(['eager' => true]));
     }
 
     /**
@@ -255,7 +255,7 @@ class AbstractReadTest extends TestCase {
         $book = new Book();
 
         // Single
-        $actual = $book->select()->where('id', 5)->with('Genres')->fetch(['eager' => true]);
+        $actual = $book->select()->where('id', 5)->with('Genres')->first(['eager' => true]);
 
         $this->assertEquals(new Entity([
             'id' => 5,
@@ -298,7 +298,7 @@ class AbstractReadTest extends TestCase {
         ]), $actual);
 
         // Multiple
-        $actual = $book->select()->where('series_id', 3)->with('Genres')->orderBy('id', 'asc')->fetchAll(['eager' => true]);
+        $actual = $book->select()->where('series_id', 3)->with('Genres')->orderBy('id', 'asc')->all(['eager' => true]);
 
         $this->assertEquals([
             new Entity([
@@ -436,7 +436,7 @@ class AbstractReadTest extends TestCase {
             ->with('Books', function() {
                 $this->with('Genres');
             })
-            ->fetch(['eager' => true]);
+            ->first(['eager' => true]);
 
         $this->assertEquals(new Entity([
             'id' => 1,
@@ -664,7 +664,7 @@ class AbstractReadTest extends TestCase {
             new Entity(['name' => 'Warrior', 'class' => 'Warrior']),
             new Entity(['name' => 'Ranger', 'class' => 'Ranger']),
             new Entity(['name' => 'Mage', 'class' => 'Mage']),
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -681,7 +681,7 @@ class AbstractReadTest extends TestCase {
             $query->func('SUM', ['health' => Func::FIELD])->asAlias('sum')
         ]);
 
-        $this->assertEquals(new Entity(['sum' => 2900]), $query->fetch());
+        $this->assertEquals(new Entity(['sum' => 2900]), $query->first());
 
         // SUBSTRING
         $query = $stat->select();
@@ -693,7 +693,7 @@ class AbstractReadTest extends TestCase {
             new Entity(['shortName' => 'War']),
             new Entity(['shortName' => 'Ran']),
             new Entity(['shortName' => 'Mag']),
-        ], $query->fetchAll());
+        ], $query->all());
 
         // SUBSTRING as field in where
         $query = $stat->select('id', 'name');
@@ -704,7 +704,7 @@ class AbstractReadTest extends TestCase {
 
         $this->assertEquals([
             new Entity(['id' => 1, 'name' => 'Warrior'])
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -737,12 +737,12 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
-        ], $user->select('id', 'username')->where('username', 'like', '%man%')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'username')->where('username', 'like', '%man%')->orderBy('id', 'asc')->all());
 
         $this->assertEquals([
             new Entity(['id' => 1, 'username' => 'miles']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->where('username', 'notLike', '%man%')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'username')->where('username', 'notLike', '%man%')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -757,12 +757,12 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
-        ], $user->select('id', 'username')->where('username', 'regexp', 'man$')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'username')->where('username', 'regexp', 'man$')->orderBy('id', 'asc')->all());
 
         $this->assertEquals([
             new Entity(['id' => 1, 'username' => 'miles']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->where('username', 'notRegexp', 'man$')->fetchAll());
+        ], $user->select('id', 'username')->where('username', 'notRegexp', 'man$')->all());
     }
 
     /**
@@ -776,13 +776,13 @@ class AbstractReadTest extends TestCase {
         $this->assertEquals([
             new Entity(['id' => 1, 'username' => 'miles']),
             new Entity(['id' => 3, 'username' => 'superman']),
-        ], $user->select('id', 'username')->where('id', 'in', [1, 3, 10])->fetchAll()); // use fake 10
+        ], $user->select('id', 'username')->where('id', 'in', [1, 3, 10])->all()); // use fake 10
 
         $this->assertEquals([
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->where('id', 'notIn', [1, 3, 10])->fetchAll());
+        ], $user->select('id', 'username')->where('id', 'notIn', [1, 3, 10])->all());
     }
 
     /**
@@ -796,13 +796,13 @@ class AbstractReadTest extends TestCase {
         $this->assertEquals([
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 3, 'username' => 'superman']),
-        ], $user->select('id', 'username')->where('age', 'between', [30, 45])->fetchAll());
+        ], $user->select('id', 'username')->where('age', 'between', [30, 45])->all());
 
         $this->assertEquals([
             new Entity(['id' => 1, 'username' => 'miles']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->where('age', 'notBetween', [30, 45])->fetchAll());
+        ], $user->select('id', 'username')->where('age', 'notBetween', [30, 45])->all());
     }
 
     /**
@@ -816,14 +816,14 @@ class AbstractReadTest extends TestCase {
 
         $this->assertEquals([
             new Entity(['id' => 1, 'username' => 'miles'])
-        ], $user->select('id', 'username')->where('created', 'isNull', null)->fetchAll());
+        ], $user->select('id', 'username')->where('created', 'isNull', null)->all());
 
         $this->assertEquals([
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->where('created', 'isNotNull', null)->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'username')->where('created', 'isNotNull', null)->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -840,11 +840,11 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 3, 'name' => 'A Storm of Swords']),
             new Entity(['id' => 4, 'name' => 'A Feast for Crows']),
             new Entity(['id' => 5, 'name' => 'A Dance with Dragons']),
-        ], $book->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->fetchAll());
+        ], $book->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->all());
 
         // Invalid field
         try {
-            $book->select('id', 'name', 'author')->fetchAll();
+            $book->select('id', 'name', 'author')->all();
             $this->assertTrue(false);
         } catch (Exception $e) {
             $this->assertTrue(true);
@@ -857,7 +857,7 @@ class AbstractReadTest extends TestCase {
                 $this->fields('name');
             })
             ->orderBy('id', 'asc')
-            ->fetchAll(['eager' => true]);
+            ->all(['eager' => true]);
 
         $this->assertEquals([
             new Entity([
@@ -899,7 +899,7 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 1, 'name' => 'A Game of Thrones']),
             new Entity(['id' => 6, 'name' => 'Harry Potter and the Philosopher\'s Stone']),
             new Entity(['id' => 13, 'name' => 'The Fellowship of the Ring'])
-        ], $book->select('id', 'name')->groupBy('series_id')->orderBy('id', 'asc')->fetchAll());
+        ], $book->select('id', 'name')->groupBy('series_id')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -915,13 +915,13 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 5, 'name' => 'Horror']),
             new Entity(['id' => 6, 'name' => 'Thriller']),
             new Entity(['id' => 7, 'name' => 'Mystery'])
-        ], $genre->select('id', 'name')->where('id', '>=', 5)->limit(3)->fetchAll());
+        ], $genre->select('id', 'name')->where('id', '>=', 5)->limit(3)->all());
 
         // Limit and offset
         $this->assertEquals([
             new Entity(['id' => 10, 'name' => 'Sci-fi']),
             new Entity(['id' => 11, 'name' => 'Fiction'])
-        ], $genre->select('id', 'name')->where('id', '>=', 7)->limit(3, 3)->fetchAll());
+        ], $genre->select('id', 'name')->where('id', '>=', 7)->limit(3, 3)->all());
     }
 
     /**
@@ -951,7 +951,7 @@ class AbstractReadTest extends TestCase {
         ], $book->select('id', 'series_id', 'name')->orderBy([
             'series_id' => 'desc',
             'id' => 'desc'
-        ])->fetchAll());
+        ])->all());
 
         $this->assertEquals([
             new Entity(['id' => 13, 'series_id' => 3, 'name' => 'The Fellowship of the Ring']),
@@ -972,7 +972,7 @@ class AbstractReadTest extends TestCase {
         ], $book->select('id', 'series_id', 'name')->orderBy([
             'series_id' => 'desc',
             'name' => 'asc'
-        ])->fetchAll());
+        ])->all());
 
         // Randomizing
         $this->assertNotEquals([
@@ -991,7 +991,7 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 3, 'series_id' => 1, 'name' => 'A Storm of Swords']),
             new Entity(['id' => 2, 'series_id' => 1, 'name' => 'A Clash of Kings']),
             new Entity(['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones']),
-        ], $book->select('id', 'series_id', 'name')->orderBy('RAND')->fetchAll());
+        ], $book->select('id', 'series_id', 'name')->orderBy('RAND')->all());
     }
 
     /**
@@ -1012,7 +1012,7 @@ class AbstractReadTest extends TestCase {
         ], $stat->select('id', 'name', 'health', 'isMelee')
             ->where('isMelee', false)
             ->where('health', '>=', 700)
-            ->fetchAll());
+            ->all());
 
         $this->assertEquals([
             new Entity([
@@ -1033,7 +1033,7 @@ class AbstractReadTest extends TestCase {
             ->where('health', '<', 1000)
             ->where('range', '>=', 5)
             ->where('energy', '!=', 0)
-            ->fetchAll());
+            ->all());
 
         $this->assertEquals([
             new Entity([
@@ -1046,7 +1046,7 @@ class AbstractReadTest extends TestCase {
         ], $stat->select('id', 'name', 'health', 'isMelee', 'range')
             ->where(function() {
                 $this->gte('health', 500)->lte('range', 7)->eq('isMelee', true);
-            })->fetchAll());
+            })->all());
     }
 
     /**
@@ -1073,7 +1073,7 @@ class AbstractReadTest extends TestCase {
         ], $stat->select('id', 'name', 'health', 'range')
             ->orWhere('health', '>', 1000)
             ->orWhere('range', '>', 7)
-            ->fetchAll());
+            ->all());
 
         $this->assertEquals([
             new Entity([
@@ -1101,7 +1101,7 @@ class AbstractReadTest extends TestCase {
             ->orWhere(function() {
                 $this->gt('damage', 100)->gt('range', 5)->gt('defense', 50);
             })
-            ->fetchAll());
+            ->all());
     }
 
     /**
@@ -1120,7 +1120,7 @@ class AbstractReadTest extends TestCase {
                 $this->either(function() {
                     $this->lte('health', 600)->lte('damage', 60);
                 });
-            })->fetchAll());
+            })->all());
     }
 
     /**
@@ -1145,20 +1145,20 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 3, 'user_id' => 3, 'quantity' => 4, 'status' => 'pending', 'shipped' => null, 'qty' => 90, 'count' => 7]),
             new Entity(['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7]),
             new Entity(['id' => 5, 'user_id' => 5, 'quantity' => 29, 'status' => 'pending', 'shipped' => null, 'qty' => 112, 'count' => 6]),
-        ], $query->fetchAll());
+        ], $query->all());
 
         $query->having('qty', '>', 100);
 
         $this->assertEquals([
             new Entity(['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7]),
             new Entity(['id' => 5, 'user_id' => 5, 'quantity' => 29, 'status' => 'pending', 'shipped' => null, 'qty' => 112, 'count' => 6]),
-        ], $query->fetchAll());
+        ], $query->all());
 
         $query->having('count', '>', 6);
 
         $this->assertEquals([
             new Entity(['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7])
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -1183,14 +1183,14 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 3, 'user_id' => 3, 'quantity' => 4, 'status' => 'pending', 'shipped' => null, 'qty' => 90, 'count' => 7]),
             new Entity(['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7]),
             new Entity(['id' => 5, 'user_id' => 5, 'quantity' => 29, 'status' => 'pending', 'shipped' => null, 'qty' => 112, 'count' => 6]),
-        ], $query->fetchAll());
+        ], $query->all());
 
         $query->orHaving('qty', '<=', 90);
 
         $this->assertEquals([
             new Entity(['id' => 2, 'user_id' => 2, 'quantity' => 33, 'status' => 'pending', 'shipped' => null, 'qty' => 77, 'count' => 5]),
             new Entity(['id' => 3, 'user_id' => 3, 'quantity' => 4, 'status' => 'pending', 'shipped' => null, 'qty' => 90, 'count' => 7]),
-        ], $query->fetchAll());
+        ], $query->all());
 
         $query->orHaving('count', '>=', 6);
 
@@ -1199,7 +1199,7 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 3, 'user_id' => 3, 'quantity' => 4, 'status' => 'pending', 'shipped' => null, 'qty' => 90, 'count' => 7]),
             new Entity(['id' => 4, 'user_id' => 4, 'quantity' => 24, 'status' => 'pending', 'shipped' => null, 'qty' => 114, 'count' => 7]),
             new Entity(['id' => 5, 'user_id' => 5, 'quantity' => 29, 'status' => 'pending', 'shipped' => null, 'qty' => 112, 'count' => 6]),
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -1230,7 +1230,7 @@ class AbstractReadTest extends TestCase {
             new Entity(['id' => 21, 'user_id' => 1, 'quantity' => 17, 'status' => 'delivered', 'shipped' => '2013-05-27 12:33:02', 'qty' => 49, 'count' => 3]),
             new Entity(['id' => 17, 'user_id' => 2, 'quantity' => 26, 'status' => 'shipped', 'shipped' => '2013-06-28 12:33:02', 'qty' => 41, 'count' => 2]),
             new Entity(['id' => 19, 'user_id' => 4, 'quantity' => 20, 'status' => 'delivered', 'shipped' => '2013-06-30 12:33:02', 'qty' => 40, 'count' => 3]),
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -1274,7 +1274,7 @@ class AbstractReadTest extends TestCase {
                     'iso' => 'MEX'
                 ])
             ])
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -1318,7 +1318,7 @@ class AbstractReadTest extends TestCase {
                     'iso' => 'MEX'
                 ])
             ])
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -1405,7 +1405,7 @@ class AbstractReadTest extends TestCase {
                     'iso' => 'ENG'
                 ])
             ]),
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -1469,7 +1469,7 @@ class AbstractReadTest extends TestCase {
                     'iso' => null
                 ])
             ]),
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -1533,7 +1533,7 @@ class AbstractReadTest extends TestCase {
                     'iso' => 'MEX'
                 ])
             ])
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -1577,7 +1577,7 @@ class AbstractReadTest extends TestCase {
                     'iso' => 'MEX'
                 ])
             ])
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**
@@ -1607,7 +1607,7 @@ class AbstractReadTest extends TestCase {
                 'name' => 'United States of America',
                 'iso' => 'USA'
             ])
-        ]), $query->fetch());
+        ]), $query->first());
     }
 
 }

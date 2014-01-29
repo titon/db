@@ -8,6 +8,7 @@
 namespace Titon\Db\Driver\Finder;
 
 use Titon\Db\Entity;
+use Titon\Db\Exception\InvalidArgumentException;
 use Titon\Utility\Hash;
 
 /**
@@ -21,9 +22,13 @@ class ListFinder extends AbstractFinder {
      * {@inheritdoc}
      */
     public function after(array $results, array $options = []) {
-        $key = $options['key'];
-        $value = $options['value'];
+        $key = isset($options['key']) ? $options['key'] : null;
+        $value = isset($options['value']) ? $options['value'] : null;
         $list = [];
+
+        if (!$key || !$value) {
+            throw new InvalidArgumentException('Missing key or value option for ListFinder');
+        }
 
         foreach ($results as $result) {
             if ($result instanceof Entity) {

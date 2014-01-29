@@ -17,15 +17,6 @@ use Titon\Db\Query;
 interface Finder {
 
     /**
-     * Modify a query before it's executed.
-     *
-     * @param \Titon\Db\Query $query
-     * @param array $options
-     * @return mixed
-     */
-    public function before(Query $query, array $options = []);
-
-    /**
      * Process results after a query has executed.
      *
      * @param \Titon\Db\Entity[] $results
@@ -33,5 +24,14 @@ interface Finder {
      * @return mixed
      */
     public function after(array $results, array $options = []);
+
+    /**
+     * Modify a query before it's executed.
+     *
+     * @param \Titon\Db\Query $query
+     * @param array $options
+     * @return mixed
+     */
+    public function before(Query $query, array $options = []);
 
 }

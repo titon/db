@@ -193,6 +193,16 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
+     * Return all records from the results.
+     *
+     * @param array $options
+     * @return \Titon\Db\Entity[]
+     */
+    public function all(array $options = []) {
+        return $this->find('all', $options);
+    }
+
+    /**
      * Set an attribute.
      *
      * @param string $key
@@ -250,11 +260,11 @@ class Query implements Serializable, JsonSerializable {
      * @return int
      */
     public function count() {
-        $this
-            ->fields($this->func('COUNT', [$this->getRepository()->getPrimaryKey() => Func::FIELD]))
-            ->limit(0);
+        $repo = $this->getRepository();
 
-        return $this->getRepository()->count($this);
+        $this->fields(Query::func('COUNT', [$repo->getPrimaryKey() => Func::FIELD]))->limit(0);
+
+        return $repo->count($this);
     }
 
     /**
@@ -264,52 +274,6 @@ class Query implements Serializable, JsonSerializable {
      */
     public function distinct() {
         return $this->attribute('distinct', true);
-    }
-
-    /**
-     * Pass the find query to the repository to interact with the database.
-     *
-     * @param string $type
-     * @param array $options
-     * @return mixed
-     */
-    public function find($type, array $options = []) {
-        return $this->getRepository()->find($this, $type, $options);
-    }
-
-    /**
-     * Pass the query to the repository to interact with the database.
-     * Return the first record from the results.
-     *
-     * @param array $options
-     * @return \Titon\Db\Entity
-     */
-    public function fetch(array $options = []) {
-        return $this->limit(1)->getRepository()->fetch($this, $options);
-    }
-
-    /**
-     * Pass the query to the repository to interact with the database.
-     * Return all records from the results.
-     *
-     * @param array $options
-     * @return \Titon\Db\Entity[]
-     */
-    public function fetchAll(array $options = []) {
-        return $this->getRepository()->fetchAll($this, $options);
-    }
-
-    /**
-     * Pass the query to the repository to interact with the database.
-     * Return all records as a key value list.
-     *
-     * @param string $key
-     * @param string $value
-     * @param array $options
-     * @return array
-     */
-    public function fetchList($key = null, $value = null, array $options = []) {
-        return $this->getRepository()->fetchList($this, $key, $value, $options);
     }
 
     /**
@@ -336,6 +300,27 @@ class Query implements Serializable, JsonSerializable {
         $this->_fields = $fields;
 
         return $this;
+    }
+
+    /**
+     * Pass the find query to the repository to interact with the database.
+     *
+     * @param string $type
+     * @param array $options
+     * @return mixed
+     */
+    public function find($type, array $options = []) {
+        return $this->getRepository()->find($this, $type, $options);
+    }
+
+    /**
+     * Return the first record from the results.
+     *
+     * @param array $options
+     * @return \Titon\Db\Entity
+     */
+    public function first(array $options = []) {
+        return $this->limit(1)->find('first', $options);
     }
 
     /**
@@ -576,6 +561,22 @@ class Query implements Serializable, JsonSerializable {
         }
 
         return $this;
+    }
+
+    /**
+     * Return all records as a key value list.
+     *
+     * @param string $value
+     * @param string $key
+     * @param array $options
+     * @return array
+     */
+    public function lists($value = null, $key = null, array $options = []) {
+        $repo = $this->getRepository();
+        $options['key'] = $key ?: $repo->getPrimaryKey();
+        $options['value'] = $value ?: $repo->getDisplayField();
+
+        return $this->find('list', $options);
     }
 
     /**

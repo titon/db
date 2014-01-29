@@ -75,7 +75,7 @@ class AbstractMiscTest extends TestCase {
             'created' => '1988-02-26 21:22:34',
             'modified' => null,
             'Profile' => function() {} // lazy-loaded
-        ]), $user->select()->with('Profile')->where('id', 1)->fetch());
+        ]), $user->select()->with('Profile')->where('id', 1)->first());
 
         // Update user and profile
         $time = time();
@@ -89,7 +89,7 @@ class AbstractMiscTest extends TestCase {
         ]));
 
         // Trigger lazy-loaded queries
-        $result = $user->select()->with('Profile')->where('id', 1)->fetch();
+        $result = $user->select()->with('Profile')->where('id', 1)->first();
         $result->Profile;
 
         $this->assertEquals(new Entity([
@@ -139,7 +139,7 @@ class AbstractMiscTest extends TestCase {
         ]);
 
         // Trigger lazy-loaded queries
-        $result = $user->select()->with('Profile')->where('id', 1)->fetch();
+        $result = $user->select()->with('Profile')->where('id', 1)->first();
         $result->Profile;
 
         $this->assertEquals($data, $result);
@@ -162,7 +162,7 @@ class AbstractMiscTest extends TestCase {
         }
 
         // Trigger lazy-loaded queries
-        $result = $user->select()->with('Profile')->where('id', 1)->fetch();
+        $result = $user->select()->with('Profile')->where('id', 1)->first();
         $result->Profile;
 
         $this->assertEquals($data, $result);
@@ -186,7 +186,7 @@ class AbstractMiscTest extends TestCase {
             new Entity(['id' => 3, 'country_id' => 2, 'username' => 'superman']),
             new Entity(['id' => 4, 'country_id' => 5, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'country_id' => 4, 'username' => 'wolverine']),
-        ], $query->fetchAll());
+        ], $query->all());
 
         // Single record
         $query = $user->select('id', 'country_id', 'username');
@@ -194,7 +194,7 @@ class AbstractMiscTest extends TestCase {
 
         $this->assertEquals([
             new Entity(['id' => 1, 'country_id' => 1, 'username' => 'miles'])
-        ], $query->fetchAll());
+        ], $query->all());
     }
 
     /**

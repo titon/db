@@ -61,7 +61,7 @@ class PdoResultTest extends TestCase {
             'age' => 25,
             'created' => '1988-02-26 21:22:34',
             'modified' => null
-        ]), $this->object->select()->fetch());
+        ]), $this->object->select()->first());
     }
 
     /**
@@ -129,7 +129,7 @@ class PdoResultTest extends TestCase {
                 'created' => '2000-11-30 21:22:34',
                 'modified' => null
             ])
-        ], $this->object->select()->fetchAll());
+        ], $this->object->select()->all());
     }
 
     /**

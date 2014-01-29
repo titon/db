@@ -118,12 +118,12 @@ $row = $user->select()
     ->with('Profile', function() {
         // with custom conditions
     })
-    ->fetch();
+    ->first();
 
 // Or a list
 $row = $user->select()
     ->with(['Country', 'Profile'])
-    ->fetch();
+    ->first();
 ```
 
 Similar to creating, define an array of data using the relation alias that will be updated as well. The primary key is required else a new record will be created.

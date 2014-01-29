@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Driver\Finder;
 
+use Titon\Common\Base;
 use Titon\Db\Driver\Finder;
 use Titon\Db\Query;
 
@@ -15,20 +16,20 @@ use Titon\Db\Query;
  *
  * @package Titon\Db\Driver\Finder
  */
-abstract class AbstractFinder implements Finder {
-
-    /**
-     * {@inheritdoc}
-     */
-    public function before(Query $query, array $options = []) {
-        return $query;
-    }
+abstract class AbstractFinder extends Base implements Finder {
 
     /**
      * {@inheritdoc}
      */
     public function after(array $results, array $options = []) {
         return $results;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function before(Query $query, array $options = []) {
+        return $query;
     }
 
 }

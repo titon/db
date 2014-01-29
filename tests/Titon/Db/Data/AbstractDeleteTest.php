@@ -61,14 +61,14 @@ class AbstractDeleteTest extends TestCase {
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'username')->orderBy('id', 'asc')->all());
 
         $this->assertSame(3, $user->query(Query::DELETE)->orderBy('age', 'asc')->limit(3)->save());
 
         $this->assertEquals([
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'username')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -85,7 +85,7 @@ class AbstractDeleteTest extends TestCase {
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'username')->orderBy('id', 'asc')->all());
 
         $this->assertSame(2, $user->query(Query::DELETE)->limit(2)->save());
 
@@ -93,7 +93,7 @@ class AbstractDeleteTest extends TestCase {
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'username')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -128,12 +128,12 @@ class AbstractDeleteTest extends TestCase {
             new Entity(['id' => 3, 'name' => 'A Storm of Swords']),
             new Entity(['id' => 4, 'name' => 'A Feast for Crows']),
             new Entity(['id' => 5, 'name' => 'A Dance with Dragons']),
-        ], $series->Books->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->fetchAll());
+        ], $series->Books->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->all());
 
         $series->delete(1, true);
 
         $this->assertFalse($series->exists(1));
-        $this->assertEquals([], $series->Books->select('id', 'name')->where('series_id', 1)->fetchAll());
+        $this->assertEquals([], $series->Books->select('id', 'name')->where('series_id', 1)->all());
     }
 
     /**
@@ -148,7 +148,7 @@ class AbstractDeleteTest extends TestCase {
         $this->assertTrue($book->exists(5));
 
         // Trigger lazy-loaded queries
-        $results = $book->select('id', 'name')->where('id', 5)->with('Genres')->fetch();
+        $results = $book->select('id', 'name')->where('id', 5)->with('Genres')->first();
         $results->Genres;
 
         $this->assertEquals(new Entity([
@@ -191,8 +191,8 @@ class AbstractDeleteTest extends TestCase {
         $book->delete(5, true);
 
         $this->assertFalse($book->exists(5));
-        $this->assertEquals([], $book->select()->where('id', 5)->with('Genres')->fetch());
-        $this->assertEquals([], $bookGenres->select()->where('book_id', 5)->fetch());
+        $this->assertEquals([], $book->select()->where('id', 5)->with('Genres')->first());
+        $this->assertEquals([], $bookGenres->select()->where('book_id', 5)->first());
 
         // The related records don't get deleted
         // Only the junction records should be
@@ -200,7 +200,7 @@ class AbstractDeleteTest extends TestCase {
             new Entity(['id' => 3, 'name' => 'Action-Adventure']),
             new Entity(['id' => 5, 'name' => 'Horror']),
             new Entity(['id' => 8, 'name' => 'Fantasy']),
-        ], $book->Genres->select('id', 'name')->where('id', [3, 5, 8])->fetchAll());
+        ], $book->Genres->select('id', 'name')->where('id', [3, 5, 8])->all());
     }
 
     /**
@@ -218,10 +218,10 @@ class AbstractDeleteTest extends TestCase {
             new Entity(['id' => 13, 'name' => 'The Fellowship of the Ring']),
             new Entity(['id' => 14, 'name' => 'The Two Towers']),
             new Entity(['id' => 15, 'name' => 'The Return of the King']),
-        ], $series->Books->select('id', 'name')->where('series_id', 3)->orderBy('id', 'asc')->fetchAll());
+        ], $series->Books->select('id', 'name')->where('series_id', 3)->orderBy('id', 'asc')->all());
 
         // Trigger lazy-loaded queries
-        $results = $series->Books->select('id', 'name')->where('id', 14)->with('Genres')->fetch();
+        $results = $series->Books->select('id', 'name')->where('id', 14)->with('Genres')->first();
         $results->Genres;
 
         $this->assertEquals(new Entity([
@@ -264,8 +264,8 @@ class AbstractDeleteTest extends TestCase {
         $series->delete(3, true);
 
         $this->assertFalse($series->exists(3));
-        $this->assertEquals([], $series->Books->select('id', 'name')->where('series_id', 3)->fetchAll());
-        $this->assertEquals([], $bookGenres->select()->where('book_id', 14)->fetch());
+        $this->assertEquals([], $series->Books->select('id', 'name')->where('series_id', 3)->all());
+        $this->assertEquals([], $bookGenres->select()->where('book_id', 14)->first());
     }
 
     /**

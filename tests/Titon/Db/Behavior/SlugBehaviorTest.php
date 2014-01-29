@@ -32,14 +32,14 @@ class SlugBehaviorTest extends TestCase {
         $this->assertEquals(new Entity([
             'title' => 'Bruce Wayne',
             'slug' => 'bruce-wayne'
-        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
 
         $topic_id = $topic->create(['title' => 'Bruce Wayne']);
 
         $this->assertEquals(new Entity([
             'title' => 'Bruce Wayne',
             'slug' => 'bruce-wayne-1'
-        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
     }
 
     /**
@@ -56,14 +56,14 @@ class SlugBehaviorTest extends TestCase {
         $this->assertEquals(new Entity([
             'title' => 'Bruce Wayne',
             'slug' => 'bruce-wayne'
-        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
 
         $topic_id = $topic->create(['title' => 'Bruce Wayne']);
 
         $this->assertEquals(new Entity([
             'title' => 'Bruce Wayne',
             'slug' => 'bruce-wayne'
-        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
     }
 
     /**
@@ -81,7 +81,7 @@ class SlugBehaviorTest extends TestCase {
             'title' => '',
             'slug' => '',
             'content' => 'Testing with no title or slug.'
-        ]), $topic->select('title', 'slug', 'content')->where('id', $topic_id)->fetch());
+        ]), $topic->select('title', 'slug', 'content')->where('id', $topic_id)->first());
     }
 
     /**
@@ -98,7 +98,7 @@ class SlugBehaviorTest extends TestCase {
         $this->assertEquals(new Entity([
             'title' => 'This is the title',
             'slug' => 'and-different-slug'
-        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
     }
 
     /**
@@ -115,7 +115,7 @@ class SlugBehaviorTest extends TestCase {
         $this->assertNotEquals(new Entity([
             'title' => 'Batman vs Superman?',
             'slug' => 'batman-vs-superman'
-        ]), $topic->select('title', 'slug')->where('id', 1)->fetch());
+        ]), $topic->select('title', 'slug')->where('id', 1)->first());
     }
 
     /**
@@ -132,7 +132,7 @@ class SlugBehaviorTest extends TestCase {
         $this->assertEquals(new Entity([
             'title' => 'Batman vs Ironman',
             'slug' => 'batman-vs-superman'
-        ]), $topic->select('title', 'slug')->where('id', 1)->fetch());
+        ]), $topic->select('title', 'slug')->where('id', 1)->first());
     }
 
     /**
@@ -149,7 +149,7 @@ class SlugBehaviorTest extends TestCase {
         $this->assertEquals(new Entity([
             'title' => 'Batman vs Superman',
             'slug' => 'batman-vs-superman'
-        ]), $topic->select('title', 'slug')->where('id', 1)->fetch());
+        ]), $topic->select('title', 'slug')->where('id', 1)->first());
     }
 
     /**
@@ -169,7 +169,7 @@ class SlugBehaviorTest extends TestCase {
         $this->assertEquals(new Entity([
             'title' => 'Batman vs Superman',
             'slug' => 'batman-vs-superman'
-        ]), $topic->select('title', 'slug')->where('id', $topic_id)->fetch());
+        ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
     }
 
     /**

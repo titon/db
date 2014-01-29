@@ -47,7 +47,7 @@ class AbstractUpdateTest extends TestCase {
             'age' => 25,
             'created' => '1988-02-26 21:22:34',
             'modified' => null
-        ]), $user->select()->where('id', 1)->fetch());
+        ]), $user->select()->where('id', 1)->first());
     }
 
     /**
@@ -105,7 +105,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 1, 'name' => 'Warrior', 'health' => 1500]),
             new Entity(['id' => 2, 'name' => 'Ranger', 'health' => 800]),
             new Entity(['id' => 3, 'name' => 'Mage', 'health' => 600]),
-        ], $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->fetchAll());
+        ], $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->all());
 
         $query = $stat->query(Query::UPDATE);
         $query->fields(['health' => $query->expr('health', '+', 75)]);
@@ -116,7 +116,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 1, 'name' => 'Warrior', 'health' => 1575]),
             new Entity(['id' => 2, 'name' => 'Ranger', 'health' => 875]),
             new Entity(['id' => 3, 'name' => 'Mage', 'health' => 675]),
-        ], $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->fetchAll());
+        ], $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->all());
 
         // Single record
         $this->assertEquals(1, $stat->update(2, [
@@ -127,7 +127,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 1, 'name' => 'Warrior', 'health' => 1575]),
             new Entity(['id' => 2, 'name' => 'Ranger', 'health' => 750]),
             new Entity(['id' => 3, 'name' => 'Mage', 'health' => 675]),
-        ], $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->fetchAll());
+        ], $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -377,7 +377,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 3, 'country_id' => 1, 'username' => 'superman']),
             new Entity(['id' => 4, 'country_id' => 1, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'country_id' => 1, 'username' => 'wolverine']),
-        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->all());
 
         // No where clause
         $this->assertSame(5, $user->query(Query::UPDATE)->fields(['country_id' => 2])->save());
@@ -388,7 +388,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 3, 'country_id' => 2, 'username' => 'superman']),
             new Entity(['id' => 4, 'country_id' => 2, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'country_id' => 2, 'username' => 'wolverine']),
-        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -407,7 +407,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 3, 'country_id' => 1, 'username' => 'superman']),
             new Entity(['id' => 4, 'country_id' => 5, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'country_id' => 4, 'username' => 'wolverine']),
-        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->all());
 
         // No where clause, offset ignored
         $this->assertSame(2, $user->query(Query::UPDATE)->fields(['country_id' => 5])->limit(2, 2)->save());
@@ -418,7 +418,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 3, 'country_id' => 1, 'username' => 'superman']),
             new Entity(['id' => 4, 'country_id' => 5, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'country_id' => 4, 'username' => 'wolverine']),
-        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -441,7 +441,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 3, 'country_id' => 6, 'username' => 'superman']), // changed
             new Entity(['id' => 4, 'country_id' => 5, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'country_id' => 6, 'username' => 'wolverine']), // changed
-        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -463,7 +463,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 3, 'country_id' => null, 'username' => 'superman']),
             new Entity(['id' => 4, 'country_id' => null, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'country_id' => 4, 'username' => 'wolverine']),
-        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'country_id', 'username')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -484,7 +484,7 @@ class AbstractUpdateTest extends TestCase {
             new Entity(['id' => 3, 'username' => 'superman', 'firstName' => '']),
             new Entity(['id' => 4, 'username' => 'spiderman', 'firstName' => '']),
             new Entity(['id' => 5, 'username' => 'wolverine', 'firstName' => '']),
-        ], $user->select('id', 'username', 'firstName')->orderBy('id', 'asc')->fetchAll());
+        ], $user->select('id', 'username', 'firstName')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -505,7 +505,7 @@ class AbstractUpdateTest extends TestCase {
 
         $this->assertEquals(1, $stat->update(1, $data));
 
-        $expected = $stat->select()->where('id', 1)->fetch()->toArray();
+        $expected = $stat->select()->where('id', 1)->first()->toArray();
         unset($expected['data'], $expected['id']);
 
         $this->assertSame([
@@ -534,7 +534,7 @@ class AbstractUpdateTest extends TestCase {
         ]));
 
         // Match row
-        $expected = $stat->select()->where('id', 1)->fetch()->toArray();
+        $expected = $stat->select()->where('id', 1)->first()->toArray();
         $handle = $expected['data'];
         $expected['data'] = stream_get_contents($handle, -1, 0);
         fclose($handle);
@@ -566,7 +566,7 @@ class AbstractUpdateTest extends TestCase {
 
         $this->assertEquals(1, $user->update(1, $data));
 
-        $this->assertSame($data, $user->select('created', 'modified')->where('id', 1)->fetch()->toArray());
+        $this->assertSame($data, $user->select('created', 'modified')->where('id', 1)->first()->toArray());
     }
 
     /**
@@ -580,18 +580,18 @@ class AbstractUpdateTest extends TestCase {
         // Integer
         $time = time();
         $this->assertEquals(1, $user->update(1, ['created' => $time]));
-        $this->assertSame(['created' => date('Y-m-d H:i:s', $time)], $user->select('created')->where('id', 1)->fetch()->toArray());
+        $this->assertSame(['created' => date('Y-m-d H:i:s', $time)], $user->select('created')->where('id', 1)->first()->toArray());
 
         // String
         $time = date('Y-m-d H:i:s', strtotime('+1 week'));
         $this->assertEquals(1, $user->update(1, ['created' => $time]));
-        $this->assertSame(['created' => $time], $user->select('created')->where('id', 1)->fetch()->toArray());
+        $this->assertSame(['created' => $time], $user->select('created')->where('id', 1)->first()->toArray());
 
         // Object
         $time = new DateTime();
         $time->modify('+2 days');
         $this->assertEquals(1, $user->update(1, ['created' => $time]));
-        $this->assertSame(['created' => $time->format('Y-m-d H:i:s')], $user->select('created')->where('id', 1)->fetch()->toArray());
+        $this->assertSame(['created' => $time->format('Y-m-d H:i:s')], $user->select('created')->where('id', 1)->first()->toArray());
     }
 
     /**

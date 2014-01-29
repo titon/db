@@ -81,7 +81,7 @@ class CounterBehavior extends AbstractBehavior {
                             ->select()
                             ->where($relation->getForeignKey(), $value)
                             ->bindCallback($counter['scope'])
-                            ->fetchAll();
+                            ->all();
 
                         $this->setCache(['Junction', $alias, $value], $results);
                     break;
@@ -172,7 +172,7 @@ class CounterBehavior extends AbstractBehavior {
                 $results = $junctionRepo->select()
                     ->where($fk, $id)
                     ->bindCallback($counter['scope'])
-                    ->fetchAll();
+                    ->all();
             }
 
             // Loop over each junction record and update the related record

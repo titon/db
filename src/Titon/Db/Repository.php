@@ -382,7 +382,7 @@ class Repository extends Base implements Callback, Listener {
                             $results = $relatedRepo
                                 ->select($relatedRepo->getPrimaryKey())
                                 ->where($relation->getRelatedForeignKey(), $id)
-                                ->fetchAll();
+                                ->all();
                         }
 
                         // Delete all records at once
@@ -439,7 +439,7 @@ class Repository extends Base implements Callback, Listener {
      */
     public function deleteMany(Closure $conditions, $options = true) {
         $pk = $this->getPrimaryKey();
-        $ids = $this->select($pk)->bindCallback($conditions)->fetchList($pk, $pk);
+        $ids = $this->select($pk)->bindCallback($conditions)->lists($pk, $pk);
         $query = $this->query(Query::DELETE)->bindCallback($conditions);
 
         // Validate that this won't delete all records
@@ -472,44 +472,6 @@ class Repository extends Base implements Callback, Listener {
      */
     public function find(Query $query, $type, array $options = []) {
         return $this->_processFind($query, $type, $options);
-    }
-
-    /**
-     * Return an entity for the first result from the query.
-     *
-     * @param \Titon\Db\Query $query
-     * @param array $options
-     * @return \Titon\Db\Entity|array
-     */
-    public function fetch(Query $query, array $options = []) {
-        return $this->find($query, 'first', $options);
-    }
-
-    /**
-     * Return a list of entities from the results of the query.
-     *
-     * @param \Titon\Db\Query $query
-     * @param array $options
-     * @return \Titon\Db\Entity[]|array
-     */
-    public function fetchAll(Query $query, array $options = []) {
-        return $this->find($query, 'all', $options);
-    }
-
-    /**
-     * Return the results as a list of key values.
-     *
-     * @param \Titon\Db\Query $query
-     * @param string $key The field to use as the array key
-     * @param string $value The field to use as the array value
-     * @param array $options
-     * @return array
-     */
-    public function fetchList(Query $query, $key = null, $value = null, array $options = []) {
-        $options['key'] = $key ?: $this->getPrimaryKey();
-        $options['value'] = $value ?: $this->getDisplayField();
-
-        return $this->find($query, 'list', $options);
     }
 
     /**
@@ -553,7 +515,7 @@ class Repository extends Base implements Callback, Listener {
                         ->limit(1);
 
                     $result->set($alias, function() use ($newQuery, $options) {
-                        return $newQuery->fetch($options);
+                        return $newQuery->first($options);
                     });
                 break;
 
@@ -569,7 +531,7 @@ class Repository extends Base implements Callback, Listener {
                         ->cache([$relatedClass, 'fetchOneToMany', $foreignValue]);
 
                     $result->set($alias, function() use ($newQuery, $options) {
-                        return $newQuery->fetchAll($options);
+                        return $newQuery->all($options);
                     });
                 break;
 
@@ -586,7 +548,7 @@ class Repository extends Base implements Callback, Listener {
                         ->limit(1);
 
                     $result->set($alias, function() use ($newQuery, $options) {
-                        return $newQuery->fetch($options);
+                        return $newQuery->first($options);
                     });
                 break;
 
@@ -611,7 +573,7 @@ class Repository extends Base implements Callback, Listener {
                             ->select()
                             ->where($relation->getForeignKey(), $foreignValue)
                             ->cache([get_class($junctionRepo), 'fetchManyToMany', $foreignValue])
-                            ->fetchAll();
+                            ->all();
 
                         if (!$junctionResults) {
                             return [];
@@ -624,7 +586,7 @@ class Repository extends Base implements Callback, Listener {
                         $m2mResults = $newQuery
                             ->where($relatedRepo->getPrimaryKey(), $lookupIDs)
                             ->cache([$relatedClass, 'fetchManyToMany', $lookupIDs])
-                            ->fetchAll($options);
+                            ->all($options);
 
                         // Include the junction data
                         foreach ($m2mResults as $i => $m2mResult) {
@@ -1002,7 +964,7 @@ class Repository extends Base implements Callback, Listener {
 
         return [
             'count' => $count->count(),
-            'results' => $query->fetchAll()
+            'results' => $query->all()
         ];
     }
 
@@ -1083,7 +1045,7 @@ class Repository extends Base implements Callback, Listener {
         return $this->select()
             ->where($this->getPrimaryKey(), $id)
             ->bindCallback($callback)
-            ->fetch($options);
+            ->first($options);
     }
 
     /**
@@ -1191,7 +1153,7 @@ class Repository extends Base implements Callback, Listener {
      */
     public function updateMany(array $data, Closure $conditions, array $options = []) {
         $pk = $this->getPrimaryKey();
-        $ids = $this->select($pk)->bindCallback($conditions)->fetchList($pk, $pk);
+        $ids = $this->select($pk)->bindCallback($conditions)->lists($pk, $pk);
         $query = $this->query(Query::UPDATE)->bindCallback($conditions);
 
         // Validate that this won't update all records
@@ -1346,7 +1308,7 @@ class Repository extends Base implements Callback, Listener {
                             $exists = $junctionRepo->select()
                                 ->where($fk, $id)
                                 ->where($rfk, $foreign_id)
-                                ->fetch();
+                                ->first();
 
                             if (!$exists) {
                                 $junctionData[$jpk] = $junctionRepo->upsert($junctionData, null, $options);

@@ -120,7 +120,7 @@ class AbstractUpsertTest extends TestCase {
             'user_id' => 1,
             'lastLogin' => '2012-02-15 21:22:34',
             'currentLogin' => '2013-06-06 19:11:03'
-        ]), $user->Profile->select()->where('id', 4)->fetch());
+        ]), $user->Profile->select()->where('id', 4)->first());
 
         $this->assertEquals(1, $user->upsertRelations(1, [
             'Profile' => [
@@ -134,7 +134,7 @@ class AbstractUpsertTest extends TestCase {
             'user_id' => 1,
             'lastLogin' => date('Y-m-d H:i:s', $time),
             'currentLogin' => '2013-06-06 19:11:03'
-        ]), $user->Profile->select()->where('id', 4)->fetch());
+        ]), $user->Profile->select()->where('id', 4)->first());
 
         // Create
         $this->assertFalse($user->Profile->exists(6));
@@ -150,7 +150,7 @@ class AbstractUpsertTest extends TestCase {
             'user_id' => 1,
             'lastLogin' => date('Y-m-d H:i:s', $time),
             'currentLogin' => null
-        ]), $user->Profile->select()->where('id', 6)->fetch());
+        ]), $user->Profile->select()->where('id', 6)->first());
     }
 
     /**
@@ -162,7 +162,7 @@ class AbstractUpsertTest extends TestCase {
         $series = new Series();
 
         // Trigger lazy-loaded queries
-        $results = $series->select()->where('id', 1)->with('Books')->fetch();
+        $results = $series->select()->where('id', 1)->with('Books')->first();
         $results->Books;
 
         $this->assertEquals(new Entity([
@@ -187,7 +187,7 @@ class AbstractUpsertTest extends TestCase {
         ]));
 
         // Trigger lazy-loaded queries
-        $results = $series->select()->where('id', 1)->with('Books')->fetch();
+        $results = $series->select()->where('id', 1)->with('Books')->first();
         $results->Books;
 
         $this->assertEquals(new Entity([
@@ -215,7 +215,7 @@ class AbstractUpsertTest extends TestCase {
         $book = new Book();
 
         // Trigger lazy-loaded queries
-        $results = $book->select()->where('id', 10)->with('Genres')->fetch();
+        $results = $book->select()->where('id', 10)->with('Genres')->first();
         $results->Genres;
 
         $this->assertEquals(new Entity([
@@ -270,7 +270,7 @@ class AbstractUpsertTest extends TestCase {
         // Trigger lazy-loaded queries
         $results = $book->select()->where('id', 10)->with('Genres', function() {
             $this->orderBy('id', 'asc');
-        })->fetch();
+        })->first();
         $results->Genres;
 
         $this->assertEquals([

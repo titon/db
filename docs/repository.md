@@ -56,9 +56,9 @@ Reading records.
 $repo->read(1); // Returns row
 
 // Or through a select
-$repo->select()->fetchAll(); // Returns all rows
-$repo->select()->fetchList(); // Returns rows as a list
-$repo->select('id', 'username')->where('id', 1)->fetch(); // Returns row
+$repo->select()->all(); // Returns all rows
+$repo->select()->lists(); // Returns rows as a list
+$repo->select('id', 'username')->where('id', 1)->first(); // Returns row
 $repo->select()->count(); // Return row count
 ```
 
