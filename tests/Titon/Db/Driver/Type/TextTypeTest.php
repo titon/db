@@ -25,7 +25,7 @@ class TextTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new TextType(new DriverStub('default', []));
+        $this->object = new TextType(new DriverStub([]));
     }
 
     /**

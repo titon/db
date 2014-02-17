@@ -25,7 +25,7 @@ class BlobTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new BlobType(new DriverStub('default', []));
+        $this->object = new BlobType(new DriverStub([]));
     }
 
     /**

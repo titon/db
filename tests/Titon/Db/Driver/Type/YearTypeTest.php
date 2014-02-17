@@ -26,7 +26,7 @@ class YearTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new YearType(new DriverStub('default', []));
+        $this->object = new YearType(new DriverStub([]));
     }
 
     /**

@@ -25,7 +25,7 @@ class SerialTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new SerialType(new DriverStub('default', []));
+        $this->object = new SerialType(new DriverStub([]));
     }
 
     /**

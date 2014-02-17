@@ -99,13 +99,6 @@ abstract class AbstractDriver extends Base implements Driver {
     protected $_logs = [];
 
     /**
-     * Unique identifier.
-     *
-     * @type string
-     */
-    protected $_key;
-
-    /**
      * The last query result.
      *
      * @type \Titon\Db\Query\Result
@@ -122,17 +115,14 @@ abstract class AbstractDriver extends Base implements Driver {
     /**
      * Store the identifier key and configuration.
      *
-     * @param string $key
      * @param array $config
      */
-    public function __construct($key, array $config) {
-        $this->_key = $key;
-
-        $this->addFinder(new FirstFinder());
-        $this->addFinder(new AllFinder());
-        $this->addFinder(new ListFinder());
-
+    public function __construct(array $config) {
         parent::__construct($config);
+
+        $this->addFinder('first', new FirstFinder());
+        $this->addFinder('all', new AllFinder());
+        $this->addFinder('list', new ListFinder());
     }
 
     /**
@@ -145,9 +135,7 @@ abstract class AbstractDriver extends Base implements Driver {
     /**
      * {@inheritdoc}
      */
-    public function addFinder(Finder $finder) {
-        $key = strtolower(str_replace('Finder', '', Path::className(get_class($finder))));
-
+    public function addFinder($key, Finder $finder) {
         $this->_finders[$key] = $finder;
 
         return $this;
@@ -219,13 +207,6 @@ abstract class AbstractDriver extends Base implements Driver {
      */
     public function getHost() {
         return $this->getConfig('host');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getKey() {
-        return $this->_key;
     }
 
     /**

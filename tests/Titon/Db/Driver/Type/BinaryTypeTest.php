@@ -25,7 +25,7 @@ class BinaryTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new BinaryType(new DriverStub('default', []));
+        $this->object = new BinaryType(new DriverStub([]));
     }
 
     /**

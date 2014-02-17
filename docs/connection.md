@@ -11,7 +11,7 @@ use Titon\Db\Mysql\MysqlDriver;
 $conn = Connection::registry(); // Registry required
 
 // Requires the db-mysql package
-$conn->addDriver(new MysqlDriver('default', [
+$conn->addDriver('default', new MysqlDriver([
     'host' => '127.0.0.1',
     'user' => 'user',
     'pass' => 'pass'

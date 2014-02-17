@@ -25,7 +25,7 @@ class IntTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new IntType(new DriverStub('default', []));
+        $this->object = new IntType(new DriverStub([]));
     }
 
     /**

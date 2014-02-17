@@ -29,11 +29,12 @@ class Connection {
     /**
      * Add a driver that houses login credentials.
      *
+     * @param string $key
      * @param \Titon\Db\Driver $driver
      * @return \Titon\Db\Driver
      */
-    public function addDriver(Driver $driver) {
-        $this->_drivers[$driver->getKey()] = $driver;
+    public function addDriver($key, Driver $driver) {
+        $this->_drivers[$key] = $driver;
 
         return $driver;
     }
@@ -50,7 +51,7 @@ class Connection {
             return $this->_drivers[$key];
         }
 
-        throw new MissingDriverException(sprintf('Invalid driver %s', $key));
+        throw new MissingDriverException(sprintf('Driver %s does not exist', $key));
     }
 
     /**

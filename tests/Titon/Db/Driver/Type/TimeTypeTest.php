@@ -26,7 +26,7 @@ class TimeTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new TimeType(new DriverStub('default', []));
+        $this->object = new TimeType(new DriverStub([]));
     }
 
     /**

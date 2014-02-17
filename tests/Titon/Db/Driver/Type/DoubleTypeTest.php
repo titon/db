@@ -25,7 +25,7 @@ class DoubleTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new DoubleType(new DriverStub('default', []));
+        $this->object = new DoubleType(new DriverStub([]));
     }
 
     /**

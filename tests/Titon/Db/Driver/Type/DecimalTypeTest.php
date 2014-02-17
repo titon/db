@@ -25,7 +25,7 @@ class DecimalTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new DecimalType(new DriverStub('default', []));
+        $this->object = new DecimalType(new DriverStub([]));
     }
 
     /**

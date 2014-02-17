@@ -25,7 +25,7 @@ class BooleanTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new BooleanType(new DriverStub('default', []));
+        $this->object = new BooleanType(new DriverStub([]));
     }
 
     /**

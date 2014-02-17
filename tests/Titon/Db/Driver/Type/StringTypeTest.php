@@ -25,7 +25,7 @@ class StringTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new StringType(new DriverStub('default', []));
+        $this->object = new StringType(new DriverStub([]));
     }
 
     /**

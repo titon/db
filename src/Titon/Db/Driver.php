@@ -24,10 +24,11 @@ interface Driver {
     /**
      * Add a query finder.
      *
+     * @param string $key
      * @param \Titon\Db\Driver\Finder $finder
      * @return \Titon\Db\Driver
      */
-    public function addFinder(Finder $finder);
+    public function addFinder($key, Finder $finder);
 
     /**
      * Connect to the driver.
@@ -95,13 +96,6 @@ interface Driver {
      * @return \Titon\Db\Driver\Finder
      */
     public function getFinder($key);
-
-    /**
-     * Return the unique identifier.
-     *
-     * @return string
-     */
-    public function getKey();
 
     /**
      * Return the ID of the last inserted record.

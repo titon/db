@@ -37,7 +37,7 @@ class DialectTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->driver = new DriverStub('default', []);
+        $this->driver = new DriverStub([]);
         $this->driver->connect();
 
         $this->object = new DialectStub($this->driver);

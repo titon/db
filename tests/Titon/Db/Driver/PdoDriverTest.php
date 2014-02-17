@@ -36,7 +36,7 @@ class PdoDriverTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new DriverStub('default', Config::get('db'));
+        $this->object = new DriverStub(Config::get('db'));
         $this->object->connect();
 
         $this->table = new User();

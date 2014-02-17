@@ -26,7 +26,7 @@ class DateTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new DateType(new DriverStub('default', []));
+        $this->object = new DateType(new DriverStub([]));
     }
 
     /**

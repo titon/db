@@ -1,6 +1,6 @@
 # Queries #
 
-A Query is an object oriented approach to SQL query building. A query can be instantiated through the table as so:
+A Query is an object oriented approach to SQL query building. A query can be instantiated through the Repository as so:
 
 ```php
 $query = $this->query(Query::UPDATE); // specify the type of query

@@ -25,7 +25,7 @@ class ConnectionTest extends TestCase {
         parent::setUp();
 
         $this->object = new Connection();
-        $this->object->addDriver(new DriverStub('mysql', []));
+        $this->object->addDriver('mysql', new DriverStub([]));
     }
 
     /**
@@ -41,7 +41,7 @@ class ConnectionTest extends TestCase {
             $this->assertTrue(true);
         }
 
-        $this->object->addDriver(new DriverStub('foobar', []));
+        $this->object->addDriver('foobar', new DriverStub([]));
         $this->assertInstanceOf('Titon\Db\Driver', $this->object->getDriver('foobar'));
     }
 
@@ -51,7 +51,7 @@ class ConnectionTest extends TestCase {
     public function testGetDrivers() {
         $this->assertEquals(1, count($this->object->getDrivers()));
 
-        $this->object->addDriver(new DriverStub('foobar', []));
+        $this->object->addDriver('foobar', new DriverStub([]));
         $this->assertEquals(2, count($this->object->getDrivers()));
     }
 

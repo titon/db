@@ -25,7 +25,7 @@ class BigintTypeTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new BigintType(new DriverStub('default', []));
+        $this->object = new BigintType(new DriverStub([]));
     }
 
     /**

@@ -24,7 +24,7 @@ class TypeTest extends TestCase {
      * Test factory and exceptions are throwing for missing types.
      */
     public function testFactory() {
-        $driver = new DriverStub('default', []);
+        $driver = new DriverStub([]);
 
         $this->assertInstanceOf('Titon\Db\Driver\Type', AbstractType::factory('int', $driver));
         $this->assertInstanceOf('Titon\Db\Driver\Type', AbstractType::factory('varchar', $driver));

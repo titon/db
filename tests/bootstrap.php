@@ -29,5 +29,5 @@ $db = [
 Titon\Common\Config::set('db', $db);
 
 // Used by tables
-Titon\Common\Registry::factory('Titon\Db\Connection')
-    ->addDriver(new Titon\Test\Stub\DriverStub('default', $db));
+Titon\Db\Connection::registry()
+    ->addDriver('default', new Titon\Test\Stub\DriverStub($db));
