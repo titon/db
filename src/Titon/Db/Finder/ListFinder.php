@@ -5,7 +5,7 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Driver\Finder;
+namespace Titon\Db\Finder;
 
 use Titon\Db\Entity;
 use Titon\Db\Exception\InvalidArgumentException;
@@ -14,7 +14,7 @@ use Titon\Utility\Hash;
 /**
  * Returns a list of records indexed by a certain field, with the value of another field.
  *
- * @package Titon\Db\Driver\Finder
+ * @package Titon\Db\Finder
  */
 class ListFinder extends AbstractFinder {
 

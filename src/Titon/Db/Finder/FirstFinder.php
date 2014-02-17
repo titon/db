@@ -5,12 +5,12 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Driver\Finder;
+namespace Titon\Db\Finder;
 
 /**
  * Returns the first record in the results.
  *
- * @package Titon\Db\Driver\Finder
+ * @package Titon\Db\Finder
  */
 class FirstFinder extends AbstractFinder {
 

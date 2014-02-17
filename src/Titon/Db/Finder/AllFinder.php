@@ -5,12 +5,12 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Driver\Finder;
+namespace Titon\Db\Finder;
 
 /**
  * Returns all records without alteration.
  *
- * @package Titon\Db\Driver\Finder
+ * @package Titon\Db\Finder
  */
 class AllFinder extends AbstractFinder {
 

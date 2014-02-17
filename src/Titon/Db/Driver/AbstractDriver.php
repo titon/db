@@ -12,12 +12,12 @@ use Titon\Common\Base;
 use Titon\Common\Traits\Cacheable;
 use Titon\Cache\Storage;
 use Titon\Db\Driver;
-use Titon\Db\Driver\Finder\FirstFinder;
-use Titon\Db\Driver\Finder\AllFinder;
-use Titon\Db\Driver\Finder\ListFinder;
 use Titon\Db\Exception\MissingFinderException;
+use Titon\Db\Finder;
+use Titon\Db\Finder\FirstFinder;
+use Titon\Db\Finder\AllFinder;
+use Titon\Db\Finder\ListFinder;
 use Titon\Db\Query\Result;
-use Titon\Utility\Path;
 
 /**
  * Implements basic driver functionality.
@@ -80,7 +80,7 @@ abstract class AbstractDriver extends Base implements Driver {
     /**
      * List of finders.
      *
-     * @type \Titon\Db\Driver\Finder[]
+     * @type \Titon\Db\Finder[]
      */
     protected $_finders = [];
 

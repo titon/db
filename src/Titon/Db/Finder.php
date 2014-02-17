@@ -5,14 +5,12 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Driver;
-
-use Titon\Db\Query;
+namespace Titon\Db;
 
 /**
  * A finder represents a specific type of query fetch, which allows alteration before or after.
  *
- * @package Titon\Db\Driver
+ * @package Titon\Db
  */
 interface Finder {
 

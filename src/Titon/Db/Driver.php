@@ -10,7 +10,7 @@ namespace Titon\Db;
 use Psr\Log\LoggerInterface;
 use Titon\Cache\Storage;
 use Titon\Db\Driver\Dialect;
-use Titon\Db\Driver\Finder;
+use Titon\Db\Finder;
 use Titon\Db\Query;
 use Titon\Db\Query\Result;
 
@@ -25,7 +25,7 @@ interface Driver {
      * Add a query finder.
      *
      * @param string $key
-     * @param \Titon\Db\Driver\Finder $finder
+     * @param \Titon\Db\Finder $finder
      * @return \Titon\Db\Driver
      */
     public function addFinder($key, Finder $finder);
@@ -93,7 +93,7 @@ interface Driver {
      * Return a finder by name.
      *
      * @param string $key
-     * @return \Titon\Db\Driver\Finder
+     * @return \Titon\Db\Finder
      */
     public function getFinder($key);
 

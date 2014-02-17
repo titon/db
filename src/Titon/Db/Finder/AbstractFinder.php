@@ -5,16 +5,16 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Driver\Finder;
+namespace Titon\Db\Finder;
 
 use Titon\Common\Base;
-use Titon\Db\Driver\Finder;
+use Titon\Db\Finder;
 use Titon\Db\Query;
 
 /**
  * Implement basic finder functionality.
  *
- * @package Titon\Db\Driver\Finder
+ * @package Titon\Db\Finder
  */
 abstract class AbstractFinder extends Base implements Finder {
 
