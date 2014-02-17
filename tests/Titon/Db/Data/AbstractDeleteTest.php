@@ -303,8 +303,8 @@ class AbstractDeleteTest extends TestCase {
             $this->assertTrue(true);
         }
 
-        $this->assertEquals(3, $user->deleteMany(function() {
-            $this->where('age', '>', 30);
+        $this->assertEquals(3, $user->deleteMany(function(Query $query) {
+            $query->where('age', '>', 30);
         }));
     }
 

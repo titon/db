@@ -613,8 +613,8 @@ class AbstractUpdateTest extends TestCase {
             $this->assertTrue(true);
         }
 
-        $this->assertEquals(3, $user->updateMany($data, function() {
-            $this->where('age', '>', 30);
+        $this->assertEquals(3, $user->updateMany($data, function(Query $query) {
+            $query->where('age', '>', 30);
         }));
     }
 

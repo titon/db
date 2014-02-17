@@ -47,8 +47,8 @@ class PredicateTest extends TestCase {
         $also = new Predicate(Predicate::ALSO);
         $also->in('id', [1, 2, 3]);
 
-        $this->object->also(function() {
-            $this->in('id', [1, 2, 3]);
+        $this->object->also(function(Predicate $predicate) {
+            $predicate->in('id', [1, 2, 3]);
         });
         $this->assertEquals([$also], $this->object->getParams());
     }
@@ -70,8 +70,8 @@ class PredicateTest extends TestCase {
         $either = new Predicate(Predicate::EITHER);
         $either->notEq('level', 1)->notEq('level', 2);
 
-        $this->object->either(function() {
-            $this->notEq('level', 1)->notEq('level', 2);
+        $this->object->either(function(Predicate $predicate) {
+            $predicate->notEq('level', 1)->notEq('level', 2);
         });
         $this->assertEquals([$either], $this->object->getParams());
     }
@@ -176,8 +176,8 @@ class PredicateTest extends TestCase {
         $maybe = new Predicate(Predicate::MAYBE);
         $maybe->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
 
-        $this->object->maybe(function() {
-            $this->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
+        $this->object->maybe(function(Predicate $predicate) {
+            $predicate->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
         });
         $this->assertEquals([$maybe], $this->object->getParams());
     }
@@ -189,8 +189,8 @@ class PredicateTest extends TestCase {
         $neither = new Predicate(Predicate::NEITHER);
         $neither->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
 
-        $this->object->neither(function() {
-            $this->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
+        $this->object->neither(function(Predicate $predicate) {
+            $predicate->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
         });
         $this->assertEquals([$neither], $this->object->getParams());
     }

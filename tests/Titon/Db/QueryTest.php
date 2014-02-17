@@ -54,8 +54,8 @@ class QueryTest extends TestCase {
     public function testBindCallback() {
         $this->assertEquals([], $this->object->getFields());
 
-        $this->object->bindCallback(function() {
-            $this->fields('id', 'created');
+        $this->object->bindCallback(function(Query $query) {
+            $query->fields('id', 'created');
         }, null);
 
         $this->assertEquals(['id', 'created'], $this->object->getFields());
@@ -141,8 +141,8 @@ class QueryTest extends TestCase {
 
         $expected['titlenotLike%Titon%'] = new Expr('title', 'notLike', '%Titon%');
 
-        $this->object->having(function() {
-            $this->notLike('title', '%Titon%');
+        $this->object->having(function(Predicate $having) {
+            $having->notLike('title', '%Titon%');
         });
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
 
@@ -251,8 +251,8 @@ class QueryTest extends TestCase {
 
         $expected['titlenotLike%Titon%'] = new Expr('title', 'notLike', '%Titon%');
 
-        $this->object->orHaving(function() {
-            $this->notLike('title', '%Titon%');
+        $this->object->orHaving(function(Predicate $having) {
+            $having->notLike('title', '%Titon%');
         });
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
 
@@ -284,8 +284,8 @@ class QueryTest extends TestCase {
 
         $expected['levelbetween[1,100]'] = new Expr('level', 'between', [1, 100]);
 
-        $this->object->orWhere(function() {
-            $this->between('level', 1, 100);
+        $this->object->orWhere(function(Predicate $where) {
+            $where->between('level', 1, 100);
         });
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
 
@@ -316,8 +316,8 @@ class QueryTest extends TestCase {
 
         $expected['levelbetween[1,100]'] = new Expr('level', 'between', [1, 100]);
 
-        $this->object->where(function() {
-            $this->between('level', 1, 100);
+        $this->object->where(function(Predicate $where) {
+            $where->between('level', 1, 100);
         });
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
 
@@ -415,8 +415,8 @@ class QueryTest extends TestCase {
             ->limit(5, 10)
             ->orderBy('id', 'asc')
             ->from('users')
-            ->where(function() {
-                $this->notIn('id', [1, 2, 3])->gte('size', 15);
+            ->where(function(Predicate $where) {
+                $where->notIn('id', [1, 2, 3])->gte('size', 15);
             });
 
         $expected = unserialize(serialize($query));
@@ -443,8 +443,8 @@ class QueryTest extends TestCase {
             ->limit(5, 10)
             ->orderBy('id', 'asc')
             ->from('users')
-            ->where(function() {
-                $this->notIn('id', [1, 2, 3])->gte('size', 15);
+            ->where(function(Predicate $where) {
+                $where->notIn('id', [1, 2, 3])->gte('size', 15);
             });
 
         $this->assertEquals(json_encode([

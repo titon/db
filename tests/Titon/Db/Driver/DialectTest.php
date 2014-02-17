@@ -208,8 +208,8 @@ class DialectTest extends TestCase {
         $query->from('foobar');
         $this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?;/', $this->object->buildSelect($query));
 
-        $query->where('status', 1)->where(function() {
-            $this->gte('rank', 15);
+        $query->where('status', 1)->where(function(Predicate $where) {
+            $where->gte('rank', 15);
         });
         $this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?;/', $this->object->buildSelect($query));
 
@@ -222,8 +222,8 @@ class DialectTest extends TestCase {
         $query->limit(50, 10);
         $this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?\s+GROUP BY (`|\")?rank(`|\")?, (`|\")?created(`|\")?\s+ORDER BY (`|\")?id(`|\")? DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 
-        $query->having(function() {
-            $this->gte('id', 100);
+        $query->having(function(Predicate $having) {
+            $having->gte('id', 100);
         });
         $this->assertRegExp('/SELECT\s+\* FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?\s+GROUP BY (`|\")?rank(`|\")?, (`|\")?created(`|\")?\s+HAVING (`|\")?id(`|\")? >= \?\s+ORDER BY (`|\")?id(`|\")? DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
 
@@ -651,10 +651,10 @@ class DialectTest extends TestCase {
 
         $this->assertRegExp('/(`|\")?id(`|\")? = \? AND (`|\")?age(`|\")? >= \?/', $this->object->formatPredicate($pred));
 
-        $pred->either(function() {
-            $this->like('name', '%Titon%')->notLike('name', '%Symfony%');
-            $this->also(function() {
-                $this->eq('active', 1)->notEq('status', 2);
+        $pred->either(function(Predicate $where) {
+            $where->like('name', '%Titon%')->notLike('name', '%Symfony%');
+            $where->also(function(Predicate $where2) {
+                $where2->eq('active', 1)->notEq('status', 2);
             });
         });
 

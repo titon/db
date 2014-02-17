@@ -7,6 +7,7 @@
 
 namespace Titon\Db;
 
+use Titon\Db\Query\Predicate;
 use Titon\Test\Stub\BehaviorStub;
 use Titon\Test\Stub\MapperStub;
 use Titon\Test\Stub\Repository\Author;
@@ -253,8 +254,8 @@ class RepositoryTest extends TestCase {
 
         $this->assertEquals(array_map(function($value) {
             return new Entity($value);
-        }, $results), $this->object->query(Query::SELECT)->where(function() {
-            $this->gte('id', 4);
+        }, $results), $this->object->query(Query::SELECT)->where(function(Predicate $where) {
+            $where->gte('id', 4);
         })->all());
 
         // No results

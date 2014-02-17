@@ -8,6 +8,7 @@
 namespace Titon\Db\Behavior;
 
 use Titon\Db\Entity;
+use Titon\Db\Query;
 use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\TestCase;
 
@@ -159,8 +160,8 @@ class SlugBehaviorTest extends TestCase {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SlugBehavior(['scope' => function() {
-            $this->where('post_count', '<=', 3);
+        $topic->addBehavior(new SlugBehavior(['scope' => function(Query $query) {
+            $query->where('post_count', '<=', 3);
         }]));
 
         $topic_id = $topic->create(['title' => 'Batman vs Superman']);

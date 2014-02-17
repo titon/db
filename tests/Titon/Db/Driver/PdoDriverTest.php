@@ -303,8 +303,8 @@ class PdoDriverTest extends TestCase {
      */
     public function testResolveParams() {
         $query1 = new Query(Query::SELECT, $this->table);
-        $query1->where('id', 1)->where(function() {
-            $this->like('name', 'Titon')->in('size', [1, 2, 3]);
+        $query1->where('id', 1)->where(function(Query\Predicate $where) {
+            $where->like('name', 'Titon')->in('size', [1, 2, 3]);
         });
 
         $this->assertEquals([
@@ -333,11 +333,11 @@ class PdoDriverTest extends TestCase {
         $query3->fields([
             'username' => 'miles',
             'age' => 26
-        ])->orWhere(function() {
-            $this
+        ])->orWhere(function(Query\Predicate $where) {
+            $where
                 ->in('id', [4, 5, 6])
-                ->also(function() {
-                    $this->eq('status', true)->notEq('email', 'email@domain.com');
+                ->also(function(Query\Predicate $where2) {
+                    $where2->eq('status', true)->notEq('email', 'email@domain.com');
                 })
                 ->between('age', 30, 50);
         });

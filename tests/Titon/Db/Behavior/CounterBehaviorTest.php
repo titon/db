@@ -7,6 +7,8 @@
 
 namespace Titon\Db\Behavior;
 
+use Titon\Db\Query\Predicate;
+use Titon\Db\Query;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\Genre;
 use Titon\Test\Stub\Repository\Post;
@@ -79,8 +81,8 @@ class CounterBehaviorTest extends TestCase {
         $this->assertEquals(14, $record->book_count);
 
         // Delete multiple records
-        $book->deleteMany(function() {
-            $this->where('series_id', 1);
+        $book->deleteMany(function(Query $where) {
+            $where->where('series_id', 1);
         }, true);
 
         $record = $genre->read(8);
@@ -96,8 +98,8 @@ class CounterBehaviorTest extends TestCase {
         $topic = new Topic();
         $post = new Post();
         $post->addBehavior(new CounterBehavior())
-            ->addCounter('Topic', 'post_count', function() {
-                $this->where('active', 1);
+            ->addCounter('Topic', 'post_count', function(Query $query) {
+                $query->where('active', 1);
             });
 
         $record = $topic->read(1);
@@ -125,8 +127,8 @@ class CounterBehaviorTest extends TestCase {
         $topic = new Topic();
         $post = new Post();
         $post->addBehavior(new CounterBehavior())
-            ->addCounter('Topic', 'post_count', function() {
-                $this->where('active', 1);
+            ->addCounter('Topic', 'post_count', function(Query $query) {
+                $query->where('active', 1);
             });
 
         $record = $topic->read(1);
@@ -145,8 +147,8 @@ class CounterBehaviorTest extends TestCase {
         $this->assertEquals(5, $record->post_count);
 
         // Update all to be inactive
-        $post->updateMany(['active' => 0], function() {
-            $this->where('topic_id', 1);
+        $post->updateMany(['active' => 0], function(Query $query) {
+            $query->where('topic_id', 1);
         });
 
         $record = $topic->read(1);
@@ -162,8 +164,8 @@ class CounterBehaviorTest extends TestCase {
         $topic = new Topic();
         $post = new Post();
         $post->addBehavior(new CounterBehavior())
-            ->addCounter('Topic', 'post_count', function() {
-                $this->where('active', 1);
+            ->addCounter('Topic', 'post_count', function(Query $query) {
+                $query->where('active', 1);
             });
 
         $record = $topic->read(1);
@@ -182,8 +184,8 @@ class CounterBehaviorTest extends TestCase {
         $this->assertEquals(3, $record->post_count);
 
         // Delete all records
-        $post->deleteMany(function() {
-            $this->where('topic_id', 1);
+        $post->deleteMany(function(Query $query) {
+            $query->where('topic_id', 1);
         }, false);
 
         $record = $topic->read(1);

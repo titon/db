@@ -8,6 +8,7 @@
 namespace Titon\Db\Data;
 
 use Titon\Db\Entity;
+use Titon\Db\Query;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\Series;
 use Titon\Test\Stub\Repository\User;
@@ -268,8 +269,8 @@ class AbstractUpsertTest extends TestCase {
         ]));
 
         // Trigger lazy-loaded queries
-        $results = $book->select()->where('id', 10)->with('Genres', function() {
-            $this->orderBy('id', 'asc');
+        $results = $book->select()->where('id', 10)->with('Genres', function(Query $query) {
+            $query->orderBy('id', 'asc');
         })->first();
         $results->Genres;
 

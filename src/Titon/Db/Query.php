@@ -231,8 +231,7 @@ class Query implements Serializable, JsonSerializable {
      */
     public function bindCallback($callback, $argument = null) {
         if ($callback instanceof Closure) {
-            $callback = $callback->bindTo($this, 'Titon\Db\Query');
-            $callback($this, $argument);
+            call_user_func_array($callback, [$this, $argument]);
         }
 
         return $this;

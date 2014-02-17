@@ -8,6 +8,7 @@
 namespace Titon\Db;
 
 use Titon\Db\Query\Expr;
+use Titon\Db\Query\Predicate;
 use Titon\Db\Relation\ManyToMany;
 use Titon\Db\Relation\OneToOne;
 use Titon\Test\Stub\Repository\User;
@@ -92,8 +93,8 @@ class RelationTest extends TestCase {
     public function testConditions() {
         $query = new Query(Query::SELECT, new User());
 
-        $this->object->setConditions(function() {
-            $this->where('status', 1);
+        $this->object->setConditions(function(Query $query) {
+            $query->where('status', 1);
         });
 
         $this->assertEquals([], $query->getWhere()->getParams());

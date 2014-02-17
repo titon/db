@@ -433,8 +433,8 @@ class AbstractReadTest extends TestCase {
         $actual = $series->select()
             ->where('id', 1)
             ->with('Author')
-            ->with('Books', function() {
-                $this->with('Genres');
+            ->with('Books', function(Query $query) {
+                $query->with('Genres');
             })
             ->first(['eager' => true]);
 
@@ -853,8 +853,8 @@ class AbstractReadTest extends TestCase {
         // When joining data, the foreign key should be included
         $actual = $book->select('id', 'name')
             ->where('series_id', 3)
-            ->with('Series', function() {
-                $this->fields('name');
+            ->with('Series', function(Query $query) {
+                $query->fields('name');
             })
             ->orderBy('id', 'asc')
             ->all(['eager' => true]);
@@ -1044,8 +1044,8 @@ class AbstractReadTest extends TestCase {
                 'range' => 1
             ])
         ], $stat->select('id', 'name', 'health', 'isMelee', 'range')
-            ->where(function() {
-                $this->gte('health', 500)->lte('range', 7)->eq('isMelee', true);
+            ->where(function(Query\Predicate $where) {
+                $where->gte('health', 500)->lte('range', 7)->eq('isMelee', true);
             })->all());
     }
 
@@ -1098,8 +1098,8 @@ class AbstractReadTest extends TestCase {
                 'range' => 8.33
             ])
         ], $stat->select('id', 'name', 'damage', 'defense', 'range')
-            ->orWhere(function() {
-                $this->gt('damage', 100)->gt('range', 5)->gt('defense', 50);
+            ->orWhere(function(Query\Predicate $where) {
+                $where->gt('damage', 100)->gt('range', 5)->gt('defense', 50);
             })
             ->all());
     }
@@ -1115,10 +1115,10 @@ class AbstractReadTest extends TestCase {
         $this->assertEquals([
             new Entity(['id' => 3, 'name' => 'Mage'])
         ], $stat->select('id', 'name')
-            ->where(function() {
-                $this->eq('isMelee', false);
-                $this->either(function() {
-                    $this->lte('health', 600)->lte('damage', 60);
+            ->where(function(Query\Predicate $where) {
+                $where->eq('isMelee', false);
+                $where->either(function(Query\Predicate $where2) {
+                    $where2->lte('health', 600)->lte('damage', 60);
                 });
             })->all());
     }
@@ -1218,11 +1218,11 @@ class AbstractReadTest extends TestCase {
             ])
             ->where('status', '!=', 'pending')
             ->groupBy('user_id')
-            ->having(function() {
-                $this->between('qty', 40, 50);
-                $this->either(function() {
-                    $this->eq('status', 'shipped');
-                    $this->eq('status', 'delivered');
+            ->having(function(Query\Predicate $having) {
+                $having->between('qty', 40, 50);
+                $having->either(function(Query\Predicate $having2) {
+                    $having2->eq('status', 'shipped');
+                    $having2->eq('status', 'delivered');
                 });
             });
 
