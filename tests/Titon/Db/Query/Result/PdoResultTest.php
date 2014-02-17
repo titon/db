@@ -34,7 +34,7 @@ class PdoResultTest extends TestCase {
      * Test statement is generated when cast to string.
      */
     public function testToString() {
-        $result = $this->object->getDriver()->query($this->object->select()->where('id', 1));
+        $result = $this->object->getDriver()->executeQuery($this->object->select()->where('id', 1));
 
         $this->assertRegExp('/\[SQL\] SELECT \* FROM `users` WHERE `id` = 1; \[TIME\] [0-9\.,]+ \[COUNT\] [0-9]+ \[STATE\] (Executed|Prepared)/i', (string) $result);
     }
@@ -136,7 +136,7 @@ class PdoResultTest extends TestCase {
      * Test statement params are parsed in.
      */
     public function testGetStatement() {
-        $stmt = $this->object->getDriver()->query($this->object->select('id', 'username')->where('id', 5));
+        $stmt = $this->object->getDriver()->executeQuery($this->object->select('id', 'username')->where('id', 5));
 
         $this->assertRegExp('/SELECT (`|\")?id(`|\")?, (`|\")?username(`|\")? FROM (`|\")?users(`|\")? WHERE (`|\")?id(`|\")? = 5;/', $stmt->getStatement());
     }

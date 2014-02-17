@@ -164,9 +164,12 @@ class Query implements Serializable, JsonSerializable {
      * @param int $type
      * @param \Titon\Db\Repository $repo
      */
-    public function __construct($type, Repository $repo) {
+    public function __construct($type, Repository $repo = null) {
         $this->_type = $type;
-        $this->setRepository($repo);
+
+        if ($repo) {
+            $this->setRepository($repo);
+        }
     }
 
     /**

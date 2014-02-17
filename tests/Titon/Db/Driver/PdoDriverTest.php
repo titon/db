@@ -262,7 +262,7 @@ class PdoDriverTest extends TestCase {
         $this->loadFixtures('Users');
 
         $query1 = (new Query(Query::SELECT, $this->table))->from('users');
-        $result = $this->object->query($query1);
+        $result = $this->object->executeQuery($query1);
 
         $this->assertInstanceOf('Titon\Db\Query\Result', $result);
 
@@ -281,7 +281,7 @@ class PdoDriverTest extends TestCase {
         $this->assertEquals(true, $result->isSuccessful());
 
         // Test with params
-        $result = $this->object->query('DELETE FROM users WHERE country_id = ?', [1]);
+        $result = $this->object->executeQuery('DELETE FROM users WHERE country_id = ?', [1]);
 
         $this->assertInstanceOf('Titon\Db\Query\Result', $result);
 
@@ -289,7 +289,7 @@ class PdoDriverTest extends TestCase {
         $this->assertEquals(1, $result->save());
 
         // Test with a string
-        $result = $this->object->query('DELETE FROM users');
+        $result = $this->object->executeQuery('DELETE FROM users');
 
         $this->assertInstanceOf('Titon\Db\Query\Result', $result);
 

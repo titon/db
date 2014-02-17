@@ -115,7 +115,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      */
     public function describeTable($repo) {
         return $this->cache([__METHOD__, $repo], function() use ($repo) {
-            $columns = $this->query('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $repo])->find();
+            $columns = $this->executeQuery('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $repo])->find();
             $schema = [];
 
             if (!$columns) {
@@ -187,92 +187,11 @@ abstract class AbstractPdoDriver extends AbstractDriver {
     }
 
     /**
-     * Return the PDO driver name.
-     *
-     * @return string
-     */
-    abstract public function getDriver();
-
-    /**
-     * Format and build the DSN based on the current configuration.
-     *
-     * @return string
-     */
-    abstract public function getDsn();
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getLastInsertID(Repository $repo) {
-        return $this->getConnection()->lastInsertId();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getSupportedTypes() {
-        return [
-            'tinyint' => 'Titon\Db\Driver\Type\IntType',
-            'smallint' => 'Titon\Db\Driver\Type\IntType',
-            'mediumint' => 'Titon\Db\Driver\Type\IntType',
-            'int' => 'Titon\Db\Driver\Type\IntType',
-            'integer' => 'Titon\Db\Driver\Type\IntType',
-            'bigint' => 'Titon\Db\Driver\Type\BigintType',
-            'real' => 'Titon\Db\Driver\Type\FloatType',
-            'float' => 'Titon\Db\Driver\Type\FloatType',
-            'double' => 'Titon\Db\Driver\Type\DoubleType',
-            'decimal' => 'Titon\Db\Driver\Type\DecimalType',
-            'boolean' => 'Titon\Db\Driver\Type\BooleanType',
-            'date' => 'Titon\Db\Driver\Type\DateType',
-            'datetime' => 'Titon\Db\Driver\Type\DatetimeType',
-            'timestamp' => 'Titon\Db\Driver\Type\DatetimeType',
-            'time' => 'Titon\Db\Driver\Type\TimeType',
-            'year' => 'Titon\Db\Driver\Type\YearType',
-            'char' => 'Titon\Db\Driver\Type\CharType',
-            'varchar' => 'Titon\Db\Driver\Type\StringType',
-            'tinytext' => 'Titon\Db\Driver\Type\TextType',
-            'mediumtext' => 'Titon\Db\Driver\Type\TextType',
-            'text' => 'Titon\Db\Driver\Type\TextType',
-            'longtext' => 'Titon\Db\Driver\Type\TextType',
-            'tinyblob' => 'Titon\Db\Driver\Type\BlobType',
-            'mediumblob' => 'Titon\Db\Driver\Type\BlobType',
-            'blob' => 'Titon\Db\Driver\Type\BlobType',
-            'longblob' => 'Titon\Db\Driver\Type\BlobType',
-            'bit' => 'Titon\Db\Driver\Type\BinaryType',
-            'binary' => 'Titon\Db\Driver\Type\BinaryType',
-            'varbinary' => 'Titon\Db\Driver\Type\BinaryType',
-            'serial' => 'Titon\Db\Driver\Type\SerialType'
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function listTables($database = null) {
-        $database = $database ?: $this->getDatabase();
-
-        return $this->cache([__METHOD__, $database], function() use ($database) {
-            $repos = $this->query('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->find();
-            $schema = [];
-
-            if (!$repos) {
-                return $schema;
-            }
-
-            foreach ($repos as $repo) {
-                $schema[] = $repo['TABLE_NAME'];
-            }
-
-            return $schema;
-        });
-    }
-
-    /**
      * {@inheritdoc}
      *
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
-    public function query($query, array $params = []) {
+    public function executeQuery($query, array $params = []) {
         $storage = $this->getStorage();
         $cacheKey = null;
         $cacheLength = null;
@@ -338,6 +257,87 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         }
 
         return $this->_result;
+    }
+
+    /**
+     * Return the PDO driver name.
+     *
+     * @return string
+     */
+    abstract public function getDriver();
+
+    /**
+     * Format and build the DSN based on the current configuration.
+     *
+     * @return string
+     */
+    abstract public function getDsn();
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getLastInsertID(Repository $repo) {
+        return $this->getConnection()->lastInsertId();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSupportedTypes() {
+        return [
+            'tinyint' => 'Titon\Db\Driver\Type\IntType',
+            'smallint' => 'Titon\Db\Driver\Type\IntType',
+            'mediumint' => 'Titon\Db\Driver\Type\IntType',
+            'int' => 'Titon\Db\Driver\Type\IntType',
+            'integer' => 'Titon\Db\Driver\Type\IntType',
+            'bigint' => 'Titon\Db\Driver\Type\BigintType',
+            'real' => 'Titon\Db\Driver\Type\FloatType',
+            'float' => 'Titon\Db\Driver\Type\FloatType',
+            'double' => 'Titon\Db\Driver\Type\DoubleType',
+            'decimal' => 'Titon\Db\Driver\Type\DecimalType',
+            'boolean' => 'Titon\Db\Driver\Type\BooleanType',
+            'date' => 'Titon\Db\Driver\Type\DateType',
+            'datetime' => 'Titon\Db\Driver\Type\DatetimeType',
+            'timestamp' => 'Titon\Db\Driver\Type\DatetimeType',
+            'time' => 'Titon\Db\Driver\Type\TimeType',
+            'year' => 'Titon\Db\Driver\Type\YearType',
+            'char' => 'Titon\Db\Driver\Type\CharType',
+            'varchar' => 'Titon\Db\Driver\Type\StringType',
+            'tinytext' => 'Titon\Db\Driver\Type\TextType',
+            'mediumtext' => 'Titon\Db\Driver\Type\TextType',
+            'text' => 'Titon\Db\Driver\Type\TextType',
+            'longtext' => 'Titon\Db\Driver\Type\TextType',
+            'tinyblob' => 'Titon\Db\Driver\Type\BlobType',
+            'mediumblob' => 'Titon\Db\Driver\Type\BlobType',
+            'blob' => 'Titon\Db\Driver\Type\BlobType',
+            'longblob' => 'Titon\Db\Driver\Type\BlobType',
+            'bit' => 'Titon\Db\Driver\Type\BinaryType',
+            'binary' => 'Titon\Db\Driver\Type\BinaryType',
+            'varbinary' => 'Titon\Db\Driver\Type\BinaryType',
+            'serial' => 'Titon\Db\Driver\Type\SerialType'
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function listTables($database = null) {
+        $database = $database ?: $this->getDatabase();
+
+        return $this->cache([__METHOD__, $database], function() use ($database) {
+            $repos = $this->executeQuery('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->find();
+            $schema = [];
+
+            if (!$repos) {
+                return $schema;
+            }
+
+            foreach ($repos as $repo) {
+                $schema[] = $repo['TABLE_NAME'];
+            }
+
+            return $schema;
+        });
     }
 
     /**

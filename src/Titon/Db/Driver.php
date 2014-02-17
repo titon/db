@@ -69,6 +69,15 @@ interface Driver {
     public function escape($value);
 
     /**
+     * Query the driver for database records.
+     *
+     * @param \Titon\Db\Query|string $query
+     * @param array $params
+     * @return \Titon\Db\Query\Result
+     */
+    public function executeQuery($query, array $params = []);
+
+    /**
      * Return the connection object.
      *
      * @return object
@@ -171,13 +180,12 @@ interface Driver {
     public function logQuery(Result $result);
 
     /**
-     * Query the driver for data records.
+     * Create a new query object.
      *
-     * @param \Titon\Db\Query|string $query
-     * @param array $params
-     * @return \Titon\Db\Query\Result
+     * @param string $type
+     * @return \Titon\Db\Query
      */
-    public function query($query, array $params = []);
+    public function newQuery($type);
 
     /**
      * Reset the driver for the next query.

@@ -232,7 +232,7 @@ class Repository extends Base implements Callback, Listener {
      * @return int
      */
     public function count(Query $query) {
-        return $this->getDriver()->query($query)->count();
+        return $this->getDriver()->executeQuery($query)->count();
     }
 
     /**
@@ -1021,13 +1021,14 @@ class Repository extends Base implements Callback, Listener {
     /**
      * Instantiate a new query builder.
      *
-     * @param int $type
+     * @param string $type
      * @return \Titon\Db\Query
      */
     public function query($type) {
         $this->data = [];
 
-        $query = new Query($type, $this);
+        $query = $this->getDriver()->newQuery($type);
+        $query->setRepository($this);
         $query->from($this->getTable(), $this->getAlias());
 
         return $query;
@@ -1069,7 +1070,7 @@ class Repository extends Base implements Callback, Listener {
      * @return int
      */
     public function save(Query $query) {
-        return $this->getDriver()->query($query)->save();
+        return $this->getDriver()->executeQuery($query)->save();
     }
 
     /**
@@ -1568,7 +1569,7 @@ class Repository extends Base implements Callback, Listener {
         } else {
             $finder->before($query, $options);
 
-            $results = $this->getDriver()->query($query)->find();
+            $results = $this->getDriver()->executeQuery($query)->find();
         }
 
         if (!$results) {

@@ -18,6 +18,7 @@ use Titon\Db\Finder\FirstFinder;
 use Titon\Db\Finder\AllFinder;
 use Titon\Db\Finder\ListFinder;
 use Titon\Db\Query\Result;
+use Titon\Db\Query;
 
 /**
  * Implements basic driver functionality.
@@ -292,6 +293,13 @@ abstract class AbstractDriver extends Base implements Driver {
         }
 
         return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function newQuery($type) {
+        return new Query($type);
     }
 
     /**
