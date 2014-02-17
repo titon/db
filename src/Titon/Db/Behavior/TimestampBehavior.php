@@ -38,7 +38,7 @@ class TimestampBehavior extends AbstractBehavior {
      * @return bool
      */
     public function preSave(Event $event, $id, array &$data) {
-        $field = $id ? $this->config->updateField : $this->config->createField;
+        $field = $id ? $this->getConfig('updateField') : $this->getConfig('createField');
         $data[$field] = time();
 
         return true;

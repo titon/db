@@ -237,11 +237,11 @@ class PdoDriverTest extends TestCase {
     public function testGetDsn() {
         $this->assertEquals('mysql:dbname=titon_test;host=127.0.0.1;port=3306;charset=utf8', $this->object->getDsn());
 
-        $this->object->config->encoding = '';
-        $this->object->config->port = 1337;
+        $this->object->setConfig('encoding', '');
+        $this->object->setConfig('port', 1337);
         $this->assertEquals('mysql:dbname=titon_test;host=127.0.0.1;port=1337', $this->object->getDsn());
 
-        $this->object->config->dsn = 'custom:dsn';
+        $this->object->setConfig('dsn', 'custom:dsn');
         $this->assertEquals('custom:dsn', $this->object->getDsn());
     }
 

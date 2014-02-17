@@ -619,7 +619,7 @@ class Repository extends Base implements Callback, Listener {
      * @return string
      */
     public function getAlias() {
-        return $this->info->shortClassName;
+        return $this->inform('shortClassName');
     }
 
     /**
@@ -666,7 +666,7 @@ class Repository extends Base implements Callback, Listener {
      * @return string
      */
     public function getConnectionKey() {
-        return $this->config->connection;
+        return $this->getConfig('connection');
     }
 
     /**
@@ -676,7 +676,7 @@ class Repository extends Base implements Callback, Listener {
      */
     public function getDisplayField() {
         return $this->cache(__METHOD__, function() {
-            $fields = $this->config->displayField;
+            $fields = $this->getConfig('displayField');
             $schema = $this->getSchema();
 
             foreach ((array) $fields as $field) {
@@ -715,7 +715,7 @@ class Repository extends Base implements Callback, Listener {
      * @return string
      */
     public function getEntity() {
-        return $this->config->entity ?: 'Titon\Db\Entity';
+        return $this->getConfig('entity', 'Titon\Db\Entity');
     }
 
     /**
@@ -749,7 +749,7 @@ class Repository extends Base implements Callback, Listener {
      */
     public function getPrimaryKey() {
         return $this->cache(__METHOD__, function() {
-            $pk = $this->config->primaryKey;
+            $pk = $this->getConfig('primaryKey');
             $schema = $this->getSchema();
 
             if ($schema->hasColumn($pk)) {
@@ -833,7 +833,7 @@ class Repository extends Base implements Callback, Listener {
      * @return string
      */
     public function getTable() {
-        return $this->config->prefix . $this->config->table;
+        return $this->getConfig('prefix') . $this->getConfig('table');
     }
 
     /**
@@ -842,7 +842,7 @@ class Repository extends Base implements Callback, Listener {
      * @return string
      */
     public function getTablePrefix() {
-        return $this->config->prefix;
+        return $this->getConfig('prefix');
     }
 
     /**

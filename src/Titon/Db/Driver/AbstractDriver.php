@@ -182,7 +182,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return string
      */
     public function getDatabase() {
-        return $this->config->database;
+        return $this->getConfig('database');
     }
 
     /**
@@ -196,7 +196,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * {@inheritdoc}
      */
     public function getEncoding() {
-        return $this->config->encoding;
+        return $this->getConfig('encoding');
     }
 
     /**
@@ -218,7 +218,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return string
      */
     public function getHost() {
-        return $this->config->host;
+        return $this->getConfig('host');
     }
 
     /**
@@ -248,7 +248,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return string
      */
     public function getPassword() {
-        return $this->config->pass;
+        return $this->getConfig('pass');
     }
 
     /**
@@ -257,7 +257,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return int
      */
     public function getPort() {
-        return $this->config->port;
+        return $this->getConfig('port');
     }
 
     /**
@@ -266,7 +266,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return string
      */
     public function getUser() {
-        return $this->config->user;
+        return $this->getConfig('user');
     }
 
     /**
@@ -275,7 +275,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return string
      */
     public function getSocket() {
-        return $this->config->socket;
+        return $this->getConfig('socket');
     }
 
     /**
@@ -296,7 +296,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * {@inheritdoc}
      */
     public function isPersistent() {
-        return $this->config->persistent;
+        return $this->getConfig('persistent');
     }
 
     /**

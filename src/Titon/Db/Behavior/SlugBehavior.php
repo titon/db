@@ -48,7 +48,7 @@ class SlugBehavior extends AbstractBehavior {
      * @return bool
      */
     public function preSave(Event $event, $id, array &$data) {
-        $config = $this->config->all();
+        $config = $this->allConfig();
 
         if (empty($data) || empty($data[$config['field']]) || !empty($data[$config['slug']])) {
             return true;
@@ -88,12 +88,12 @@ class SlugBehavior extends AbstractBehavior {
      */
     public function makeUnique($id, $slug) {
         $repo = $this->getRepository();
-        $scope = $this->config->scope;
+        $scope = $this->getConfig('scope');
 
         /** @type \Titon\Db\Query $query */
         foreach ([
-            $repo->select()->where($this->config->slug, $slug),
-            $repo->select()->where($this->config->slug, 'like', $slug . '%')
+            $repo->select()->where($this->getConfig('slug'), $slug),
+            $repo->select()->where($this->getConfig('slug'), 'like', $slug . '%')
         ] as $i => $query) {
             if ($scope) {
                 $query->bindCallback($scope);

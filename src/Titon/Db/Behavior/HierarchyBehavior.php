@@ -66,20 +66,20 @@ class HierarchyBehavior extends AbstractBehavior {
      * @return bool
      */
     public function preDelete(Event $event, $id, &$cascade) {
-        if (!$this->config->onDelete) {
+        if (!$this->getConfig('onDelete')) {
             return true;
         }
 
         if ($node = $this->getNode($id)) {
             $count = $this->getRepository()->select()
-                ->where($this->config->parentField, $id)
+                ->where($this->getConfig('parentField'), $id)
                 ->count();
 
             if ($count) {
                 return false;
             }
 
-            $this->_deleteIndex = $node[$this->config->leftField];
+            $this->_deleteIndex = $node[$this->getConfig('leftField')];
         }
 
         return true;
@@ -92,7 +92,7 @@ class HierarchyBehavior extends AbstractBehavior {
      * @param int|int[] $id
      */
     public function postDelete(Event $event, $id) {
-        if (!$this->config->onDelete || !$this->_deleteIndex) {
+        if (!$this->getConfig('onDelete') || !$this->_deleteIndex) {
             return;
         }
 
@@ -113,13 +113,13 @@ class HierarchyBehavior extends AbstractBehavior {
      * @return bool
      */
     public function preSave(Event $event, $id, array &$data) {
-        if (!$this->config->onSave) {
+        if (!$this->getConfig('onSave')) {
             return $data;
         }
 
-        $parent = $this->config->parentField;
-        $left = $this->config->leftField;
-        $right = $this->config->rightField;
+        $parent = $this->getConfig('parentField');
+        $left = $this->getConfig('leftField');
+        $right = $this->getConfig('rightField');
 
         // Append left and right during create
         if (!$id) {
@@ -155,7 +155,7 @@ class HierarchyBehavior extends AbstractBehavior {
 
         // Remove left and right fields from updates as it should not be modified
         } else {
-            unset($data[$this->config->leftField], $data[$this->config->rightField]);
+            unset($data[$this->getConfig('leftField')], $data[$this->getConfig('rightField')]);
         }
 
         return true;
@@ -169,7 +169,7 @@ class HierarchyBehavior extends AbstractBehavior {
      * @param bool $created
      */
     public function postSave(Event $event, $id, $created = false) {
-        if (!$this->config->onSave || !$created || !$this->_saveIndex) {
+        if (!$this->getConfig('onSave') || !$created || !$this->_saveIndex) {
             return;
         }
 
@@ -184,7 +184,7 @@ class HierarchyBehavior extends AbstractBehavior {
      */
     public function getFirstNode() {
         return $this->getRepository()->select()
-            ->orderBy($this->config->leftField, 'asc')
+            ->orderBy($this->getConfig('leftField'), 'asc')
             ->limit(1)
             ->first();
     }
@@ -196,7 +196,7 @@ class HierarchyBehavior extends AbstractBehavior {
      */
     public function getLastNode() {
         return $this->getRepository()->select()
-            ->orderBy($this->config->rightField, 'desc')
+            ->orderBy($this->getConfig('rightField'), 'desc')
             ->limit(1)
             ->first();
     }
@@ -213,8 +213,8 @@ class HierarchyBehavior extends AbstractBehavior {
      * @return array
      */
     public function getList($id = null, $key = null, $value = null, $spacer = '    ') {
-        $left = $this->config->leftField;
-        $right = $this->config->rightField;
+        $left = $this->getConfig('leftField');
+        $right = $this->getConfig('rightField');
 
         $query = $this->getRepository()->select()->orderBy($left, 'asc');
 
@@ -244,7 +244,7 @@ class HierarchyBehavior extends AbstractBehavior {
         if ($withParent) {
             $query
                 ->where($repo->getAlias() . '.' . $pk, $id)
-                ->leftJoin([$repo->getTable(), 'Parent'], [], [$this->config->parentField => 'Parent.' . $pk]);
+                ->leftJoin([$repo->getTable(), 'Parent'], [], [$this->getConfig('parentField') => 'Parent.' . $pk]);
         } else {
             $query->where($pk, $id);
         }
@@ -265,8 +265,8 @@ class HierarchyBehavior extends AbstractBehavior {
             return [];
         }
 
-        $left = $this->config->leftField;
-        $right = $this->config->rightField;
+        $left = $this->getConfig('leftField');
+        $right = $this->getConfig('rightField');
 
         return $this->getRepository()->select()
             ->where($left, '<', $node[$left])
@@ -282,9 +282,9 @@ class HierarchyBehavior extends AbstractBehavior {
      * @return array
      */
     public function getTree($id = null) {
-        $parent = $this->config->parentField;
-        $left = $this->config->leftField;
-        $right = $this->config->rightField;
+        $parent = $this->getConfig('parentField');
+        $left = $this->getConfig('leftField');
+        $right = $this->getConfig('rightField');
 
         $query = $this->getRepository()->select()->orderBy($left, 'asc');
 
@@ -338,7 +338,7 @@ class HierarchyBehavior extends AbstractBehavior {
         $stack = [];
         $key = $key ?: $this->getRepository()->getPrimaryKey();
         $value = $value ?: $this->getRepository()->getDisplayField();
-        $right = $this->config->rightField;
+        $right = $this->getConfig('rightField');
 
         foreach ($nodes as $node) {
             $count = count($stack);
@@ -375,7 +375,7 @@ class HierarchyBehavior extends AbstractBehavior {
             $id = $node[$pk];
 
             if (isset($mappedNodes[$id])) {
-                $node[$this->config->treeField ?: 'Nodes'] = $this->mapTree($mappedNodes[$id], $mappedNodes);
+                $node[$this->getConfig('treeField') ?: 'Nodes'] = $this->mapTree($mappedNodes[$id], $mappedNodes);
             }
 
             $tree[] = $node;
@@ -400,8 +400,8 @@ class HierarchyBehavior extends AbstractBehavior {
             return false;
         }
 
-        $left = $this->config->leftField;
-        $right = $this->config->rightField;
+        $left = $this->getConfig('leftField');
+        $right = $this->getConfig('rightField');
         $nodeLeft = $node[$left];
         $nodeRight = $node[$right];
         $inc = ($count * 2);
@@ -460,8 +460,8 @@ class HierarchyBehavior extends AbstractBehavior {
             return false;
         }
 
-        $left = $this->config->leftField;
-        $right = $this->config->rightField;
+        $left = $this->getConfig('leftField');
+        $right = $this->getConfig('rightField');
         $nodeLeft = $node[$left];
         $nodeRight = $node[$right];
         $inc = ($count * 2);
@@ -516,12 +516,12 @@ class HierarchyBehavior extends AbstractBehavior {
         $repo = $this->getRepository();
         $node = $this->getNode($id);
 
-        if (!$node || $node[$this->config->parentField] == $parent_id) {
+        if (!$node || $node[$this->getConfig('parentField')] == $parent_id) {
             return false;
         }
 
-        $left = $this->config->leftField;
-        $right = $this->config->rightField;
+        $left = $this->getConfig('leftField');
+        $right = $this->getConfig('rightField');
         $data = [];
 
         // Remove the node and reset others
@@ -547,7 +547,7 @@ class HierarchyBehavior extends AbstractBehavior {
         }
 
         $repo->query(Query::UPDATE)
-            ->fields($data + [$this->config->parentField => $parent_id])
+            ->fields($data + [$this->getConfig('parentField') => $parent_id])
             ->where($repo->getPrimaryKey(), $id)
             ->save();
 
@@ -577,7 +577,7 @@ class HierarchyBehavior extends AbstractBehavior {
     protected function _insertNode($id, $index) {
         $repo = $this->getRepository();
 
-        foreach ([$this->config->leftField, $this->config->rightField] as $field) {
+        foreach ([$this->getConfig('leftField'), $this->getConfig('rightField')] as $field) {
             $query = $repo->query(Query::UPDATE)
                 ->fields([$field => Query::expr($field, '+', 2)])
                 ->where($field, '>=', $index);
@@ -599,7 +599,7 @@ class HierarchyBehavior extends AbstractBehavior {
     protected function _removeNode($id, $index) {
         $repo = $this->getRepository();
 
-        foreach ([$this->config->leftField, $this->config->rightField] as $field) {
+        foreach ([$this->getConfig('leftField'), $this->getConfig('rightField')] as $field) {
             $query = $repo->query(Query::UPDATE)
                 ->fields([$field => Query::expr($field, '-', 2)])
                 ->where($field, '>=', $index);
@@ -622,7 +622,7 @@ class HierarchyBehavior extends AbstractBehavior {
      * @return int
      */
     protected function _reOrder($parent_id, $left, array $order = []) {
-        $parent = $this->config->parentField;
+        $parent = $this->getConfig('parentField');
         $repo = $this->getRepository();
         $pk = $repo->getPrimaryKey();
         $right = $left + 1;
@@ -641,8 +641,8 @@ class HierarchyBehavior extends AbstractBehavior {
         if ($parent_id) {
             $repo->query(Query::UPDATE)
                 ->fields([
-                    $this->config->leftField => $left,
-                    $this->config->rightField => $right
+                    $this->getConfig('leftField') => $left,
+                    $this->getConfig('rightField') => $right
                 ])
                 ->where($pk, $parent_id)
                 ->save();

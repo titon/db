@@ -75,14 +75,14 @@ abstract class AbstractRelation extends Base implements Relation {
      * {@inheritdoc}
      */
     public function getAlias() {
-        return $this->config->alias;
+        return $this->getConfig('alias');
     }
 
     /**
      * {@inheritdoc}
      */
     public function getClass() {
-        return $this->config->class;
+        return $this->getConfig('class');
     }
 
     /**
@@ -96,14 +96,14 @@ abstract class AbstractRelation extends Base implements Relation {
      * {@inheritdoc}
      */
     public function getForeignKey() {
-        return $this->config->foreignKey;
+        return $this->getConfig('foreignKey');
     }
 
     /**
      * {@inheritdoc}
      */
     public function getRelatedForeignKey() {
-        return $this->config->relatedForeignKey;
+        return $this->getConfig('relatedForeignKey');
     }
 
     /**
@@ -123,14 +123,14 @@ abstract class AbstractRelation extends Base implements Relation {
      * {@inheritdoc}
      */
     public function isDependent() {
-        return $this->config->dependent;
+        return $this->getConfig('dependent');
     }
 
     /**
      * {@inheritdoc}
      */
     public function setAlias($alias) {
-        $this->config->alias = $alias;
+        $this->setConfig('alias', $alias);
 
         return $this;
     }
@@ -140,7 +140,7 @@ abstract class AbstractRelation extends Base implements Relation {
      */
     public function setClass($class) {
         if (is_string($class)) {
-            $this->config->class = $class;
+            $this->setConfig('class', $class);
 
         } else if ($class instanceof Repository) {
             $this->setRelatedRepository($class);
@@ -165,7 +165,7 @@ abstract class AbstractRelation extends Base implements Relation {
      * {@inheritdoc}
      */
     public function setDependent($state) {
-        $this->config->dependent = (bool) $state;
+        $this->setConfig('dependent', (bool) $state);
 
         return $this;
     }
@@ -174,7 +174,7 @@ abstract class AbstractRelation extends Base implements Relation {
      * {@inheritdoc}
      */
     public function setForeignKey($key) {
-        $this->config->foreignKey = $key;
+        $this->setConfig('foreignKey', $key);
 
         return $this;
     }
@@ -183,7 +183,7 @@ abstract class AbstractRelation extends Base implements Relation {
      * {@inheritdoc}
      */
     public function setRelatedForeignKey($key) {
-        $this->config->relatedForeignKey = $key;
+        $this->setConfig('relatedForeignKey', $key);
 
         return $this;
     }

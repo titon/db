@@ -81,7 +81,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
             throw new MissingDriverException(sprintf('%s driver extension is not enabled', $this->getDriver()));
         }
 
-        $this->_connection = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->config->flags + [
+        $this->_connection = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->getConfig('flags') + [
             PDO::ATTR_PERSISTENT => $this->isPersistent(),
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);

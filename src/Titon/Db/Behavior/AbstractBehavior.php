@@ -26,7 +26,7 @@ abstract class AbstractBehavior extends Base implements Behavior, Listener {
      * {@inheritdoc}
      */
     public function getAlias() {
-        return str_replace('Behavior', '', $this->info->shortClassName);
+        return str_replace('Behavior', '', $this->inform('shortClassName'));
     }
 
     /**

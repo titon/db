@@ -73,7 +73,7 @@ class SoftDeleteBehaviorTest extends TestCase {
         $behavior = $this->object->getBehavior('SoftDelete');
 
         // Do not filter
-        $behavior->config->filterDeleted = false;
+        $behavior->setConfig('filterDeleted', false);
 
         // Test on deleted record
         $this->assertTrue($this->object->exists(1));
@@ -133,7 +133,7 @@ class SoftDeleteBehaviorTest extends TestCase {
     public function testPurgeDeletedTimestamp() {
         $this->loadFixtures('Posts');
 
-        $this->object->getBehavior('SoftDelete')->config->useFlag = false;
+        $this->object->getBehavior('SoftDelete')->setConfig('useFlag', false);
 
         $this->assertEquals(7, $this->object->select()->count());
 
@@ -155,7 +155,7 @@ class SoftDeleteBehaviorTest extends TestCase {
          ], $this->object->select()->all());
 
         // Do not filter
-        $this->object->getBehavior('SoftDelete')->config->filterDeleted = false;
+        $this->object->getBehavior('SoftDelete')->setConfig('filterDeleted', false);
 
         $this->assertEquals([
             new Entity(['id' => 1, 'topic_id' => 1, 'active' => 1, 'deleted' => 1, 'content' => 'Curabitur vulputate sem eget metus dignissim varius.', 'created_at' => '2012-01-01 00:12:34', 'deleted_at' => '2012-02-06 23:55:33']),
@@ -174,7 +174,7 @@ class SoftDeleteBehaviorTest extends TestCase {
     public function testFilterDeletedWithTimestamp() {
         $this->loadFixtures('Posts');
 
-        $this->object->getBehavior('SoftDelete')->config->useFlag = false;
+        $this->object->getBehavior('SoftDelete')->setConfig('useFlag', false);
 
         $this->assertEquals([
             new Entity(['id' => 2, 'topic_id' => 1, 'active' => 1, 'deleted' => 0, 'content' => 'Proin sed magna accumsan, mattis dolor at, commodo nisl.', 'created_at' => '2012-04-06 23:55:33', 'deleted_at' => null]),
@@ -184,7 +184,7 @@ class SoftDeleteBehaviorTest extends TestCase {
          ], $this->object->select()->all());
 
         // Do not filter
-        $this->object->getBehavior('SoftDelete')->config->filterDeleted = false;
+        $this->object->getBehavior('SoftDelete')->setConfig('filterDeleted', false);
 
         $this->assertEquals([
             new Entity(['id' => 1, 'topic_id' => 1, 'active' => 1, 'deleted' => 1, 'content' => 'Curabitur vulputate sem eget metus dignissim varius.', 'created_at' => '2012-01-01 00:12:34', 'deleted_at' => '2012-02-06 23:55:33']),
@@ -213,7 +213,7 @@ class SoftDeleteBehaviorTest extends TestCase {
             new Entity(['id' => 7, 'topic_id' => 2, 'active' => 0, 'deleted' => 1, 'content' => 'Quisque dui nulla, semper nec sagittis quis.', 'created_at' => '2013-08-08 02:03:11', 'deleted_at' => null])
         ], $this->object->select()->where('deleted', [0, 1])->all());
 
-        $this->object->getBehavior('SoftDelete')->config->useFlag = false;
+        $this->object->getBehavior('SoftDelete')->setConfig('useFlag', false);
 
         $this->assertEquals([
             new Entity(['id' => 5, 'topic_id' => 1, 'active' => 1, 'deleted' => 1, 'content' => 'Nullam congue dolor sed luctus pulvinar.', 'created_at' => '2013-02-26 11:44:33', 'deleted_at' => '2013-11-06 22:13:27']),

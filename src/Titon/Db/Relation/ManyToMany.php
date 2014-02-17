@@ -48,7 +48,7 @@ class ManyToMany extends AbstractRelation {
      * @return string
      */
     public function getJunctionAlias() {
-        return $this->config->junctionAlias;
+        return $this->getConfig('junctionAlias');
     }
 
     /**
@@ -57,7 +57,7 @@ class ManyToMany extends AbstractRelation {
      * @return string
      */
     public function getJunctionClass() {
-        return $this->config->junctionClass;
+        return $this->getConfig('junctionClass');
     }
 
     /**
@@ -98,7 +98,7 @@ class ManyToMany extends AbstractRelation {
      * @return \Titon\Db\Relation\ManyToMany
      */
     public function setJunctionAlias($alias) {
-        $this->config->junctionAlias = $alias;
+        $this->setConfig('junctionAlias', $alias);
 
         return $this;
     }
@@ -112,7 +112,7 @@ class ManyToMany extends AbstractRelation {
      */
     public function setJunctionClass($class) {
         if (is_string($class)) {
-            $this->config->junctionClass = $class;
+            $this->setConfig('junctionClass', $class);
 
         } else if ($class instanceof Repository) {
             $this->setJunctionRepository($class);

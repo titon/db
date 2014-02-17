@@ -980,7 +980,7 @@ abstract class AbstractDialect extends Base implements Dialect {
             return $this->quote($repo) . '.' . $field;
         }
 
-        $char = $this->config->quoteCharacter;
+        $char = $this->getConfig('quoteCharacter');
 
         if (!$char) {
             return $value;

@@ -48,8 +48,8 @@ class SoftDeleteBehavior extends AbstractBehavior {
 
         return $repo->query(Query::UPDATE)
             ->fields([
-                $this->config->flagField => true,
-                $this->config->deleteField => time()
+                $this->getConfig('flagField') => true,
+                $this->getConfig('deleteField') => time()
             ])
             ->where($repo->getPrimaryKey(), $id)
             ->save();
@@ -79,7 +79,7 @@ class SoftDeleteBehavior extends AbstractBehavior {
      * @return bool
      */
     public function preFind(Event $event, Query $query, $finder) {
-        $config = $this->config->all();
+        $config = $this->allConfig();
 
         if ($config['filterDeleted']) {
             $where = $query->getWhere();
@@ -121,7 +121,7 @@ class SoftDeleteBehavior extends AbstractBehavior {
      */
     public function purgeDeleted($timeFrame) {
         $query = $this->getRepository()->query(Query::DELETE);
-        $config = $this->config->all();
+        $config = $this->allConfig();
 
         if ($timeFrame) {
             $query->where($config['deleteField'], '>=', Time::toUnix($timeFrame));

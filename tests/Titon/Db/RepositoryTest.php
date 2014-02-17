@@ -327,19 +327,19 @@ class RepositoryTest extends TestCase {
      */
     public function testGetDisplayField() {
         $user1 = new User();
-        $user1->config->displayField = 'username';
+        $user1->setConfig('displayField', 'username');
 
         $this->assertEquals('username', $user1->getDisplayField());
 
         // Unknown field, falls back to ID
         $user2 = new User();
-        $user2->config->displayField = 'foobar';
+        $user2->setConfig('displayField', 'foobar');
 
         $this->assertEquals('id', $user2->getDisplayField());
 
         // Loops through till it finds one
         $user3 = new User();
-        $user3->config->displayField = ['foo', 'bar', 'firstName', 'baz'];
+        $user3->setConfig('displayField', ['foo', 'bar', 'firstName', 'baz']);
 
         $this->assertEquals('firstName', $user3->getDisplayField());
     }
@@ -351,7 +351,7 @@ class RepositoryTest extends TestCase {
         $this->assertInstanceOf('Titon\Db\Driver', $this->object->getDriver());
 
         // Connection doesnt exist
-        $this->object->config->connection = 'foobar';
+        $this->object->setConfig('connection', 'foobar');
 
         try {
             $this->assertInstanceOf('Titon\Db\Driver', $this->object->getDriver());
@@ -373,13 +373,13 @@ class RepositoryTest extends TestCase {
      */
     public function testGetPrimaryKey() {
         $user1 = new User();
-        $user1->config->primaryKey = 'username';
+        $user1->setConfig('primaryKey', 'username');
 
         $this->assertEquals('username', $user1->getPrimaryKey());
 
         // Unknown field, falls back to ID
         $user2 = new User();
-        $user2->config->primaryKey = 'foobar';
+        $user2->setConfig('primaryKey', 'foobar');
 
         $this->assertEquals('id', $user2->getPrimaryKey());
     }
@@ -422,7 +422,7 @@ class RepositoryTest extends TestCase {
     public function testGetTable() {
         $this->assertEquals('users', $this->object->getTable());
 
-        $this->object->config->prefix = 'test_';
+        $this->object->setConfig('prefix', 'test_');
         $this->assertEquals('test_users', $this->object->getTable());
     }
 
@@ -432,7 +432,7 @@ class RepositoryTest extends TestCase {
     public function testGetPrefix() {
         $this->assertEquals('', $this->object->getTablePrefix());
 
-        $this->object->config->prefix = 'test_';
+        $this->object->setConfig('prefix', 'test_');
         $this->assertEquals('test_', $this->object->getTablePrefix());
     }
 
