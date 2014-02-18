@@ -701,12 +701,7 @@ class Repository extends Base implements Callback, Listener {
             return $this->_driver;
         }
 
-        $driver = $this->getConnection()->getDriver($this->getConnectionKey());
-        $driver->connect();
-
-        $this->_driver = $driver;
-
-        return $driver;
+        return $this->_driver = $this->getConnection()->getDriver($this->getConnectionKey());
     }
 
     /**
@@ -1475,10 +1470,12 @@ class Repository extends Base implements Callback, Listener {
             }
         }
 
+        // Update the connection group
+        $driver = $this->getDriver();
+        $driver->setConnectionGroup('delete');
+
         // Use transactions for cascading
         if ($options['cascade']) {
-            $driver = $this->getDriver();
-
             if (!$driver->startTransaction()) {
                 throw new QueryFailureException('Failed to start database transaction');
             }
@@ -1569,7 +1566,11 @@ class Repository extends Base implements Callback, Listener {
         } else {
             $finder->before($query, $options);
 
-            $results = $this->getDriver()->executeQuery($query)->find();
+            // Update the connection group
+            $driver = $this->getDriver();
+            $driver->setConnectionGroup('read');
+
+            $results = $driver->executeQuery($query)->find();
         }
 
         if (!$results) {
@@ -1630,9 +1631,11 @@ class Repository extends Base implements Callback, Listener {
         // Set the data
         $query->fields($data);
 
-        // Update the records using transactions
+        // Update the connection group
         $driver = $this->getDriver();
+        $driver->setConnectionGroup('write');
 
+        // Update the records using transactions
         if ($relatedData) {
             if (!$driver->startTransaction()) {
                 throw new QueryFailureException('Failed to start database transaction');

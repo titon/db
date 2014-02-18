@@ -56,9 +56,10 @@ interface Driver {
     /**
      * Disconnect from the driver.
      *
+     * @param bool $flush
      * @return bool
      */
-    public function disconnect();
+    public function disconnect($flush = false);
 
     /**
      * Escape a value to be SQL valid.
@@ -85,6 +86,13 @@ interface Driver {
     public function getConnection();
 
     /**
+     * The current read, write, or custom connection group.
+     *
+     * @return string
+     */
+    public function getConnectionGroup();
+
+    /**
      * Return the dialect.
      *
      * @return \Titon\Db\Driver\Dialect
@@ -105,6 +113,14 @@ interface Driver {
      * @return \Titon\Db\Finder
      */
     public function getFinder($key);
+
+    /**
+     * Return connection settings for a group.
+     *
+     * @param string $key
+     * @return array
+     */
+    public function getGroup($key);
 
     /**
      * Return the ID of the last inserted record.
@@ -200,6 +216,14 @@ interface Driver {
      * @return bool
      */
     public function rollbackTransaction();
+
+    /**
+     * Set the connection group.
+     *
+     * @param string $group
+     * @return $this
+     */
+    public function setConnectionGroup($group);
 
     /**
      * Set the driver specific dialect.

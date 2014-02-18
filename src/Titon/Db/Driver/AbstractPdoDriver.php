@@ -81,12 +81,10 @@ abstract class AbstractPdoDriver extends AbstractDriver {
             throw new MissingDriverException(sprintf('%s driver extension is not enabled', $this->getDriver()));
         }
 
-        $this->_connection = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->getConfig('flags') + [
+        $this->_connections[$this->getConnectionGroup()] = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->getConfig('flags') + [
             PDO::ATTR_PERSISTENT => $this->isPersistent(),
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
-
-        $this->_connected = true;
 
         return true;
     }
@@ -192,6 +190,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
     public function executeQuery($query, array $params = []) {
+        $this->connect();
+
         $storage = $this->getStorage();
         $cacheKey = null;
         $cacheLength = null;

@@ -46,7 +46,13 @@ class DriverTest extends TestCase {
      */
     public function testConnection() {
         $this->assertFalse($this->object->isConnected());
-        $this->assertEquals(null, $this->object->getConnection());
+
+        try {
+            $this->object->getConnection();
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
 
         $this->object->connect();
 
@@ -56,7 +62,101 @@ class DriverTest extends TestCase {
         $this->object->disconnect();
 
         $this->assertFalse($this->object->isConnected());
-        $this->assertEquals(null, $this->object->getConnection());
+
+        try {
+            $this->object->getConnection();
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
+    }
+
+    /**
+     * Test that group settings are inherited.
+     */
+    public function testGroupConnections() {
+        $driver = new DriverStub([
+            'database' => 'titon_test',
+            'host' => '127.0.0.1',
+            'user' => 'root',
+            'pass' => '',
+            'connections' => [
+                'read' => [
+                    'host' => 'prod1.com'
+                ],
+                'write' => [
+                    'host' => 'prod2.com',
+                    'user' => 'writer'
+                ]
+            ]
+        ]);
+
+        // No changes
+        $this->assertEquals([
+            'database' => 'titon_test',
+            'host' => '127.0.0.1',
+            'port' => 3306,
+            'user' => 'root',
+            'pass' => '',
+        ], $driver->getGroup('delete'));
+
+        $this->assertEquals([
+            'database' => 'titon_test',
+            'host' => 'prod1.com',
+            'port' => 3306,
+            'user' => 'root',
+            'pass' => '',
+        ], $driver->getGroup('read'));
+
+        $this->assertEquals([
+            'database' => 'titon_test',
+            'host' => 'prod2.com',
+            'port' => 3306,
+            'user' => 'writer',
+            'pass' => '',
+        ], $driver->getGroup('write'));
+    }
+
+    /**
+     * Test that the correct values are returned from getters.
+     */
+    public function testGroupGetters() {
+        $driver = new DriverStub([
+            'database' => 'titon_test',
+            'host' => '127.0.0.1',
+            'user' => 'root',
+            'pass' => '',
+            'connections' => [
+                'read' => [
+                    'host' => 'prod1.com'
+                ],
+                'write' => [
+                    'host' => 'prod2.com',
+                    'user' => 'writer'
+                ]
+            ]
+        ]);
+
+        // Read by default
+        $this->assertEquals('root', $driver->getUser());
+        $this->assertEquals('', $driver->getPassword());
+        $this->assertEquals('prod1.com', $driver->getHost());
+        $this->assertEquals('titon_test', $driver->getDatabase());
+        $this->assertEquals(3306, $driver->getPort());
+
+        $driver->setConnectionGroup('write');
+        $this->assertEquals('writer', $driver->getUser());
+        $this->assertEquals('', $driver->getPassword());
+        $this->assertEquals('prod2.com', $driver->getHost());
+        $this->assertEquals('titon_test', $driver->getDatabase());
+        $this->assertEquals(3306, $driver->getPort());
+
+        $driver->setConnectionGroup('delete');
+        $this->assertEquals('root', $driver->getUser());
+        $this->assertEquals('', $driver->getPassword());
+        $this->assertEquals('127.0.0.1', $driver->getHost());
+        $this->assertEquals('titon_test', $driver->getDatabase());
+        $this->assertEquals(3306, $driver->getPort());
     }
 
     /**
