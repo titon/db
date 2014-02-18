@@ -36,7 +36,7 @@ trait DriverAware {
      * Set the driver.
      *
      * @param \Titon\Db\Driver $driver
-     * @return \Titon\Db\Traits\DriverAware
+     * @return $this
      */
     public function setDriver(Driver $driver) {
         $this->_driver = $driver;

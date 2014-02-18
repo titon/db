@@ -25,7 +25,7 @@ trait AliasAware {
      * Set the alias name.
      *
      * @param string $alias
-     * @return \Titon\Db\Traits\AliasAware
+     * @return $this
      */
     public function asAlias($alias) {
         $this->_alias = $alias;

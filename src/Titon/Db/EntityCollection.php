@@ -10,6 +10,11 @@ namespace Titon\Db;
 use Titon\Type\Collection;
 use Titon\Type\Contract\Arrayable;
 
+/**
+ * Houses a collection of Entity objects.
+ *
+ * @package Titon\Db
+ */
 class EntityCollection extends Collection {
 
     /**

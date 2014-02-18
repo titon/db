@@ -37,7 +37,7 @@ class FilterBehavior extends AbstractBehavior {
      * @param string $field
      * @param string $filter
      * @param array $options
-     * @return \Titon\Db\Behavior\FilterBehavior
+     * @return $this
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function filter($field, $filter, array $options = []) {

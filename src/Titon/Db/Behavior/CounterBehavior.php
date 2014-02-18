@@ -37,7 +37,7 @@ class CounterBehavior extends AbstractBehavior {
      * @param string|\Titon\Db\Relation $alias
      * @param string $field
      * @param \Closure $scope
-     * @return \Titon\Db\Behavior\CounterBehavior
+     * @return $this
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function addCounter($alias, $field, Closure $scope = null) {
@@ -122,6 +122,7 @@ class CounterBehavior extends AbstractBehavior {
      * Determine the count while applying scope and update the relation record.
      *
      * @param int|int[] $ids
+     * @return $this
      */
     public function syncCounters($ids) {
         foreach ($this->_counters as $alias => $counter) {
@@ -139,6 +140,8 @@ class CounterBehavior extends AbstractBehavior {
 
         // Reset cache for this sync
         $this->flushCache();
+
+        return $this;
     }
 
     /**

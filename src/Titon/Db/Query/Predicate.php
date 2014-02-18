@@ -54,7 +54,7 @@ class Predicate implements Serializable, JsonSerializable {
      * @param string $field
      * @param string $op
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function add($field, $op, $value) {
         if ($field instanceof Func) {
@@ -82,7 +82,7 @@ class Predicate implements Serializable, JsonSerializable {
      * Generate a new sub-grouped AND predicate.
      *
      * @param \Closure $callback
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function also(Closure $callback) {
         $predicate = new Predicate(self::ALSO);
@@ -99,7 +99,7 @@ class Predicate implements Serializable, JsonSerializable {
      * @param string $field
      * @param int $start
      * @param int $end
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function between($field, $start, $end) {
         $this->add($field, Expr::BETWEEN, [$start, $end]);
@@ -112,7 +112,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param \Closure $callback
      * @param \Titon\Db\Query $query
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function bindCallback(Closure $callback, $query = null) {
         call_user_func_array($callback, [$this, $query]);
@@ -124,7 +124,7 @@ class Predicate implements Serializable, JsonSerializable {
      * Generate a new sub-grouped OR predicate.
      *
      * @param \Closure $callback
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function either(Closure $callback) {
         $predicate = new Predicate(self::EITHER);
@@ -140,7 +140,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function eq($field, $value) {
         if (is_array($value)) {
@@ -162,7 +162,7 @@ class Predicate implements Serializable, JsonSerializable {
      * @param string $field
      * @param string $op
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function expr($field, $op, $value) {
         return $this->add($field, $op, $value);
@@ -191,7 +191,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function gt($field, $value) {
         $this->add($field, '>', $value);
@@ -204,7 +204,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function gte($field, $value) {
         $this->add($field, '>=', $value);
@@ -233,7 +233,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function in($field, $value) {
         $this->add($field, Expr::IN, (array) $value);
@@ -246,7 +246,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function like($field, $value) {
         $this->add($field, Expr::LIKE, $value);
@@ -259,7 +259,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function lt($field, $value) {
         $this->add($field, '<', $value);
@@ -272,7 +272,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function lte($field, $value) {
         $this->add($field, '<=', $value);
@@ -284,7 +284,7 @@ class Predicate implements Serializable, JsonSerializable {
      * Generate a new sub-grouped XOR predicate.
      *
      * @param \Closure $callback
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function maybe(Closure $callback) {
         $predicate = new Predicate(self::MAYBE);
@@ -299,7 +299,7 @@ class Predicate implements Serializable, JsonSerializable {
      * Generate a new sub-grouped NOR predicate.
      *
      * @param \Closure $callback
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function neither(Closure $callback) {
         $predicate = new Predicate(self::NEITHER);
@@ -316,7 +316,7 @@ class Predicate implements Serializable, JsonSerializable {
      * @param string $field
      * @param int $start
      * @param int $end
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function notBetween($field, $start, $end) {
         $this->add($field, Expr::NOT_BETWEEN, [$start, $end]);
@@ -329,7 +329,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function notEq($field, $value) {
         if (is_array($value)) {
@@ -350,7 +350,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function notIn($field, $value) {
         $this->add($field, Expr::NOT_IN, (array) $value);
@@ -363,7 +363,7 @@ class Predicate implements Serializable, JsonSerializable {
      *
      * @param string $field
      * @param mixed $value
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function notLike($field, $value) {
         $this->add($field, Expr::NOT_LIKE, $value);
@@ -375,7 +375,7 @@ class Predicate implements Serializable, JsonSerializable {
      * Adds a not is null "NOT IS NULL" expression.
      *
      * @param string $field
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function notNull($field) {
         $this->add($field, Expr::NOT_NULL, null);
@@ -387,7 +387,7 @@ class Predicate implements Serializable, JsonSerializable {
      * Adds an is null "IS NULL" expression.
      *
      * @param string $field
-     * @return \Titon\Db\Query\Predicate
+     * @return $this
      */
     public function null($field) {
         $this->add($field, Expr::NULL, null);

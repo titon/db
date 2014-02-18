@@ -41,7 +41,7 @@ interface Mapper {
      * Set the repository this data mapper belongs to.
      *
      * @param \Titon\Db\Repository $repo
-     * @return \Titon\Db\Mapper
+     * @return $this
      */
     public function setRepository(Repository $repo);
 

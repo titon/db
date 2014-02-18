@@ -88,7 +88,7 @@ interface Relation {
      * Set the alias name.
      *
      * @param string $alias
-     * @return \Titon\Db\Relation
+     * @return $this
      */
     public function setAlias($alias);
 
@@ -96,7 +96,7 @@ interface Relation {
      * Set the related class name.
      *
      * @param string|\Titon\Db\Repository $class
-     * @return \Titon\Db\Relation
+     * @return $this
      */
     public function setClass($class);
 
@@ -104,7 +104,7 @@ interface Relation {
      * Set the query conditions for this relation.
      *
      * @param \Closure $callback
-     * @return \Titon\Db\Relation
+     * @return $this
      */
     public function setConditions(Closure $callback);
 
@@ -112,7 +112,7 @@ interface Relation {
      * Set relation dependency.
      *
      * @param bool $state
-     * @return \Titon\Db\Relation
+     * @return $this
      */
     public function setDependent($state);
 
@@ -120,7 +120,7 @@ interface Relation {
      * Set the foreign key for the current table.
      *
      * @param string $key
-     * @return \Titon\Db\Relation
+     * @return $this
      */
     public function setForeignKey($key);
 
@@ -128,7 +128,7 @@ interface Relation {
      * Set the primary repository instance.
      *
      * @param \Titon\Db\Repository $repo
-     * @return \Titon\Db\Relation
+     * @return $this
      */
     public function setRepository(Repository $repo);
 
@@ -136,7 +136,7 @@ interface Relation {
      * Set the foreign key for the related table.
      *
      * @param string $key
-     * @return \Titon\Db\Relation
+     * @return $this
      */
     public function setRelatedForeignKey($key);
 
@@ -144,7 +144,7 @@ interface Relation {
      * Set the related repository instance.
      *
      * @param \Titon\Db\Repository $repo
-     * @return \Titon\Db\Relation
+     * @return $this
      */
     public function setRelatedRepository(Repository $repo);
 

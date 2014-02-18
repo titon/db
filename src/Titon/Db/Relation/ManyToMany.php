@@ -95,7 +95,7 @@ class ManyToMany extends AbstractRelation {
      * Set the junction alias.
      *
      * @param string $alias
-     * @return \Titon\Db\Relation\ManyToMany
+     * @return $this
      */
     public function setJunctionAlias($alias) {
         $this->setConfig('junctionAlias', $alias);
@@ -107,7 +107,7 @@ class ManyToMany extends AbstractRelation {
      * Set the junction class name.
      *
      * @param string|\Titon\Db\Repository $class
-     * @return \Titon\Db\Relation\ManyToMany
+     * @return $this
      * @throws \Titon\Db\Exception\InvalidTableException
      */
     public function setJunctionClass($class) {
@@ -131,7 +131,7 @@ class ManyToMany extends AbstractRelation {
      * Set the junction repository as an alias on the primary repository.
      *
      * @param \Titon\Db\Repository $repo
-     * @return \Titon\Db\Relation\ManyToMany
+     * @return $this
      */
     public function setJunctionRepository(Repository $repo) {
         $this->_junctionRepository = $repo;

@@ -47,7 +47,7 @@ class SubQuery extends Query {
      * Set the filter type.
      *
      * @param string $filter
-     * @return \Titon\Db\Query\SubQuery
+     * @return $this
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function withFilter($filter) {

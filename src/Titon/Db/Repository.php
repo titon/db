@@ -1086,7 +1086,7 @@ class Repository extends Base implements Callback, Listener {
      * Set the connection class.
      *
      * @param \Titon\Db\Connection $connection
-     * @return \Titon\Db\Repository
+     * @return $this
      */
     public function setConnection(Connection $connection) {
         $this->_connection = $connection;
@@ -1100,7 +1100,7 @@ class Repository extends Base implements Callback, Listener {
      * @uses Titon\Utility\Hash
      *
      * @param array $data
-     * @return \Titon\Db\Repository
+     * @return $this
      */
     public function setData(array $data) {
         $this->data = Hash::merge($this->_mapDefaults(), $this->data, $data);
@@ -1112,7 +1112,7 @@ class Repository extends Base implements Callback, Listener {
      * Set the schema for this repository table.
      *
      * @param \Titon\Db\Driver\Schema $schema
-     * @return \Titon\Db\Repository
+     * @return $this
      */
     public function setSchema(Schema $schema) {
         $this->_schema = $schema;
@@ -1513,7 +1513,7 @@ class Repository extends Base implements Callback, Listener {
         $this->data = [];
 
         if ($options['postCallback']) {
-            $event = $this->emit('db.postDelete', [$id]);
+            $this->emit('db.postDelete', [$id]);
         }
 
         return $count;
@@ -1577,7 +1577,7 @@ class Repository extends Base implements Callback, Listener {
         }
 
         if ($options['postCallback']) {
-            $event = $this->emit('db.postFind', [&$results, $finderType]);
+            $this->emit('db.postFind', [&$results, $finderType]);
         }
 
         // Wrap the results in entities
@@ -1679,7 +1679,7 @@ class Repository extends Base implements Callback, Listener {
         }
 
         if ($options['postCallback']) {
-            $event = $this->emit('db.postSave', [$id, $isCreate]);
+            $this->emit('db.postSave', [$id, $isCreate]);
         }
 
         if ($isCreate) {

@@ -26,7 +26,7 @@ interface Driver {
      *
      * @param string $key
      * @param \Titon\Db\Finder $finder
-     * @return \Titon\Db\Driver
+     * @return $this
      */
     public function addFinder($key, Finder $finder);
 
@@ -175,7 +175,7 @@ interface Driver {
      * Logs a query result.
      *
      * @param \Titon\Db\Query\Result $result
-     * @return \Titon\Db\Driver
+     * @return $this
      */
     public function logQuery(Result $result);
 
@@ -190,7 +190,7 @@ interface Driver {
     /**
      * Reset the driver for the next query.
      *
-     * @return \Titon\Db\Driver
+     * @return $this
      */
     public function reset();
 
@@ -205,7 +205,7 @@ interface Driver {
      * Set the driver specific dialect.
      *
      * @param \Titon\Db\Driver\Dialect $dialect
-     * @return \Titon\Db\Driver
+     * @return $this
      */
     public function setDialect(Dialect $dialect);
 
@@ -213,7 +213,7 @@ interface Driver {
      * Set the logger for query logging.
      *
      * @param \Psr\Log\LoggerInterface $logger
-     * @return \Titon\Db\Driver
+     * @return $this
      */
     public function setLogger(LoggerInterface $logger);
 
@@ -221,7 +221,7 @@ interface Driver {
      * Set the storage engine for query caching.
      *
      * @param \Titon\Cache\Storage $storage
-     * @return \Titon\Db\Driver
+     * @return $this
      */
     public function setStorage(Storage $storage);
 

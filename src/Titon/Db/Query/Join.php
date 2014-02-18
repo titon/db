@@ -72,7 +72,7 @@ class Join implements Serializable, JsonSerializable {
      * Set the list of fields to return.
      *
      * @param string|array $fields
-     * @return \Titon\Db\Query\Join
+     * @return $this
      */
     public function fields($fields) {
         if (!is_array($fields)) {
@@ -89,7 +89,7 @@ class Join implements Serializable, JsonSerializable {
      *
      * @param string $repo
      * @param string $alias
-     * @return \Titon\Db\Query\Join
+     * @return $this
      */
     public function from($repo, $alias = null) {
         $this->_table = (string) $repo;
@@ -139,7 +139,7 @@ class Join implements Serializable, JsonSerializable {
      *
      * @param string $foreignKey
      * @param string $key
-     * @return \Titon\Db\Query\Join
+     * @return $this
      */
     public function on($foreignKey, $key = null) {
         if (is_array($foreignKey)) {

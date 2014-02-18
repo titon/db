@@ -210,7 +210,7 @@ class Query implements Serializable, JsonSerializable {
      *
      * @param string $key
      * @param mixed $value
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function attribute($key, $value = null) {
         if (is_array($key)) {
@@ -227,7 +227,7 @@ class Query implements Serializable, JsonSerializable {
      *
      * @param \Closure $callback
      * @param mixed $argument
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function bindCallback($callback, $argument = null) {
         if ($callback instanceof Closure) {
@@ -242,7 +242,7 @@ class Query implements Serializable, JsonSerializable {
      *
      * @param mixed $key
      * @param mixed $expires
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function cache($key, $expires = null) {
         if ($this->getType() !== self::SELECT) {
@@ -272,7 +272,7 @@ class Query implements Serializable, JsonSerializable {
     /**
      * Mark a query with a distinct attribute.
      *
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function distinct() {
         return $this->attribute('distinct', true);
@@ -283,7 +283,7 @@ class Query implements Serializable, JsonSerializable {
      *
      * @param string|array $fields
      * @param bool $merge
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function fields($fields, $merge = false) {
         if (!is_array($fields)) {
@@ -330,7 +330,7 @@ class Query implements Serializable, JsonSerializable {
      *
      * @param string $repo
      * @param string $alias
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function from($repo, $alias = null) {
         $this->_table = (string) $repo;
@@ -452,7 +452,7 @@ class Query implements Serializable, JsonSerializable {
     /**
      * Return the relation queries.
      *
-     * @return \Titon\Db\Query[]
+     * @return $this[]
      */
     public function getRelationQueries() {
         return $this->_relationQueries;
@@ -498,7 +498,7 @@ class Query implements Serializable, JsonSerializable {
      * Set what fields to group on.
      *
      * @param string $fields,...
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function groupBy() {
         $fields = func_get_args();
@@ -518,7 +518,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string $field
      * @param string $op
      * @param mixed $value
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function having($field, $op = null, $value = null) {
         return $this->_modifyPredicate($this->_having, Predicate::ALSO, $field, $op, $value);
@@ -530,7 +530,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function innerJoin($repo, array $fields, array $on = []) {
         return $this->_addJoin(Join::INNER, $repo, $fields, $on);
@@ -542,7 +542,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function leftJoin($repo, array $fields, array $on = []) {
         return $this->_addJoin(Join::LEFT, $repo, $fields, $on);
@@ -553,7 +553,7 @@ class Query implements Serializable, JsonSerializable {
      *
      * @param int $limit
      * @param int $offset
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function limit($limit, $offset = 0) {
         $this->_limit = (int) $limit;
@@ -585,7 +585,7 @@ class Query implements Serializable, JsonSerializable {
      * Set the record offset.
      *
      * @param int $offset
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function offset($offset) {
         $this->_offset = (int) $offset;
@@ -598,7 +598,7 @@ class Query implements Serializable, JsonSerializable {
      *
      * @param string|array $field
      * @param string $direction
-     * @return \Titon\Db\Query
+     * @return $this
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function orderBy($field, $direction = self::DESC) {
@@ -632,7 +632,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string $field
      * @param string $op
      * @param mixed $value
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function orHaving($field, $op = null, $value = null) {
         return $this->_modifyPredicate($this->_having, Predicate::EITHER, $field, $op, $value);
@@ -644,7 +644,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string $field
      * @param string $op
      * @param mixed $value
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function orWhere($field, $op = null, $value = null) {
         return $this->_modifyPredicate($this->_where, Predicate::EITHER, $field, $op, $value);
@@ -656,7 +656,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function outerJoin($repo, array $fields, array $on = []) {
         return $this->_addJoin(Join::OUTER, $repo, $fields, $on);
@@ -668,7 +668,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function rightJoin($repo, array $fields, array $on = []) {
         return $this->_addJoin(Join::RIGHT, $repo, $fields, $on);
@@ -688,7 +688,7 @@ class Query implements Serializable, JsonSerializable {
      * Set the table schema.
      *
      * @param \Titon\Db\Driver\Schema $schema
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function schema(Schema $schema) {
         $this->_schema = $schema;
@@ -702,7 +702,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string|array|\Titon\Db\Relation $repo
      * @param array $fields
      * @param array $on
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function straightJoin($repo, array $fields, array $on = []) {
         return $this->_addJoin(Join::STRAIGHT, $repo, $fields, $on);
@@ -735,7 +735,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string $field
      * @param string $op
      * @param mixed $value
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function where($field, $op = null, $value = null) {
         return $this->_modifyPredicate($this->_where, Predicate::ALSO, $field, $op, $value);
@@ -746,7 +746,7 @@ class Query implements Serializable, JsonSerializable {
      *
      * @param string|string[] $alias
      * @param \Titon\Db\Query|\Closure $query
-     * @return \Titon\Db\Query
+     * @return $this
      * @throws \Titon\Db\Exception\InvalidRelationQueryException
      */
     public function with($alias, $query = null) {
@@ -803,7 +803,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string $field
      * @param string $op
      * @param mixed $value
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function xorHaving($field, $op = null, $value = null) {
         return $this->_modifyPredicate($this->_having, Predicate::MAYBE, $field, $op, $value);
@@ -815,7 +815,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string $field
      * @param string $op
      * @param mixed $value
-     * @return \Titon\Db\Query
+     * @return $this
      */
     public function xorWhere($field, $op = null, $value = null) {
         return $this->_modifyPredicate($this->_where, Predicate::MAYBE, $field, $op, $value);
@@ -901,7 +901,7 @@ class Query implements Serializable, JsonSerializable {
      * @param string|array|\Titon\Db\Relation $table
      * @param array $fields
      * @param array $on
-     * @return \Titon\Db\Query
+     * @return $this
      * @throws \Titon\Db\Exception\InvalidRelationQueryException
      */
     protected function _addJoin($type, $table, $fields = [], $on = []) {
@@ -985,8 +985,8 @@ class Query implements Serializable, JsonSerializable {
      * @param string $field
      * @param mixed $op
      * @param mixed $value
+     * @return $this
      * @throws \Titon\Db\Exception\ExistingPredicateException
-     * @return \Titon\Db\Query
      */
     protected function _modifyPredicate(&$predicate, $type, $field, $op, $value) {
         if (!$predicate) {

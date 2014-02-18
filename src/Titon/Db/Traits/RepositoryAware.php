@@ -36,7 +36,7 @@ trait RepositoryAware {
      * Set the table.
      *
      * @param \Titon\Db\Repository $repository
-     * @return \Titon\Db\Traits\RepositoryAware
+     * @return $this
      */
     public function setRepository(Repository $repository) {
         $this->_repository = $repository;

@@ -32,7 +32,7 @@ interface Behavior extends Callback {
      * Set the repository this behavior is attached to.
      *
      * @param \Titon\Db\Repository $repo
-     * @return \Titon\Db\Behavior
+     * @return $this
      */
     public function setRepository(Repository $repo);
 

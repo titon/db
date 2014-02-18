@@ -98,7 +98,7 @@ class Schema implements Serializable, JsonSerializable {
      *      @type mixed $unique     Is this a unique key
      *      @type mixed $foreign    Is this a foreign key
      * }
-     * @return \Titon\Db\Driver\Schema
+     * @return $this
      */
     public function addColumn($column, $options) {
         if (is_string($options)) {
@@ -152,7 +152,7 @@ class Schema implements Serializable, JsonSerializable {
      * Add multiple columns. Index is the column name, the value is the array of options.
      *
      * @param array $columns
-     * @return \Titon\Db\Driver\Schema
+     * @return $this
      */
     public function addColumns(array $columns) {
         foreach ($columns as $column => $options) {
@@ -172,7 +172,7 @@ class Schema implements Serializable, JsonSerializable {
      *      @type string $onUpdate      Action to use for ON UPDATE clauses
      *      @type string $onDelete      Action to use for ON DELETE clauses
      * }
-     * @return \Titon\Db\Driver\Schema
+     * @return $this
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function addForeign($column, $options = []) {
@@ -195,7 +195,7 @@ class Schema implements Serializable, JsonSerializable {
      *
      * @param string $column
      * @param string $group
-     * @return \Titon\Db\Driver\Schema
+     * @return $this
      */
     public function addIndex($column, $group = null) {
         if (!is_string($group)) {
@@ -212,7 +212,7 @@ class Schema implements Serializable, JsonSerializable {
      *
      * @param string $key
      * @param mixed $value
-     * @return \Titon\Db\Driver\Schema
+     * @return $this
      */
     public function addOption($key, $value) {
         $this->_options[$key] = $value;
@@ -224,7 +224,7 @@ class Schema implements Serializable, JsonSerializable {
      * Add multiple table options.
      *
      * @param array $options
-     * @return \Titon\Db\Driver\Schema
+     * @return $this
      */
     public function addOptions(array $options) {
         $this->_options = array_replace($this->_options, $options);
@@ -238,7 +238,7 @@ class Schema implements Serializable, JsonSerializable {
      *
      * @param string $column
      * @param string|bool $options  Provide a name to reference the constraint by
-     * @return \Titon\Db\Driver\Schema
+     * @return $this
      */
     public function addPrimary($column, $options = false) {
         $symbol = is_string($options) ? $options : '';
@@ -264,7 +264,7 @@ class Schema implements Serializable, JsonSerializable {
      *      @type string $constraint    Provide a name to reference the constraint by
      *      @type string $index         Custom name for the index key, defaults to the column name
      * }
-     * @return \Titon\Db\Driver\Schema
+     * @return $this
      */
     public function addUnique($column, $options = []) {
         $symbol = '';
