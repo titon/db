@@ -8,6 +8,8 @@
 namespace Titon\Db;
 
 use Titon\Common\Traits\Mutable;
+use Titon\Type\Contract\Arrayable;
+use Titon\Type\Contract\Jsonable;
 use \Serializable;
 use \JsonSerializable;
 use \Iterator;
@@ -25,7 +27,7 @@ use \Closure;
  *
  * @package Titon\Db
  */
-class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, Countable {
+class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, Countable, Arrayable, Jsonable {
     use Mutable;
 
     /**
@@ -92,9 +94,7 @@ class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, C
     }
 
     /**
-     * Convert all entities and nested entities to arrays.
-     *
-     * @return array
+     * {@inheritdoc}
      */
     public function toArray() {
         $data = [];
@@ -108,6 +108,13 @@ class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, C
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function toJson($options = 0) {
+        return json_encode($this->toArray(), $options);
+    }
+
+    /**
      * Apply array casting recursively.
      *
      * @param mixed $data
@@ -117,7 +124,7 @@ class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, C
         $array = [];
 
         foreach ($data as $key => $value) {
-            if ($value instanceof Entity) {
+            if ($value instanceof Arrayable) {
                 $array[$key] = $value->toArray();
 
             } else if (is_array($value)) {

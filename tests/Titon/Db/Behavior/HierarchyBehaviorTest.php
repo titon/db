@@ -8,6 +8,7 @@
 namespace Titon\Db\Behavior;
 
 use Titon\Db\Entity;
+use Titon\Db\EntityCollection;
 use Titon\Test\Stub\Repository\Category;
 use Titon\Test\TestCase;
 
@@ -306,12 +307,12 @@ class HierarchyBehaviorTest extends TestCase {
         $category = new Category();
         $category->addBehavior(new HierarchyBehavior());
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'name' => 'Fruit', 'parent_id' => null, 'left' => 1, 'right' => 20]),
             new Entity(['id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15])
-        ], $category->Hierarchy->getPath(8));
+        ]), $category->Hierarchy->getPath(8));
 
-        $this->assertEquals([], $category->Hierarchy->getPath(20));
+        $this->assertEquals(new EntityCollection(), $category->Hierarchy->getPath(20));
     }
 
     /**

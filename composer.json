@@ -15,7 +15,8 @@
         "php": ">=5.4.0",
         "ext-pdo": "*",
         "titon/common": "*",
-        "titon/event": "*"
+        "titon/event": "*",
+        "titon/type": "*"
     },
     "require-dev": {
         "titon/test": "dev-master",

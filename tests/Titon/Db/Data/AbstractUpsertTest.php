@@ -8,6 +8,7 @@
 namespace Titon\Db\Data;
 
 use Titon\Db\Entity;
+use Titon\Db\EntityCollection;
 use Titon\Db\Query;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\Series;
@@ -170,13 +171,13 @@ class AbstractUpsertTest extends TestCase {
             'id' => 1,
             'author_id' => 1,
             'name' => 'A Song of Ice and Fire',
-            'Books' => [
+            'Books' => new EntityCollection([
                 new Entity(['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones', 'isbn' => '0-553-10354-7', 'released' => '1996-08-02']),
                 new Entity(['id' => 2, 'series_id' => 1, 'name' => 'A Clash of Kings', 'isbn' => '0-553-10803-4', 'released' => '1999-02-25']),
                 new Entity(['id' => 3, 'series_id' => 1, 'name' => 'A Storm of Swords', 'isbn' => '0-553-10663-5', 'released' => '2000-11-11']),
                 new Entity(['id' => 4, 'series_id' => 1, 'name' => 'A Feast for Crows', 'isbn' => '0-553-80150-3', 'released' => '2005-11-02']),
                 new Entity(['id' => 5, 'series_id' => 1, 'name' => 'A Dance with Dragons', 'isbn' => '0-553-80147-3', 'released' => '2011-07-19'])
-            ]
+            ])
         ]), $results);
 
         $this->assertEquals(3, $series->upsertRelations(1, [
@@ -195,7 +196,7 @@ class AbstractUpsertTest extends TestCase {
             'id' => 1,
             'author_id' => 1,
             'name' => 'A Song of Ice and Fire',
-            'Books' => [
+            'Books' => new EntityCollection([
                 new Entity(['id' => 1, 'series_id' => 1, 'name' => 'A Game of Thrones (Updated)', 'isbn' => '0-553-10354-7', 'released' => '1996-08-02']),
                 new Entity(['id' => 2, 'series_id' => 1, 'name' => 'A Clash of Kings', 'isbn' => '0-553-10803-4', 'released' => '1999-02-25']),
                 new Entity(['id' => 3, 'series_id' => 1, 'name' => 'A Storm of Swords', 'isbn' => '0-553-10663-5', 'released' => '2000-11-11']),
@@ -203,7 +204,7 @@ class AbstractUpsertTest extends TestCase {
                 new Entity(['id' => 5, 'series_id' => 1, 'name' => 'A Dance with Dragons', 'isbn' => '0-553-80147-3', 'released' => '2011-07-19']),
                 new Entity(['id' => 16, 'series_id' => 1, 'name' => 'The Winds of Winter', 'isbn' => '', 'released' => '']),
                 new Entity(['id' => 17, 'series_id' => 1, 'name' => 'A Dream of Spring', 'isbn' => '', 'released' => ''])
-            ]
+            ])
         ]), $results);
     }
 
@@ -225,7 +226,7 @@ class AbstractUpsertTest extends TestCase {
             'name' => 'Harry Potter and the Order of the Phoenix',
             'isbn' => '0-7475-5100-6',
             'released' => '2003-06-21',
-            'Genres' => [
+            'Genres' => new EntityCollection([
                 new Entity([
                     'id' => 2,
                     'name' => 'Adventure',
@@ -256,7 +257,7 @@ class AbstractUpsertTest extends TestCase {
                         'genre_id' => 8
                     ])
                 ])
-            ]
+            ])
         ]), $results);
 
         $this->assertEquals(4, $book->upsertRelations(10, [

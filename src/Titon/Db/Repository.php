@@ -1553,7 +1553,7 @@ class Repository extends Base implements Callback, Listener {
             $state = $event->getData();
 
             if ($state !== null && !$state) {
-                return [];
+                return $finder->noResults();
             }
         }
 
@@ -1573,7 +1573,7 @@ class Repository extends Base implements Callback, Listener {
         }
 
         if (!$results) {
-            return [];
+            return $finder->noResults();
         }
 
         if ($options['postCallback']) {

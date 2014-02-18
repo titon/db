@@ -7,11 +7,27 @@
 
 namespace Titon\Db\Finder;
 
+use Titon\Db\EntityCollection;
+
 /**
- * Returns all records without alteration.
+ * Returns all records wrapped in a collection.
  *
  * @package Titon\Db\Finder
  */
 class AllFinder extends AbstractFinder {
+
+    /**
+     * {@inheritdoc}
+     */
+    public function after(array $results, array $options = []) {
+        return new EntityCollection($results);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function noResults() {
+        return new EntityCollection();
+    }
 
 }

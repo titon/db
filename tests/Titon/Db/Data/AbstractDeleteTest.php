@@ -8,6 +8,7 @@
 namespace Titon\Db\Data;
 
 use Titon\Db\Entity;
+use Titon\Db\EntityCollection;
 use Titon\Db\Query;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\BookGenre;
@@ -55,20 +56,20 @@ class AbstractDeleteTest extends TestCase {
 
         $user = new User();
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'username' => 'miles']),
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->orderBy('id', 'asc')->all());
+        ]), $user->select('id', 'username')->orderBy('id', 'asc')->all());
 
         $this->assertSame(3, $user->query(Query::DELETE)->orderBy('age', 'asc')->limit(3)->save());
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->orderBy('id', 'asc')->all());
+        ]), $user->select('id', 'username')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -79,21 +80,21 @@ class AbstractDeleteTest extends TestCase {
 
         $user = new User();
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'username' => 'miles']),
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->orderBy('id', 'asc')->all());
+        ]), $user->select('id', 'username')->orderBy('id', 'asc')->all());
 
         $this->assertSame(2, $user->query(Query::DELETE)->limit(2)->save());
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine'])
-        ], $user->select('id', 'username')->orderBy('id', 'asc')->all());
+        ]), $user->select('id', 'username')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -122,18 +123,18 @@ class AbstractDeleteTest extends TestCase {
         $series = new Series();
 
         $this->assertTrue($series->exists(1));
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'name' => 'A Game of Thrones']),
             new Entity(['id' => 2, 'name' => 'A Clash of Kings']),
             new Entity(['id' => 3, 'name' => 'A Storm of Swords']),
             new Entity(['id' => 4, 'name' => 'A Feast for Crows']),
             new Entity(['id' => 5, 'name' => 'A Dance with Dragons']),
-        ], $series->Books->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->all());
+        ]), $series->Books->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->all());
 
         $series->delete(1, true);
 
         $this->assertFalse($series->exists(1));
-        $this->assertEquals([], $series->Books->select('id', 'name')->where('series_id', 1)->all());
+        $this->assertEquals(new EntityCollection(), $series->Books->select('id', 'name')->where('series_id', 1)->all());
     }
 
     /**
@@ -154,7 +155,7 @@ class AbstractDeleteTest extends TestCase {
         $this->assertEquals(new Entity([
             'id' => 5,
             'name' => 'A Dance with Dragons',
-            'Genres' => [
+            'Genres' => new EntityCollection([
                 new Entity([
                     'id' => 3,
                     'name' => 'Action-Adventure',
@@ -185,7 +186,7 @@ class AbstractDeleteTest extends TestCase {
                         'genre_id' => 8
                     ])
                 ])
-            ]
+            ])
         ]), $results);
 
         $book->delete(5, true);
@@ -196,11 +197,11 @@ class AbstractDeleteTest extends TestCase {
 
         // The related records don't get deleted
         // Only the junction records should be
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 3, 'name' => 'Action-Adventure']),
             new Entity(['id' => 5, 'name' => 'Horror']),
             new Entity(['id' => 8, 'name' => 'Fantasy']),
-        ], $book->Genres->select('id', 'name')->where('id', [3, 5, 8])->all());
+        ]), $book->Genres->select('id', 'name')->where('id', [3, 5, 8])->all());
     }
 
     /**
@@ -214,11 +215,11 @@ class AbstractDeleteTest extends TestCase {
 
         $this->assertTrue($series->exists(3));
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 13, 'name' => 'The Fellowship of the Ring']),
             new Entity(['id' => 14, 'name' => 'The Two Towers']),
             new Entity(['id' => 15, 'name' => 'The Return of the King']),
-        ], $series->Books->select('id', 'name')->where('series_id', 3)->orderBy('id', 'asc')->all());
+        ]), $series->Books->select('id', 'name')->where('series_id', 3)->orderBy('id', 'asc')->all());
 
         // Trigger lazy-loaded queries
         $results = $series->Books->select('id', 'name')->where('id', 14)->with('Genres')->first();
@@ -227,7 +228,7 @@ class AbstractDeleteTest extends TestCase {
         $this->assertEquals(new Entity([
             'id' => 14,
             'name' => 'The Two Towers',
-            'Genres' => [
+            'Genres' => new EntityCollection([
                 new Entity([
                     'id' => 3,
                     'name' => 'Action-Adventure',
@@ -258,13 +259,13 @@ class AbstractDeleteTest extends TestCase {
                         'genre_id' => 8
                     ])
                 ])
-            ]
+            ])
         ]), $results);
 
         $series->delete(3, true);
 
         $this->assertFalse($series->exists(3));
-        $this->assertEquals([], $series->Books->select('id', 'name')->where('series_id', 3)->all());
+        $this->assertEquals(new EntityCollection(), $series->Books->select('id', 'name')->where('series_id', 3)->all());
         $this->assertEquals([], $bookGenres->select()->where('book_id', 14)->first());
     }
 

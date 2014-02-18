@@ -199,7 +199,7 @@ class Query implements Serializable, JsonSerializable {
      * Return all records from the results.
      *
      * @param array $options
-     * @return \Titon\Db\Entity[]
+     * @return \Titon\Db\EntityCollection
      */
     public function all(array $options = []) {
         return $this->find('all', $options);

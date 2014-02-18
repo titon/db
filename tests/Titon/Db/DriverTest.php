@@ -75,7 +75,7 @@ class DriverTest extends TestCase {
     public function testStorage() {
         $this->assertEquals(null, $this->object->getStorage());
 
-        $this->object->setStorage(new MemoryStorage('memory'));
+        $this->object->setStorage(new MemoryStorage());
         $this->assertInstanceOf('Titon\Cache\Storage', $this->object->getStorage());
     }
 

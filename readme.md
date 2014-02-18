@@ -41,6 +41,7 @@ Supported database engines are packaged as individual driver packages, which are
 
 * `Common`
 * `Event`
+* `Type`
 * `Cache` (optional)
 * `Psr\Log` (optional)
 

@@ -8,6 +8,7 @@
 namespace Titon\Db\Query\Result;
 
 use Titon\Db\Entity;
+use Titon\Db\EntityCollection;
 use Titon\Db\Query;
 use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
@@ -68,7 +69,7 @@ class PdoResultTest extends TestCase {
      * Test all results are returned.
      */
     public function testFetchAll() {
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity([
                 'id' => 1,
                 'country_id' => 1,
@@ -129,7 +130,7 @@ class PdoResultTest extends TestCase {
                 'created' => '2000-11-30 21:22:34',
                 'modified' => null
             ])
-        ], $this->object->select()->all());
+        ]), $this->object->select()->all());
     }
 
     /**

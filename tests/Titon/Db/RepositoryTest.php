@@ -115,17 +115,17 @@ class RepositoryTest extends TestCase {
 
         $topic = new Topic();
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 4]),
             new Entity(['post_count' => 1])
-        ], $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->all());
 
         $topic->decrement(null, ['post_count' => 1]);
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 3]),
             new Entity(['post_count' => 0])
-        ], $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->all());
     }
 
     /**
@@ -244,22 +244,22 @@ class RepositoryTest extends TestCase {
             ]
         ];
 
-        $this->assertEquals(array_map(function($value) {
+        $this->assertEquals(new EntityCollection(array_map(function($value) {
             return new Entity($value);
-        }, $results), $this->object->query(Query::SELECT)->all());
+        }, $results)), $this->object->query(Query::SELECT)->all());
 
         // With conditions
         unset($results[0], $results[1], $results[2]);
         $results = array_values($results);
 
-        $this->assertEquals(array_map(function($value) {
+        $this->assertEquals(new EntityCollection(array_map(function($value) {
             return new Entity($value);
-        }, $results), $this->object->query(Query::SELECT)->where(function(Predicate $where) {
+        }, $results)), $this->object->query(Query::SELECT)->where(function(Predicate $where) {
             $where->gte('id', 4);
         })->all());
 
         // No results
-        $this->assertEquals([], $this->object->query(Query::SELECT)->where('country_id', 15)->all());
+        $this->assertEquals(new EntityCollection(), $this->object->query(Query::SELECT)->where('country_id', 15)->all());
     }
 
     /**
@@ -465,17 +465,17 @@ class RepositoryTest extends TestCase {
 
         $topic = new Topic();
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 4]),
             new Entity(['post_count' => 1])
-        ], $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->all());
 
         $topic->increment(null, ['post_count' => 3]);
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 7]),
             new Entity(['post_count' => 4])
-        ], $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->all());
     }
 
     /**

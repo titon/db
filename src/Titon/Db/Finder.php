@@ -32,4 +32,11 @@ interface Finder {
      */
     public function before(Query $query, array $options = []);
 
+    /**
+     * Return an empty value when no results are found.
+     *
+     * @return mixed
+     */
+    public function noResults();
+
 }

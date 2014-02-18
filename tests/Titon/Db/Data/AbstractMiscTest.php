@@ -9,6 +9,7 @@ namespace Titon\Db\Data;
 
 use DateTime;
 use Titon\Db\Entity;
+use Titon\Db\EntityCollection;
 use Titon\Db\Query;
 use Titon\Db\Query\SubQuery;
 use Titon\Test\Stub\Repository\Stat;
@@ -180,21 +181,21 @@ class AbstractMiscTest extends TestCase {
         $query = $user->select('id', 'country_id', 'username');
         $query->where('country_id', '=', $query->subQuery('id')->from('countries')->withFilter(SubQuery::ANY))->orderBy('id', 'asc');
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'country_id' => 1, 'username' => 'miles']),
             new Entity(['id' => 2, 'country_id' => 3, 'username' => 'batman']),
             new Entity(['id' => 3, 'country_id' => 2, 'username' => 'superman']),
             new Entity(['id' => 4, 'country_id' => 5, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'country_id' => 4, 'username' => 'wolverine']),
-        ], $query->all());
+        ]), $query->all());
 
         // Single record
         $query = $user->select('id', 'country_id', 'username');
         $query->where('country_id', '=', $query->subQuery('id')->from('countries')->where('iso', 'USA'));
 
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'country_id' => 1, 'username' => 'miles'])
-        ], $query->all());
+        ]), $query->all());
     }
 
     /**

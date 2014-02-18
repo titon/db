@@ -8,6 +8,7 @@
 namespace Titon\Db\Data;
 
 use Titon\Db\Entity;
+use Titon\Db\EntityCollection;
 use Titon\Test\Stub\Repository\UserDeleteCallbacks;
 use Titon\Test\Stub\Repository\UserFindCallbacks;
 use Titon\Test\Stub\Repository\UserSaveCallbacks;
@@ -129,13 +130,13 @@ class AbstractCallbackTest extends TestCase {
         $this->assertEquals(new Entity(['custom' => 'data']), $user->select()->first());
 
         // Modify fields for first all
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'username' => 'miles']),
             new Entity(['id' => 2, 'username' => 'batman']),
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman']),
             new Entity(['id' => 5, 'username' => 'wolverine']),
-        ], $user->select('id', 'username', 'firstName', 'lastName')->orderBy('id', 'asc')->all());
+        ]), $user->select('id', 'username', 'firstName', 'lastName')->orderBy('id', 'asc')->all());
     }
 
     /**
@@ -148,13 +149,13 @@ class AbstractCallbackTest extends TestCase {
         $user->testApply = true;
 
         // Modify results after first
-        $this->assertEquals([
+        $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'username' => 'miles']),
             new Entity(['id' => 2, 'username' => 'batman', 'foo' => 'bar']),
             new Entity(['id' => 3, 'username' => 'superman']),
             new Entity(['id' => 4, 'username' => 'spiderman', 'foo' => 'bar']),
             new Entity(['id' => 5, 'username' => 'wolverine']),
-        ], $user->select('id', 'username', 'firstName', 'lastName')->orderBy('id', 'asc')->all());
+        ]), $user->select('id', 'username', 'firstName', 'lastName')->orderBy('id', 'asc')->all());
     }
 
 }

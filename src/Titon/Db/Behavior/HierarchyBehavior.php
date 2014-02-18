@@ -226,7 +226,7 @@ class HierarchyBehavior extends AbstractBehavior {
             }
         }
 
-        return $this->mapList($query->all(), $key, $value, $spacer);
+        return $this->mapList($query->all()->toArray(), $key, $value, $spacer);
     }
 
     /**
