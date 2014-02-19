@@ -5,14 +5,14 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Query\Result;
+namespace Titon\Db\Query\ResultSet;
 
 /**
  * The SqlResult is used for debugging purposes where an SQL string statement needs to be logged.
  *
- * @package Titon\Db\Query\Result
+ * @package Titon\Db\Query\ResultSet
  */
-class SqlResult extends AbstractResult {
+class SqlResultSet extends AbstractResultSet {
 
     /**
      * SQL string.

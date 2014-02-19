@@ -5,18 +5,18 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Query\Result;
+namespace Titon\Db\Query\ResultSet;
 
 use Titon\Common\Traits\Cacheable;
-use Titon\Db\Query\Result;
+use Titon\Db\Query\ResultSet;
 use Titon\Db\Query;
 
 /**
  * Provides shared functionality for results.
  *
- * @package Titon\Db\Query\Result
+ * @package Titon\Db\Query\ResultSet
  */
-abstract class AbstractResult implements Result {
+abstract class AbstractResultSet implements ResultSet {
     use Cacheable;
 
     /**

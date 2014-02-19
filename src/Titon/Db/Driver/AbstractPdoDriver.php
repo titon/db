@@ -16,8 +16,8 @@ use Titon\Db\Query;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
 use Titon\Db\Query\Predicate;
-use Titon\Db\Query\Result\PdoResult;
-use Titon\Db\Query\Result\SqlResult;
+use Titon\Db\Query\ResultSet\PdoResultSet;
+use Titon\Db\Query\ResultSet\SqlResultSet;
 use Titon\Db\Query\SubQuery;
 use \PDO;
 
@@ -94,7 +94,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      */
     public function commitTransaction() {
         if ($this->_transactions === 1) {
-            $this->logQuery(new SqlResult('COMMIT'));
+            $this->logQuery(new SqlResultSet('COMMIT'));
 
             $status = $this->getConnection()->commit();
         } else {
@@ -240,9 +240,9 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
         // Gather and log result
         if ($isQuery) {
-            $this->_result = new PdoResult($statement, $query);
+            $this->_result = new PdoResultSet($statement, $query);
         } else {
-            $this->_result = new PdoResult($statement);
+            $this->_result = new PdoResultSet($statement);
         }
 
         $this->logQuery($this->_result);
@@ -474,7 +474,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      */
     public function rollbackTransaction() {
         if ($this->_transactions === 1) {
-            $this->logQuery(new SqlResult('ROLLBACK'));
+            $this->logQuery(new SqlResultSet('ROLLBACK'));
 
             $status = $this->getConnection()->rollBack();
 
@@ -494,7 +494,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      */
     public function startTransaction() {
         if (!$this->_transactions) {
-            $this->logQuery(new SqlResult('BEGIN'));
+            $this->logQuery(new SqlResultSet('BEGIN'));
 
             $status = $this->getConnection()->beginTransaction();
         } else {

@@ -14,7 +14,7 @@ use Titon\Cache\Storage;
 use Titon\Db\Driver;
 use Titon\Db\Exception\InvalidArgumentException;
 use Titon\Db\Exception\UnknownConnectionException;
-use Titon\Db\Query\Result;
+use Titon\Db\Query\ResultSet;
 use Titon\Db\Query;
 use Titon\Utility\Hash;
 
@@ -88,14 +88,14 @@ abstract class AbstractDriver extends Base implements Driver {
     /**
      * Logged query statements and bound parameters.
      *
-     * @type \Titon\Db\Query\Result[]
+     * @type \Titon\Db\Query\ResultSet[]
      */
     protected $_logs = [];
 
     /**
      * The last query result.
      *
-     * @type \Titon\Db\Query\Result
+     * @type \Titon\Db\Query\ResultSet
      */
     protected $_result;
 
@@ -271,7 +271,7 @@ abstract class AbstractDriver extends Base implements Driver {
     /**
      * {@inheritdoc}
      */
-    public function logQuery(Result $result) {
+    public function logQuery(ResultSet $result) {
         $this->_logs[] = $result;
 
         // Cast the SQL to string and log it

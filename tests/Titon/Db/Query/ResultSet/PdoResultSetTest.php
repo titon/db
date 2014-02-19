@@ -5,7 +5,7 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Query\Result;
+namespace Titon\Db\Query\ResultSet;
 
 use Titon\Db\Entity;
 use Titon\Db\EntityCollection;
@@ -14,11 +14,11 @@ use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Query\Result\PdoResult.
+ * Test class for Titon\Db\Query\ResultSet\PdoResultSet.
  *
  * @property \Titon\Db\Repository $object
  */
-class PdoResultTest extends TestCase {
+class PdoResultSetTest extends TestCase {
 
     /**
      * Create a result.

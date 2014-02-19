@@ -12,7 +12,7 @@ namespace Titon\Db\Query;
  *
  * @package Titon\Db\Query
  */
-interface Result {
+interface ResultSet {
 
     /**
      * Close any open connection.
@@ -31,7 +31,7 @@ interface Result {
     /**
      * Execute the query and log the affected rows and execution time.
      *
-     * @return \Titon\Db\Query\Result
+     * @return \Titon\Db\Query\ResultSet
      */
     public function execute();
 

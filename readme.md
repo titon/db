@@ -35,7 +35,7 @@ Supported database engines are packaged as individual driver packages, which are
     * `Func` - Function builder
     * `Join` - Join builder
     * `Predicate` - Clause builder
-    * `Result` - Result set mapper
+    * `ResultSet` - Results mapper
 
 ### Dependencies ###
 

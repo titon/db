@@ -5,10 +5,10 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Query\Result;
+namespace Titon\Db\Query\ResultSet;
 
 use Titon\Db\Query;
-use Titon\Db\Query\Result;
+use Titon\Db\Query\ResultSet;
 use \PDO;
 use \PDOStatement;
 use \PDOException;
@@ -16,9 +16,9 @@ use \PDOException;
 /**
  * Accepts a PDOStatement instance which is used for result fetching and query profiling.
  *
- * @package Titon\Db\Query\Result
+ * @package Titon\Db\Query\ResultSet
  */
-class PdoResult extends AbstractResult implements Result {
+class PdoResultSet extends AbstractResultSet implements ResultSet {
 
     /**
      * PDOStatement instance.
