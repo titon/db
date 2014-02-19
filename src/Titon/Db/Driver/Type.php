@@ -38,7 +38,7 @@ interface Type {
      *
      * @param string $type
      * @param \Titon\Db\Driver $driver
-     * @return \Titon\Db\Driver\Type
+     * @return $this
      */
     public static function factory($type, Driver $driver);
 

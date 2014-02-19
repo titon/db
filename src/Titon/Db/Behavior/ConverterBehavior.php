@@ -49,7 +49,7 @@ class ConverterBehavior extends AbstractBehavior {
      * @param string $field
      * @param string $type
      * @param array $options
-     * @return \Titon\Db\Behavior\ConverterBehavior
+     * @return $this
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function convert($field, $type, array $options) {
@@ -62,6 +62,8 @@ class ConverterBehavior extends AbstractBehavior {
             'decode' => true,
             'type' => $type,
         ], $this->_defaults[$type], $options);
+
+        return $this;
     }
 
     /**

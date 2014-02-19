@@ -208,7 +208,7 @@ interface Dialect {
      * Set the driver that this dialect belongs to.
      *
      * @param \Titon\Db\Driver $driver
-     * @return \Titon\Db\Driver\Dialect
+     * @return $this
      */
     public function setDriver(Driver $driver);
 

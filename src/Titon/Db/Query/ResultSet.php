@@ -31,7 +31,7 @@ interface ResultSet {
     /**
      * Execute the query and log the affected rows and execution time.
      *
-     * @return \Titon\Db\Query\ResultSet
+     * @return $this
      */
     public function execute();
 

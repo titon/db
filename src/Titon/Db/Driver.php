@@ -77,11 +77,19 @@ interface Driver {
     public function getConnection();
 
     /**
-     * The current read, write, or custom connection group.
+     * The current read, write, or custom connection config.
      *
      * @return string
      */
-    public function getConnectionGroup();
+    public function getContext();
+
+    /**
+     * Return connection configuration for a context.
+     *
+     * @param string $key
+     * @return array
+     */
+    public function getContextConfig($key);
 
     /**
      * Return the dialect.
@@ -96,14 +104,6 @@ interface Driver {
      * @return string
      */
     public function getEncoding();
-
-    /**
-     * Return connection settings for a group.
-     *
-     * @param string $key
-     * @return array
-     */
-    public function getGroup($key);
 
     /**
      * Return the ID of the last inserted record.
@@ -201,12 +201,12 @@ interface Driver {
     public function rollbackTransaction();
 
     /**
-     * Set the connection group.
+     * Set the connection context.
      *
      * @param string $group
      * @return $this
      */
-    public function setConnectionGroup($group);
+    public function setContext($group);
 
     /**
      * Set the driver specific dialect.

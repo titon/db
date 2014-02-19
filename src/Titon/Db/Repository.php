@@ -1524,7 +1524,7 @@ class Repository extends Base implements Callback, Listener {
 
         // Update the connection group
         $driver = $this->getDriver();
-        $driver->setConnectionGroup('delete');
+        $driver->setContext('delete');
 
         // Use transactions for cascading
         if ($options['cascade']) {
@@ -1620,7 +1620,7 @@ class Repository extends Base implements Callback, Listener {
 
             // Update the connection group
             $driver = $this->getDriver();
-            $driver->setConnectionGroup('read');
+            $driver->setContext('read');
 
             $results = $driver->executeQuery($query)->find();
         }
@@ -1685,7 +1685,7 @@ class Repository extends Base implements Callback, Listener {
 
         // Update the connection group
         $driver = $this->getDriver();
-        $driver->setConnectionGroup('write');
+        $driver->setContext('write');
 
         // Update the records using transactions
         if ($relatedData) {

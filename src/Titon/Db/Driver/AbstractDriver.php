@@ -13,7 +13,6 @@ use Titon\Common\Traits\Cacheable;
 use Titon\Cache\Storage;
 use Titon\Db\Driver;
 use Titon\Db\Exception\InvalidArgumentException;
-use Titon\Db\Exception\UnknownConnectionException;
 use Titon\Db\Query\ResultSet;
 use Titon\Db\Query;
 use Titon\Utility\Hash;
@@ -40,7 +39,7 @@ abstract class AbstractDriver extends Base implements Driver {
      *      @type string $encoding      Charset encoding for the driver
      *      @type string $timezone      Timezone for the driver
      *      @type array $flags          Flags used when connecting
-     *      @type array $connections    Mapping of read, write, and custom connections
+     *      @type array $contexts       Mapping of read, write, and custom config contexts
      * }
      */
     protected $_config = [
@@ -54,7 +53,7 @@ abstract class AbstractDriver extends Base implements Driver {
         'encoding' => 'utf8',
         'timezone' => 'UTC',
         'flags' => [],
-        'connections' => []
+        'contexts' => []
     ];
 
     /**
@@ -65,18 +64,18 @@ abstract class AbstractDriver extends Base implements Driver {
     protected $_connections = [];
 
     /**
+     * The current connection config.
+     *
+     * @type string
+     */
+    protected $_context = 'read';
+
+    /**
      * Dialect object instance.
      *
      * @type \Titon\Db\Driver\Dialect
      */
     protected $_dialect;
-
-    /**
-     * The current read, write, or custom connection group.
-     *
-     * @type string
-     */
-    protected $_group = 'read';
 
     /**
      * Logger object instance.
@@ -123,7 +122,7 @@ abstract class AbstractDriver extends Base implements Driver {
             if ($flush) {
                 $this->_connections = [];
             } else {
-                unset($this->_connections[$this->getConnectionGroup()]);
+                unset($this->_connections[$this->getContext()]);
             }
 
             return true;
@@ -136,20 +135,33 @@ abstract class AbstractDriver extends Base implements Driver {
      * {@inheritdoc}
      */
     public function getConnection() {
-        $group = $this->getConnectionGroup();
+        $context = $this->getContext();
 
-        if (isset($this->_connections[$group])) {
-            return $this->_connections[$group];
+        if (empty($this->_connections[$context])) {
+            $this->connect();
         }
 
-        throw new UnknownConnectionException(sprintf('No connection found for %s group', $group));
+        return $this->_connections[$context];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getConnectionGroup() {
-        return $this->_group;
+    public function getContext() {
+        return $this->_context;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getContextConfig($key) {
+        $config = $this->allConfig();
+
+        if (isset($config['contexts'][$key])) {
+            $config = array_merge($config, $config['contexts'][$key]);
+        }
+
+        return Hash::reduce($config, ['user', 'pass', 'host', 'port', 'database']);
     }
 
     /**
@@ -158,7 +170,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return string
      */
     public function getDatabase() {
-        return $this->getGroup($this->getConnectionGroup())['database'];
+        return $this->getContextConfig($this->getContext())['database'];
     }
 
     /**
@@ -176,25 +188,12 @@ abstract class AbstractDriver extends Base implements Driver {
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function getGroup($key) {
-        $config = $this->allConfig();
-
-        if (isset($config['connections'][$key])) {
-            $config = array_merge($config, $config['connections'][$key]);
-        }
-
-        return Hash::reduce($config, ['user', 'pass', 'host', 'port', 'database']);
-    }
-
-    /**
      * Return the database host.
      *
      * @return string
      */
     public function getHost() {
-        return $this->getGroup($this->getConnectionGroup())['host'];
+        return $this->getContextConfig($this->getContext())['host'];
     }
 
     /**
@@ -217,7 +216,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return string
      */
     public function getPassword() {
-        return $this->getGroup($this->getConnectionGroup())['pass'];
+        return $this->getContextConfig($this->getContext())['pass'];
     }
 
     /**
@@ -226,7 +225,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return int
      */
     public function getPort() {
-        return $this->getGroup($this->getConnectionGroup())['port'];
+        return $this->getContextConfig($this->getContext())['port'];
     }
 
     /**
@@ -235,7 +234,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * @return string
      */
     public function getUser() {
-        return $this->getGroup($this->getConnectionGroup())['user'];
+        return $this->getContextConfig($this->getContext())['user'];
     }
 
     /**
@@ -258,7 +257,7 @@ abstract class AbstractDriver extends Base implements Driver {
      * {@inheritdoc}
      */
     public function isConnected() {
-        return isset($this->_connections[$this->getConnectionGroup()]);
+        return isset($this->_connections[$this->getContext()]);
     }
 
     /**
@@ -307,12 +306,12 @@ abstract class AbstractDriver extends Base implements Driver {
     /**
      * {@inheritdoc}
      */
-    public function setConnectionGroup($group) {
-        if (!$group) {
-            throw new InvalidArgumentException('A connection group is required');
+    public function setContext($context) {
+        if (!$context) {
+            throw new InvalidArgumentException('A connection context is required');
         }
 
-        $this->_group = $group;
+        $this->_context = $context;
 
         return $this;
     }
