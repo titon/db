@@ -351,7 +351,7 @@ class RepositoryTest extends TestCase {
     public function testGetDriver() {
         $this->assertInstanceOf('Titon\Db\Driver', $this->object->getDriver());
 
-        // Connection doesnt exist
+        // Database doesnt exist
         $this->object->setConfig('connection', 'foobar');
 
         try {

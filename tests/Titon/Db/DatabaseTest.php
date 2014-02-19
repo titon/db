@@ -12,11 +12,11 @@ use Titon\Test\TestCase;
 use \Exception;
 
 /**
- * Test class for Titon\Db\Connection.
+ * Test class for Titon\Db\Database.
  *
- * @property \Titon\Db\Connection $object
+ * @property \Titon\Db\Database $object
  */
-class ConnectionTest extends TestCase {
+class DatabaseTest extends TestCase {
 
     /**
      * This method is called before a test is executed.
@@ -24,7 +24,7 @@ class ConnectionTest extends TestCase {
     protected function setUp() {
         parent::setUp();
 
-        $this->object = new Connection();
+        $this->object = new Database();
         $this->object->addDriver('mysql', new DriverStub([]));
     }
 

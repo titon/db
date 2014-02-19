@@ -22,15 +22,6 @@ use Titon\Db\Query\Result;
 interface Driver {
 
     /**
-     * Add a query finder.
-     *
-     * @param string $key
-     * @param \Titon\Db\Finder $finder
-     * @return $this
-     */
-    public function addFinder($key, Finder $finder);
-
-    /**
      * Connect to the driver.
      *
      * @return bool
@@ -105,14 +96,6 @@ interface Driver {
      * @return string
      */
     public function getEncoding();
-
-    /**
-     * Return a finder by name.
-     *
-     * @param string $key
-     * @return \Titon\Db\Finder
-     */
-    public function getFinder($key);
 
     /**
      * Return connection settings for a group.

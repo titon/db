@@ -10,23 +10,28 @@ namespace Titon\Db;
 use Titon\Common\Base;
 use Titon\Common\Traits\Attachable;
 use Titon\Common\Traits\Cacheable;
-use Titon\Event\Event;
-use Titon\Event\Listener;
-use Titon\Event\Traits\Emittable;
 use Titon\Db\Driver\Dialect;
 use Titon\Db\Driver\Schema;
 use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Exception\InvalidRelationStructureException;
 use Titon\Db\Exception\MissingBehaviorException;
+use Titon\Db\Exception\MissingFinderException;
 use Titon\Db\Exception\MissingMapperException;
 use Titon\Db\Exception\MissingRelationException;
 use Titon\Db\Exception\QueryFailureException;
+use Titon\Db\Finder;
+use Titon\Db\Finder\FirstFinder;
+use Titon\Db\Finder\AllFinder;
+use Titon\Db\Finder\ListFinder;
 use Titon\Db\Mapper\TypeCastMapper;
 use Titon\Db\Query;
 use Titon\Db\Relation\OneToOne;
 use Titon\Db\Relation\OneToMany;
 use Titon\Db\Relation\ManyToOne;
 use Titon\Db\Relation\ManyToMany;
+use Titon\Event\Event;
+use Titon\Event\Listener;
+use Titon\Event\Traits\Emittable;
 use Titon\Utility\Hash;
 use Titon\Utility\Path;
 use \Exception;
@@ -92,11 +97,11 @@ class Repository extends Base implements Callback, Listener {
     ];
 
     /**
-     * Connection instance.
+     * Database instance.
      *
-     * @type \Titon\Db\Connection
+     * @type \Titon\Db\Database
      */
-    protected $_connection;
+    protected $_database;
 
     /**
      * Driver instance.
@@ -104,6 +109,13 @@ class Repository extends Base implements Callback, Listener {
      * @type \Titon\Db\Driver
      */
     protected $_driver;
+
+    /**
+     * List of finders.
+     *
+     * @type \Titon\Db\Finder[]
+     */
+    protected $_finders = [];
 
     /**
      * List of data mappers.
@@ -136,6 +148,9 @@ class Repository extends Base implements Callback, Listener {
 
         $this->on('db', $this);
         $this->addMapper(new TypeCastMapper());
+        $this->addFinder('first', new FirstFinder());
+        $this->addFinder('all', new AllFinder());
+        $this->addFinder('list', new ListFinder());
     }
 
     /**
@@ -156,6 +171,19 @@ class Repository extends Base implements Callback, Listener {
         }
 
         return $behavior;
+    }
+
+    /**
+     * Add a query finder.
+     *
+     * @param string $key
+     * @param \Titon\Db\Finder $finder
+     * @return $this
+     */
+    public function addFinder($key, Finder $finder) {
+        $this->_finders[$key] = $finder;
+
+        return $this;
     }
 
     /**
@@ -647,26 +675,26 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
-     * Return the connection class.
-     * If none has been defined, register one.
-     *
-     * @return \Titon\Db\Connection
-     */
-    public function getConnection() {
-        if (!$this->_connection) {
-            $this->setConnection(Connection::registry());
-        }
-
-        return $this->_connection;
-    }
-
-    /**
      * Return the connection driver key.
      *
      * @return string
      */
     public function getConnectionKey() {
         return $this->getConfig('connection');
+    }
+
+    /**
+     * Return the database class.
+     * If none has been defined, register one.
+     *
+     * @return \Titon\Db\Database
+     */
+    public function getDatabase() {
+        if (!$this->_database) {
+            $this->setDatabase(Database::registry());
+        }
+
+        return $this->_database;
     }
 
     /**
@@ -701,7 +729,7 @@ class Repository extends Base implements Callback, Listener {
             return $this->_driver;
         }
 
-        return $this->_driver = $this->getConnection()->getDriver($this->getConnectionKey());
+        return $this->_driver = $this->getDatabase()->getDriver($this->getConnectionKey());
     }
 
     /**
@@ -711,6 +739,30 @@ class Repository extends Base implements Callback, Listener {
      */
     public function getEntity() {
         return $this->getConfig('entity', 'Titon\Db\Entity');
+    }
+
+    /**
+     * Return a finder by name.
+     *
+     * @param string $key
+     * @return \Titon\Db\Finder
+     * @throws \Titon\Db\Exception\MissingFinderException
+     */
+    public function getFinder($key) {
+        if (isset($this->_finders[$key])) {
+            return $this->_finders[$key];
+        }
+
+        throw new MissingFinderException(sprintf('Finder %s does not exist', $key));
+    }
+
+    /**
+     * Return all finders.
+     *
+     * @return \Titon\Db\Finder[]
+     */
+    public function getFinders() {
+        return $this->_finders;
     }
 
     /**
@@ -1078,18 +1130,6 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
-     * Set the connection class.
-     *
-     * @param \Titon\Db\Connection $connection
-     * @return $this
-     */
-    public function setConnection(Connection $connection) {
-        $this->_connection = $connection;
-
-        return $this;
-    }
-
-    /**
      * Set and merge result data into the repository.
      *
      * @uses Titon\Utility\Hash
@@ -1099,6 +1139,18 @@ class Repository extends Base implements Callback, Listener {
      */
     public function setData(array $data) {
         $this->data = Hash::merge($this->_mapDefaults(), $this->data, $data);
+
+        return $this;
+    }
+
+    /**
+     * Set the database class.
+     *
+     * @param \Titon\Db\Database $database
+     * @return $this
+     */
+    public function setDatabase(Database $database) {
+        $this->_database = $database;
 
         return $this;
     }
@@ -1542,7 +1594,7 @@ class Repository extends Base implements Callback, Listener {
             'postCallback' => true
         ];
 
-        $finder = $this->getDriver()->getFinder($finderType);
+        $finder = $this->getFinder($finderType);
 
         // Use the return of preFind() if applicable
         if ($options['preCallback']) {

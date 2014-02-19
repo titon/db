@@ -13,12 +13,7 @@ use Titon\Common\Traits\Cacheable;
 use Titon\Cache\Storage;
 use Titon\Db\Driver;
 use Titon\Db\Exception\InvalidArgumentException;
-use Titon\Db\Exception\MissingFinderException;
 use Titon\Db\Exception\UnknownConnectionException;
-use Titon\Db\Finder;
-use Titon\Db\Finder\FirstFinder;
-use Titon\Db\Finder\AllFinder;
-use Titon\Db\Finder\ListFinder;
 use Titon\Db\Query\Result;
 use Titon\Db\Query;
 use Titon\Utility\Hash;
@@ -77,13 +72,6 @@ abstract class AbstractDriver extends Base implements Driver {
     protected $_dialect;
 
     /**
-     * List of finders.
-     *
-     * @type \Titon\Db\Finder[]
-     */
-    protected $_finders = [];
-
-    /**
      * The current read, write, or custom connection group.
      *
      * @type string
@@ -119,32 +107,10 @@ abstract class AbstractDriver extends Base implements Driver {
     protected $_storage;
 
     /**
-     * Store the identifier key and configuration.
-     *
-     * @param array $config
-     */
-    public function __construct(array $config) {
-        parent::__construct($config);
-
-        $this->addFinder('first', new FirstFinder());
-        $this->addFinder('all', new AllFinder());
-        $this->addFinder('list', new ListFinder());
-    }
-
-    /**
      * Disconnect when the object is destroyed.
      */
     public function __destruct() {
-        $this->disconnect();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function addFinder($key, Finder $finder) {
-        $this->_finders[$key] = $finder;
-
-        return $this;
+        $this->disconnect(true);
     }
 
     /**
@@ -207,19 +173,6 @@ abstract class AbstractDriver extends Base implements Driver {
      */
     public function getEncoding() {
         return $this->getConfig('encoding');
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @throws \Titon\Db\Exception\MissingFinderException
-     */
-    public function getFinder($key) {
-        if (isset($this->_finders[$key])) {
-            return $this->_finders[$key];
-        }
-
-        throw new MissingFinderException(sprintf('Finder %s does not exist', $key));
     }
 
     /**

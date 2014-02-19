@@ -12,11 +12,11 @@ use Titon\Db\Exception\MissingDriverException;
 use Titon\Db\Driver;
 
 /**
- * Manages drivers, connections and login credentials.
+ * Manages drivers and login credentials.
  *
  * @package Titon\Db
  */
-class Connection {
+class Database {
     use FactoryAware;
 
     /**

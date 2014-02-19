@@ -1,14 +1,14 @@
 # Connections #
 
-The Connection class manages the loading and fetching of drivers. A driver represents a type of database or external data source.
-Simply instantiate a Connection object and set the available drivers.
+The Database class manages the loading and fetching of drivers. A driver represents a type of database or external data source.
+Simply instantiate a Database object and set the available drivers.
 
 ```php
 use Titon\Common\Registry;
-use Titon\Db\Connection;
+use Titon\Db\Database;
 use Titon\Db\Mysql\MysqlDriver;
 
-$conn = Connection::registry(); // Registry required
+$conn = Database::registry(); // Registry required
 
 // Requires the db-mysql package
 $conn->addDriver('default', new MysqlDriver([

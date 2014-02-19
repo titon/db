@@ -19,15 +19,15 @@ Supported database engines are packaged as individual driver packages, which are
 
 ### Features ###
 
-* `Repository` - Queries drivers, maps relations and returns entities
+* `Database` - Driver manager
+* `Repository` - Table representation, queries drivers, maps relations and returns entities
 * `Behavior` - Executes logic during database events
 * `Relation` - Object relation mapper
 * `Entity` - Single record of data
+* `Finder` - Select query formatting
 * `Mapper` - Modify data before save and after find
-* `Connection` - Driver manager
 * `Driver` - Interacts with a database or remote service
     * `Dialect` - Driver specific SQL formatting
-    * `Finder` - Select query formatting
     * `Schema` - Repository schema
     * `Type` - Data type mapping
 * `Query` - Object oriented query builder
