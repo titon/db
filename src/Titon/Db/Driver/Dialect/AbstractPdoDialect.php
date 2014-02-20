@@ -158,11 +158,20 @@ class AbstractPdoDialect extends AbstractDialect {
             'where' => $this->formatWhere($query->getWhere()),
             'groupBy' => $this->formatGroupBy($query->getGroupBy()),
             'having' => $this->formatHaving($query->getHaving()),
+            'unions' => $this->formatUnions($query->getUnions()),
             'orderBy' => $this->formatOrderBy($query->getOrderBy()),
             'limit' => $this->formatLimitOffset($query->getLimit(), $query->getOffset()),
         ];
 
-        return $this->renderStatement($this->getStatement(Query::SELECT), $params);
+        $statement = $this->renderStatement($this->getStatement(Query::SELECT), $params);
+
+        // Primary select needs to be wrapped in parenthesis, so add a (
+        // The closing ) is added by formatUnions()
+        if ($query->getUnions()) {
+            $statement = '(' . $statement;
+        }
+
+        return $statement;
     }
 
     /**

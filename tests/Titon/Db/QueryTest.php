@@ -304,6 +304,41 @@ class QueryTest extends TestCase {
     }
 
     /**
+     * Test unions and flags.
+     */
+    public function testUnions() {
+        $query1 = $this->object->subQuery();
+        $this->object->union($query1);
+
+        $this->assertEquals([$query1], $this->object->getUnions());
+
+        $query2 = $this->object->subQuery();
+        $this->object->union($query2, 'all');
+
+        $this->assertEquals([$query1, $query2], $this->object->getUnions());
+        $this->assertEquals(['union' => 'all'], $query2->getAttributes());
+
+        $query3 = $this->object->subQuery();
+        $this->object->union($query3, 'distinct');
+
+        $this->assertEquals([$query1, $query2, $query3], $this->object->getUnions());
+        $this->assertEquals(['union' => 'distinct'], $query3->getAttributes());
+
+        $query4 = $this->object->subQuery();
+        $this->object->union($query4, 'foobar');
+
+        $this->assertEquals([$query1, $query2, $query3, $query4], $this->object->getUnions());
+        $this->assertEquals([], $query4->getAttributes());
+
+        try {
+            $this->object->union(new Query(Query::UPDATE));
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
+    }
+
+    /**
      * Test that where clause returns params.
      */
     public function testWhere() {
@@ -489,6 +524,7 @@ class QueryTest extends TestCase {
             'schema' => null,
             'table' => 'users',
             'type' => 'select',
+            'unions' => [],
             'where' => [
                 'type' => 'and',
                 'params' => [
@@ -538,6 +574,7 @@ class QueryTest extends TestCase {
             'schema' => null,
             'table' => 'users',
             'type' => 'update',
+            'unions' => [],
             'where' => [
                 'type' => 'and',
                 'params' => []

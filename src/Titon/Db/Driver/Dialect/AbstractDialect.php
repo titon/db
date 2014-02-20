@@ -87,6 +87,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         self::REGEXP            => '%s REGEXP ?',
         self::RLIKE             => '%s REGEXP ?',
         self::SUB_QUERY         => '(%s)',
+        self::UNION             => 'UNION {a.union} (%s)',
         self::WHERE             => 'WHERE %s',
         self::UNIQUE_KEY        => 'UNIQUE KEY %s (%s)',
     ];
@@ -134,7 +135,7 @@ abstract class AbstractDialect extends Base implements Dialect {
      */
     protected $_statements = [
         Query::INSERT        => 'INSERT INTO {table} {fields} VALUES {values}',
-        Query::SELECT        => 'SELECT {fields} FROM {table} {joins} {where} {groupBy} {having} {orderBy} {limit}',
+        Query::SELECT        => 'SELECT {fields} FROM {table} {joins} {where} {groupBy} {having} {unions} {orderBy} {limit}',
         Query::UPDATE        => 'UPDATE {table} {joins} SET {fields} {where} {orderBy} {limit}',
         Query::DELETE        => 'DELETE FROM {table} {joins} {where} {orderBy} {limit}',
         Query::TRUNCATE      => 'TRUNCATE {table}',
@@ -832,6 +833,39 @@ abstract class AbstractDialect extends Base implements Dialect {
         }
 
         return $key;
+    }
+
+    /**
+     * Format union queries.
+     *
+     * @param \Titon\Db\Query[] $queries
+     * @return string
+     * @throws \Titon\Db\Exception\UnsupportedQueryStatementException
+     */
+    public function formatUnions(array $queries) {
+        if (!$queries) {
+            return '';
+        }
+
+        if (!method_exists($this, 'buildSelect')) {
+            throw new UnsupportedQueryStatementException('Unions require a buildSelect() method');
+        }
+
+        $output = [];
+
+        foreach ($queries as $query) {
+            $clause = sprintf($this->getClause(self::UNION), trim($this->buildSelect($query), ';'));
+            $attributes = $this->renderAttributes($query->getAttributes());
+
+            if (empty($attributes['a.union'])) {
+                $attributes['a.union'] = '';
+            }
+
+            $output[] = str_replace('{a.union}', $attributes['a.union'], $clause);
+        }
+
+        // Return a ) as we need to wrap the primary select query
+        return ') ' . implode(' ', $output);
     }
 
     /**

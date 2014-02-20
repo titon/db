@@ -22,7 +22,7 @@ use \Exception;
 /**
  * Test class for Titon\Db\Driver\Dialect.
  *
- * @property \Titon\Db\Driver\Dialect\AbstractDialect $object
+ * @property \Titon\Db\Driver\Dialect\AbstractPdoDialect $object
  */
 class DialectTest extends TestCase {
 
@@ -253,6 +253,27 @@ class DialectTest extends TestCase {
         $query->outerJoin(['bar', 'Bar'], ['id'], ['User.bar_id' => 'Bar.id']);
 
         $this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.(`|\")?id(`|\")?, (`|\")?foo(`|\")?.(`|\")?id(`|\")?, (`|\")?Bar(`|\")?.(`|\")?id(`|\")? FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? LEFT JOIN (`|\")?foo(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?foo(`|\")?.(`|\")?id(`|\")? FULL OUTER JOIN (`|\")?bar(`|\")? AS (`|\")?Bar(`|\")? ON (`|\")?User(`|\")?.(`|\")?bar_id(`|\")? = (`|\")?Bar(`|\")?.(`|\")?id(`|\")?;/', $this->object->buildSelect($query));
+    }
+
+    /**
+     * Test union building and wrapping.
+     */
+    public function testBuildSelectUnions() {
+        $user = new User();
+        $query = $user->select('id');
+        $query->union($query->subQuery('id')->from('u1'));
+
+        $this->assertRegExp('/\(SELECT (`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+\) UNION  \(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\);/', $this->object->buildSelect($query));
+
+        // more joins
+        $query->union($query->subQuery('id')->from('u2'), 'all');
+
+        $this->assertRegExp('/\(SELECT (`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+\) UNION  \(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\) UNION ALL \(SELECT (`|\")?id(`|\")? FROM (`|\")?u2(`|\")?\);/', $this->object->buildSelect($query));
+
+        // order by limit
+        $query->orderBy('id', 'DESC')->limit(10);
+
+        $this->assertRegExp('/\(SELECT (`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+\) UNION  \(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\) UNION ALL \(SELECT (`|\")?id(`|\")? FROM (`|\")?u2(`|\")?\) ORDER BY (`|\")?id(`|\")? DESC LIMIT 10;/', $this->object->buildSelect($query));
     }
 
     /**
@@ -778,6 +799,25 @@ class DialectTest extends TestCase {
 
         $data['columns'][] = 'bar';
         $this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? UNIQUE KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?, (`|\")?bar(`|\")?\)/', $this->object->formatTableUnique($data));
+    }
+
+    /**
+     * Test union building.
+     */
+    public function testFormatUnions() {
+        $query = new Query(Query::INSERT, new User());
+
+        $query->union($query->subQuery('id')->from('u1'));
+        $this->assertRegExp('/\) UNION\s+\(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\)/', $this->object->formatUnions($query->getUnions()));
+
+        // all
+        $query->union($query->subQuery('id')->from('u2'), 'all');
+        $this->assertRegExp('/\) UNION\s+\(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\) UNION ALL \(SELECT (`|\")?id(`|\")? FROM (`|\")?u2(`|\")?\)/', $this->object->formatUnions($query->getUnions()));
+
+        // distinct
+        $query = new Query(Query::INSERT, new User());
+        $query->union($query->subQuery('id')->from('u1'), 'distinct');
+        $this->assertRegExp('/\) UNION DISTINCT \(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\)/', $this->object->formatUnions($query->getUnions()));
     }
 
     /**

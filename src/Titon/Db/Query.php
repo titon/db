@@ -12,6 +12,7 @@ use Titon\Db\Driver\Dialect;
 use Titon\Db\Driver\Schema;
 use Titon\Db\Exception\ExistingPredicateException;
 use Titon\Db\Exception\InvalidArgumentException;
+use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Exception\InvalidRelationQueryException;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
@@ -150,6 +151,13 @@ class Query implements Serializable, JsonSerializable {
      * @type string
      */
     protected $_type;
+
+    /**
+     * Queries to union with.
+     *
+     * @type \Titon\Db\Query[]
+     */
+    protected $_unions = [];
 
     /**
      * The where predicate containing a list of parameters.
@@ -486,6 +494,15 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
+     * Return the union queries.
+     *
+     * @return \Titon\Db\Query[]
+     */
+    public function getUnions() {
+        return $this->_unions;
+    }
+
+    /**
      * Return the where predicate.
      *
      * @return \Titon\Db\Query\Predicate
@@ -730,6 +747,28 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
+     * Set a select query as a union.
+     *
+     * @param \Titon\Db\Query $query
+     * @param string $flag
+     * @return $this
+     * @throws \Titon\Db\Exception\InvalidQueryException
+     */
+    public function union(Query $query, $flag = null) {
+        if ($query->getType() !== self::SELECT) {
+            throw new InvalidQueryException(sprintf('A select query can only be used in a union'));
+        }
+
+        if ($flag === Dialect::ALL || $flag === Dialect::DISTINCT) {
+            $query->attribute('union', $flag);
+        }
+
+        $this->_unions[] = $query;
+
+        return $this;
+    }
+
+    /**
      * Will modify or create a where predicate using the AND conjunction.
      *
      * @param string $field
@@ -856,6 +895,7 @@ class Query implements Serializable, JsonSerializable {
         $this->_schema = $data['schema'];
         $this->_table = $data['table'];
         $this->_type = $data['type'];
+        $this->_unions = $data['unions'];
         $this->_where = $data['where'];
     }
 
@@ -890,6 +930,7 @@ class Query implements Serializable, JsonSerializable {
             'schema' => $this->getSchema(),
             'table' => $this->getTable(),
             'type' => $this->getType(),
+            'unions' => $this->getUnions(),
             'where' => $this->getWhere()
         ];
     }
