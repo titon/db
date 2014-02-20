@@ -25,7 +25,6 @@ Supported database engines are packaged as individual driver packages, which are
 * `Relation` - Object relation mapper
 * `Entity` - Single record of data
 * `Finder` - Select query formatting
-* `Mapper` - Modify data before save and after find
 * `Driver` - Interacts with a database or remote service
     * `Dialect` - Driver specific SQL formatting
     * `Schema` - Repository schema
@@ -52,7 +51,6 @@ Supported database engines are packaged as individual driver packages, which are
 
 ### Upcoming Features ###
 
-* Different configurations for read and writes / master and slaves
 * Built-in aggregate methods
 * Select unions
 * Locking and unlocking
