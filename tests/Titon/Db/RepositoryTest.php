@@ -48,18 +48,6 @@ class RepositoryTest extends TestCase {
     }
 
     /**
-     * Test data mapper management.
-     */
-    public function testAddHasMappers() {
-        $stub = new RepositoryStub();
-
-        $this->assertFalse($stub->hasMapper('Stub'));
-
-        $stub->addMapper(new MapperStub());
-        $this->assertTrue($stub->hasMapper('Stub'));
-    }
-
-    /**
      * Test table relation management.
      */
     public function testAddHasRelations() {
