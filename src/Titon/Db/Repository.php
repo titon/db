@@ -986,7 +986,9 @@ class Repository extends Base implements Callback, Listener {
 
         $driver = $this->getDriver();
 
-        // Type cast the results first
+        // TODO - Type cast the results first
+        // I feel like this should be on the driver layer, but where and how?
+        // Was thinking of using events on the driver, but no access to the repository or schema...
         foreach ($results as $i => $result) {
             foreach ($result as $field => $value) {
                 if (isset($schema[$field])) {
