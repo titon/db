@@ -1611,4 +1611,47 @@ class AbstractReadTest extends TestCase {
         ]), $query->first());
     }
 
+    /**
+     * Test unions merge multiple selects.
+     */
+    public function testUnions() {
+        $this->loadFixtures(['Users', 'Books', 'Authors']);
+
+        $user = new User();
+        $query = $user->select('username AS name');
+        $query->union($query->subQuery('name')->from('books')->where('series_id', 1));
+        $query->union($query->subQuery('name')->from('authors'));
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['name' => 'batman']),
+            new Entity(['name' => 'miles']),
+            new Entity(['name' => 'spiderman']),
+            new Entity(['name' => 'superman']),
+            new Entity(['name' => 'wolverine']),
+            new Entity(['name' => 'A Game of Thrones']),
+            new Entity(['name' => 'A Clash of Kings']),
+            new Entity(['name' => 'A Storm of Swords']),
+            new Entity(['name' => 'A Feast for Crows']),
+            new Entity(['name' => 'A Dance with Dragons']),
+            new Entity(['name' => 'George R. R. Martin']),
+            new Entity(['name' => 'J. K. Rowling']),
+            new Entity(['name' => 'J. R. R. Tolkien']),
+        ]), $query->all());
+
+        $query->orderBy('name', 'desc')->limit(10);
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['name' => 'wolverine']),
+            new Entity(['name' => 'superman']),
+            new Entity(['name' => 'spiderman']),
+            new Entity(['name' => 'miles']),
+            new Entity(['name' => 'J. R. R. Tolkien']),
+            new Entity(['name' => 'J. K. Rowling']),
+            new Entity(['name' => 'George R. R. Martin']),
+            new Entity(['name' => 'batman']),
+            new Entity(['name' => 'A Storm of Swords']),
+            new Entity(['name' => 'A Game of Thrones']),
+        ]), $query->all());
+    }
+
 }
