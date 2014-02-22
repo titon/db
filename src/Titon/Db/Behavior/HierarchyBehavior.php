@@ -244,7 +244,11 @@ class HierarchyBehavior extends AbstractBehavior {
         if ($withParent) {
             $query
                 ->where($repo->getAlias() . '.' . $pk, $id)
-                ->leftJoin([$repo->getTable(), 'Parent'], [], [$this->getConfig('parentField') => 'Parent.' . $pk]);
+                ->leftJoin(
+                    [$repo->getTable(), 'Parent'],
+                    array_keys($repo->getSchema()->getColumns()), // We need the fields or joins fail
+                    [$this->getConfig('parentField') => 'Parent.' . $pk]
+                );
         } else {
             $query->where($pk, $id);
         }
