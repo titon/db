@@ -99,13 +99,6 @@ interface Driver {
     public function getDialect();
 
     /**
-     * Return the encoding for the driver.
-     *
-     * @return string
-     */
-    public function getEncoding();
-
-    /**
      * Return the ID of the last inserted record.
      *
      * @param \Titon\Db\Repository

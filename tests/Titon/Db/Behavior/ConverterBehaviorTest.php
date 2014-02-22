@@ -30,28 +30,35 @@ class ConverterBehaviorTest extends TestCase {
         $post->addBehavior(new ConverterBehavior())
             ->convert('content', 'serialize', ['decode' => false]);
 
-        $data = [
+        $post_id = $post->create([
             'topic_id' => 3,
             'active' => 1,
             'content' => ['foo' => 'bar']
-        ];
-
-        $post_id = $post->create($data);
+        ]);
 
         $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 3,
             'active' => 1,
-            'content' => 'a:1:{s:3:"foo";s:3:"bar";}'
+            'deleted' => 0,
+            'content' => 'a:1:{s:3:"foo";s:3:"bar";}',
+            'created_at' => null,
+            'deleted_at' => null
         ]), $post->read($post_id));
 
         // With decoding
-        $post->getBehavior('Convertable')
+        $post->getBehavior('Converter')
             ->convert('content', 'serialize', ['decode' => true]);
 
-        $data['id'] = $post_id;
-
-        $this->assertEquals(new Entity($data), $post->read($post_id));
+        $this->assertEquals(new Entity([
+            'id' => $post_id,
+            'topic_id' => 3,
+            'active' => 1,
+            'deleted' => 0,
+            'content' => ['foo' => 'bar'],
+            'created_at' => null,
+            'deleted_at' => null
+        ]), $post->read($post_id));
     }
 
     /**
@@ -66,28 +73,35 @@ class ConverterBehaviorTest extends TestCase {
         $post->addBehavior(new ConverterBehavior())
             ->convert('content', 'json', ['decode' => false]);
 
-        $data = [
+        $post_id = $post->create([
             'topic_id' => 3,
             'active' => 1,
             'content' => ['foo' => 'bar']
-        ];
-
-        $post_id = $post->create($data);
+        ]);
 
         $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 3,
             'active' => 1,
-            'content' => '{"foo":"bar"}'
+            'deleted' => 0,
+            'content' => '{"foo":"bar"}',
+            'created_at' => null,
+            'deleted_at' => null
         ]), $post->read($post_id));
 
         // With decoding
-        $post->getBehavior('Convertable')
+        $post->getBehavior('Converter')
             ->convert('content', 'json', ['decode' => true]);
 
-        $data['id'] = $post_id;
-
-        $this->assertEquals(new Entity($data), $post->read($post_id));
+        $this->assertEquals(new Entity([
+            'id' => $post_id,
+            'topic_id' => 3,
+            'active' => 1,
+            'deleted' => 0,
+            'content' => ['foo' => 'bar'],
+            'created_at' => null,
+            'deleted_at' => null
+        ]), $post->read($post_id));
     }
 
     /**
@@ -102,28 +116,35 @@ class ConverterBehaviorTest extends TestCase {
         $post->addBehavior(new ConverterBehavior())
             ->convert('content', 'base64', ['decode' => false]);
 
-        $data = [
+        $post_id = $post->create([
             'topic_id' => 3,
             'active' => 1,
             'content' => 'This data will be base64 encoded'
-        ];
-
-        $post_id = $post->create($data);
+        ]);
 
         $this->assertEquals(new Entity([
             'id' => $post_id,
             'topic_id' => 3,
             'active' => 1,
-            'content' => 'VGhpcyBkYXRhIHdpbGwgYmUgYmFzZTY0IGVuY29kZWQ='
+            'deleted' => 0,
+            'content' => 'VGhpcyBkYXRhIHdpbGwgYmUgYmFzZTY0IGVuY29kZWQ=',
+            'created_at' => null,
+            'deleted_at' => null
         ]), $post->read($post_id));
 
         // With decoding
-        $post->getBehavior('Convertable')
+        $post->getBehavior('Converter')
             ->convert('content', 'base64', ['decode' => true]);
 
-        $data['id'] = $post_id;
-
-        $this->assertEquals(new Entity($data), $post->read($post_id));
+        $this->assertEquals(new Entity([
+            'id' => $post_id,
+            'topic_id' => 3,
+            'active' => 1,
+            'deleted' => 0,
+            'content' => 'This data will be base64 encoded',
+            'created_at' => null,
+            'deleted_at' => null
+        ]), $post->read($post_id));
     }
 
 }
