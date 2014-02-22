@@ -447,8 +447,6 @@ abstract class AbstractDialect extends Base implements Dialect {
             }
         }
 
-        print_r($columns);
-
         return $columns;
     }
 
