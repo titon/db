@@ -263,17 +263,17 @@ class DialectTest extends TestCase {
         $query = $user->select('id');
         $query->union($query->subQuery('id')->from('u1'));
 
-        $this->assertRegExp('/\(SELECT (`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+\) UNION  \(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\);/', $this->object->buildSelect($query));
+        $this->assertRegExp('/\(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+\) UNION  \(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\);/', $this->object->buildSelect($query));
 
         // more joins
         $query->union($query->subQuery('id')->from('u2'), 'all');
 
-        $this->assertRegExp('/\(SELECT (`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+\) UNION  \(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\) UNION ALL \(SELECT (`|\")?id(`|\")? FROM (`|\")?u2(`|\")?\);/', $this->object->buildSelect($query));
+        $this->assertRegExp('/\(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+\) UNION  \(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\) UNION ALL \(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u2(`|\")?\);/', $this->object->buildSelect($query));
 
         // order by limit
         $query->orderBy('id', 'DESC')->limit(10);
 
-        $this->assertRegExp('/\(SELECT (`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+\) UNION  \(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\) UNION ALL \(SELECT (`|\")?id(`|\")? FROM (`|\")?u2(`|\")?\) ORDER BY (`|\")?id(`|\")? DESC LIMIT 10;/', $this->object->buildSelect($query));
+        $this->assertRegExp('/\(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+\) UNION  \(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\) UNION ALL \(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u2(`|\")?\) ORDER BY (`|\")?id(`|\")? DESC LIMIT 10;/', $this->object->buildSelect($query));
     }
 
     /**
@@ -808,16 +808,16 @@ class DialectTest extends TestCase {
         $query = new Query(Query::INSERT, new User());
 
         $query->union($query->subQuery('id')->from('u1'));
-        $this->assertRegExp('/\) UNION\s+\(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\)/', $this->object->formatUnions($query->getUnions()));
+        $this->assertRegExp('/\) UNION\s+\(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\)/', $this->object->formatUnions($query->getUnions()));
 
         // all
         $query->union($query->subQuery('id')->from('u2'), 'all');
-        $this->assertRegExp('/\) UNION\s+\(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\) UNION ALL \(SELECT (`|\")?id(`|\")? FROM (`|\")?u2(`|\")?\)/', $this->object->formatUnions($query->getUnions()));
+        $this->assertRegExp('/\) UNION\s+\(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\) UNION ALL \(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u2(`|\")?\)/', $this->object->formatUnions($query->getUnions()));
 
         // distinct
         $query = new Query(Query::INSERT, new User());
         $query->union($query->subQuery('id')->from('u1'), 'distinct');
-        $this->assertRegExp('/\) UNION DISTINCT \(SELECT (`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\)/', $this->object->formatUnions($query->getUnions()));
+        $this->assertRegExp('/\) UNION DISTINCT \(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?\)/', $this->object->formatUnions($query->getUnions()));
     }
 
     /**
