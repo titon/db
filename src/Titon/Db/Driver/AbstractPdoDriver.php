@@ -16,6 +16,7 @@ use Titon\Db\Query;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
 use Titon\Db\Query\Predicate;
+use Titon\Db\Query\RawExpr;
 use Titon\Db\Query\ResultSet\PdoResultSet;
 use Titon\Db\Query\ResultSet\SqlResultSet;
 use Titon\Db\Query\SubQuery;
@@ -359,7 +360,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         }
 
         // Use the raw value for binding
-        if ($value instanceof Expr) {
+        if ($value instanceof RawExpr) {
             $value = $value->getValue();
         }
 

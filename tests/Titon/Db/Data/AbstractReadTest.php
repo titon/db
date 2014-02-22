@@ -670,6 +670,40 @@ class AbstractReadTest extends TestCase {
     }
 
     /**
+     * Test expressions in select statements.
+     */
+    public function testSelectRawExpression() {
+        $this->loadFixtures('Stats');
+
+        $stat = new Stat();
+
+        // In place of expr()
+        $query = $stat->select();
+        $query->fields([
+            'name AS role',
+            Query::raw('`name` AS `class`')
+        ]);
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['role' => 'Warrior', 'class' => 'Warrior']),
+            new Entity(['role' => 'Ranger', 'class' => 'Ranger']),
+            new Entity(['role' => 'Mage', 'class' => 'Mage']),
+        ]), $query->all());
+
+        // In place of func()
+        $query = $stat->select();
+        $query->fields([
+            Query::raw('SUBSTR(`name`, 1, 3) as `shortName`')
+        ]);
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['shortName' => 'War']),
+            new Entity(['shortName' => 'Ran']),
+            new Entity(['shortName' => 'Mag']),
+        ]), $query->all());
+    }
+
+    /**
      * Test functions in select statements.
      */
     public function testSelectFunctions() {

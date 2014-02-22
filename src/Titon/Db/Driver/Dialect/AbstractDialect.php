@@ -21,6 +21,7 @@ use Titon\Db\Query;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
 use Titon\Db\Query\Predicate;
+use Titon\Db\Query\RawExpr;
 use Titon\Db\Query\SubQuery;
 use Titon\Db\Traits\DriverAware;
 use Titon\Utility\String;
@@ -260,13 +261,13 @@ abstract class AbstractDialect extends Base implements Dialect {
         $value = $expr->getValue();
 
         if ($operator === Expr::AS_ALIAS) {
-            return sprintf($this->getClause(self::AS_ALIAS), $this->quote($field), $value);
+            return sprintf($this->getClause(self::AS_ALIAS), $this->quote($field), $this->quote($value));
 
         } else if (!$expr->useValue() && !($operator === Expr::NULL || $operator === Expr::NOT_NULL)) {
             return $this->quote($field);
         }
 
-        $isSubQuery = ($value instanceof Query);
+        $isSubQuery = ($value instanceof SubQuery);
 
         // Function instead of field
         if ($field instanceof Func) {
@@ -431,6 +432,9 @@ abstract class AbstractDialect extends Base implements Dialect {
                 } else if ($field instanceof Expr) {
                     $columns[] = $this->formatExpression($field);
 
+                } else if ($field instanceof RawExpr) {
+                    $columns[] = $field->getValue(); // must come 2nd
+
                 } else if ($field instanceof SubQuery) {
                     $columns[] = $this->formatSubQuery($field);
 
@@ -442,6 +446,8 @@ abstract class AbstractDialect extends Base implements Dialect {
                 }
             }
         }
+
+        print_r($columns);
 
         return $columns;
     }

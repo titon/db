@@ -22,6 +22,7 @@ use Titon\Db\Query\SubQuery;
 use Titon\Db\Traits\AliasAware;
 use Titon\Db\Traits\ExprAware;
 use Titon\Db\Traits\FuncAware;
+use Titon\Db\Traits\RawExprAware;
 use Titon\Db\Traits\RepositoryAware;
 use \Closure;
 use \Serializable;
@@ -35,7 +36,7 @@ use \JsonSerializable;
  * @package Titon\Db
  */
 class Query implements Serializable, JsonSerializable {
-    use AliasAware, ExprAware, FuncAware, RepositoryAware;
+    use AliasAware, ExprAware, FuncAware, RawExprAware, RepositoryAware;
 
     // Order directions
     const ASC = Dialect::ASC;

@@ -30,11 +30,12 @@ Supported database engines are packaged as individual driver packages, which are
     * `Schema` - Repository schema
     * `Type` - Data type mapping
 * `Query` - Object oriented query builder
+    * `RawExpr` - Raw expression builder
     * `Expr` - Expression builder
     * `Func` - Function builder
     * `Join` - Join builder
     * `Predicate` - Clause builder
-    * `ResultSet` - Results mapper
+    * `ResultSet` - Result set mapper
 
 ### Dependencies ###
 
@@ -52,7 +53,6 @@ Supported database engines are packaged as individual driver packages, which are
 ### Upcoming Features ###
 
 * Built-in aggregate methods
-* Select unions
 * Locking and unlocking
 * Polymorphic relations
 * Refactored lazy/eager loading of relations

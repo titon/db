@@ -9,15 +9,14 @@ namespace Titon\Db\Query;
 
 use Titon\Db\Driver\Dialect;
 use Titon\Db\Traits\ExprAware;
-use \Serializable;
-use \JsonSerializable;
 
 /**
  * The Expr class represents a mathematical or logical expression that can be calculated depending on context.
+ * Will properly quote identifiers and values.
  *
  * @package Titon\Db\Query
  */
-class Expr implements Serializable, JsonSerializable {
+class Expr extends RawExpr {
     use ExprAware;
 
     const NULL = Dialect::IS_NULL;
@@ -46,13 +45,6 @@ class Expr implements Serializable, JsonSerializable {
      * @type string
      */
     protected $_operator;
-
-    /**
-     * Data value.
-     *
-     * @type mixed
-     */
-    protected $_value;
 
     /**
      * Store all values required by the expression.
@@ -96,30 +88,12 @@ class Expr implements Serializable, JsonSerializable {
     }
 
     /**
-     * Return the value.
-     *
-     * @return mixed
-     */
-    public function getValue() {
-        return $this->_value;
-    }
-
-    /**
      * Return true if the value should be used for binds.
      *
      * @return bool
      */
     public function useValue() {
         return ($this->getOperator() !== null && $this->getValue() !== null);
-    }
-
-    /**
-     * Serialize the expression.
-     *
-     * @return string
-     */
-    public function serialize() {
-        return serialize($this->jsonSerialize());
     }
 
     /**
