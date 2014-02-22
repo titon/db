@@ -434,6 +434,9 @@ abstract class AbstractDialect extends Base implements Dialect {
                 } else if ($field instanceof SubQuery) {
                     $columns[] = $this->formatSubQuery($field);
 
+                } else if (preg_match('/^(.*?)\s+AS\s+(.*?)$/i', $field, $matches)) {
+                    $columns[] = sprintf($this->getClause(self::AS_ALIAS), $alias . $this->quote($matches[1]), $this->quote($matches[2]));
+
                 } else {
                     $columns[] = $alias . $this->quote($field);
                 }

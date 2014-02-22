@@ -12,6 +12,7 @@ use Titon\Db\Entity;
 use Titon\Db\EntityCollection;
 use Titon\Db\Query\Func;
 use Titon\Db\Query;
+use Titon\Db\Query\SubQuery;
 use Titon\Test\Stub\Repository\Author;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\Genre;
@@ -657,14 +658,14 @@ class AbstractReadTest extends TestCase {
 
         $query = $stat->select();
         $query->fields([
-            'name',
+            'name as  role',
             $query->expr('name', Query\Expr::AS_ALIAS, 'class')
         ]);
 
         $this->assertEquals(new EntityCollection([
-            new Entity(['name' => 'Warrior', 'class' => 'Warrior']),
-            new Entity(['name' => 'Ranger', 'class' => 'Ranger']),
-            new Entity(['name' => 'Mage', 'class' => 'Mage']),
+            new Entity(['role' => 'Warrior', 'class' => 'Warrior']),
+            new Entity(['role' => 'Ranger', 'class' => 'Ranger']),
+            new Entity(['role' => 'Mage', 'class' => 'Mage']),
         ]), $query->all());
     }
 
@@ -1651,6 +1652,35 @@ class AbstractReadTest extends TestCase {
             new Entity(['name' => 'batman']),
             new Entity(['name' => 'A Storm of Swords']),
             new Entity(['name' => 'A Game of Thrones']),
+        ]), $query->all());
+    }
+
+    /**
+     * Test that sub-queries return results.
+     */
+    public function testSubQueries() {
+        $this->loadFixtures(['Users', 'Profiles', 'Countries']);
+
+        $user = new User();
+
+        // ANY filter
+        $query = $user->select('id', 'country_id', 'username');
+        $query->where('country_id', '=', $query->subQuery('id')->from('countries')->withFilter(SubQuery::ANY))->orderBy('id', 'asc');
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['id' => 1, 'country_id' => 1, 'username' => 'miles']),
+            new Entity(['id' => 2, 'country_id' => 3, 'username' => 'batman']),
+            new Entity(['id' => 3, 'country_id' => 2, 'username' => 'superman']),
+            new Entity(['id' => 4, 'country_id' => 5, 'username' => 'spiderman']),
+            new Entity(['id' => 5, 'country_id' => 4, 'username' => 'wolverine']),
+        ]), $query->all());
+
+        // Single record
+        $query = $user->select('id', 'country_id', 'username');
+        $query->where('country_id', '=', $query->subQuery('id')->from('countries')->where('iso', 'USA'));
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['id' => 1, 'country_id' => 1, 'username' => 'miles'])
         ]), $query->all());
     }
 

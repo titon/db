@@ -392,7 +392,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         $type = $query->getType();
         $schema = $query->getRepository()->getSchema()->getColumns();
 
-        // Grab the values from insert and update queries
+        // Grab values from insert and update queries
         if ($type === Query::INSERT || $type === Query::UPDATE) {
             foreach ($query->getFields() as $field => $value) {
                 $binds[] = $this->resolveBind($field, $value, $schema);
@@ -435,7 +435,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         $resolvePredicate($query->getWhere());
         $resolvePredicate($query->getHaving());
 
-        // Grab binds from unions
+        // Grab values from unions
         foreach ($query->getUnions() as $union) {
             $binds = array_merge($binds, $this->resolveParams($union));
         }
