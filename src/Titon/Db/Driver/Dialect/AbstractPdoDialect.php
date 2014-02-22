@@ -163,15 +163,7 @@ class AbstractPdoDialect extends AbstractDialect {
             'limit' => $this->formatLimitOffset($query->getLimit(), $query->getOffset()),
         ];
 
-        $statement = $this->renderStatement($this->getStatement(Query::SELECT), $params);
-
-        // Primary select needs to be wrapped in parenthesis, so add a (
-        // The closing ) is added by formatUnions()
-        if ($query->getUnions()) {
-            $statement = '(' . $statement;
-        }
-
-        return $statement;
+        return $this->renderStatement($this->getStatement(Query::SELECT), $params);
     }
 
     /**

@@ -88,7 +88,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         self::REGEXP            => '%s REGEXP ?',
         self::RLIKE             => '%s REGEXP ?',
         self::SUB_QUERY         => '(%s)',
-        self::UNION             => 'UNION {a.union} (%s)',
+        self::UNION             => 'UNION {a.union} %s',
         self::WHERE             => 'WHERE %s',
         self::UNIQUE_KEY        => 'UNIQUE KEY %s (%s)',
     ];
@@ -871,8 +871,7 @@ abstract class AbstractDialect extends Base implements Dialect {
             $output[] = str_replace('{a.union}', $attributes['a.union'], $clause);
         }
 
-        // Return a ) as we need to wrap the primary select query
-        return ') ' . implode(' ', $output);
+        return implode(' ', $output);
     }
 
     /**
