@@ -12,7 +12,7 @@ use Titon\Type\Contract\Arrayable;
 use Titon\Type\Contract\Jsonable;
 use \Serializable;
 use \JsonSerializable;
-use \Iterator;
+use \IteratorAggregate;
 use \ArrayAccess;
 use \Countable;
 use \Closure;
@@ -27,7 +27,7 @@ use \Closure;
  *
  * @package Titon\Db
  */
-class Entity implements Serializable, JsonSerializable, Iterator, ArrayAccess, Countable, Arrayable, Jsonable {
+class Entity implements Serializable, JsonSerializable, IteratorAggregate, ArrayAccess, Countable, Arrayable, Jsonable {
     use Mutable;
 
     /**
