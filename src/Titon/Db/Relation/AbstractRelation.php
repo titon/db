@@ -9,6 +9,7 @@ namespace Titon\Db\Relation;
 
 use Titon\Common\Augment\InfoAugment;
 use Titon\Common\Base;
+use Titon\Db\Contract\Relational;
 use Titon\Db\Exception\InvalidTableException;
 use Titon\Db\Relation;
 use Titon\Db\Repository;
@@ -209,7 +210,7 @@ abstract class AbstractRelation extends Base implements Relation {
         $repo = new $class();
 
         if (!($repo instanceof Repository)) {
-            if (in_array('Titon\Db\Traits\RepositoryAware', (new InfoAugment($repo))->traits())) {
+            if ($repo instanceof Relational) {
                 $repo = $repo->getRepository();
             } else {
                 throw new InvalidTableException(sprintf('%s relation must return a Repository instance', $this->getAlias()));
