@@ -381,7 +381,13 @@ abstract class AbstractDialect extends Base implements Dialect {
                     $columns = $this->formatSelectFields($fields, $query->getRepository()->getAlias());
 
                     foreach ($joins as $join) {
-                        $columns = array_merge($columns, $this->formatSelectFields($join->getFields(), $join->getAlias()));
+                        $fields = $join->getFields();
+
+                        if (empty($fields)) {
+                            throw new InvalidQueryException('Missing field data for join query');
+                        }
+
+                        $columns = array_merge($columns, $this->formatSelectFields($fields, $join->getAlias()));
                     }
                 } else {
                     $columns = $this->formatSelectFields($fields);

@@ -996,21 +996,24 @@ class Query implements Serializable, JsonSerializable {
         if ($table instanceof Relation) {
             $relation = $table;
             $relatedRepo = $relation->getRelatedRepository();
+            $alias = $relation->getAlias();
 
             if (!$fields && $this->getType() === self::SELECT) {
                 $fields = $this->_mapTableFields($relatedRepo);
             }
 
             $join
-                ->from($relatedRepo->getTable(), $relatedRepo->getAlias())
+                ->from($relatedRepo->getTable(), $alias)
                 ->fields($fields);
 
             switch ($relation->getType()) {
                 case Relation::MANY_TO_ONE:
-                    $join->on($repo->getAlias() . '.' . $relation->getForeignKey(), $relatedRepo->getAlias() . '.' . $relatedRepo->getPrimaryKey());
+                    // primary.foreign_key = join.id
+                    $join->on($repo->getAlias() . '.' . $relation->getForeignKey(), $alias . '.' . $relatedRepo->getPrimaryKey());
                 break;
                 case Relation::ONE_TO_ONE:
-                    $join->on($repo->getAlias() . '.' . $repo->getPrimaryKey(), $relatedRepo->getAlias() . '.' . $relation->getRelatedForeignKey());
+                    // primary.id = join.foreign_key
+                    $join->on($repo->getAlias() . '.' . $repo->getPrimaryKey(), $alias . '.' . $relation->getRelatedForeignKey());
                 break;
                 default:
                     throw new InvalidRelationQueryException('Only many-to-one and one-to-one relations can join data');
@@ -1022,6 +1025,11 @@ class Query implements Serializable, JsonSerializable {
                 $table = $table[0];
             } else {
                 $alias = $table;
+            }
+
+            // Auto-populate fields if tables are the same
+            if (!$fields && $table === $repo->getTable() && $this->getType() === self::SELECT) {
+                $fields = $this->_mapTableFields($repo);
             }
 
             $conditions = [];

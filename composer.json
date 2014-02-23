@@ -30,7 +30,6 @@
         "titon/db-postgresql": "Enable PostgreSQL database access",
         "titon/db-mongodb": "Enable MongoDB database access",
         "titon/cache": "Cache query results using a Storage engine",
-        "titon/type": "Utilize enums in the EnumerableBehavior",
         "psr/log": "Log queries using a Logger"
     },
     "autoload": {

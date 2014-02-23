@@ -15,6 +15,7 @@ use Titon\Db\Query;
 use Titon\Db\Query\SubQuery;
 use Titon\Test\Stub\Repository\Author;
 use Titon\Test\Stub\Repository\Book;
+use Titon\Test\Stub\Repository\Category;
 use Titon\Test\Stub\Repository\Genre;
 use Titon\Test\Stub\Repository\Order;
 use Titon\Test\Stub\Repository\Series;
@@ -1642,6 +1643,51 @@ class AbstractReadTest extends TestCase {
                 'id' => 1,
                 'name' => 'United States of America',
                 'iso' => 'USA'
+            ])
+        ]), $query->first());
+    }
+
+    /**
+     * Test joining on the same table works.
+     */
+    public function testSelfJoin() {
+        $this->loadFixtures('Categories');
+
+        $category = new Category();
+
+        // with relation
+        $query = $category->select()->leftJoin($category->getRelation('Parent'), [])->where('Category.id', 2);
+
+        $this->assertEquals(new Entity([
+            'id' => 2,
+            'parent_id' => 1,
+            'name' => 'Banana',
+            'left' => 2,
+            'right' => 3,
+            'Parent' => new Entity([
+                'id' => 1,
+                'parent_id' => null,
+                'name' => 'Fruit',
+                'left' => 1,
+                'right' => 20,
+            ])
+        ]), $query->first());
+
+        // manual
+        $query = $category->select()->leftJoin(['categories', 'Parent'], [], ['parent_id' => 'id'])->where('Category.id', 2);
+
+        $this->assertEquals(new Entity([
+            'id' => 2,
+            'parent_id' => 1,
+            'name' => 'Banana',
+            'left' => 2,
+            'right' => 3,
+            'Parent' => new Entity([
+                'id' => 1,
+                'parent_id' => null,
+                'name' => 'Fruit',
+                'left' => 1,
+                'right' => 20,
             ])
         ]), $query->first());
     }
