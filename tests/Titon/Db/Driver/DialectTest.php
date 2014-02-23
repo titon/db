@@ -235,6 +235,8 @@ class DialectTest extends TestCase {
      * Test select statements that contain joins.
      */
     public function testBuildSelectJoins() {
+        $this->object->setConfig('virtualJoins', false);
+
         $user = new User();
         $query = $user->select();
         $query->rightJoin($user->getRelation('Profile'), []);
