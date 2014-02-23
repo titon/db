@@ -132,13 +132,9 @@ class PdoResultSet extends AbstractResultSet implements ResultSet {
                     // For drivers that alias fields as Alias__column
                     if (strpos($name, '__') !== false) {
                         list($alias, $name) = explode('__', $name, 2);
-
-                        if (empty($column['table'])) {
-                            $column['table'] = $alias;
-                        }
                     }
 
-                    if (isset($column['table'])) {
+                    if (!$alias && isset($column['table'])) {
                         // For drivers that only return the table
                         if (isset($aliasMap[$column['table']])) {
                             $alias = $aliasMap[$column['table']];
