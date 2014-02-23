@@ -40,10 +40,12 @@ abstract class AbstractDialect extends Base implements Dialect {
      *
      * @type array {
      *      @type string $quoteCharacter    Character used for quoting keywords
+     *      @type string $virtualJoins      Use virtual joins for drivers that do not support PDO::getColumnMeta()
      * }
      */
     protected $_config = [
-        'quoteCharacter' => '`'
+        'quoteCharacter' => '`',
+        'virtualJoins' => false
     ];
 
     /**
@@ -308,9 +310,13 @@ abstract class AbstractDialect extends Base implements Dialect {
 
         $isSubQuery = ($value instanceof SubQuery);
 
-        // Function instead of field
+        // Function as field
         if ($field instanceof Func) {
             $field = $this->formatFunction($field);
+
+        // Raw expression as field
+        } else if ($field instanceof RawExpr) {
+            $field = $field->getValue();
 
         // Regular clause
         } else {
@@ -337,6 +343,7 @@ abstract class AbstractDialect extends Base implements Dialect {
 
         // Replace ? with sub-query statement
         if ($isSubQuery) {
+            /** @type \Titon\Db\Query\SubQuery $value */
 
             // EXISTS and NOT EXISTS doesn't have a field or operator
             if (in_array($value->getFilter(), [SubQuery::EXISTS, SubQuery::NOT_EXISTS], true)) {
@@ -462,13 +469,12 @@ abstract class AbstractDialect extends Base implements Dialect {
      */
     public function formatSelectFields(array $fields, $alias = null) {
         $columns = [];
-
-        if ($alias) {
-            $alias = $this->quote($alias) . '.';
-        }
+        $quotedAlias = ($alias) ? $this->quote($alias) . '.' : '';
+        $virtualJoins = $this->getConfig('virtualJoins');
 
         if (empty($fields)) {
-            $columns[] = $alias . '*';
+            $columns[] = $quotedAlias . '*';
+
         } else {
             foreach ($fields as $field) {
                 if ($field instanceof Func) {
@@ -484,10 +490,14 @@ abstract class AbstractDialect extends Base implements Dialect {
                     $columns[] = $this->formatSubQuery($field);
 
                 } else if (preg_match('/^(.*?)\s+AS\s+(.*?)$/i', $field, $matches)) {
-                    $columns[] = sprintf($this->getClause(self::AS_ALIAS), $alias . $this->quote($matches[1]), $this->quote($matches[2]));
+                    $columns[] = sprintf($this->getClause(self::AS_ALIAS), $quotedAlias . $this->quote($matches[1]), $this->quote($matches[2]));
+
+                // Alias the field for drivers that don't support PDO::getColumnMeta()
+                } else if ($virtualJoins && $alias) {
+                    $columns[] = sprintf($this->getClause(self::AS_ALIAS), $quotedAlias . $this->quote($field), $alias . '__' . $field);
 
                 } else {
-                    $columns[] = $alias . $this->quote($field);
+                    $columns[] = $quotedAlias . $this->quote($field);
                 }
             }
         }
@@ -512,6 +522,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         foreach ($fields as $key => $value) {
             if ($value instanceof Expr) {
                 $columns[] = $alias . $this->quote($key) . ' = ' . $this->formatExpression($value);
+
             } else {
                 $columns[] = $alias . $this->quote($key) . ' = ?';
             }
