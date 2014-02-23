@@ -4,9 +4,26 @@ The Titon Database package provides a lightweight and low-level interface for in
 The DB package comes bundled with a robust database abstraction layer (DBAL), an object oriented query builder,
 a powerful SQL dialect formatter, a data type caster, custom finder classes, behaviors, mappers, schemas, and many more.
 
+```php
+$db = Titon\Db\Database::registry();
+$db->addDriver('default', new Titon\Db\Mysql\MysqlDriver([
+    'user' => 'root',
+    'pass' => 'pass'
+]));
+
+$users = new Titon\Db\Repository(['table' => 'users']);
+$entities = $users->select()->where('status', 1)->orderBy('created_at', 'desc')->all();
+```
+
 Alongside the DBAL is an extensible object relational mapper (ORM) that permits repositories (database tables) to
 relate records to other repository records through foreign keys. Related data can also be saved automatically while saving parent records,
 and can be pulled in automatically and easily through the query builder. The ORM is fully compatible with schemaless/NoSQL database drivers.
+
+```php
+$users->hasOne('Profile', 'App\Repository\Profile', 'profile_id');
+
+$entity = $users->select()->with('Profile')->where('id', 1)->first();
+```
 
 Supported database engines are packaged as individual driver packages, which are listed below.
 
@@ -53,6 +70,5 @@ Supported database engines are packaged as individual driver packages, which are
 ### Upcoming Features ###
 
 * Built-in aggregate methods
-* Locking and unlocking
 * Polymorphic relations
 * Refactored lazy/eager loading of relations
