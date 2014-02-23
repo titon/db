@@ -132,9 +132,12 @@ class PdoResultSet extends AbstractResultSet implements ResultSet {
                     // For drivers that alias fields as Alias__column
                     if (strpos($name, '__') !== false) {
                         list($alias, $name) = explode('__', $name, 2);
+
+                        // PostgreSQL lowercases the aliases, so we need to map them in the next step
+                        $column['table'] = $alias;
                     }
 
-                    if (!$alias && isset($column['table'])) {
+                    if (isset($column['table'])) {
                         // For drivers that only return the table
                         if (isset($aliasMap[$column['table']])) {
                             $alias = $aliasMap[$column['table']];
