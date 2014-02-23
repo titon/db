@@ -76,6 +76,13 @@ class Query implements Serializable, JsonSerializable {
     protected $_cacheLength;
 
     /**
+     * Queries to union, intersect, or except with.
+     *
+     * @type \Titon\Db\Query[]
+     */
+    protected $_compounds = [];
+
+    /**
      * The fields to query for. An empty array will query all fields.
      *
      * @type string[]
@@ -152,13 +159,6 @@ class Query implements Serializable, JsonSerializable {
      * @type string
      */
     protected $_type;
-
-    /**
-     * Queries to union with.
-     *
-     * @type \Titon\Db\Query[]
-     */
-    protected $_unions = [];
 
     /**
      * The where predicate containing a list of parameters.
@@ -288,6 +288,21 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
+     * Add a select query as an except.
+     *
+     * @param \Titon\Db\Query $query
+     * @param string $flag
+     * @return $this
+     */
+    public function except(Query $query, $flag = null) {
+        if ($flag === Dialect::ALL) {
+            $query->attribute('flag', $flag);
+        }
+
+        return $this->_addCompound(Dialect::EXCEPT, $query);
+    }
+
+    /**
      * Set the list of fields to return.
      *
      * @param string|array $fields
@@ -386,6 +401,15 @@ class Query implements Serializable, JsonSerializable {
      */
     public function getCacheLength() {
         return $this->_cacheLength;
+    }
+
+    /**
+     * Return the compound queries.
+     *
+     * @return \Titon\Db\Query[]
+     */
+    public function getCompounds() {
+        return $this->_compounds;
     }
 
     /**
@@ -495,15 +519,6 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
-     * Return the union queries.
-     *
-     * @return \Titon\Db\Query[]
-     */
-    public function getUnions() {
-        return $this->_unions;
-    }
-
-    /**
      * Return the where predicate.
      *
      * @return \Titon\Db\Query\Predicate
@@ -552,6 +567,21 @@ class Query implements Serializable, JsonSerializable {
      */
     public function innerJoin($repo, array $fields, array $on = []) {
         return $this->_addJoin(Join::INNER, $repo, $fields, $on);
+    }
+
+    /**
+     * Add a select query as an intersect.
+     *
+     * @param \Titon\Db\Query $query
+     * @param string $flag
+     * @return $this
+     */
+    public function intersect(Query $query, $flag = null) {
+        if ($flag === Dialect::ALL) {
+            $query->attribute('flag', $flag);
+        }
+
+        return $this->_addCompound(Dialect::INTERSECT, $query);
     }
 
     /**
@@ -748,25 +778,18 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
-     * Set a select query as a union.
+     * Add a select query as a union.
      *
      * @param \Titon\Db\Query $query
      * @param string $flag
      * @return $this
-     * @throws \Titon\Db\Exception\InvalidQueryException
      */
     public function union(Query $query, $flag = null) {
-        if ($query->getType() !== self::SELECT) {
-            throw new InvalidQueryException(sprintf('A select query can only be used in a union'));
-        }
-
         if ($flag === Dialect::ALL || $flag === Dialect::DISTINCT) {
-            $query->attribute('union', $flag);
+            $query->attribute('flag', $flag);
         }
 
-        $this->_unions[] = $query;
-
-        return $this;
+        return $this->_addCompound(Dialect::UNION, $query);
     }
 
     /**
@@ -885,6 +908,7 @@ class Query implements Serializable, JsonSerializable {
         $this->_attributes = $data['attributes'];
         $this->_cacheKey = $data['cacheKey'];
         $this->_cacheLength = $data['cacheLength'];
+        $this->_compounds = $data['compounds'];
         $this->_fields = $data['fields'];
         $this->_groupBy = $data['groupBy'];
         $this->_having = $data['having'];
@@ -896,7 +920,6 @@ class Query implements Serializable, JsonSerializable {
         $this->_schema = $data['schema'];
         $this->_table = $data['table'];
         $this->_type = $data['type'];
-        $this->_unions = $data['unions'];
         $this->_where = $data['where'];
     }
 
@@ -919,6 +942,7 @@ class Query implements Serializable, JsonSerializable {
             'attributes' => $this->getAttributes(),
             'cacheKey' => $this->getCacheKey(),
             'cacheLength' => $this->getCacheLength(),
+            'compounds' => $this->getCompounds(),
             'fields' => $fields,
             'groupBy' => $this->getGroupBy(),
             'having' => $this->getHaving(),
@@ -931,9 +955,28 @@ class Query implements Serializable, JsonSerializable {
             'schema' => $this->getSchema(),
             'table' => $this->getTable(),
             'type' => $this->getType(),
-            'unions' => $this->getUnions(),
             'where' => $this->getWhere()
         ];
+    }
+
+    /**
+     * Add a new compound query. Only select queries can be used with compounds.
+     *
+     * @param string $type
+     * @param \Titon\Db\Query $query
+     * @return $this
+     * @throws \Titon\Db\Exception\InvalidQueryException
+     */
+    protected function _addCompound($type, Query $query) {
+        if ($query->getType() !== self::SELECT) {
+            throw new InvalidQueryException(sprintf('Only a select query can be used with %s', $type));
+        }
+
+        $query->attribute('compound', $type);
+
+        $this->_compounds[] = $query;
+
+        return $this;
     }
 
     /**

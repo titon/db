@@ -499,6 +499,44 @@ class DialectTest extends TestCase {
     }
 
     /**
+     * Test compound query building.
+     */
+    public function testFormatCompounds() {
+        // union
+        $query = new Query(Query::INSERT, new User());
+        $query->union($query->subQuery('id')->from('u1'));
+        $this->assertRegExp('/UNION\s+SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?/', $this->object->formatCompounds($query->getCompounds()));
+
+        // union all
+        $query->union($query->subQuery('id')->from('u2'), 'all');
+        $this->assertRegExp('/UNION\s+SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")? UNION ALL SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u2(`|\")?/', $this->object->formatCompounds($query->getCompounds()));
+
+        // union distinct
+        $query = new Query(Query::INSERT, new User());
+        $query->union($query->subQuery('id')->from('u1'), 'distinct');
+        $this->assertRegExp('/UNION DISTINCT SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?/', $this->object->formatCompounds($query->getCompounds()));
+
+        // intersects
+        $query = new Query(Query::INSERT, new User());
+        $query->intersect($query->subQuery('id')->from('u1'));
+        $this->assertRegExp('/INTERSECT\s+SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?/', $this->object->formatCompounds($query->getCompounds()));
+
+        // intersects all
+        $query->intersect($query->subQuery('id')->from('u2'), 'all');
+        $this->assertRegExp('/INTERSECT\s+SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")? INTERSECT ALL SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u2(`|\")?/', $this->object->formatCompounds($query->getCompounds()));
+
+        // excepts
+        $query = new Query(Query::INSERT, new User());
+        $query->except($query->subQuery('id')->from('u1'));
+        $this->assertRegExp('/EXCEPT\s+SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?/', $this->object->formatCompounds($query->getCompounds()));
+
+        // excepts all
+        $query->except($query->subQuery('id')->from('u2'), 'all');
+        $this->assertRegExp('/EXCEPT\s+SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")? EXCEPT ALL SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u2(`|\")?/', $this->object->formatCompounds($query->getCompounds()));
+
+    }
+
+    /**
      * Test expressions are built.
      */
     public function testFormatExpression() {
@@ -799,25 +837,6 @@ class DialectTest extends TestCase {
 
         $data['columns'][] = 'bar';
         $this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? UNIQUE KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?, (`|\")?bar(`|\")?\)/', $this->object->formatTableUnique($data));
-    }
-
-    /**
-     * Test union building.
-     */
-    public function testFormatUnions() {
-        $query = new Query(Query::INSERT, new User());
-
-        $query->union($query->subQuery('id')->from('u1'));
-        $this->assertRegExp('/UNION\s+SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?/', $this->object->formatUnions($query->getUnions()));
-
-        // all
-        $query->union($query->subQuery('id')->from('u2'), 'all');
-        $this->assertRegExp('/UNION\s+SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")? UNION ALL SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u2(`|\")?/', $this->object->formatUnions($query->getUnions()));
-
-        // distinct
-        $query = new Query(Query::INSERT, new User());
-        $query->union($query->subQuery('id')->from('u1'), 'distinct');
-        $this->assertRegExp('/UNION DISTINCT SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")?/', $this->object->formatUnions($query->getUnions()));
     }
 
     /**

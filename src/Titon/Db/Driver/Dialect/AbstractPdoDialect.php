@@ -158,7 +158,7 @@ class AbstractPdoDialect extends AbstractDialect {
             'where' => $this->formatWhere($query->getWhere()),
             'groupBy' => $this->formatGroupBy($query->getGroupBy()),
             'having' => $this->formatHaving($query->getHaving()),
-            'unions' => $this->formatUnions($query->getUnions()),
+            'compounds' => $this->formatCompounds($query->getCompounds()),
             'orderBy' => $this->formatOrderBy($query->getOrderBy()),
             'limit' => $this->formatLimitOffset($query->getLimit(), $query->getOffset()),
         ];

@@ -436,9 +436,9 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         $resolvePredicate($query->getWhere());
         $resolvePredicate($query->getHaving());
 
-        // Grab values from unions
-        foreach ($query->getUnions() as $union) {
-            $binds = array_merge($binds, $this->resolveParams($union));
+        // Grab values from compound queries
+        foreach ($query->getCompounds() as $compound) {
+            $binds = array_merge($binds, $this->resolveParams($compound));
         }
 
         return $binds;

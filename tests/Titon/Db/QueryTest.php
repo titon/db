@@ -62,6 +62,35 @@ class QueryTest extends TestCase {
     }
 
     /**
+     * Test excepts and flags.
+     */
+    public function testExcepts() {
+        $query1 = $this->object->subQuery();
+        $this->object->except($query1);
+
+        $this->assertEquals([$query1], $this->object->getCompounds());
+
+        $query2 = $this->object->subQuery();
+        $this->object->except($query2, 'all');
+
+        $this->assertEquals([$query1, $query2], $this->object->getCompounds());
+        $this->assertEquals(['compound' => 'except', 'flag' => 'all'], $query2->getAttributes());
+
+        $query3 = $this->object->subQuery();
+        $this->object->except($query3, 'foobar');
+
+        $this->assertEquals([$query1, $query2, $query3], $this->object->getCompounds());
+        $this->assertEquals(['compound' => 'except'], $query3->getAttributes());
+
+        try {
+            $this->object->except(new Query(Query::UPDATE));
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
+    }
+
+    /**
      * Test that an expression object is returned.
      */
     public function testExpr() {
@@ -162,11 +191,38 @@ class QueryTest extends TestCase {
     }
 
     /**
+     * Test intersects and flags.
+     */
+    public function testIntersects() {
+        $query1 = $this->object->subQuery();
+        $this->object->intersect($query1);
+
+        $this->assertEquals([$query1], $this->object->getCompounds());
+
+        $query2 = $this->object->subQuery();
+        $this->object->intersect($query2, 'all');
+
+        $this->assertEquals([$query1, $query2], $this->object->getCompounds());
+        $this->assertEquals(['compound' => 'intersect', 'flag' => 'all'], $query2->getAttributes());
+
+        $query3 = $this->object->subQuery();
+        $this->object->intersect($query3, 'foobar');
+
+        $this->assertEquals([$query1, $query2, $query3], $this->object->getCompounds());
+        $this->assertEquals(['compound' => 'intersect'], $query3->getAttributes());
+
+        try {
+            $this->object->intersect(new Query(Query::UPDATE));
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
+    }
+
+    /**
      * Test join building.
      */
     public function testJoins() {
-        $expected = [];
-
         $j1 = new Join(Join::LEFT);
         $j1->from('profiles', 'profiles')->on('User.profile_id', 'profiles.id');
 
@@ -310,25 +366,25 @@ class QueryTest extends TestCase {
         $query1 = $this->object->subQuery();
         $this->object->union($query1);
 
-        $this->assertEquals([$query1], $this->object->getUnions());
+        $this->assertEquals([$query1], $this->object->getCompounds());
 
         $query2 = $this->object->subQuery();
         $this->object->union($query2, 'all');
 
-        $this->assertEquals([$query1, $query2], $this->object->getUnions());
-        $this->assertEquals(['union' => 'all'], $query2->getAttributes());
+        $this->assertEquals([$query1, $query2], $this->object->getCompounds());
+        $this->assertEquals(['compound' => 'union', 'flag' => 'all'], $query2->getAttributes());
 
         $query3 = $this->object->subQuery();
         $this->object->union($query3, 'distinct');
 
-        $this->assertEquals([$query1, $query2, $query3], $this->object->getUnions());
-        $this->assertEquals(['union' => 'distinct'], $query3->getAttributes());
+        $this->assertEquals([$query1, $query2, $query3], $this->object->getCompounds());
+        $this->assertEquals(['compound' => 'union', 'flag' => 'distinct'], $query3->getAttributes());
 
         $query4 = $this->object->subQuery();
         $this->object->union($query4, 'foobar');
 
-        $this->assertEquals([$query1, $query2, $query3, $query4], $this->object->getUnions());
-        $this->assertEquals([], $query4->getAttributes());
+        $this->assertEquals([$query1, $query2, $query3, $query4], $this->object->getCompounds());
+        $this->assertEquals(['compound' => 'union'], $query4->getAttributes());
 
         try {
             $this->object->union(new Query(Query::UPDATE));
@@ -487,6 +543,7 @@ class QueryTest extends TestCase {
             'attributes' => ['distinct' => true],
             'cacheKey' => 'cacheKey',
             'cacheLength' => '+5 minutes',
+            'compounds' => [],
             'fields' => [
                 'id',
                 [
@@ -524,7 +581,6 @@ class QueryTest extends TestCase {
             'schema' => null,
             'table' => 'users',
             'type' => 'select',
-            'unions' => [],
             'where' => [
                 'type' => 'and',
                 'params' => [
@@ -553,6 +609,7 @@ class QueryTest extends TestCase {
             'attributes' => [],
             'cacheKey' => null,
             'cacheLength' => null,
+            'compounds' => [],
             'fields' => [
                 'size' => [
                     'field' => 'size',
@@ -574,7 +631,6 @@ class QueryTest extends TestCase {
             'schema' => null,
             'table' => 'users',
             'type' => 'update',
-            'unions' => [],
             'where' => [
                 'type' => 'and',
                 'params' => []

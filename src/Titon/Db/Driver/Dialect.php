@@ -36,6 +36,7 @@ interface Dialect {
     const DISTINCT = 'distinct';
     const EITHER = 'or';
     const ENGINE = 'engine';
+    const EXCEPT = 'except';
     const EXISTS = 'exists';
     const EXPRESSION = 'expression';
     const FOREIGN_KEY = 'foreignKey';
@@ -46,6 +47,7 @@ interface Dialect {
     const IGNORE = 'ignore';
     const IN = 'in';
     const INDEX = 'index';
+    const INTERSECT = 'intersect';
     const IS_NULL = 'isNull';
     const IS_NOT_NULL = 'isNotNull';
     const JOIN = 'join';
