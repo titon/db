@@ -806,11 +806,10 @@ class Repository extends Base implements Callback, Listener {
     public function getSchema() {
         if ($this->_schema instanceof Schema) {
             return $this->_schema;
-        }
 
         // Manually defined columns
         // Allows for full schema and key/index support
-        if (is_array($this->_schema)) {
+        }else if ($this->_schema && is_array($this->_schema)) {
             $columns = $this->_schema;
 
         // Inspect database for columns
