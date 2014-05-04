@@ -51,7 +51,7 @@ class SubQuery extends Query {
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function withFilter($filter) {
-        if (!in_array($filter, [self::ALL, self::ANY, self::SOME, self::EXISTS, self::NOT_EXISTS, self::IN, self::NOT_IN], true)) {
+        if (!in_array($filter, [static::ALL, static::ANY, static::SOME, static::EXISTS, static::NOT_EXISTS, static::IN, static::NOT_IN], true)) {
             throw new InvalidArgumentException('Invalid filter type for sub-query');
         }
 

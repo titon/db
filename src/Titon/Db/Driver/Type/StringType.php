@@ -25,7 +25,7 @@ class StringType extends CharType {
      * {@inheritdoc}
      */
     public function getName() {
-        return self::STRING;
+        return static::STRING;
     }
 
 }

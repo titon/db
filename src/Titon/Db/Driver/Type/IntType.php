@@ -34,7 +34,7 @@ class IntType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return self::INT;
+        return static::INT;
     }
 
     /**

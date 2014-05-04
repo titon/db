@@ -34,7 +34,7 @@ class BooleanType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return self::BOOLEAN;
+        return static::BOOLEAN;
     }
 
     /**

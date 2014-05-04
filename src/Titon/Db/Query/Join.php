@@ -9,8 +9,6 @@ namespace Titon\Db\Query;
 
 use Titon\Db\Driver\Dialect;
 use Titon\Db\Traits\AliasAware;
-use \Serializable;
-use \JsonSerializable;
 
 /**
  * The Join class represents meta data for an additional table to join records on.
@@ -21,7 +19,7 @@ use \JsonSerializable;
  *
  * @package Titon\Db\Query
  */
-class Join implements Serializable, JsonSerializable {
+class Join {
     use AliasAware;
 
     const LEFT = Dialect::JOIN_LEFT; // Use left join as reference table
@@ -149,45 +147,6 @@ class Join implements Serializable, JsonSerializable {
         }
 
         return $this;
-    }
-
-    /**
-     * Serialize the function.
-     *
-     * @return string
-     */
-    public function serialize() {
-        return serialize($this->jsonSerialize());
-    }
-
-    /**
-     * Reconstruct the function once unserialized.
-     *
-     * @param string $data
-     */
-    public function unserialize($data) {
-        $data = unserialize($data);
-
-        $this->_alias = $data['alias'];
-        $this->_type = $data['type'];
-        $this->_table = $data['table'];
-        $this->_fields = $data['fields'];
-        $this->_conditions = $data['on'];
-    }
-
-    /**
-     * Return all data for serialization.
-     *
-     * @return array
-     */
-    public function jsonSerialize() {
-        return [
-            'table' => $this->getTable(),
-            'alias' => $this->getAlias(),
-            'fields' => $this->getFields(),
-            'type' => $this->getType(),
-            'on' => $this->getOn()
-        ];
     }
 
 }

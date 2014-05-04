@@ -25,7 +25,7 @@ class SerialType extends BigintType {
      * {@inheritdoc}
      */
     public function getName() {
-        return self::SERIAL;
+        return static::SERIAL;
     }
 
 }

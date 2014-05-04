@@ -50,7 +50,7 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
         $value = isset($this->_data[$key]) ? $this->_data[$key] : null;
 
         if ($value instanceof Closure) {
-            $value = $value();
+            $value = call_user_func($value);
             $this->set($key, $value);
         }
 
@@ -90,7 +90,7 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
      * @return array
      */
     public function jsonSerialize() {
-        return $this->_data;
+        return $this->toArray();
     }
 
     /**
@@ -111,7 +111,7 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
      * {@inheritdoc}
      */
     public function toJson($options = 0) {
-        return json_encode($this->toArray(), $options);
+        return json_encode($this, $options);
     }
 
     /**

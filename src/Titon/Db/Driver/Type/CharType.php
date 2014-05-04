@@ -25,7 +25,7 @@ class CharType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return self::CHAR;
+        return static::CHAR;
     }
 
     /**

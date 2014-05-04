@@ -96,30 +96,4 @@ class Expr extends RawExpr {
         return ($this->getOperator() !== null && $this->getValue() !== null);
     }
 
-    /**
-     * Reconstruct the expression once unserialized.
-     *
-     * @param string $data
-     */
-    public function unserialize($data) {
-        $data = unserialize($data);
-
-        $this->_field = $data['field'];
-        $this->_operator = $data['operator'];
-        $this->_value = $data['value'];
-    }
-
-    /**
-     * Return all data for serialization.
-     *
-     * @return array
-     */
-    public function jsonSerialize() {
-        return [
-            'field' => $this->getField(),
-            'operator' => $this->getOperator(),
-            'value' => $this->getValue()
-        ];
-    }
-
 }

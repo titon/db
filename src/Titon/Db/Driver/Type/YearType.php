@@ -37,7 +37,7 @@ class YearType extends DateType {
      * {@inheritdoc}
      */
     public function getName() {
-        return self::YEAR;
+        return static::YEAR;
     }
 
 }

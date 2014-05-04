@@ -28,4 +28,8 @@ class EntityCollection extends Collection {
         }, $this->_value);
     }
 
+    public function unserialize($value) {
+        $this->__construct(unserialize($value));
+    }
+
 }

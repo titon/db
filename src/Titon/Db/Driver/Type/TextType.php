@@ -27,7 +27,7 @@ class TextType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return self::TEXT;
+        return static::TEXT;
     }
 
 }

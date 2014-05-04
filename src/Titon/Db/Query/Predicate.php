@@ -9,15 +9,13 @@ namespace Titon\Db\Query;
 
 use Titon\Db\Driver\Dialect;
 use \Closure;
-use \Serializable;
-use \JsonSerializable;
 
 /**
  * Functionality for handling advanced query predicates: where, having
  *
  * @package Titon\Db\Query
  */
-class Predicate implements Serializable, JsonSerializable {
+class Predicate {
 
     const ALSO = Dialect::ALSO; // AND
     const EITHER = Dialect::EITHER; // OR
@@ -85,7 +83,7 @@ class Predicate implements Serializable, JsonSerializable {
      * @return $this
      */
     public function also(Closure $callback) {
-        $predicate = new Predicate(self::ALSO);
+        $predicate = new Predicate(static::ALSO);
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
@@ -127,7 +125,7 @@ class Predicate implements Serializable, JsonSerializable {
      * @return $this
      */
     public function either(Closure $callback) {
-        $predicate = new Predicate(self::EITHER);
+        $predicate = new Predicate(static::EITHER);
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
@@ -183,7 +181,7 @@ class Predicate implements Serializable, JsonSerializable {
      * @return string
      */
     public function getType() {
-        return $this->_type ?: self::ALSO;
+        return $this->_type ?: static::ALSO;
     }
 
     /**
@@ -287,7 +285,7 @@ class Predicate implements Serializable, JsonSerializable {
      * @return $this
      */
     public function maybe(Closure $callback) {
-        $predicate = new Predicate(self::MAYBE);
+        $predicate = new Predicate(static::MAYBE);
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
@@ -302,7 +300,7 @@ class Predicate implements Serializable, JsonSerializable {
      * @return $this
      */
     public function neither(Closure $callback) {
-        $predicate = new Predicate(self::NEITHER);
+        $predicate = new Predicate(static::NEITHER);
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
@@ -393,39 +391,6 @@ class Predicate implements Serializable, JsonSerializable {
         $this->add($field, Expr::NULL, null);
 
         return $this;
-    }
-
-    /**
-     * Serialize the query predicate.
-     *
-     * @return string
-     */
-    public function serialize() {
-        return serialize($this->jsonSerialize());
-    }
-
-    /**
-     * Reconstruct the query predicate once unserialized.
-     *
-     * @param string $data
-     */
-    public function unserialize($data) {
-        $data = unserialize($data);
-
-        $this->_type = $data['type'];
-        $this->_params = $data['params'];
-    }
-
-    /**
-     * Return all data for serialization.
-     *
-     * @return array
-     */
-    public function jsonSerialize() {
-        return [
-            'type' => $this->getType(),
-            'params' => $this->getParams()
-        ];
     }
 
 }

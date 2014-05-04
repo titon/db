@@ -7,7 +7,6 @@
 
 namespace Titon\Db;
 
-use Titon\Common\Registry;
 use Titon\Db\Driver\Dialect;
 use Titon\Db\Driver\Schema;
 use Titon\Db\Exception\ExistingPredicateException;
@@ -25,8 +24,6 @@ use Titon\Db\Traits\FuncAware;
 use Titon\Db\Traits\RawExprAware;
 use Titon\Db\Traits\RepositoryAware;
 use \Closure;
-use \Serializable;
-use \JsonSerializable;
 
 /**
  * Provides an object oriented interface for building an SQL query.
@@ -35,7 +32,7 @@ use \JsonSerializable;
  *
  * @package Titon\Db
  */
-class Query implements Serializable, JsonSerializable {
+class Query {
     use AliasAware, ExprAware, FuncAware, RawExprAware, RepositoryAware;
 
     // Order directions
@@ -254,7 +251,7 @@ class Query implements Serializable, JsonSerializable {
      * @return $this
      */
     public function cache($key, $expires = null) {
-        if ($this->getType() !== self::SELECT) {
+        if ($this->getType() !== static::SELECT) {
             return $this;
         }
 
@@ -319,7 +316,7 @@ class Query implements Serializable, JsonSerializable {
             $fields = array_merge($this->_fields, $fields);
         }
 
-        if ($this->getType() === self::SELECT) {
+        if ($this->getType() === static::SELECT) {
             $fields = array_values(array_unique($fields));
         }
 
@@ -369,7 +366,7 @@ class Query implements Serializable, JsonSerializable {
      * @return string
      */
     public function getAlias() {
-        if ($this->getJoins() || $this instanceof SubQuery || in_array($this->getType(), [self::CREATE_INDEX, self::DROP_INDEX])) {
+        if ($this->getJoins() || $this instanceof SubQuery || in_array($this->getType(), [static::CREATE_INDEX, static::DROP_INDEX])) {
             return $this->_alias;
         }
 
@@ -421,7 +418,7 @@ class Query implements Serializable, JsonSerializable {
     public function getFields() {
         $fields = $this->_fields;
 
-        if ($this->getJoins() && !$fields && $this->getType() === self::SELECT) {
+        if ($this->getJoins() && !$fields && $this->getType() === static::SELECT) {
             return $this->_mapTableFields($this->getRepository());
         }
 
@@ -565,7 +562,7 @@ class Query implements Serializable, JsonSerializable {
      * @param array $on
      * @return $this
      */
-    public function innerJoin($repo, array $fields, array $on = []) {
+    public function innerJoin($repo, array $fields = [], array $on = []) {
         return $this->_addJoin(Join::INNER, $repo, $fields, $on);
     }
 
@@ -592,7 +589,7 @@ class Query implements Serializable, JsonSerializable {
      * @param array $on
      * @return $this
      */
-    public function leftJoin($repo, array $fields, array $on = []) {
+    public function leftJoin($repo, array $fields = [], array $on = []) {
         return $this->_addJoin(Join::LEFT, $repo, $fields, $on);
     }
 
@@ -664,7 +661,7 @@ class Query implements Serializable, JsonSerializable {
         } else {
             $direction = strtolower($direction);
 
-            if ($direction != self::ASC && $direction != self::DESC) {
+            if ($direction != static::ASC && $direction != static::DESC) {
                 throw new InvalidArgumentException(sprintf('Invalid order direction %s for field %s', $direction, $field));
             }
 
@@ -706,7 +703,7 @@ class Query implements Serializable, JsonSerializable {
      * @param array $on
      * @return $this
      */
-    public function outerJoin($repo, array $fields, array $on = []) {
+    public function outerJoin($repo, array $fields = [], array $on = []) {
         return $this->_addJoin(Join::OUTER, $repo, $fields, $on);
     }
 
@@ -718,7 +715,7 @@ class Query implements Serializable, JsonSerializable {
      * @param array $on
      * @return $this
      */
-    public function rightJoin($repo, array $fields, array $on = []) {
+    public function rightJoin($repo, array $fields = [], array $on = []) {
         return $this->_addJoin(Join::RIGHT, $repo, $fields, $on);
     }
 
@@ -774,7 +771,7 @@ class Query implements Serializable, JsonSerializable {
      * @return string
      */
     public function toString() {
-        return md5(json_encode($this->jsonSerialize()));
+        return spl_object_hash($this);
     }
 
     /**
@@ -813,7 +810,7 @@ class Query implements Serializable, JsonSerializable {
      * @throws \Titon\Db\Exception\InvalidRelationQueryException
      */
     public function with($alias, $query = null) {
-        if ($this->getType() !== self::SELECT) {
+        if ($this->getType() !== static::SELECT) {
             throw new InvalidRelationQueryException('Only select queries can join related data');
         }
 
@@ -831,7 +828,7 @@ class Query implements Serializable, JsonSerializable {
         if ($query instanceof Query) {
             $relatedQuery = $query;
 
-            if ($query->getType() !== self::SELECT) {
+            if ($query->getType() !== static::SELECT) {
                 throw new InvalidRelationQueryException('Only select sub-queries are permitted for related data');
             }
         } else {
@@ -885,81 +882,6 @@ class Query implements Serializable, JsonSerializable {
     }
 
     /**
-     * Serialize the query.
-     *
-     * @return string
-     */
-    public function serialize() {
-        return serialize($this->jsonSerialize());
-    }
-
-    /**
-     * Reconstruct the query once unserialized.
-     *
-     * @uses Titon\Common\Registry
-     *
-     * @param string $data
-     */
-    public function unserialize($data) {
-        $data = unserialize($data);
-
-        $this->_repository = Registry::factory($data['repository']);
-        $this->_alias = $data['alias'];
-        $this->_attributes = $data['attributes'];
-        $this->_cacheKey = $data['cacheKey'];
-        $this->_cacheLength = $data['cacheLength'];
-        $this->_compounds = $data['compounds'];
-        $this->_fields = $data['fields'];
-        $this->_groupBy = $data['groupBy'];
-        $this->_having = $data['having'];
-        $this->_joins = $data['joins'];
-        $this->_limit = $data['limit'];
-        $this->_offset = $data['offset'];
-        $this->_orderBy = $data['orderBy'];
-        $this->_relationQueries = $data['relationQueries'];
-        $this->_schema = $data['schema'];
-        $this->_table = $data['table'];
-        $this->_type = $data['type'];
-        $this->_where = $data['where'];
-    }
-
-    /**
-     * Return all data for serialization.
-     *
-     * @return array
-     */
-    public function jsonSerialize() {
-        $fields = $this->getFields();
-
-        foreach ($fields as $field => $value) {
-            if (is_resource($value)) {
-                $fields[$field] = stream_get_contents($value);
-            }
-        }
-
-        return [
-            'alias' => $this->getAlias(),
-            'attributes' => $this->getAttributes(),
-            'cacheKey' => $this->getCacheKey(),
-            'cacheLength' => $this->getCacheLength(),
-            'compounds' => $this->getCompounds(),
-            'fields' => $fields,
-            'groupBy' => $this->getGroupBy(),
-            'having' => $this->getHaving(),
-            'joins' => $this->getJoins(),
-            'limit' => $this->getLimit(),
-            'repository' => get_class($this->getRepository()),
-            'offset' => $this->getOffset(),
-            'orderBy' => $this->getOrderBy(),
-            'relationQueries' => $this->getRelationQueries(),
-            'schema' => $this->getSchema(),
-            'table' => $this->getTable(),
-            'type' => $this->getType(),
-            'where' => $this->getWhere()
-        ];
-    }
-
-    /**
      * Add a new compound query. Only select queries can be used with compounds.
      *
      * @param string $type
@@ -968,7 +890,7 @@ class Query implements Serializable, JsonSerializable {
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
     protected function _addCompound($type, Query $query) {
-        if ($query->getType() !== self::SELECT) {
+        if ($query->getType() !== static::SELECT) {
             throw new InvalidQueryException(sprintf('Only a select query can be used with %s', $type));
         }
 
@@ -998,7 +920,7 @@ class Query implements Serializable, JsonSerializable {
             $relatedRepo = $relation->getRelatedRepository();
             $alias = $relation->getAlias();
 
-            if (!$fields && $this->getType() === self::SELECT) {
+            if (!$fields && $this->getType() === static::SELECT) {
                 $fields = $this->_mapTableFields($relatedRepo);
             }
 
@@ -1028,7 +950,7 @@ class Query implements Serializable, JsonSerializable {
             }
 
             // Auto-populate fields if tables are the same
-            if (!$fields && $table === $repo->getTable() && $this->getType() === self::SELECT) {
+            if (!$fields && $table === $repo->getTable() && $this->getType() === static::SELECT) {
                 $fields = $this->_mapTableFields($repo);
             }
 

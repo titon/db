@@ -8,6 +8,10 @@
 namespace Titon\Db;
 
 use Titon\Db\Query\Predicate;
+use Titon\Db\Relation\ManyToMany;
+use Titon\Db\Relation\ManyToOne;
+use Titon\Db\Relation\OneToMany;
+use Titon\Db\Relation\OneToOne;
 use Titon\Test\Stub\BehaviorStub;
 use Titon\Test\Stub\MapperStub;
 use Titon\Test\Stub\Repository\Author;
@@ -60,6 +64,30 @@ class RepositoryTest extends TestCase {
 
         $this->assertInstanceOf('Titon\Db\Repository', $stub->User);
         $this->assertInstanceOf('Titon\Db\Repository', $stub->getObject('User'));
+    }
+
+    public function testBelongsTo() {
+        $relation = $this->object->belongsTo('Country', 'Titon\Test\Stub\Repository\Country', 'country_id');
+
+        $expected = new ManyToOne('Country', 'Titon\Test\Stub\Repository\Country');
+        $expected->setForeignKey('country_id');
+        $expected->setRepository($this->object);
+
+        $this->assertEquals($expected, $relation);
+        $this->assertEquals($relation, $this->object->getRelation('Country'));
+    }
+
+    public function testBelongsToMany() {
+        $relation = $this->object->belongsToMany('Groups', 'Titon\Test\Stub\Repository\Group', 'Titon\Test\Stub\Repository\UserGroups', 'user_id', 'group_id');
+
+        $expected = new ManyToMany('Groups', 'Titon\Test\Stub\Repository\Group');
+        $expected->setJunctionClass('Titon\Test\Stub\Repository\UserGroups');
+        $expected->setForeignKey('user_id');
+        $expected->setRelatedForeignKey('group_id');
+        $expected->setRepository($this->object);
+
+        $this->assertEquals($expected, $relation);
+        $this->assertEquals($relation, $this->object->getRelation('Groups'));
     }
 
     /**
@@ -357,6 +385,21 @@ class RepositoryTest extends TestCase {
         $this->assertEquals('Titon\Db\Entity', $this->object->getEntity());
     }
 
+    public function testGetFinder() {
+        $this->assertInstanceOf('Titon\Db\Finder', $this->object->getFinder('first'));
+
+        try {
+            $this->object->getFinder('foobar');
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
+    }
+
+    public function testGetFinders() {
+        $this->assertEquals(['first', 'all', 'list'], array_keys($this->object->getFinders()));
+    }
+
     /**
      * Test primary key config.
      */
@@ -423,6 +466,28 @@ class RepositoryTest extends TestCase {
 
         $this->object->setConfig('prefix', 'test_');
         $this->assertEquals('test_', $this->object->getTablePrefix());
+    }
+
+    public function testHasOne() {
+        $relation = $this->object->hasOne('Profile', 'Titon\Test\Stub\Repository\Profile', 'user_id');
+
+        $expected = new OneToOne('Profile', 'Titon\Test\Stub\Repository\Profile');
+        $expected->setRelatedForeignKey('user_id');
+        $expected->setRepository($this->object);
+
+        $this->assertEquals($expected, $relation);
+        $this->assertEquals($relation, $this->object->getRelation('Profile'));
+    }
+
+    public function testHasMany() {
+        $relation = $this->object->hasMany('Posts', 'Titon\Test\Stub\Repository\Post', 'user_id');
+
+        $expected = new OneToMany('Posts', 'Titon\Test\Stub\Repository\Post');
+        $expected->setRelatedForeignKey('user_id');
+        $expected->setRepository($this->object);
+
+        $this->assertEquals($expected, $relation);
+        $this->assertEquals($relation, $this->object->getRelation('Posts'));
     }
 
     /**

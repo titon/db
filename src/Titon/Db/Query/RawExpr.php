@@ -8,15 +8,13 @@
 namespace Titon\Db\Query;
 
 use Titon\Db\Traits\RawExprAware;
-use \Serializable;
-use \JsonSerializable;
 
 /**
  * The RawExpr represents a raw database expression that is not modified by the DBAL.
  *
  * @package Titon\Db\Query
  */
-class RawExpr implements Serializable, JsonSerializable {
+class RawExpr {
     use RawExprAware;
 
     /**
@@ -51,33 +49,6 @@ class RawExpr implements Serializable, JsonSerializable {
      */
     public function getValue() {
         return $this->_value;
-    }
-
-    /**
-     * Serialize the expression.
-     *
-     * @return string
-     */
-    public function serialize() {
-        return serialize($this->jsonSerialize());
-    }
-
-    /**
-     * Reconstruct the expression once unserialized.
-     *
-     * @param string $data
-     */
-    public function unserialize($data) {
-        $this->_value = unserialize($data);
-    }
-
-    /**
-     * Return all data for serialization.
-     *
-     * @return array
-     */
-    public function jsonSerialize() {
-        return $this->getValue();
     }
 
 }

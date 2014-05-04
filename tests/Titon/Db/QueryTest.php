@@ -12,6 +12,7 @@ use Titon\Db\Query\Expr;
 use Titon\Db\Query\Join;
 use Titon\Db\Query\Predicate;
 use Titon\Test\Stub\Repository\Profile;
+use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 use \Exception;
@@ -59,6 +60,27 @@ class QueryTest extends TestCase {
         }, null);
 
         $this->assertEquals(['id', 'created'], $this->object->getFields());
+    }
+
+    public function testCache() {
+        $this->object->cache('foobar', '+25 minutes');
+
+        $this->assertEquals('foobar', $this->object->getCacheKey());
+        $this->assertEquals('+25 minutes', $this->object->getCacheLength());
+    }
+
+    public function testCacheFailsNonSelect() {
+        $query = new Query(Query::UPDATE);
+        $query->cache('foobar', '+25 minutes');
+
+        $this->assertEquals(null, $this->object->getCacheKey());
+        $this->assertEquals(null, $this->object->getCacheLength());
+    }
+
+    public function testDistinct() {
+        $this->assertEquals([], $this->object->getAttributes());
+        $this->object->distinct();
+        $this->assertEquals(['distinct' => true], $this->object->getAttributes());
     }
 
     /**
@@ -241,6 +263,18 @@ class QueryTest extends TestCase {
 
         $this->object->innerJoin($this->object->getRepository()->getRelation('Profile'), []);
         $this->assertEquals($j3, $this->object->getJoins()[2]);
+    }
+
+    public function testJoinUnsupportedRelation() {
+        $repo = new Topic();
+        $query = $repo->select();
+
+        try {
+            $query->leftJoin($repo->getRelation('Posts'));
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
     }
 
     /**
@@ -451,12 +485,9 @@ class QueryTest extends TestCase {
             $query->where($relation->getRelatedForeignKey(), 1);
         });
 
-        $query = new Query(Query::SELECT, new Profile());
-        $query->from('profiles')->where('user_id', 1);
-
         $queries = $this->object->getRelationQueries();
 
-        $this->assertEquals($query->jsonSerialize(), $queries['Profile']->jsonSerialize());
+        $this->assertInstanceOf('Titon\Db\Query', $queries['Profile']);
 
         // Test exceptions
         try {
@@ -488,154 +519,63 @@ class QueryTest extends TestCase {
         $query->with('Profile', new Query(Query::SELECT, new User()));
     }
 
-    /**
-     * Test object serialization.
-     */
-    public function testSerialize() {
-        $repo = new User();
-        $query = new Query(Query::SELECT, $repo);
-        $func = $query->func('COUNT', ['id' => Query\Func::FIELD])->asAlias('count');
+    public function testXorHaving() {
+        $expected = ['id=1' => new Expr('id', '=', 1)];
 
-        $query
-            ->attribute('distinct', true)
-            ->cache('cacheKey', '+5 minutes')
-            ->fields(['id', $func])
-            ->groupBy('id')
-            ->having('count', '>', 5)
-            ->leftJoin(['profiles', 'Profile'], [], ['User.id' => 'Profile.user_id'])
-            ->limit(5, 10)
-            ->orderBy('id', 'asc')
-            ->from('users')
-            ->where(function(Predicate $where) {
-                $where->notIn('id', [1, 2, 3])->gte('size', 15);
-            });
+        $this->object->xorHaving('id', 1);
+        $this->assertEquals($expected, $this->object->getHaving()->getParams());
 
-        $expected = unserialize(serialize($query));
-        $expected->setRepository($repo); // Asserting will fail unless we use the same repository instance
+        $this->assertEquals(Predicate::MAYBE, $this->object->getHaving()->getType());
 
-        $this->assertEquals($expected, $query);
+        $expected['titlenotLike%Titon%'] = new Expr('title', 'notLike', '%Titon%');
+
+        $this->object->xorHaving(function(Predicate $having) {
+            $having->notLike('title', '%Titon%');
+        });
+        $this->assertEquals($expected, $this->object->getHaving()->getParams());
+
+        try {
+            $this->object->having('id', 1);
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
+
+        // Custom operator
+        $this->object->xorHaving('size', '>=', 15);
+
+        $expected['size>=15'] = new Expr('size', '>=', 15);
+
+        $this->assertEquals($expected, $this->object->getHaving()->getParams());
     }
 
-    /**
-     * Test JSON encoding of queries.
-     */
-    public function testJsonSerialize() {
-        $query = new Query(Query::SELECT, new User());
-        $query
-            ->attribute('distinct', true)
-            ->cache('cacheKey', '+5 minutes')
-            ->fields([
-                'id', // column
-                $query->func('COUNT', ['id' => Query\Func::FIELD])->asAlias('count'), // function
-            ])
-            ->groupBy('id')
-            ->having('count', '>', 5)
-            ->leftJoin(['profiles', 'Profile'], [], ['User.id' => 'Profile.user_id'])
-            ->limit(5, 10)
-            ->orderBy('id', 'asc')
-            ->from('users')
-            ->where(function(Predicate $where) {
-                $where->notIn('id', [1, 2, 3])->gte('size', 15);
-            });
+    public function testXorWhere() {
+        $expected = ['id=152' => new Expr('id', '=', 152)];
 
-        $this->assertEquals(json_encode([
-            'alias' => null,
-            'attributes' => ['distinct' => true],
-            'cacheKey' => 'cacheKey',
-            'cacheLength' => '+5 minutes',
-            'compounds' => [],
-            'fields' => [
-                'id',
-                [
-                    'name' => 'COUNT',
-                    'alias' => 'count',
-                    'arguments' => [['type' => 'field', 'value' => 'id']],
-                    'separator' => ', '
-                ]
-            ],
-            'groupBy' => ['id'],
-            'having' => [
-                'type' => 'and',
-                'params' => [
-                    'count>5' => [
-                        'field' => 'count',
-                        'operator' => '>',
-                        'value' => 5
-                    ]
-                ]
-            ],
-            'joins' => [
-                [
-                    'table' => 'profiles',
-                    'alias' => 'Profile',
-                    'fields' => [],
-                    'type' => 'leftJoin',
-                    'on' => ['User.id' => 'Profile.user_id']
-                ]
-            ],
-            'limit' => 5,
-            'repository' => 'Titon\Test\Stub\Repository\User',
-            'offset' => 10,
-            'orderBy' => ['id' => 'asc'],
-            'relationQueries' => [],
-            'schema' => null,
-            'table' => 'users',
-            'type' => 'select',
-            'where' => [
-                'type' => 'and',
-                'params' => [
-                    'idnotIn[1,2,3]' => [
-                        'field' => 'id',
-                        'operator' => 'notIn',
-                        'value' => [1, 2, 3]
-                    ],
-                    'size>=15' => [
-                        'field' => 'size',
-                        'operator' => '>=',
-                        'value' => 15
-                    ]
-                ]
-            ]
-        ]), json_encode($query));
+        $this->object->xorWhere('id', 152);
+        $this->assertEquals($expected, $this->object->getWhere()->getParams());
 
-        // Test expressions (cant be done in select queries)
-        $query = new Query(Query::UPDATE, new User());
-        $query->from('users')->fields([
-            'size' => $this->object->expr('size', '+', 5) // expression
-        ]);
+        $this->assertEquals(Predicate::MAYBE, $this->object->getWhere()->getType());
 
-        $this->assertEquals(json_encode([
-            'alias' => null,
-            'attributes' => [],
-            'cacheKey' => null,
-            'cacheLength' => null,
-            'compounds' => [],
-            'fields' => [
-                'size' => [
-                    'field' => 'size',
-                    'operator' => '+',
-                    'value' => 5
-                ]
-            ],
-            'groupBy' => [],
-            'having' => [
-                'type' => 'and',
-                'params' => []
-            ],
-            'joins' => [],
-            'limit' => null,
-            'repository' => 'Titon\Test\Stub\Repository\User',
-            'offset' => null,
-            'orderBy' => [],
-            'relationQueries' => [],
-            'schema' => null,
-            'table' => 'users',
-            'type' => 'update',
-            'where' => [
-                'type' => 'and',
-                'params' => []
-            ]
-        ]), json_encode($query));
+        $expected['levelbetween[1,100]'] = new Expr('level', 'between', [1, 100]);
+
+        $this->object->xorWhere(function(Predicate $where) {
+            $where->between('level', 1, 100);
+        });
+        $this->assertEquals($expected, $this->object->getWhere()->getParams());
+
+        try {
+            $this->object->where('id', 1);
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
+
+        $this->object->xorWhere('size', Expr::NOT_IN, [1, 2]);
+
+        $expected['sizenotIn[1,2]'] = new Expr('size', 'notIn', [1, 2]);
+
+        $this->assertEquals($expected, $this->object->getWhere()->getParams());
     }
 
     /**

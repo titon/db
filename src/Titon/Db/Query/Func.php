@@ -10,8 +10,6 @@ namespace Titon\Db\Query;
 use Titon\Db\Driver;
 use Titon\Db\Traits\AliasAware;
 use Titon\Db\Traits\FuncAware;
-use \Serializable;
-use \JsonSerializable;
 
 /**
  * The Func class represents an SQL function with optional arguments.
@@ -36,7 +34,7 @@ use \JsonSerializable;
  *
  * @package Titon\Db\Query
  */
-class Func implements Serializable, JsonSerializable {
+class Func {
     use FuncAware, AliasAware;
 
     const FIELD = 'field';
@@ -132,43 +130,6 @@ class Func implements Serializable, JsonSerializable {
      */
     public function getSeparator() {
         return $this->_separator;
-    }
-
-    /**
-     * Serialize the function.
-     *
-     * @return string
-     */
-    public function serialize() {
-        return serialize($this->jsonSerialize());
-    }
-
-    /**
-     * Reconstruct the function once unserialized.
-     *
-     * @param string $data
-     */
-    public function unserialize($data) {
-        $data = unserialize($data);
-
-        $this->_alias = $data['alias'];
-        $this->_arguments = $data['arguments'];
-        $this->_name = $data['name'];
-        $this->_separator = $data['separator'];
-    }
-
-    /**
-     * Return all data for serialization.
-     *
-     * @return array
-     */
-    public function jsonSerialize() {
-        return [
-            'name' => $this->getName(),
-            'alias' => $this->getAlias(),
-            'arguments' => $this->getArguments(),
-            'separator' => $this->getSeparator()
-        ];
     }
 
 }

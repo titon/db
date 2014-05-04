@@ -23,7 +23,7 @@ class DatetimeType extends DateType {
      * {@inheritdoc}
      */
     public function getName() {
-        return self::DATETIME;
+        return static::DATETIME;
     }
 
 }
