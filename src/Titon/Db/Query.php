@@ -890,7 +890,7 @@ class Query {
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
     protected function _addCompound($type, Query $query) {
-        if ($query->getType() !== static::SELECT) {
+        if ($query->getType() !== self::SELECT) {
             throw new InvalidQueryException(sprintf('Only a select query can be used with %s', $type));
         }
 
@@ -920,7 +920,7 @@ class Query {
             $relatedRepo = $relation->getRelatedRepository();
             $alias = $relation->getAlias();
 
-            if (!$fields && $this->getType() === static::SELECT) {
+            if (!$fields && $this->getType() === self::SELECT) {
                 $fields = $this->_mapTableFields($relatedRepo);
             }
 

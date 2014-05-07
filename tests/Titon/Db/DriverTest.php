@@ -1,14 +1,9 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db;
 
 use Titon\Cache\Storage\MemoryStorage;
 use Titon\Common\Config;
+use Titon\Db\Query\ResultSet\SqlResultSet;
 use Titon\Debug\Logger;
 use Titon\Test\Stub\DialectStub;
 use Titon\Test\Stub\DriverStub;
@@ -17,42 +12,24 @@ use Titon\Test\TestCase;
 use \Exception;
 
 /**
- * Test class for Titon\Db\Driver.
- *
  * @property \Titon\Db\Driver $object
  */
 class DriverTest extends TestCase {
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
         $this->object = new DriverStub(Config::get('db'));
     }
 
-    /**
-     * Disconnect just in case.
-     */
     protected function tearDown() {
         parent::tearDown();
 
         $this->object->disconnect();
     }
 
-    /**
-     * Test that the driver can connect and disconnect.
-     */
     public function testConnection() {
         $this->assertFalse($this->object->isConnected());
-
-        try {
-            $this->object->getConnection();
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
 
         $this->object->connect();
 
@@ -62,7 +39,9 @@ class DriverTest extends TestCase {
         $this->object->disconnect();
 
         $this->assertFalse($this->object->isConnected());
+    }
 
+    public function testConnectionThrowsErrorIfNotActive() {
         try {
             $this->object->getConnection();
             $this->assertTrue(false);
@@ -71,9 +50,6 @@ class DriverTest extends TestCase {
         }
     }
 
-    /**
-     * Test that group settings are inherited.
-     */
     public function testContextConnections() {
         $driver = new DriverStub([
             'database' => 'titon_test',
@@ -117,9 +93,6 @@ class DriverTest extends TestCase {
         ], $driver->getContextConfig('write'));
     }
 
-    /**
-     * Test that the correct values are returned from getters.
-     */
     public function testContextGetters() {
         $driver = new DriverStub([
             'database' => 'titon_test',
@@ -159,48 +132,39 @@ class DriverTest extends TestCase {
         $this->assertEquals(3306, $driver->getPort());
     }
 
-    /**
-     * Test dialect management.
-     */
     public function testDialects() {
         $this->assertInstanceOf('Titon\Db\Driver\Dialect', $this->object->getDialect());
 
         $this->object->setDialect(new DialectStub($this->object));
+
         $this->assertInstanceOf('Titon\Test\Stub\DialectStub', $this->object->getDialect());
     }
 
-    /**
-     * Test storage management.
-     */
     public function testStorage() {
         $this->assertEquals(null, $this->object->getStorage());
 
         $this->object->setStorage(new MemoryStorage());
+
         $this->assertInstanceOf('Titon\Cache\Storage', $this->object->getStorage());
     }
 
-    /**
-     * Test log management.
-     */
     public function testLogger() {
         $this->assertEquals(null, $this->object->getLogger());
 
         $this->object->setLogger(new Logger(TEST_DIR));
+
         $this->assertInstanceOf('Psr\Log\LoggerInterface', $this->object->getLogger());
     }
 
-    /**
-     * Test query logging.
-     */
     public function testLogging() {
         $this->assertEquals([], $this->object->getLoggedQueries());
 
-        $log1 = new QueryResultSetStub('SELECT * FROM users');
+        $log1 = new SqlResultSet('SELECT * FROM users');
         $this->object->logQuery($log1);
 
         $this->assertEquals([$log1], $this->object->getLoggedQueries());
 
-        $log2 = new QueryResultSetStub('DELETE FROM users WHERE id = 1');
+        $log2 = new SqlResultSet('DELETE FROM users WHERE id = 1');
         $this->object->logQuery($log2);
 
         $this->assertEquals([$log1, $log2], $this->object->getLoggedQueries());

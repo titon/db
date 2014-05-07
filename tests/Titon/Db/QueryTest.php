@@ -1,41 +1,26 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db;
 
 use Titon\Db\Query;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Join;
 use Titon\Db\Query\Predicate;
-use Titon\Test\Stub\Repository\Profile;
 use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 use \Exception;
 
 /**
- * Test class for Titon\Db\Query.
- *
  * @property \Titon\Db\Query $object
  */
 class QueryTest extends TestCase {
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
         $this->object = new Query(Query::SELECT, new User());
     }
 
-    /**
-     * Test getting and setting of attributes.
-     */
     public function testAttributes() {
         $this->assertEquals([], $this->object->getAttributes());
 
@@ -49,9 +34,6 @@ class QueryTest extends TestCase {
         $this->assertEquals(['readonly' => false, 'distinct' => true], $this->object->getAttributes());
     }
 
-    /**
-     * Test that callbacks modify the query.
-     */
     public function testBindCallback() {
         $this->assertEquals([], $this->object->getFields());
 
@@ -83,9 +65,6 @@ class QueryTest extends TestCase {
         $this->assertEquals(['distinct' => true], $this->object->getAttributes());
     }
 
-    /**
-     * Test excepts and flags.
-     */
     public function testExcepts() {
         $query1 = $this->object->subQuery();
         $this->object->except($query1);
@@ -103,7 +82,9 @@ class QueryTest extends TestCase {
 
         $this->assertEquals([$query1, $query2, $query3], $this->object->getCompounds());
         $this->assertEquals(['compound' => 'except'], $query3->getAttributes());
+    }
 
+    public function testExceptFailsNonSelect() {
         try {
             $this->object->except(new Query(Query::UPDATE));
             $this->assertTrue(false);
@@ -112,16 +93,10 @@ class QueryTest extends TestCase {
         }
     }
 
-    /**
-     * Test that an expression object is returned.
-     */
     public function testExpr() {
-        $this->assertInstanceOf('Titon\Db\Query\Expr', $this->object->expr('column', '+', 5));
+        $this->assertInstanceOf('Titon\Db\Query\Expr', Query::expr('column', '+', 5));
     }
 
-    /**
-     * Test getting and setting fields.
-     */
     public function testFields() {
         $this->object->fields('id', 'title', 'id');
         $this->assertEquals(['id', 'title'], $this->object->getFields());
@@ -150,24 +125,15 @@ class QueryTest extends TestCase {
         $this->assertEquals(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], $query->getFields());
     }
 
-    /**
-     * Test getting and setting the table.
-     */
     public function testFrom() {
         $this->object->from('users');
         $this->assertEquals('users', $this->object->getTable());
     }
 
-    /**
-     * Test that a function object is returned.
-     */
     public function testFunc() {
-        $this->assertInstanceOf('Titon\Db\Query\Func', $this->object->func('SUBSTRING', ['Foo', 1, 2]));
+        $this->assertInstanceOf('Titon\Db\Query\Func', Query::func('SUBSTRING', ['Foo', 1, 2]));
     }
 
-    /**
-     * Test getting and setting group by fields.
-     */
     public function testGroupBy() {
         $this->object->groupBy('id', 'created');
         $this->assertEquals(['id', 'created'], $this->object->getGroupBy());
@@ -179,9 +145,6 @@ class QueryTest extends TestCase {
         $this->assertEquals(['id', 'created', 'title', 'content', 'modified'], $this->object->getGroupBy());
     }
 
-    /**
-     * Test that having clause returns params.
-     */
     public function testHaving() {
         $expected = ['id=1' => new Expr('id', '=', 1)];
 
@@ -212,9 +175,6 @@ class QueryTest extends TestCase {
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
     }
 
-    /**
-     * Test intersects and flags.
-     */
     public function testIntersects() {
         $query1 = $this->object->subQuery();
         $this->object->intersect($query1);
@@ -232,7 +192,9 @@ class QueryTest extends TestCase {
 
         $this->assertEquals([$query1, $query2, $query3], $this->object->getCompounds());
         $this->assertEquals(['compound' => 'intersect'], $query3->getAttributes());
+    }
 
+    public function testIntersectFailsNonSelect() {
         try {
             $this->object->intersect(new Query(Query::UPDATE));
             $this->assertTrue(false);
@@ -241,28 +203,28 @@ class QueryTest extends TestCase {
         }
     }
 
-    /**
-     * Test join building.
-     */
-    public function testJoins() {
+    public function testLeftJoin() {
         $j1 = new Join(Join::LEFT);
         $j1->from('profiles', 'profiles')->on('User.profile_id', 'profiles.id');
 
         $this->object->leftJoin('profiles', [], ['profile_id' => 'id']);
         $this->assertEquals($j1, $this->object->getJoins()[0]);
+    }
 
-        $j2 = new Join(Join::RIGHT);
-        $j2->from('profiles', 'profiles')->on('users.id', 'profiles.id')->fields(['id', 'created']);
+    public function testRightJoin() {
+        $j1 = new Join(Join::RIGHT);
+        $j1->from('profiles', 'profiles')->on('users.id', 'profiles.id')->fields(['id', 'created']);
 
         $this->object->rightJoin('profiles', ['id', 'created'], ['users.id' => 'profiles.id']);
-        $this->assertEquals($j2, $this->object->getJoins()[1]);
+        $this->assertEquals($j1, $this->object->getJoins()[0]);
+    }
 
-        // With relation
-        $j3 = new Join(Join::INNER);
-        $j3->from('profiles', 'Profile')->on('User.id', 'Profile.user_id')->fields('id', 'user_id', 'lastLogin', 'currentLogin');
+    public function testInnerJoin() {
+        $j1 = new Join(Join::INNER);
+        $j1->from('profiles', 'Profile')->on('User.id', 'Profile.user_id')->fields('id', 'user_id', 'lastLogin', 'currentLogin');
 
         $this->object->innerJoin($this->object->getRepository()->getRelation('Profile'), []);
-        $this->assertEquals($j3, $this->object->getJoins()[2]);
+        $this->assertEquals($j1, $this->object->getJoins()[0]);
     }
 
     public function testJoinUnsupportedRelation() {
@@ -277,9 +239,6 @@ class QueryTest extends TestCase {
         }
     }
 
-    /**
-     * Test getting and setting of limit and offset.
-     */
     public function testLimit() {
         $this->object->limit(15);
         $this->assertEquals(15, $this->object->getLimit());
@@ -290,18 +249,12 @@ class QueryTest extends TestCase {
         $this->assertEquals(50, $this->object->getOffset());
     }
 
-    /**
-     * Test getting and setting of offset.
-     */
     public function testOffset() {
         $this->assertEquals(0, $this->object->getOffset());
         $this->object->offset(15);
         $this->assertEquals(15, $this->object->getOffset());
     }
 
-    /**
-     * Test getting and setting of order by directions.
-     */
     public function testOrderBy() {
         $this->object->orderBy('id', 'asc');
         $this->assertEquals(['id' => 'asc'], $this->object->getOrderBy());
@@ -311,26 +264,27 @@ class QueryTest extends TestCase {
             'created' => 'asc'
         ]);
         $this->assertEquals(['id' => 'desc', 'created' => 'asc'], $this->object->getOrderBy());
+    }
 
+    public function testOrderByErrorsInvalidType() {
         try {
             $this->object->orderBy('id', 'ascending');
             $this->assertTrue(false);
         } catch (Exception $e) {
             $this->assertTrue(true);
         }
+    }
 
+    public function testOrderByRand() {
         $rand1 = new Query\Func('RAND');
         $this->object->orderBy('RAND');
-        $this->assertEquals(['id' => 'desc', 'created' => 'asc', $rand1], $this->object->getOrderBy());
+        $this->assertEquals([$rand1], $this->object->getOrderBy());
 
         $rand2 = new Query\Func('RAND');
         $this->object->orderBy($rand2);
-        $this->assertEquals(['id' => 'desc', 'created' => 'asc', $rand1, $rand2], $this->object->getOrderBy());
+        $this->assertEquals([$rand1, $rand2], $this->object->getOrderBy());
     }
 
-    /**
-     * Test that OR having clause returns params.
-     */
     public function testOrHaving() {
         $expected = ['id=1' => new Expr('id', '=', 1)];
 
@@ -361,9 +315,6 @@ class QueryTest extends TestCase {
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
     }
 
-    /**
-     * Test that OR where clause returns params.
-     */
     public function testOrWhere() {
         $expected = ['id=152' => new Expr('id', '=', 152)];
 
@@ -393,9 +344,6 @@ class QueryTest extends TestCase {
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
     }
 
-    /**
-     * Test unions and flags.
-     */
     public function testUnions() {
         $query1 = $this->object->subQuery();
         $this->object->union($query1);
@@ -419,7 +367,9 @@ class QueryTest extends TestCase {
 
         $this->assertEquals([$query1, $query2, $query3, $query4], $this->object->getCompounds());
         $this->assertEquals(['compound' => 'union'], $query4->getAttributes());
+    }
 
+    public function testUnionFailsNonSelect() {
         try {
             $this->object->union(new Query(Query::UPDATE));
             $this->assertTrue(false);
@@ -428,9 +378,6 @@ class QueryTest extends TestCase {
         }
     }
 
-    /**
-     * Test that where clause returns params.
-     */
     public function testWhere() {
         $expected = ['id=152' => new Expr('id', '=', 152)];
 
@@ -461,9 +408,6 @@ class QueryTest extends TestCase {
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
     }
 
-    /**
-     * Test that with() generates relational sub-queries.
-     */
     public function testWith() {
         // Missing relation
         try {
@@ -578,9 +522,6 @@ class QueryTest extends TestCase {
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
     }
 
-    /**
-     * Test where and having objects persist through cloning.
-     */
     public function testCloning() {
         $query1 = new Query(Query::SELECT, new User());
         $query1->where('id', 1)->having('id', '>', 1);
@@ -588,6 +529,7 @@ class QueryTest extends TestCase {
         $query2 = clone $query1;
 
         $this->assertEquals($query1, $query2);
+        $this->assertNotSame($query1, $query2);
     }
 
 }

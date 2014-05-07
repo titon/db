@@ -1,25 +1,13 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db;
 
-use Titon\Db\Entity;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Entity.
- *
  * @property \Titon\Db\Entity $object
  */
 class EntityTest extends TestCase {
 
-    /**
-     * Create complex entity object.
-     */
     protected function setUp() {
         parent::setUp();
 
@@ -48,10 +36,7 @@ class EntityTest extends TestCase {
         ]);
     }
 
-    /**
-     * Test that property access works.
-     */
-    public function testMapData() {
+    public function testGetters() {
         $this->assertEquals(1, $this->object->id);
         $this->assertEquals(null, $this->object->age);
 
@@ -64,9 +49,6 @@ class EntityTest extends TestCase {
         $this->assertEquals('Post #1', $this->object->Posts[0]->title);
     }
 
-    /**
-     * Test that array access works.
-     */
     public function testArrayAccess() {
         $this->assertEquals(1, $this->object['id']);
         $this->assertEquals(null, $this->object['age']);
@@ -92,9 +74,6 @@ class EntityTest extends TestCase {
         $this->assertEquals('{"id":1,"username":"Miles","password":"iamasecret","email":"email@domain.com","created":"1988-02-26 10:22:33","interests":["food","games"],"Profile":{"id":1,"age":25,"country":"USA"},"Posts":[{"id":666,"title":"Post #1"},{"id":1337,"title":"Post #2"}]}', json_encode($this->object));
     }
 
-    /**
-     * Test looping works.
-     */
     public function testIterator() {
         $keys = [];
 
@@ -105,9 +84,6 @@ class EntityTest extends TestCase {
         $this->assertEquals($keys, $this->object->keys());
     }
 
-    /**
-     * Test that closures are executed and the value is returned.
-     */
     public function testClosureReading() {
         $this->object = new Entity([
             'id' => 1,
@@ -127,9 +103,6 @@ class EntityTest extends TestCase {
         $this->assertEquals('{"id":1,"username":"Miles","password":"iamasecret","email":"email@domain.com","created":"1988-02-26 10:22:33","interests":["food","games"],"Profile":{"id":1,"age":25,"country":"USA"},"Posts":[{"id":666,"title":"Post #1"},{"id":1337,"title":"Post #2"}]}', $this->object->toJson());
     }
 
-    /**
-     * Test nested entities are converted to arrays.
-     */
     public function testNestedToArray() {
         $this->assertEquals([
             'id' => 1,
