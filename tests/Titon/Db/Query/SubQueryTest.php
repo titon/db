@@ -1,10 +1,4 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Query;
 
 use Exception;
@@ -12,35 +6,31 @@ use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Query\SubQuery.
- *
- * @property \Titon\Db\Query\SubQuery $object
+ * @property \Titon\Db\Query\SubQuery
  */
 class SubQueryTest extends TestCase {
 
-    /**
-     * Test alias is set.
-     */
-    public function testAsAlias() {
-        $subQuery = new SubQuery(SubQuery::SELECT, new User());
-        $this->assertEquals(null, $subQuery->getAlias());
+    protected function setUp() {
+        parent::setUp();
 
-        $subQuery->asAlias('column');
-        $this->assertEquals('column', $subQuery->getAlias());
+        $this->object = new SubQuery(SubQuery::SELECT, new User());
     }
 
-    /**
-     * Test filter is set.
-     */
+    public function testAsAlias() {
+        $this->assertEquals(null, $this->object->getAlias());
+        $this->object->asAlias('column');
+        $this->assertEquals('column', $this->object->getAlias());
+    }
+
     public function testWithFilter() {
-        $subQuery = new SubQuery(SubQuery::SELECT, new User());
-        $this->assertEquals(null, $subQuery->getFilter());
+        $this->assertEquals(null, $this->object->getFilter());
+        $this->object->withFilter(SubQuery::ALL);
+        $this->assertEquals('all', $this->object->getFilter());
+    }
 
-        $subQuery->withFilter(SubQuery::ALL);
-        $this->assertEquals('all', $subQuery->getFilter());
-
+    public function testWithFilterInvalidFilter() {
         try {
-            $subQuery->withFilter('foobar');
+            $this->object->withFilter('foobar');
             $this->assertTrue(false);
         } catch (Exception $e) {
             $this->assertTrue(true);

@@ -1,26 +1,10 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Query;
 
-use Titon\Common\Config;
-use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
-/**
- * Test class for Titon\Db\Query\Func.
- *
- * @property \Titon\Db\Query\Func $object
- */
 class FuncTest extends TestCase {
 
-    /**
-     * Test data is persisted.
-     */
     public function testFunction() {
         $func = new Func('SUBSTRING', ['TitonFramework', 5]);
 
@@ -30,7 +14,10 @@ class FuncTest extends TestCase {
             ['type' => null, 'value' => 'TitonFramework'],
             ['type' => null, 'value' => 5],
         ], $func->getArguments());
+        $this->assertEquals('SUBSTRING(TitonFramework, 5) AS ', (string) $func);
+    }
 
+    public function testFunctionLiteralArgs() {
         $func = new Func('SUBSTRING', ['Titon', 'FROM -4 FOR 2' => Func::LITERAL], ' ');
 
         $this->assertEquals('SUBSTRING', $func->getName());
@@ -39,7 +26,10 @@ class FuncTest extends TestCase {
             ['type' => null, 'value' => 'Titon'],
             ['type' => Func::LITERAL, 'value' => 'FROM -4 FOR 2'],
         ], $func->getArguments());
+        $this->assertEquals('SUBSTRING(Titon FROM -4 FOR 2) AS ', (string) $func);
+    }
 
+    public function testNestedFunctions() {
         $func1 = new Func('CHAR', ['0x65 USING utf8' => Func::LITERAL]);
         $func2 = new Func('CHARSET', $func1);
 
@@ -48,6 +38,9 @@ class FuncTest extends TestCase {
         $this->assertEquals([
             ['type' => null, 'value' => $func1],
         ], $func2->getArguments());
+
+        $this->assertEquals('CHAR(0x65 USING utf8) AS ', (string) $func1);
+        $this->assertEquals('CHARSET(CHAR(0x65 USING utf8) AS ) AS ', (string) $func2);
     }
 
 }

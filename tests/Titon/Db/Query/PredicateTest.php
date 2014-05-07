@@ -1,34 +1,19 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Query;
 
-use Titon\Db\Query\Predicate;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Query\Predicate.
- *
  * @property \Titon\Db\Query\Predicate $object
  */
 class PredicateTest extends TestCase {
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
         $this->object = new Predicate(Predicate::ALSO);
     }
 
-    /**
-     * Test adding params.
-     */
     public function testAdd() {
         $this->object->add('id', '=', 1);
         $expected = ['id=1' => new Expr('id', '=', 1)];
@@ -40,9 +25,25 @@ class PredicateTest extends TestCase {
         $this->assertEquals($expected, $this->object->getParams());
     }
 
-    /**
-     * Test AND sub-grouping.
-     */
+    public function testAddFunction() {
+        $func = new Func('SUBSTRING', ['Titon', 3]);
+        $this->object->add($func, '=', 'on');
+
+        $this->assertEquals([
+            'SUBSTRING(Titon, 3) AS =on' => new Expr($func, '=', 'on')
+        ], $this->object->getParams());
+    }
+
+    public function testAddDateTime() {
+        $time = time();
+        $date = new \DateTime();
+        $this->object->add('created', '>', $date);
+
+        $this->assertEquals([
+            'created>' . $time => new Expr('created', '>', $date)
+        ], $this->object->getParams());
+    }
+
     public function testAlso() {
         $also = new Predicate(Predicate::ALSO);
         $also->in('id', [1, 2, 3]);
@@ -53,9 +54,6 @@ class PredicateTest extends TestCase {
         $this->assertEquals([$also], $this->object->getParams());
     }
 
-    /**
-     * Test between clause.
-     */
     public function testBetween() {
         $this->object->between('size', 100, 500);
         $this->assertEquals([
@@ -63,9 +61,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test OR sub-grouping.
-     */
     public function testEither() {
         $either = new Predicate(Predicate::EITHER);
         $either->notEq('level', 1)->notEq('level', 2);
@@ -76,9 +71,6 @@ class PredicateTest extends TestCase {
         $this->assertEquals([$either], $this->object->getParams());
     }
 
-    /**
-     * Test equals clause and all its variants.
-     */
     public function testEq() {
         $this->object->eq('id', 1);
         $expected = [
@@ -98,18 +90,19 @@ class PredicateTest extends TestCase {
         $this->assertEquals($expected, $this->object->getParams());
     }
 
-    /**
-     * Test adding params.
-     */
     public function testExpr() {
         $this->object->expr('id', '!=', 1);
         $expected = ['id!=1' => new Expr('id', '!=', 1)];
         $this->assertEquals($expected, $this->object->getParams());
     }
 
-    /**
-     * Test greater than or equal clause.
-     */
+    public function testGetType() {
+        $this->assertEquals(Predicate::ALSO, $this->object->getType());
+
+        $pred = new Predicate(Predicate::MAYBE);
+        $this->assertEquals(Predicate::MAYBE, $pred->getType());
+    }
+
     public function testGte() {
         $this->object->gte('size', 250);
         $this->assertEquals([
@@ -117,9 +110,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test greater than clause.
-     */
     public function testGt() {
         $this->object->gt('size', 666);
         $this->assertEquals([
@@ -127,9 +117,12 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test in clause.
-     */
+    public function testHasParam() {
+        $this->assertFalse($this->object->hasParam('created'));
+        $this->object->gte('created', time());
+        $this->assertTrue($this->object->hasParam('created'));
+    }
+
     public function testIn() {
         $this->object->in('color', ['red', 'green', 'blue']);
         $this->assertEquals([
@@ -137,9 +130,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test like clause.
-     */
     public function testLike() {
         $this->object->like('name', 'Titon%');
         $this->object->like('name', '%Titon%');
@@ -149,9 +139,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test less than or equal clause.
-     */
     public function testLte() {
         $this->object->lte('size', 1337);
         $this->assertEquals([
@@ -159,9 +146,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test less than clause.
-     */
     public function testLt() {
         $this->object->lt('size', 1234);
         $this->assertEquals([
@@ -169,9 +153,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test XOR sub-grouping.
-     */
     public function testMaybe() {
         $maybe = new Predicate(Predicate::MAYBE);
         $maybe->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
@@ -182,9 +163,6 @@ class PredicateTest extends TestCase {
         $this->assertEquals([$maybe], $this->object->getParams());
     }
 
-    /**
-     * Test NOR sub-grouping.
-     */
     public function testNeither() {
         $neither = new Predicate(Predicate::NEITHER);
         $neither->notIn('color', ['red', 'green'])->notIn('size', ['large', 'small']);
@@ -195,9 +173,6 @@ class PredicateTest extends TestCase {
         $this->assertEquals([$neither], $this->object->getParams());
     }
 
-    /**
-     * Test not between clause.
-     */
     public function testNotBetween() {
         $this->object->notBetween('size', 123, 124);
         $this->assertEquals([
@@ -205,9 +180,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test not equals clause and all its variants.
-     */
     public function testNotEq() {
         $this->object->notEq('id', 1);
         $expected = [
@@ -227,9 +199,6 @@ class PredicateTest extends TestCase {
         $this->assertEquals($expected, $this->object->getParams());
     }
 
-    /**
-     * Test not in clause.
-     */
     public function testNotIn() {
         $this->object->notIn('color', ['red', 'green', 'blue']);
         $this->assertEquals([
@@ -237,9 +206,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test not like clause.
-     */
     public function testNotLike() {
         $this->object->notLike('name', 'Titon%');
         $this->object->notLike('name', '%Titon%');
@@ -249,9 +215,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test not null clause.
-     */
     public function testNotNull() {
         $this->object->notNull('title');
         $this->assertEquals([
@@ -259,9 +222,6 @@ class PredicateTest extends TestCase {
         ], $this->object->getParams());
     }
 
-    /**
-     * Test null clause.
-     */
     public function testNull() {
         $this->object->null('title');
         $this->assertEquals([

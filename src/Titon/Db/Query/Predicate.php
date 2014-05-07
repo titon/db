@@ -55,11 +55,7 @@ class Predicate {
      * @return $this
      */
     public function add($field, $op, $value) {
-        if ($field instanceof Func) {
-            $key = $field->getName() . $op;
-        } else {
-            $key = $field . $op;
-        }
+        $key = (string) $field . $op;
 
         if (is_array($value)) {
             $key .= json_encode($value);

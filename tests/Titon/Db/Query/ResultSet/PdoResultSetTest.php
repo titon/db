@@ -1,10 +1,4 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Query\ResultSet;
 
 use Titon\Db\Entity;
@@ -14,42 +8,44 @@ use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Query\ResultSet\PdoResultSet.
- *
  * @property \Titon\Db\Repository $object
  */
 class PdoResultSetTest extends TestCase {
 
-    /**
-     * Create a result.
-     */
     protected function setUp() {
         parent::setUp();
 
         $this->object = new User();
-
         $this->loadFixtures('Users');
     }
 
-    /**
-     * Test statement is generated when cast to string.
-     */
     public function testToString() {
-        $result = $this->object->getDriver()->executeQuery($this->object->select()->where('id', 1));
+        $result = $this->object->getDriver()->executeQuery($this->object->select()->where('id', 1)->where('username', 'like', '%titon%'));
 
-        $this->assertRegExp('/\[SQL\] SELECT \* FROM `users` WHERE `id` = 1; \[TIME\] [0-9\.,]+ \[COUNT\] [0-9]+ \[STATE\] (Executed|Prepared)/i', (string) $result);
+        $this->assertRegExp('/\[SQL\] SELECT \* FROM (`|\")?users(`|\")? WHERE (`|\")?id(`|\")? = 1 AND (`|\")?username(`|\")? LIKE \'%titon%\'; \[TIME\] [0-9\.,]+ \[COUNT\] [0-9]+ \[STATE\] (Executed|Prepared)/i', (string) $result);
+
+        $result->close();
     }
 
-    /**
-     * Test a count of records is returned.
-     */
     public function testCount() {
         $this->assertEquals(5, $this->object->select()->count());
     }
 
-    /**
-     * Test a single result is returned.
-     */
+    public function testExecute() {
+        $result = $this->object->getDriver()->executeQuery($this->object->select()->where('id', 1));
+
+        $this->assertFalse($result->hasExecuted());
+
+        $result->execute();
+        $this->assertTrue($result->hasExecuted());
+
+        // Assert it doesn't run twice
+        $result->execute();
+        $this->assertTrue($result->hasExecuted());
+
+        $result->close();
+    }
+
     public function testFetch() {
         $this->assertEquals(new Entity([
             'id' => 1,
@@ -65,9 +61,6 @@ class PdoResultSetTest extends TestCase {
         ]), $this->object->select()->first());
     }
 
-    /**
-     * Test all results are returned.
-     */
     public function testFetchAll() {
         $this->assertEquals(new EntityCollection([
             new Entity([
@@ -133,18 +126,12 @@ class PdoResultSetTest extends TestCase {
         ]), $this->object->select()->all());
     }
 
-    /**
-     * Test statement params are parsed in.
-     */
     public function testGetStatement() {
         $stmt = $this->object->getDriver()->executeQuery($this->object->select('id', 'username')->where('id', 5));
 
         $this->assertRegExp('/SELECT (`|\")?id(`|\")?, (`|\")?username(`|\")? FROM (`|\")?users(`|\")? WHERE (`|\")?id(`|\")? = 5;/', $stmt->getStatement());
     }
 
-    /**
-     * Test row count is returned for deletes.
-     */
     public function testSave() {
         $this->assertEquals(5, $this->object->query(Query::DELETE)->save());
     }
