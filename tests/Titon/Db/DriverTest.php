@@ -7,7 +7,6 @@ use Titon\Db\Query\ResultSet\SqlResultSet;
 use Titon\Debug\Logger;
 use Titon\Test\Stub\DialectStub;
 use Titon\Test\Stub\DriverStub;
-use Titon\Test\Stub\QueryResultSetStub;
 use Titon\Test\TestCase;
 use \Exception;
 
@@ -28,29 +27,74 @@ class DriverTest extends TestCase {
         $this->object->disconnect();
     }
 
-    public function testConnection() {
+    public function testDisconnect() {
         $this->assertFalse($this->object->isConnected());
 
         $this->object->connect();
 
         $this->assertTrue($this->object->isConnected());
-        $this->assertInstanceOf('PDO', $this->object->getConnection());
 
         $this->object->disconnect();
 
         $this->assertFalse($this->object->isConnected());
     }
 
-    public function testConnectionThrowsErrorIfNotActive() {
-        try {
-            $this->object->getConnection();
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
+    public function testDisconnectAll() {
+        $this->assertEquals(0, count($this->object->getConnections()));
+
+        $this->object->getConnection(); // read context
+
+        $this->assertEquals(1, count($this->object->getConnections()));
+
+        $this->object->setContext('write');
+        $this->object->getConnection(); // write context
+
+        $this->assertEquals(2, count($this->object->getConnections()));
+
+        $this->object->disconnect(true);
+
+        $this->assertEquals(0, count($this->object->getConnections()));
     }
 
-    public function testContextConnections() {
+    public function testGetConnection() {
+        $read = $this->object->getConnection();
+
+        $this->object->setContext('write');
+        $write = $this->object->getConnection();
+
+        $this->assertInstanceOf('PDO', $read);
+        $this->assertInstanceOf('PDO', $write);
+        $this->assertNotSame($write, $read);
+    }
+
+    public function testGetConnections() {
+        $read = $this->object->getConnection();
+
+        $this->object->setContext('write');
+        $write = $this->object->getConnection();
+
+        $this->assertEquals([
+            'read' => $read,
+            'write' => $write
+        ], $this->object->getConnections());
+    }
+
+    public function testGetSetContext() {
+        $this->assertEquals('read', $this->object->getContext());
+
+        $this->object->setContext('write');
+
+        $this->assertEquals('write', $this->object->getContext());
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidArgumentException
+     */
+    public function testSetContextThrowsError() {
+        $this->object->setContext(null);
+    }
+
+    public function testGetContextConfig() {
         $driver = new DriverStub([
             'database' => 'titon_test',
             'host' => '127.0.0.1',

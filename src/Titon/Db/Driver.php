@@ -70,11 +70,18 @@ interface Driver {
     public function executeQuery($query, array $params = []);
 
     /**
-     * Return the connection object.
+     * Return the current connection object.
      *
      * @return object
      */
     public function getConnection();
+
+    /**
+     * Return all the active connections indexed by context.
+     *
+     * @return object[]
+     */
+    public function getConnections();
 
     /**
      * The current read, write, or custom connection config.

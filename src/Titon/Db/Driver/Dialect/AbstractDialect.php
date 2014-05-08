@@ -246,9 +246,11 @@ abstract class AbstractDialect extends Base implements Dialect {
             return '';
         }
 
+        // @codeCoverageIgnoreStart
         if (!method_exists($this, 'buildSelect')) {
             throw new UnsupportedQueryStatementException('Unions require a buildSelect() method');
         }
+        // @codeCoverageIgnoreEnd
 
         $output = [];
 
@@ -718,11 +720,13 @@ abstract class AbstractDialect extends Base implements Dialect {
         $alias = $query->getAlias();
         $query->asAlias(null);
 
+        // @codeCoverageIgnoreStart
         if (method_exists($this, 'buildSelect')) {
             $output = sprintf($this->getClause(self::SUB_QUERY), trim($this->buildSelect($query), ';'));
         } else {
             throw new UnsupportedQueryStatementException('Sub-query building requires a buildSelect() method');
         }
+        // @codeCoverageIgnoreEnd
 
         if ($alias) {
             $output = sprintf($this->getClause(self::AS_ALIAS), $output, $this->quote($alias));

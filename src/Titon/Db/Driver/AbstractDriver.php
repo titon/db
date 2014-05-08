@@ -107,6 +107,8 @@ abstract class AbstractDriver extends Base implements Driver {
 
     /**
      * Disconnect when the object is destroyed.
+     *
+     * @codeCoverageIgnore
      */
     public function __destruct() {
         $this->disconnect(true);
@@ -142,6 +144,13 @@ abstract class AbstractDriver extends Base implements Driver {
         }
 
         return $this->_connections[$context];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getConnections() {
+        return $this->_connections;
     }
 
     /**

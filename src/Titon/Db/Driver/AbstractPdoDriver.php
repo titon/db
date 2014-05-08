@@ -283,6 +283,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
     /**
      * {@inheritdoc}
+     *
+     * @codeCoverageIgnore
      */
     public function getSupportedTypes() {
         return [
