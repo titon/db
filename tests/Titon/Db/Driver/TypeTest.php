@@ -1,28 +1,16 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Driver;
 
 use Titon\Db\Driver\Type\AbstractType;
-use Titon\Db\Driver\Type\BlobType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 use \Exception;
 
 /**
- * Test class for Titon\Db\Driver\Type.
- *
  * @property \Titon\Db\Driver\Type $object
  */
 class TypeTest extends TestCase {
 
-    /**
-     * Test factory and exceptions are throwing for missing types.
-     */
     public function testFactory() {
         $driver = new DriverStub([]);
 

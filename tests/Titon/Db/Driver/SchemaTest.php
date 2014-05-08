@@ -1,37 +1,23 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Driver;
 
-use Titon\Db\Driver\Schema;
 use Titon\Test\TestCase;
 use \Exception;
 
 /**
- * Test class for Titon\Db\Driver\Schema.
- *
  * @property \Titon\Db\Driver\Schema $object
  */
 class SchemaTest extends TestCase {
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
         $this->object = new Schema('table');
     }
 
-    /**
-     * Test column building.
-     */
     public function testColumns() {
         $this->assertFalse($this->object->hasColumn('id'));
+        $this->assertFalse($this->object->hasColumns());
 
         // Add a column
         $this->object->addColumn('id', [
@@ -117,6 +103,8 @@ class SchemaTest extends TestCase {
             'null' => true
         ], $this->object->getColumn('username'));
 
+        $this->assertTrue($this->object->hasColumns());
+
         try {
             $this->object->getColumn('foobar');
 
@@ -124,18 +112,24 @@ class SchemaTest extends TestCase {
         } catch (Exception $e) {
             $this->assertTrue(true);
         }
+
+        $this->object->addColumn('country_id', [
+            'type' => 'integer',
+            'foreign' => 'countries.id'
+        ]);
+
+        $this->assertEquals([
+            'type' => 'integer',
+            'foreign' => 'countries.id',
+            'field' => 'country_id',
+            'null' => true
+        ], $this->object->getColumn('country_id'));
     }
 
-    /**
-     * Test table name is returned.
-     */
     public function testTable() {
         $this->assertEquals('table', $this->object->getTable());
     }
 
-    /**
-     * Test index building.
-     */
     public function testIndexes() {
         $this->assertEquals([], $this->object->getIndexes());
 
@@ -158,9 +152,6 @@ class SchemaTest extends TestCase {
         ], $this->object->getIndexes());
     }
 
-    /**
-     * Test primary key building.
-     */
     public function testPrimaryKey() {
         $this->assertEquals([], $this->object->getPrimaryKey());
 
@@ -180,9 +171,6 @@ class SchemaTest extends TestCase {
         ], $this->object->getPrimaryKey());
     }
 
-    /**
-     * Test primary key with constraint symbol.
-     */
     public function testPrimaryKeyConstraint() {
         $this->assertEquals([], $this->object->getPrimaryKey());
 
@@ -194,9 +182,6 @@ class SchemaTest extends TestCase {
         ], $this->object->getPrimaryKey());
     }
 
-    /**
-     * Test unique key building.
-     */
     public function testUniqueKey() {
         $this->assertEquals([], $this->object->getUniqueKeys());
 
@@ -244,9 +229,6 @@ class SchemaTest extends TestCase {
         ], $this->object->getUniqueKeys());
     }
 
-    /**
-     * Test unique key with constraint symbol.
-     */
     public function testUniqueKeyConstraint() {
         $this->assertEquals([], $this->object->getUniqueKeys());
 
@@ -278,9 +260,6 @@ class SchemaTest extends TestCase {
         ], $this->object->getUniqueKeys());
     }
 
-    /**
-     * Test foreign key building.
-     */
     public function testForeignKey() {
         $this->assertEquals([], $this->object->getForeignKeys());
 
@@ -318,9 +297,15 @@ class SchemaTest extends TestCase {
         ], $this->object->getForeignKeys());
     }
 
-    /**
-     * Test foreign key with constraint symbol.
-     */
+    public function testForeignKeyFailNoReference() {
+        try {
+            $this->object->addForeign('column1', ['constraint' => 'foo']);
+            $this->assertTrue(false);
+        } catch (Exception $e) {
+            $this->assertTrue(true);
+        }
+    }
+
     public function testForeignKeyConstraint() {
         $this->assertEquals([], $this->object->getForeignKeys());
 
@@ -339,9 +324,6 @@ class SchemaTest extends TestCase {
         ], $this->object->getForeignKeys());
     }
 
-    /**
-     * Test option setting and getting.
-     */
     public function testOptions() {
         $this->assertEquals([], $this->object->getOptions());
 
@@ -360,84 +342,6 @@ class SchemaTest extends TestCase {
             'engine' => 'InnoDB',
             'comment' => 'Foobar'
         ], $this->object->getOptions());
-    }
-
-    /**
-     * Test object serialization.
-     */
-    public function testSerialize() {
-        $this->object->addColumn('id', [
-            'type' => 'int',
-            'primary' => true,
-            'ai' => true,
-            'null' => false
-        ]);
-
-        $this->object->addColumn('user_id', [
-            'type' => 'int',
-            'foreign' => 'users.id',
-            'index' => true,
-            'null' => true
-        ]);
-
-        $this->object->addColumn('name', [
-            'type' => 'varchar',
-            'length' => 200,
-            'index' => true,
-            'unique' => true,
-            'null' => false
-        ]);
-
-        $this->assertEquals([
-            'columns' => [
-                'id' => [
-                    'type' => 'int',
-                    'primary' => true,
-                    'ai' => true,
-                    'field' => 'id'
-                ],
-                'user_id' => [
-                    'type' => 'int',
-                    'foreign' => 'users.id',
-                    'index' => true,
-                    'null' => true,
-                    'field' => 'user_id'
-                ],
-                'name' => [
-                    'type' => 'varchar',
-                    'length' => 200,
-                    'index' => true,
-                    'unique' => true,
-                    'field' => 'name'
-                ]
-            ],
-            'foreignKeys' => [
-                'user_id' => [
-                    'references' => 'users.id',
-                    'column' => 'user_id',
-                    'constraint' => ''
-                ]
-            ],
-            'indexes' => [
-                'user_id' => ['user_id'],
-                'name' => ['name']
-            ],
-            'options' => [],
-            'primaryKey' => [
-                'constraint' => '',
-                'columns' => ['id']
-            ],
-            'table' => 'table',
-            'uniqueKeys' => [
-                'name' => [
-                    'index' => 'name',
-                    'constraint' => '',
-                    'columns' => ['name']
-                ]
-            ],
-        ], $this->object->jsonSerialize());
-
-        $this->assertEquals($this->object, unserialize(serialize($this->object)));
     }
 
 }

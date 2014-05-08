@@ -484,7 +484,7 @@ abstract class AbstractDialect extends Base implements Dialect {
                     $columns[] = $this->formatExpression($field);
 
                 } else if ($field instanceof RawExpr) {
-                    $columns[] = $field->getValue(); // must come 2nd
+                    $columns[] = $field->getValue(); // must come after other expressions
 
                 } else if ($field instanceof SubQuery) {
                     $columns[] = $this->formatSubQuery($field);
@@ -775,17 +775,13 @@ abstract class AbstractDialect extends Base implements Dialect {
         unset($actions['references'], $actions['constraint'], $actions['column']);
 
         foreach ($actions as $clause => $action) {
-            if (!$action) {
-                continue;
-            }
-
             $value = '';
 
             if ($this->hasKeyword($action)) {
                 $value = $this->getKeyword($action);
 
-            } else if (is_string($action)) {
-                $value = $this->quote($action);
+            //} else if (is_string($action)) {
+            //    $value = $this->quote($action);
             }
 
             $key .= ' ' . sprintf($this->getClause($clause), $value);
@@ -845,9 +841,9 @@ abstract class AbstractDialect extends Base implements Dialect {
         $output = [];
 
         foreach ($options as $key => $value) {
-            if ($this->hasKeyword($value)) {
-                $value = $this->getKeyword($value);
-            }
+            //if ($this->hasKeyword($value)) {
+            //    $value = $this->getKeyword($value);
+            //}
 
             if ($this->hasClause($key)) {
                 $option = sprintf($this->getClause($key), $value);

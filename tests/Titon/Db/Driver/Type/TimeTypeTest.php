@@ -1,37 +1,22 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Driver\Type;
 
 use DateTime;
 use PDO;
-use Titon\Db\Driver\Type\TimeType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Driver\Type\TimeType.
- *
  * @property \Titon\Db\Driver\Type\TimeType $object
  */
 class TimeTypeTest extends TestCase {
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
         $this->object = new TimeType(new DriverStub([]));
     }
 
-    /**
-     * Test from database conversion.
-     */
     public function testFrom() {
         $this->assertSame('00:02:05', $this->object->from('00:02:05'));
         $this->assertSame('21:05:29', $this->object->from('21:05:29'));
@@ -39,9 +24,6 @@ class TimeTypeTest extends TestCase {
         $this->assertSame('02:44:55', $this->object->from('02:44:55'));
     }
 
-    /**
-     * Test to database conversion.
-     */
     public function testTo() {
         $this->assertSame('00:02:05', $this->object->to(mktime(0, 2, 5, 2, 26, 1988)));
         $this->assertSame('21:05:29', $this->object->to('21:05:29'));
@@ -66,23 +48,14 @@ class TimeTypeTest extends TestCase {
         ]));
     }
 
-    /**
-     * Test name string.
-     */
     public function testGetName() {
         $this->assertEquals('time', $this->object->getName());
     }
 
-    /**
-     * Test PDO type.
-     */
     public function testGetBindingType() {
         $this->assertEquals(PDO::PARAM_STR, $this->object->getBindingType());
     }
 
-    /**
-     * Test schema options.
-     */
     public function testGetDefaultOptions() {
         $this->assertEquals(['null' => true, 'default' => null], $this->object->getDefaultOptions());
     }

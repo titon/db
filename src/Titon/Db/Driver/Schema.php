@@ -9,15 +9,13 @@ namespace Titon\Db\Driver;
 
 use Titon\Db\Exception\InvalidArgumentException;
 use Titon\Db\Exception\MissingColumnException;
-use \Serializable;
-use \JsonSerializable;
 
 /**
  * Represents a database table schema and provides mapping for columns, indexes, types and constraints.
  *
  * @package Titon\Db\Driver
  */
-class Schema implements Serializable, JsonSerializable {
+class Schema {
 
     /**
      * Table columns.
@@ -388,49 +386,6 @@ class Schema implements Serializable, JsonSerializable {
      */
     public function hasColumns() {
         return !empty($this->_columns);
-    }
-
-    /**
-     * Serialize the schema.
-     *
-     * @return string
-     */
-    public function serialize() {
-        return serialize($this->jsonSerialize());
-    }
-
-    /**
-     * Reconstruct the schema once unserialized.
-     *
-     * @param string $data
-     */
-    public function unserialize($data) {
-        $data = unserialize($data);
-
-        $this->_columns = $data['columns'];
-        $this->_foreignKeys = $data['foreignKeys'];
-        $this->_indexes = $data['indexes'];
-        $this->_options = $data['options'];
-        $this->_primaryKey = $data['primaryKey'];
-        $this->_table = $data['table'];
-        $this->_uniqueKeys = $data['uniqueKeys'];
-    }
-
-    /**
-     * Return all data for serialization.
-     *
-     * @return array
-     */
-    public function jsonSerialize() {
-        return [
-            'columns' => $this->getColumns(),
-            'foreignKeys' => $this->getForeignKeys(),
-            'indexes' => $this->getIndexes(),
-            'options' => $this->getOptions(),
-            'primaryKey' => $this->getPrimaryKey(),
-            'table' => $this->getTable(),
-            'uniqueKeys' => $this->getUniqueKeys(),
-        ];
     }
 
 }

@@ -1,10 +1,4 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Driver;
 
 use Titon\Db\Driver\Dialect\AbstractDialect;
@@ -20,20 +14,13 @@ use Titon\Test\TestCase;
 use \Exception;
 
 /**
- * Test class for Titon\Db\Driver\Dialect.
- *
  * @property \Titon\Db\Driver\Dialect\AbstractPdoDialect $object
  */
 class DialectTest extends TestCase {
 
-    /**
-     * @type \Titon\Db\Driver
-     */
+    /** @type \Titon\Db\Driver */
     public $driver;
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
@@ -43,18 +30,12 @@ class DialectTest extends TestCase {
         $this->object = new DialectStub($this->driver);
     }
 
-    /**
-     * Close the connection.
-     */
     protected function tearDown() {
         parent::tearDown();
 
         $this->driver->disconnect();
     }
 
-    /**
-     * Test create index statement building.
-     */
     public function testBuildCreateIndex() {
         $query = new Query(Query::CREATE_INDEX, new User());
         $query->fields('profile_id')->from('users')->asAlias('idx');
@@ -69,11 +50,11 @@ class DialectTest extends TestCase {
 
         $query->fields(['profile_id' => ['length' => 5, 'order' => 'desc']]);
         $this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")?\(5\) DESC\)/', $this->object->buildCreateIndex($query));
+
+        $query->fields(['profile_id' => ['collate' => 'utf8_general_ci']]);
+        $this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")? COLLATE utf8_general_ci\)/', $this->object->buildCreateIndex($query));
     }
 
-    /**
-     * Test create table statement creation.
-     */
     public function testBuildCreateTable() {
         $schema = new Schema('foobar');
         $schema->addColumn('column', [
@@ -108,8 +89,12 @@ class DialectTest extends TestCase {
     }
 
     /**
-     * Test delete statement creation.
+     * @expectedException \Titon\Db\Exception\InvalidSchemaException
      */
+    public function testBuildCreateTableNoSchema() {
+        $this->object->buildCreateTable(new Query(Query::CREATE_TABLE));
+    }
+
     public function testBuildDelete() {
         $query = new Query(Query::DELETE, new User());
 
@@ -126,9 +111,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/DELETE\s+FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?id(`|\")? IN \(\?, \?, \?\)\s+ORDER BY (`|\")?id(`|\")? ASC\s+LIMIT 5;/', $this->object->buildDelete($query));
     }
 
-    /**
-     * Test delete statements that contain joins.
-     */
     public function testBuildDeleteJoins() {
         $user = new User();
         $query = $user->query(Query::DELETE);
@@ -144,9 +126,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/DELETE\s+FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? LEFT JOIN (`|\")?foo(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?foo(`|\")?.(`|\")?id(`|\")? FULL OUTER JOIN (`|\")?bar(`|\")? AS (`|\")?Bar(`|\")? ON (`|\")?User(`|\")?.(`|\")?bar_id(`|\")? = (`|\")?Bar(`|\")?.(`|\")?id(`|\")?;/', $this->object->buildDelete($query));
     }
 
-    /**
-     * Test drop index statement building.
-     */
     public function testBuildDropIndex() {
         $query = new Query(Query::DROP_INDEX, new User());
         $query->from('users')->asAlias('idx');
@@ -154,9 +133,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/DROP\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")?/', $this->object->buildDropIndex($query));
     }
 
-    /**
-     * Test drop table statement creation.
-     */
     public function testBuildDropTable() {
         $query = new Query(Query::DROP_TABLE, new User());
         $query->from('foobar');
@@ -164,9 +140,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/DROP\s+TABLE IF EXISTS (`|\")?foobar(`|\")?;/', $this->object->buildDropTable($query));
     }
 
-    /**
-     * Test insert statement creation.
-     */
     public function testBuildInsert() {
         $query = new Query(Query::INSERT, new User());
         $query->from('foobar')->fields([
@@ -183,9 +156,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/INSERT\s+INTO (`|\")?foobar(`|\")? \((`|\")?email(`|\")?, (`|\")?website(`|\")?\) VALUES \(\?, \?\);/', $this->object->buildInsert($query));
     }
 
-    /**
-     * Test multi insert statement creation.
-     */
     public function testBuildMultiInsert() {
         $query = new Query(Query::MULTI_INSERT, new User());
         $query->from('foobar')->fields([
@@ -199,9 +169,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/INSERT\s+INTO (`|\")?foobar(`|\")? \((`|\")?username(`|\")?, (`|\")?firstName(`|\")?, (`|\")?lastName(`|\")?\) VALUES \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\), \(\?, \?, \?\);/', $this->object->buildMultiInsert($query));
     }
 
-    /**
-     * Test select statement creation.
-     */
     public function testBuildSelect() {
         $query = new Query(Query::SELECT, new User());
 
@@ -231,9 +198,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/SELECT\s+(`|\")?id(`|\")?, (`|\")?username(`|\")?, (`|\")?rank(`|\")? FROM (`|\")?foobar(`|\")?\s+WHERE (`|\")?status(`|\")? = \? AND (`|\")?rank(`|\")? >= \?\s+GROUP BY (`|\")?rank(`|\")?, (`|\")?created(`|\")?\s+HAVING (`|\")?id(`|\")? >= \?\s+ORDER BY (`|\")?id(`|\")? DESC\s+LIMIT 50 OFFSET 10;/', $this->object->buildSelect($query));
     }
 
-    /**
-     * Test select statements that contain joins.
-     */
     public function testBuildSelectJoins() {
         $this->object->setConfig('virtualJoins', false);
 
@@ -257,9 +221,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.(`|\")?id(`|\")?, (`|\")?foo(`|\")?.(`|\")?id(`|\")?, (`|\")?Bar(`|\")?.(`|\")?id(`|\")? FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? LEFT JOIN (`|\")?foo(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?foo(`|\")?.(`|\")?id(`|\")? FULL OUTER JOIN (`|\")?bar(`|\")? AS (`|\")?Bar(`|\")? ON (`|\")?User(`|\")?.(`|\")?bar_id(`|\")? = (`|\")?Bar(`|\")?.(`|\")?id(`|\")?;/', $this->object->buildSelect($query));
     }
 
-    /**
-     * Test select statements that contain joins.
-     */
     public function testBuildSelectVirtualJoins() {
         $this->object->setConfig('virtualJoins', true);
         $user = new User();
@@ -283,9 +244,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.(`|\")?id(`|\")? AS User__id, (`|\")?foo(`|\")?.(`|\")?id(`|\")? AS foo__id, (`|\")?Bar(`|\")?.(`|\")?id(`|\")? AS Bar__id FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? LEFT JOIN (`|\")?foo(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?foo(`|\")?.(`|\")?id(`|\")? FULL OUTER JOIN (`|\")?bar(`|\")? AS (`|\")?Bar(`|\")? ON (`|\")?User(`|\")?.(`|\")?bar_id(`|\")? = (`|\")?Bar(`|\")?.(`|\")?id(`|\")?;/', $this->object->buildSelect($query));
     }
 
-    /**
-     * Test union building and wrapping.
-     */
     public function testBuildSelectUnions() {
         $user = new User();
         $query = $user->select('id');
@@ -304,9 +262,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/SELECT\s+(`|\")?id(`|\")? FROM (`|\")?users(`|\")?\s+ UNION  SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")? UNION ALL SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u2(`|\")? ORDER BY (`|\")?id(`|\")? DESC LIMIT 10;/', $this->object->buildSelect($query));
     }
 
-    /**
-     * Test truncate table statement creation.
-     */
     public function testBuildTruncate() {
         $query = new Query(Query::TRUNCATE, new User());
         $query->from('foobar');
@@ -314,9 +269,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/TRUNCATE (`|\")?foobar(`|\")?;/', $this->object->buildTruncate($query));
     }
 
-    /**
-     * Test update statement creation.
-     */
     public function testBuildUpdate() {
         $query = new Query(Query::UPDATE, new User());
 
@@ -357,9 +309,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?email(`|\")? = \?, (`|\")?website(`|\")? = \?\s+WHERE (`|\")?status(`|\")? = \?\s+ORDER BY (`|\")?username(`|\")? DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
     }
 
-    /**
-     * Test update statements that contain joins.
-     */
     public function testBuildUpdateJoins() {
         $user = new User();
         $query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
@@ -374,9 +323,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/UPDATE\s+(`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?\s+SET (`|\")?User(`|\")?\.(`|\")?username(`|\")? = \?, (`|\")?Profile(`|\")?\.(`|\")?avatar(`|\")? = \?;/', $this->object->buildUpdate($query));
     }
 
-    /**
-     * Test sub-query creation.
-     */
     public function testBuildSubQuery() {
         // In fields
         $query = new Query(Query::SELECT, new User());
@@ -423,9 +369,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/SELECT\s+\* FROM (`|\")?users(`|\")?\s+WHERE EXISTS \(SELECT\s+(`|\")?column2(`|\")? FROM (`|\")?profiles(`|\")?\);/', $this->object->buildSelect($query));
     }
 
-    /**
-     * Test table column formatting builds according to the options defined.
-     */
     public function testFormatColumns() {
         $schema = new Schema('foobar');
         $schema->addColumn('column', [
@@ -513,9 +456,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/' . $expected . '/', $this->object->formatColumns($schema));
     }
 
-    /**
-     * Test default formatting.
-     */
     public function testFormatDefault() {
         $this->assertEquals('', $this->object->formatDefault(''));
         $this->assertEquals('DEFAULT \'test\'', $this->object->formatDefault('test'));
@@ -526,9 +466,6 @@ class DialectTest extends TestCase {
         }));
     }
 
-    /**
-     * Test compound query building.
-     */
     public function testFormatCompounds() {
         // union
         $query = new Query(Query::INSERT, new User());
@@ -561,12 +498,8 @@ class DialectTest extends TestCase {
         // excepts all
         $query->except($query->subQuery('id')->from('u2'), 'all');
         $this->assertRegExp('/EXCEPT\s+SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u1(`|\")? EXCEPT ALL SELECT\s+(`|\")?id(`|\")? FROM (`|\")?u2(`|\")?/', $this->object->formatCompounds($query->getCompounds()));
-
     }
 
-    /**
-     * Test expressions are built.
-     */
     public function testFormatExpression() {
         $expr = new Expr('column', '+', 5);
         $this->assertRegExp('/(`|\")?column(`|\")? \+ \?/', $this->object->formatExpression($expr));
@@ -590,9 +523,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/SUBSTR\(name, 0, 3\) = ?/', $this->object->formatExpression($expr));
     }
 
-    /**
-     * Test fields and values format depending on the query type.
-     */
     public function testFormatFields() {
         $fields = [
             'id' => 1,
@@ -622,9 +552,73 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/(`|\")?id(`|\")?, (`|\")?username(`|\")?, (`|\")?email(`|\")?, SUM\((`|\")?id(`|\")?\)/', $this->object->formatFields($query));
     }
 
+    public function testFormatFieldsWithJoins() {
+        $query = new Query(Query::SELECT, new User());
+        $query->fields(['id', 'country_id', 'username']);
+        $query->leftJoin(['countries', 'Country'], ['iso'],['users.country_id' => 'Country.id'] );
+
+        $this->assertRegExp('/(`|\")?User(`|\")?\.(`|\")?id(`|\")?, (`|\")?User(`|\")?\.(`|\")?country_id(`|\")?, (`|\")?User(`|\")?\.(`|\")?username(`|\")?, (`|\")?Country(`|\")?\.(`|\")?iso(`|\")?/', $this->object->formatFields($query));
+    }
+
     /**
-     * Test that function formatting parses types.
+     * @expectedException \Titon\Db\Exception\InvalidQueryException
      */
+    public function testFormatFieldsThrowsErrorNoFields() {
+        $this->object->formatFields(new Query(Query::INSERT));
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidQueryException
+     */
+    public function testFormatFieldsThrowsErrorsNoJoinFields() {
+        $query = new Query(Query::SELECT, new User());
+        $query->fields(['id', 'country_id', 'username']);
+        $query->leftJoin(['countries', 'Country'], [],['users.country_id' => 'Country.id'] );
+
+        $this->object->formatFields($query);
+    }
+
+    public function testFormatFieldsWrongType() {
+        $query = new Query(Query::DELETE);
+
+        $this->assertEquals('', $this->object->formatFields($query));
+    }
+
+    public function testFormatSelectFieldsFunctions() {
+        $this->assertEquals(['SUBSTR(`name`, -3)'], $this->object->formatSelectFields([Query::func('SUBSTR', ['name' => Func::FIELD, -3])]));
+        $this->assertEquals(['SUBSTR(`name`, -3) AS `alias`'], $this->object->formatSelectFields([Query::func('SUBSTR', ['name' => Func::FIELD, -3])->asAlias('alias')], 'foo'));
+    }
+
+    public function testFormatSelectFieldsExprs() {
+        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields([Query::expr('name', 'as', 'alias')]));
+        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields([Query::expr('name', 'as', 'alias')], 'foo'));
+    }
+
+    public function testFormatSelectFieldsRawExprs() {
+        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields([Query::raw('`name` AS `alias`')]));
+        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields([Query::raw('`name` AS `alias`')], 'foo'));
+    }
+
+    public function testFormatSelectFieldsAsAlias() {
+        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields(['name as alias']));
+        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields(['name  AS  alias']));
+        $this->assertEquals(['`foo`.`name` AS `alias`'], $this->object->formatSelectFields(['name as alias'], 'foo'));
+    }
+
+    public function testFormatSelectFieldsVirtualJoins() {
+        $this->assertEquals(['`foo`.`name`'], $this->object->formatSelectFields(['name'], 'foo'));
+        $this->object->setConfig('virtualJoins', true);
+        $this->assertEquals(['`foo`.`name` AS foo__name'], $this->object->formatSelectFields(['name'], 'foo'));
+    }
+
+    public function testFormatUpdateFields() {
+        $this->assertEquals(['`foo` = ?', '`views` = ?'], $this->object->formatUpdateFields(['foo' => 'bar', 'views' => 1]));
+    }
+
+    public function testFormatUpdateFieldsExprs() {
+        $this->assertEquals(['`foo` = ?', '`views` = `views` + ?'], $this->object->formatUpdateFields(['foo' => 'bar', 'views' => Query::expr('views', '+', 5)]));
+    }
+
     public function testFormatFunction() {
         $func = new Func('SUBSTRING', ['TitonFramework', 5]);
         $this->assertEquals("SUBSTRING('TitonFramework', 5)", $this->object->formatFunction($func));
@@ -659,17 +653,11 @@ class DialectTest extends TestCase {
         $this->assertEquals("CHARSET(CHAR(0x65 USING utf8))", $this->object->formatFunction($func2));
     }
 
-    /**
-     * Test group by formatting.
-     */
     public function testFormatGroupBy() {
         $this->assertEquals('', $this->object->formatGroupBy([]));
         $this->assertRegExp('/GROUP BY (`|\")?id(`|\")?, (`|\")?username(`|\")?/', $this->object->formatGroupBy(['id', 'username']));
     }
 
-    /**
-     * Test having predicate is formatted.
-     */
     public function testFormatHaving() {
         $pred = new Predicate(Predicate::ALSO);
 
@@ -680,9 +668,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/HAVING (`|\")?age(`|\")? >= \?/', $this->object->formatHaving($pred));
     }
 
-    /**
-     * Test join clause formatting.
-     */
     public function testFormatJoins() {
         $join = new Join(Join::LEFT);
         $join->from('users')->on(['id' => 'id']);
@@ -708,26 +693,17 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/INNER JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")? FULL OUTER JOIN (`|\")?settings(`|\")? AS (`|\")?Setting(`|\")? ON (`|\")?User(`|\")?.(`|\")?setting_id(`|\")? = (`|\")?Setting(`|\")?.(`|\")?id(`|\")?/', $this->object->formatJoins([$join, $join2]));
     }
 
-    /**
-     * Test limit is formatted.
-     */
     public function testFormatLimit() {
         $this->assertEquals('', $this->object->formatLimit(0));
         $this->assertEquals('LIMIT 5', $this->object->formatLimit(5));
     }
 
-    /**
-     * Test limit and offset is formatted.
-     */
     public function testFormatLimitOffset() {
         $this->assertEquals('', $this->object->formatLimitOffset(0));
         $this->assertEquals('LIMIT 5', $this->object->formatLimitOffset(5));
         $this->assertEquals('LIMIT 5 OFFSET 10', $this->object->formatLimitOffset(5, 10));
     }
 
-    /**
-     * Test order by formatting.
-     */
     public function testFormatOrderBy() {
         $this->assertEquals('', $this->object->formatOrderBy([]));
         $this->assertRegExp('/ORDER BY (`|\")?id(`|\")? ASC/', $this->object->formatOrderBy(['id' => 'asc']));
@@ -738,9 +714,6 @@ class DialectTest extends TestCase {
         $this->assertEquals('ORDER BY RAND()', $this->object->formatOrderBy([$func]));
     }
 
-    /**
-     * Test nested predicates get parsed correctly.
-     */
     public function testFormatPredicate() {
         $pred = new Predicate(Predicate::ALSO);
         $pred->eq('id', 1)->gte('age', 12);
@@ -762,17 +735,11 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/(`|\")?id(`|\")? = \? XOR (`|\")?age(`|\")? >= \?/', $this->object->formatPredicate($pred));
     }
 
-    /**
-     * Test table is quoted.
-     */
     public function testFormatTable() {
         $this->assertRegExp('/(`|\")?foobar(`|\")?/', $this->object->formatTable('foobar'));
         $this->assertRegExp('/(`|\")?foobar(`|\")? AS (`|\")?Foo(`|\")?/', $this->object->formatTable('foobar', 'Foo'));
     }
 
-    /**
-     * Test foreign keys.
-     */
     public function testFormatTableForeign() {
         $data = ['column' => 'id', 'references' => 'users.id', 'constraint' => ''];
 
@@ -781,6 +748,7 @@ class DialectTest extends TestCase {
         $data['constraint'] = 'symbol';
         $this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? FOREIGN KEY \((`|\")?id(`|\")?\) REFERENCES (`|\")?users(`|\")?\((`|\")?id(`|\")?\)/', $this->object->formatTableForeign($data));
 
+        // keywords
         $data['onUpdate'] = Dialect::RESTRICT;
         $this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? FOREIGN KEY \((`|\")?id(`|\")?\) REFERENCES (`|\")?users(`|\")?\((`|\")?id(`|\")?\) ON UPDATE RESTRICT/', $this->object->formatTableForeign($data));
 
@@ -788,17 +756,11 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? FOREIGN KEY \((`|\")?id(`|\")?\) REFERENCES (`|\")?users(`|\")?\((`|\")?id(`|\")?\) ON UPDATE RESTRICT WHERE /', $this->object->formatTableForeign($data));
     }
 
-    /**
-     * Test index keys.
-     */
     public function testFormatTableIndex() {
         $this->assertRegExp('/KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?\)/', $this->object->formatTableIndex('idx', ['foo']));
         $this->assertRegExp('/KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?, (`|\")?bar(`|\")?\)/', $this->object->formatTableIndex('idx', ['foo', 'bar']));
     }
 
-    /**
-     * Test table keys are built with primary, unique, foreign and index.
-     */
     public function testFormatTableKeys() {
         $schema = new Schema('foobar');
         $schema->addUnique('primary');
@@ -832,9 +794,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/' . $expected . '/', $this->object->formatTableKeys($schema));
     }
 
-    /**
-     * Test table options are formatted.
-     */
     public function testFormatTableOptions() {
         $options = [];
         $this->assertEquals('', $this->object->formatTableOptions($options));
@@ -844,11 +803,12 @@ class DialectTest extends TestCase {
 
         $options['engine'] = 'MyISAM';
         $this->assertEquals("CHARACTER SET utf8 ENGINE MyISAM", $this->object->formatTableOptions($options));
+
+        // keyword
+        $options['engine'] = 'MyISAM';
+        $this->assertEquals("CHARACTER SET utf8 ENGINE MyISAM", $this->object->formatTableOptions($options));
     }
 
-    /**
-     * Test primary key.
-     */
     public function testFormatTablePrimary() {
         $data = ['columns' => ['foo'], 'constraint' => ''];
 
@@ -861,9 +821,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? PRIMARY KEY \((`|\")?foo(`|\")?, (`|\")?bar(`|\")?\)/', $this->object->formatTablePrimary($data));
     }
 
-    /**
-     * Test unique keys.
-     */
     public function testFormatTableUnique() {
         $data = ['columns' => ['foo'], 'constraint' => '', 'index' => 'idx'];
 
@@ -876,9 +833,6 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/CONSTRAINT (`|\")?symbol(`|\")? UNIQUE KEY (`|\")?idx(`|\")? \((`|\")?foo(`|\")?, (`|\")?bar(`|\")?\)/', $this->object->formatTableUnique($data));
     }
 
-    /**
-     * Test values are represented with question marks.
-     */
     public function testFormatValues() {
         $query = new Query(Query::INSERT, new User());
         $query->fields([
@@ -890,9 +844,12 @@ class DialectTest extends TestCase {
         $this->assertEquals('(?, ?, ?)', $this->object->formatValues($query));
     }
 
-    /**
-     * Test where predicate is formatted.
-     */
+    public function testFormatValuesInvalidType() {
+        $query = new Query(Query::SELECT);
+
+        $this->assertEquals('', $this->object->formatValues($query));
+    }
+
     public function testFormatWhere() {
         $pred = new Predicate(Predicate::EITHER);
 
@@ -903,56 +860,55 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/WHERE (`|\")?id(`|\")? BETWEEN \? AND \? OR (`|\")?status(`|\")? = \?/', $this->object->formatWhere($pred));
     }
 
-    /**
-     * Test single clause fetching.
-     */
     public function testGetClause() {
         $this->assertEquals('%s AS %s', $this->object->getClause(AbstractDialect::AS_ALIAS));
-
-        try {
-            $this->object->getClause('foobar');
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
     }
 
     /**
-     * Test multiple clause fetching.
+     * @expectedException \Titon\Db\Exception\MissingClauseException
      */
+    public function testGetClauseMissingKey() {
+        $this->object->getClause('foobar');
+    }
+
     public function testGetClauses() {
         $this->assertNotEmpty($this->object->getClauses());
     }
 
-    /**
-     * Test the driver is returned.
-     */
     public function testGetDriver() {
         $this->assertInstanceOf('Titon\Db\Driver', $this->object->getDriver());
     }
 
-    /**
-     * Test single statement fetching.
-     */
-    public function testGetStatement() {
-        try {
-            $this->object->getStatement('foobar');
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
+    public function testGetKeyword() {
+        $this->assertEquals('ALL', $this->object->getKeyword(AbstractDialect::ALL));
     }
 
     /**
-     * Test multiple statement fetching.
+     * @expectedException \Titon\Db\Exception\MissingKeywordException
      */
+    public function testGetKeywordMissingKey() {
+        $this->object->getKeyword('foobar');
+    }
+
+    public function testGetKeywords() {
+        $this->assertNotEmpty($this->object->getKeywords());
+    }
+
+    public function testGetStatement() {
+        $this->assertEquals('INSERT INTO {table} {fields} VALUES {values}', $this->object->getStatement('insert'));
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\MissingStatementException
+     */
+    public function testGetStatementMissingKey() {
+        $this->object->getStatement('foobar');
+    }
+
     public function testGetStatements() {
         $this->assertNotEmpty($this->object->getStatements());
     }
 
-    /**
-     * Test identifier quoting.
-     */
     public function testQuote() {
         $this->assertEquals('`foo`', $this->object->quote('foo'));
         $this->assertEquals('`foo`', $this->object->quote('foo`'));
@@ -964,17 +920,16 @@ class DialectTest extends TestCase {
         $this->assertEquals('`foo`.*', $this->object->quote('foo.*'));
     }
 
-    /**
-     * Test multiple identifier quoting.
-     */
+    public function testQuoteNoChar() {
+        $this->object->setConfig('quoteCharacter', '');
+        $this->assertEquals('foo', $this->object->quote('foo'));
+    }
+
     public function testQuoteList() {
         $this->assertEquals('`foo`, `bar`, `baz`', $this->object->quoteList(['foo', '`bar', '`baz`']));
         $this->assertEquals('`foo`.`bar`, `baz`', $this->object->quoteList(['foo.bar', '`baz`']));
     }
 
-    /**
-     * Test attribute parsing.
-     */
     public function testRenderAttributes() {
         $this->assertEquals(['a.distinct' => ''], $this->object->renderAttributes(['distinct' => false]));
         $this->assertEquals(['a.distinct' => 'DISTINCT'], $this->object->renderAttributes(['distinct' => true]));
@@ -984,9 +939,6 @@ class DialectTest extends TestCase {
         }]));
     }
 
-    /**
-     * Test params are rendered in a statement.
-     */
     public function testRenderStatement() {
         $this->assertEquals('SELECT * FROM tableName WHERE id = 1;', $this->object->renderStatement('SELECT * FROM {table} WHERE id = {id}', [
             'table' => 'tableName',

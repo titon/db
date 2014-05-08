@@ -1,36 +1,21 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Driver\Type;
 
 use PDO;
-use Titon\Db\Driver\Type\IntType;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Driver\Type\IntType.
- *
  * @property \Titon\Db\Driver\Type\IntType $object
  */
 class IntTypeTest extends TestCase {
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
         $this->object = new IntType(new DriverStub([]));
     }
 
-    /**
-     * Test from database conversion.
-     */
     public function testFrom() {
         $this->assertSame(123, $this->object->from('123.5'));
         $this->assertSame(456, $this->object->from('456'));
@@ -39,9 +24,6 @@ class IntTypeTest extends TestCase {
         $this->assertSame(0, $this->object->from('true'));
     }
 
-    /**
-     * Test to database conversion.
-     */
     public function testTo() {
         $this->assertSame(null, $this->object->to(''));
         $this->assertSame(null, $this->object->to(null));
@@ -51,23 +33,14 @@ class IntTypeTest extends TestCase {
         $this->assertSame(0, $this->object->to('abc'));
     }
 
-    /**
-     * Test name string.
-     */
     public function testGetName() {
         $this->assertEquals('int', $this->object->getName());
     }
 
-    /**
-     * Test PDO type.
-     */
     public function testGetBindingType() {
         $this->assertEquals(PDO::PARAM_INT, $this->object->getBindingType());
     }
 
-    /**
-     * Test schema options.
-     */
     public function testGetDefaultOptions() {
         $this->assertEquals([], $this->object->getDefaultOptions());
     }
