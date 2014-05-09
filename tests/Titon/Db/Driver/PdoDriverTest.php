@@ -1,38 +1,26 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Driver;
 
+use Titon\Cache\Storage\MemoryStorage;
 use Titon\Common\Config;
+use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Query;
+use Titon\Db\Query\ResultSet;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\Stub\Repository\Stat;
 use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
-use \Exception;
 use \PDO;
+use \Exception;
 
 /**
- * Test class for Titon\Db\Driver\AbstractPdoDriver.
- *
  * @property \Titon\Db\Driver\AbstractPdoDriver $object
  */
 class PdoDriverTest extends TestCase {
 
-    /**
-     * Stub table.
-     *
-     * @type \Titon\Db\Repository
-     */
+    /** @type \Titon\Db\Repository */
     protected $table;
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
@@ -42,49 +30,41 @@ class PdoDriverTest extends TestCase {
         $this->table = new User();
     }
 
-    /**
-     * Disconnect just in case.
-     */
     protected function tearDown() {
         parent::tearDown();
 
         $this->object->disconnect();
     }
 
-    /**
-     * Test statement building.
-     */
     public function testBuildStatement() {
         $this->loadFixtures('Users');
 
-        // Unsupported query
-        try {
-            $this->object->buildStatement(new Query('someType', $this->table));
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
         $statement = $this->object->buildStatement((new Query(Query::SELECT, $this->table))->fields('id')->from('users'));
+
         $this->assertInstanceOf('PDOStatement', $statement);
+
         $statement->closeCursor();
     }
 
     /**
-     * Test value escaping and quoting.
+     * @expectedException \Titon\Db\Exception\UnsupportedQueryStatementException
      */
-    public function testEscape() {
-        $this->assertSame('NULL', $this->object->escape(null));
-        $this->assertSame("'12345'", $this->object->escape(12345));
-        $this->assertSame("'67890'", $this->object->escape('67890'));
-        $this->assertSame("'666.25'", $this->object->escape(666.25));
-        $this->assertSame("'abc'", $this->object->escape('abc'));
-        $this->assertSame("'1'", $this->object->escape(true));
+    public function testBuildStatementInvalidQuery() {
+        $this->object->buildStatement(new Query('someType', $this->table));
     }
 
-    /**
-     * Test table inspecting.
-     */
+    public function testConnect() {
+        $connections = $this->object->getConnections();
+
+        $this->assertArrayNotHasKey('write', $connections);
+
+        $this->object->setContext('write')->connect();
+
+        $connections = $this->object->getConnections();
+
+        $this->assertArrayHasKey('write', $connections);
+    }
+
     public function testDescribeTable() {
         $this->loadFixtures(['Users', 'Stats']);
 
@@ -231,38 +211,24 @@ class PdoDriverTest extends TestCase {
         ], $user->getDriver()->describeTable($stat->getTable()));
     }
 
-    /**
-     * Test DSN building.
-     */
-    public function testGetDsn() {
-        $this->assertEquals('mysql:dbname=titon_test;host=127.0.0.1;port=3306;charset=utf8', $this->object->getDsn());
-
-        $this->object->setConfig('encoding', '');
-        $this->object->setConfig('port', 1337);
-        $this->assertEquals('mysql:dbname=titon_test;host=127.0.0.1;port=1337', $this->object->getDsn());
-
-        $this->object->setConfig('dsn', 'custom:dsn');
-        $this->assertEquals('custom:dsn', $this->object->getDsn());
+    public function testDescribeTableMissingTable() {
+        $this->assertEquals([], $this->object->describeTable('foobar'));
     }
 
-    /**
-     * Test database inspecting.
-     */
-    public function testListTables() {
-        $this->loadFixtures(['Authors', 'Books', 'Genres', 'BookGenres', 'Series']);
-
-        // Check the keys since the values constantly change
-        $this->assertArraysEqual(['authors', 'books', 'books_genres', 'genres', 'series'], $this->object->listTables());
+    public function testEscape() {
+        $this->assertSame('NULL', $this->object->escape(null));
+        $this->assertSame("'12345'", $this->object->escape(12345));
+        $this->assertSame("'67890'", $this->object->escape('67890'));
+        $this->assertSame("'666.25'", $this->object->escape(666.25));
+        $this->assertSame("'abc'", $this->object->escape('abc'));
+        $this->assertSame("'1'", $this->object->escape(true));
     }
 
-    /**
-     * Test query execution.
-     */
-    public function testQuery() {
+    public function testExecuteQuery() {
         $this->loadFixtures('Users');
 
-        $query1 = (new Query(Query::SELECT, $this->table))->from('users');
-        $result = $this->object->executeQuery($query1);
+        $query = (new Query(Query::SELECT, $this->table))->from('users');
+        $result = $this->object->executeQuery($query);
 
         $this->assertInstanceOf('Titon\Db\Query\ResultSet', $result);
 
@@ -279,28 +245,147 @@ class PdoDriverTest extends TestCase {
         $this->assertEquals(1, $result->getRowCount());
         $this->assertEquals(true, $result->hasExecuted());
         $this->assertEquals(true, $result->isSuccessful());
+    }
 
-        // Test with params
+    public function testExecuteQueryString() {
+        $this->loadFixtures('Users');
+
         $result = $this->object->executeQuery('DELETE FROM users WHERE country_id = ?', [1]);
 
         $this->assertInstanceOf('Titon\Db\Query\ResultSet', $result);
 
         $this->assertEquals(0, $result->getRowCount());
         $this->assertEquals(1, $result->save());
+    }
 
-        // Test with a string
+    public function testExecuteQueryStringNoParams() {
+        $this->loadFixtures('Users');
+
         $result = $this->object->executeQuery('DELETE FROM users');
 
         $this->assertInstanceOf('Titon\Db\Query\ResultSet', $result);
 
         $this->assertEquals(0, $result->getRowCount());
-        $this->assertEquals(4, $result->save());
+        $this->assertEquals(5, $result->save());
     }
 
     /**
-     * Test that query params are resolved for binds.
-     * Should be in correct order.
+     * @expectedException \Titon\Db\Exception\InvalidQueryException
      */
+    public function testExecuteQueryInvalidQuery() {
+        $this->object->executeQuery(123456);
+    }
+
+    public function testExecuteQueryNoCache() {
+        $this->loadFixtures('Users');
+
+        $this->assertEquals([], $this->object->getLoggedQueries());
+        $this->assertFalse($this->object->hasCache(__METHOD__));
+
+        $query = new Query(Query::SELECT, $this->table);
+        $query->from('users');
+
+        $result = $this->object->executeQuery($query);
+
+        $this->assertEquals([$result], $this->object->getLoggedQueries());
+        $this->assertFalse($this->object->hasCache(__METHOD__));
+
+        // Execute it again
+        $result = $this->object->executeQuery($query);
+
+        $this->assertEquals([$result, $result], $this->object->getLoggedQueries());
+        $this->assertFalse($this->object->hasCache(__METHOD__));
+    }
+
+    public function testExecuteQueryLocalCache() {
+        $this->loadFixtures('Users');
+
+        $this->assertEquals([], $this->object->getLoggedQueries());
+        $this->assertFalse($this->object->hasCache(__METHOD__));
+
+        $query = new Query(Query::SELECT, $this->table);
+        $query->from('users')->cache(__METHOD__, '+5 minutes');
+
+        $result = $this->object->executeQuery($query);
+
+        $this->assertEquals([$result], $this->object->getLoggedQueries());
+        $this->assertTrue($this->object->hasCache(__METHOD__));
+
+        // Execute it again
+        $result = $this->object->executeQuery($query);
+
+        $this->assertEquals([$result], $this->object->getLoggedQueries());
+        $this->assertTrue($this->object->hasCache(__METHOD__));
+    }
+
+    public function testExecuteQueryStorageCache() {
+        $this->loadFixtures('Users');
+
+        $storage = new MemoryStorage();
+        $this->object->setStorage($storage);
+
+        $this->assertEquals([], $this->object->getLoggedQueries());
+        $this->assertFalse($storage->has(__METHOD__));
+
+        $query = new Query(Query::SELECT, $this->table);
+        $query->from('users')->cache(__METHOD__, '+5 minutes');
+
+        $result = $this->object->executeQuery($query);
+
+        $this->assertEquals([$result], $this->object->getLoggedQueries());
+        $this->assertTrue($storage->has(__METHOD__));
+
+        // Execute it again
+        $result = $this->object->executeQuery($query);
+
+        $this->assertEquals([$result], $this->object->getLoggedQueries());
+        $this->assertTrue($storage->has(__METHOD__));
+    }
+
+    public function testGetDsn() {
+        $this->assertEquals('mysql:dbname=titon_test;host=127.0.0.1;port=3306;charset=utf8', $this->object->getDsn());
+
+        $this->object->setConfig('encoding', '');
+        $this->object->setConfig('port', 1337);
+        $this->assertEquals('mysql:dbname=titon_test;host=127.0.0.1;port=1337', $this->object->getDsn());
+
+        $this->object->setConfig('dsn', 'custom:dsn');
+        $this->assertEquals('custom:dsn', $this->object->getDsn());
+    }
+
+    public function testListTables() {
+        $this->loadFixtures(['Authors', 'Books', 'Genres', 'BookGenres', 'Series']);
+
+        // Check the keys since the values constantly change
+        $this->assertArraysEqual(['authors', 'books', 'books_genres', 'genres', 'series'], $this->object->listTables());
+    }
+
+    public function testListTablesMissingDatabase() {
+        $this->assertEquals([], $this->object->listTables('foobar'));
+    }
+
+    public function testResolveBind() {
+        $this->assertEquals([null, PDO::PARAM_NULL], $this->object->resolveBind('foo', null));
+        $this->assertEquals(['abc', PDO::PARAM_STR], $this->object->resolveBind('foo', 'abc'));
+        $this->assertEquals(['123', PDO::PARAM_INT], $this->object->resolveBind('foo', '123'));
+        $this->assertEquals([123, PDO::PARAM_INT], $this->object->resolveBind('foo', 123));
+        $this->assertEquals([123.45, PDO::PARAM_STR], $this->object->resolveBind('foo', 123.45));
+    }
+
+    public function testResolveBindObjects() {
+        $this->assertEquals(['abc', PDO::PARAM_STR], $this->object->resolveBind(Query::func('SUBSTRING()'), 'abc'));
+        $this->assertEquals([123, PDO::PARAM_INT], $this->object->resolveBind('foo', Query::expr('foo', '+', 123)));
+    }
+
+    public function testResolveBindSchema() {
+        $this->loadFixtures('Users');
+
+        $schema = $this->table->getSchema();
+        $time = time();
+
+        $this->assertEquals([date('Y-m-d H:i:s', $time), PDO::PARAM_STR], $this->object->resolveBind('created', new \DateTime(), $schema->getColumns()));
+    }
+
     public function testResolveParams() {
         $query1 = new Query(Query::SELECT, $this->table);
         $query1->where('id', 1)->where(function(Query\Predicate $where) {
@@ -355,9 +440,40 @@ class PdoDriverTest extends TestCase {
         ], $this->object->resolveParams($query3));
     }
 
-    /**
-     * Test type introspecting.
-     */
+    public function testResolveParamsMultiInsert() {
+        $time = time();
+
+        $query = new Query(Query::MULTI_INSERT, $this->table);
+        $query->fields([
+            ['username' => 'foo', 'age' => 16, 'created' => null],
+            ['username' => 'bar', 'age' => 33, 'created' => new \DateTime()]
+        ]);
+
+        $this->assertEquals([
+            ['foo', PDO::PARAM_STR],
+            [16, PDO::PARAM_INT],
+            [null, PDO::PARAM_NULL],
+            ['bar', PDO::PARAM_STR],
+            [33, PDO::PARAM_INT],
+            [date('Y-m-d H:i:s', $time), PDO::PARAM_STR],
+        ], $this->object->resolveParams($query));
+    }
+
+    public function testResolveParamsCompoundQueries() {
+        $query1 = new Query(Query::SELECT, $this->table);
+        $query1->where('username', 'like', '%foo%');
+
+        $query2 = new Query(Query::SELECT, $this->table);
+        $query2->where('username', 'like', '%bar%');
+
+        $query1->union($query2);
+
+        $this->assertEquals([
+            ['%foo%', PDO::PARAM_STR],
+            ['%bar%', PDO::PARAM_STR],
+        ], $this->object->resolveParams($query1));
+    }
+
     public function testResolveType() {
         $this->assertSame(PDO::PARAM_NULL, $this->object->resolveType(null));
         $this->assertSame(PDO::PARAM_INT, $this->object->resolveType(12345));
@@ -365,6 +481,164 @@ class PdoDriverTest extends TestCase {
         $this->assertSame(PDO::PARAM_STR, $this->object->resolveType(666.25));
         $this->assertSame(PDO::PARAM_STR, $this->object->resolveType('abc'));
         $this->assertSame(PDO::PARAM_BOOL, $this->object->resolveType(true));
+
+        $f = fopen('php://input', 'r');
+        $this->assertSame(PDO::PARAM_LOB, $this->object->resolveType($f));
+        fclose($f);
+    }
+
+    public function testTransactions() {
+        $this->loadFixtures(['Users', 'Profiles']);
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertTrue($this->object->startTransaction());
+
+        try {
+            $this->object->executeQuery('DELETE FROM profiles WHERE user_id = 1')->execute();
+            $this->object->executeQuery('DELETE FROM users WHERE id = 1')->execute();
+
+            $this->assertTrue($this->object->commitTransaction());
+        } catch (Exception $e) {
+            $this->object->rollbackTransaction();
+        }
+
+        $this->assertEquals(0, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(0, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertEquals([
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1',
+            'BEGIN',
+            'DELETE FROM profiles WHERE user_id = 1',
+            'DELETE FROM users WHERE id = 1',
+            'COMMIT',
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1'
+        ], array_map(function(ResultSet $value) {
+            return $value->getStatement();
+        }, $this->object->getLoggedQueries()));
+    }
+
+    public function testRollbackTransactions() {
+        $this->loadFixtures(['Users', 'Profiles']);
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertTrue($this->object->startTransaction());
+
+        try {
+            $this->object->executeQuery('DELETE FROM profiles WHERE user_id = 1')->execute();
+            $this->object->executeQuery('DELETE FROM users WHERE id = 1')->execute();
+
+            throw new Exception('Fake error to trigger rollback!');
+        } catch (Exception $e) {
+            $this->object->rollbackTransaction();
+        }
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertEquals([
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1',
+            'BEGIN',
+            'DELETE FROM profiles WHERE user_id = 1',
+            'DELETE FROM users WHERE id = 1',
+            'ROLLBACK',
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1'
+        ], array_map(function(ResultSet $value) {
+            return $value->getStatement();
+        }, $this->object->getLoggedQueries()));
+    }
+
+    public function testNestedTransactions() {
+        $this->loadFixtures(['Users', 'Profiles']);
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertTrue($this->object->startTransaction());
+
+        try {
+            $this->assertTrue($this->object->startTransaction());
+
+            try {
+                $this->object->executeQuery('DELETE FROM profiles WHERE user_id = 1')->execute();
+                $this->object->executeQuery('DELETE FROM users WHERE id = 1')->execute();
+
+                $this->assertTrue($this->object->commitTransaction());
+            } catch (InvalidQueryException $e) {
+                $this->object->rollbackTransaction();
+            }
+
+            $this->assertTrue($this->object->commitTransaction());
+
+        } catch (Exception $e) {
+            $this->object->rollbackTransaction();
+        }
+
+        $this->assertEquals(0, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(0, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertEquals([
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1',
+            'BEGIN',
+            'DELETE FROM profiles WHERE user_id = 1',
+            'DELETE FROM users WHERE id = 1',
+            'COMMIT',
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1'
+        ], array_map(function(ResultSet $value) {
+            return $value->getStatement();
+        }, $this->object->getLoggedQueries()));
+    }
+
+    public function testNestedRollbackTransactions() {
+        $this->loadFixtures(['Users', 'Profiles']);
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertTrue($this->object->startTransaction());
+
+        try {
+            $this->assertTrue($this->object->startTransaction());
+
+            try {
+                $this->object->executeQuery('DELETE FROM profiles WHERE user_id = 1')->execute();
+                $this->object->executeQuery('DELETE FROM users WHERE id = 1')->execute();
+
+                throw new Exception('Fake error to trigger rollback!');
+            } catch (Exception $e) {
+                $this->object->rollbackTransaction();
+
+                // Must throw again if nested catch blocks
+                throw $e;
+            }
+        } catch (Exception $e) {
+            $this->object->rollbackTransaction();
+        }
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertEquals([
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1',
+            'BEGIN',
+            'DELETE FROM profiles WHERE user_id = 1',
+            'DELETE FROM users WHERE id = 1',
+            'ROLLBACK',
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1'
+        ], array_map(function(ResultSet $value) {
+            return $value->getStatement();
+        }, $this->object->getLoggedQueries()));
     }
 
 }

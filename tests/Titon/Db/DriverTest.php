@@ -200,7 +200,7 @@ class DriverTest extends TestCase {
         $this->assertInstanceOf('Psr\Log\LoggerInterface', $this->object->getLogger());
     }
 
-    public function testLogging() {
+    public function testLogQuery() {
         $this->assertEquals([], $this->object->getLoggedQueries());
 
         $log1 = new SqlResultSet('SELECT * FROM users');
@@ -212,6 +212,19 @@ class DriverTest extends TestCase {
         $this->object->logQuery($log2);
 
         $this->assertEquals([$log1, $log2], $this->object->getLoggedQueries());
+    }
+
+    public function testLogQueryToLogger() {
+        $path = TEMP_DIR . '/debug-' . date('Y-m-d') . '.log';
+
+        $this->assertFileNotExists($path);
+
+        $this->object->setLogger(new Logger(TEMP_DIR));
+        $this->object->logQuery(new SqlResultSet('SELECT * FROM users'));
+
+        $this->assertFileExists($path);
+
+        @unlink($path);
     }
 
 }

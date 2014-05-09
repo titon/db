@@ -78,9 +78,11 @@ abstract class AbstractPdoDriver extends AbstractDriver {
             return true;
         }
 
+        // @codeCoverageIgnoreStart
         if (!$this->isEnabled()) {
             throw new MissingDriverException(sprintf('%s driver extension is not enabled', $this->getDriver()));
         }
+        // @codeCoverageIgnoreEnd
 
         $this->_connections[$this->getContext()] = new PDO($this->getDsn(), $this->getUser(), $this->getPassword(), $this->getConfig('flags') + [
             PDO::ATTR_PERSISTENT => $this->isPersistent(),
@@ -264,6 +266,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      * Return the PDO driver name.
      *
      * @return string
+     * @codeCoverageIgnore
      */
     abstract public function getDriver();
 
@@ -271,6 +274,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      * Format and build the DSN based on the current configuration.
      *
      * @return string
+     * @codeCoverageIgnore
      */
     abstract public function getDsn();
 
@@ -376,11 +380,11 @@ abstract class AbstractPdoDriver extends AbstractDriver {
             $type = $dataType->getBindingType();
         }
 
+        // Fallback and resolve
         if (!$type) {
             $type = $this->resolveType($value);
         }
 
-        // Return scalar type
         return [$value, $type];
     }
 
