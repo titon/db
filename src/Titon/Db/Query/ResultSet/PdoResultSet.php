@@ -129,6 +129,7 @@ class PdoResultSet extends AbstractResultSet implements ResultSet {
                     $name = $column['name'];
                     $alias = '';
 
+                    // @codeCoverageIgnoreStart
                     // For drivers that alias fields as Alias__column
                     if (strpos($name, '__') !== false) {
                         list($alias, $name) = explode('__', $name, 2);
@@ -147,6 +148,7 @@ class PdoResultSet extends AbstractResultSet implements ResultSet {
                             $alias = $column['table'];
                         }
                     }
+                    // @codeCoverageIgnoreEnd
 
                     $joins[$alias][$name] = $value;
                 }

@@ -52,7 +52,7 @@ class ConverterBehavior extends AbstractBehavior {
      * @return $this
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
-    public function convert($field, $type, array $options) {
+    public function convert($field, $type, array $options = []) {
         if (!isset($this->_defaults[$type])) {
             throw new InvalidArgumentException(sprintf('Converter %s does not exist', $type));
         }
@@ -64,6 +64,15 @@ class ConverterBehavior extends AbstractBehavior {
         ], $this->_defaults[$type], $options);
 
         return $this;
+    }
+
+    /**
+     * Return all the converter configurations.
+     *
+     * @return array
+     */
+    public function getConverters() {
+        return $this->_converters;
     }
 
     /**

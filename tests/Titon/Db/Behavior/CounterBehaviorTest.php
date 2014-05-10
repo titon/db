@@ -1,13 +1,6 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Behavior;
 
-use Titon\Db\Query\Predicate;
 use Titon\Db\Query;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\Genre;
@@ -16,22 +9,39 @@ use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\CounterBehavior.
- *
  * @property \Titon\Db\Behavior\CounterBehavior $object
  */
 class CounterBehaviorTest extends TestCase {
 
-    /**
-     * Test that counts are synced on create or update.
-     */
+    protected function setUp() {
+        parent::setUp();
+
+        $this->object = new CounterBehavior();
+    }
+
+    public function testTrack() {
+        $scope = function() {};
+
+        $book = new Book();
+        $book->addBehavior($this->object);
+
+        $this->object->track('Genres', 'book_count', $scope);
+
+        $this->assertEquals([
+            'Genres' => [
+                'field' => 'book_count',
+                'scope' => $scope,
+            ]
+        ], $this->object->getCounters());
+    }
+
     public function testOnUpsertManyToMany() {
         $this->loadFixtures(['Books', 'Genres', 'BookGenres']);
 
         $genre = new Genre();
+
         $book = new Book();
-        $book->addBehavior(new CounterBehavior())
-            ->addCounter('Genres', 'book_count');
+        $book->addBehavior($this->object->track('Genres', 'book_count'));
 
         $record = $genre->read(3);
         $this->assertEquals(8, $record->book_count);
@@ -60,16 +70,13 @@ class CounterBehaviorTest extends TestCase {
         $this->assertEquals(10, $record->book_count);
     }
 
-    /**
-     * Test that counts are synced on delete.
-     */
     public function testOnDeleteManyToMany() {
         $this->loadFixtures(['Books', 'Genres', 'BookGenres']);
 
         $genre = new Genre();
+
         $book = new Book();
-        $book->addBehavior(new CounterBehavior())
-            ->addCounter('Genres', 'book_count');
+        $book->addBehavior($this->object->track('Genres', 'book_count'));
 
         $record = $genre->read(8);
         $this->assertEquals(15, $record->book_count);
@@ -89,18 +96,15 @@ class CounterBehaviorTest extends TestCase {
         $this->assertEquals(10, $record->book_count);
     }
 
-    /**
-     * Test that counts are synced on create.
-     */
     public function testOnCreateManyToOne() {
         $this->loadFixtures(['Topics', 'Posts']);
 
         $topic = new Topic();
+
         $post = new Post();
-        $post->addBehavior(new CounterBehavior())
-            ->addCounter('Topic', 'post_count', function(Query $query) {
-                $query->where('active', 1);
-            });
+        $post->addBehavior($this->object->track('Topic', 'post_count', function(Query $query) {
+            $query->where('active', 1);
+        }));
 
         $record = $topic->read(1);
         $this->assertEquals(4, $record->post_count);
@@ -118,18 +122,14 @@ class CounterBehaviorTest extends TestCase {
         $this->assertEquals(5, $record->post_count);
     }
 
-    /**
-     * Test that counts are synced on update.
-     */
     public function testOnUpdateManyToOne() {
         $this->loadFixtures(['Topics', 'Posts']);
 
         $topic = new Topic();
         $post = new Post();
-        $post->addBehavior(new CounterBehavior())
-            ->addCounter('Topic', 'post_count', function(Query $query) {
-                $query->where('active', 1);
-            });
+        $post->addBehavior($this->object->track('Topic', 'post_count', function(Query $query) {
+            $query->where('active', 1);
+        }));
 
         $record = $topic->read(1);
         $this->assertEquals(4, $record->post_count);
@@ -155,18 +155,14 @@ class CounterBehaviorTest extends TestCase {
         $this->assertEquals(0, $record->post_count);
     }
 
-    /**
-     * Test that counts are synced on delete.
-     */
     public function testOnDeleteManyToOne() {
         $this->loadFixtures(['Topics', 'Posts']);
 
         $topic = new Topic();
         $post = new Post();
-        $post->addBehavior(new CounterBehavior())
-            ->addCounter('Topic', 'post_count', function(Query $query) {
-                $query->where('active', 1);
-            });
+        $post->addBehavior($this->object->track('Topic', 'post_count', function(Query $query) {
+            $query->where('active', 1);
+        }));
 
         $record = $topic->read(1);
         $this->assertEquals(4, $record->post_count);

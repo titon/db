@@ -15,6 +15,7 @@ use Titon\Db\Query;
  * Implement basic finder functionality.
  *
  * @package Titon\Db\Finder
+ * @codeCoverageIgnore
  */
 abstract class AbstractFinder extends Base implements Finder {
 

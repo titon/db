@@ -34,30 +34,27 @@ class CounterBehavior extends AbstractBehavior {
     /**
      * Add a counter for a relation.
      *
-     * @param string|\Titon\Db\Relation $alias
+     * @param string $alias
      * @param string $field
      * @param \Closure $scope
      * @return $this
-     * @throws \Titon\Db\Exception\InvalidArgumentException
      */
-    public function addCounter($alias, $field, Closure $scope = null) {
-        if ($alias instanceof Relation) {
-            $relation = $alias;
-            $alias = $relation->getAlias();
-        } else {
-            $relation = $this->getRepository()->getRelation($alias);
-        }
-
-        if (!in_array($relation->getType(), [Relation::MANY_TO_ONE, Relation::MANY_TO_MANY])) {
-            throw new InvalidArgumentException(sprintf('Invalid relation %s, only many-to-one or many-to-many relationships permitted', $alias));
-        }
-
+    public function track($alias, $field, Closure $scope = null) {
         $this->_counters[$alias] = [
             'field' => $field,
             'scope' => $scope
         ];
 
         return $this;
+    }
+
+    /**
+     * Return all the counter configurations.
+     *
+     * @return array
+     */
+    public function getCounters() {
+        return $this->_counters;
     }
 
     /**
@@ -71,10 +68,10 @@ class CounterBehavior extends AbstractBehavior {
     public function preDelete(Event $event, $id, &$cascade) {
         $repo = $this->getRepository();
 
-        foreach ($this->_counters as $alias => $counter) {
-            foreach ((array) $id as $value) {
-                $relation = $repo->getRelation($alias);
+        foreach ($this->getCounters() as $alias => $counter) {
+            $relation = $repo->getRelation($alias);
 
+            foreach ((array) $id as $value) {
                 switch ($relation->getType()) {
                     case Relation::MANY_TO_MANY:
                         $results = $relation->getJunctionRepository()
@@ -125,7 +122,7 @@ class CounterBehavior extends AbstractBehavior {
      * @return $this
      */
     public function syncCounters($ids) {
-        foreach ($this->_counters as $alias => $counter) {
+        foreach ($this->getCounters() as $alias => $counter) {
             $relation = $this->getRepository()->getRelation($alias);
 
             switch ($relation->getType()) {

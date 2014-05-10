@@ -1,32 +1,28 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Behavior;
 
 use Titon\Db\Entity;
 use Titon\Db\Query;
+use Titon\Event\Event;
 use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\SlugBehavior.
- *
  * @property \Titon\Db\Behavior\SlugBehavior $object
  */
 class SlugBehaviorTest extends TestCase {
 
-    /**
-     * Test unique slugs increment.
-     */
+    protected function setUp() {
+        parent::setUp();
+
+        $this->object = new SlugBehavior();
+    }
+
     public function testUniqueSlugs() {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SlugBehavior());
+        $topic->addBehavior($this->object);
 
         $topic_id = $topic->create(['title' => 'Bruce Wayne']);
 
@@ -43,9 +39,6 @@ class SlugBehaviorTest extends TestCase {
         ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
     }
 
-    /**
-     * Test that non-unique slugs can use same name.
-     */
     public function testNonUniqueSlugs() {
         $this->loadFixtures('Topics');
 
@@ -67,14 +60,25 @@ class SlugBehaviorTest extends TestCase {
         ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
     }
 
-    /**
-     * Should not slug without a title.
-     */
+    public function testSlugLength() {
+        $this->loadFixtures('Topics');
+
+        $topic = new Topic();
+        $topic->addBehavior($this->object);
+
+        $data = ['title' => 'This is something we need to slug and shorten'];
+
+        $this->object->setConfig('length', 15);
+        $this->object->preSave(new Event('db.preSave'), 1, $data);
+
+        $this->assertEquals('this-is-some', $data['slug']);
+    }
+
     public function testSaveWithMissingTitle() {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SlugBehavior());
+        $topic->addBehavior($this->object);
 
         $topic_id = $topic->create(['content' => 'Testing with no title or slug.']);
 
@@ -85,14 +89,11 @@ class SlugBehaviorTest extends TestCase {
         ]), $topic->select('title', 'slug', 'content')->where('id', $topic_id)->first());
     }
 
-    /**
-     * Test that supplied slug takes precedence.
-     */
     public function testSaveWithSlug() {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SlugBehavior());
+        $topic->addBehavior($this->object);
 
         $topic_id = $topic->create(['title' => 'This is the title', 'slug' => 'and-different-slug']);
 
@@ -102,14 +103,11 @@ class SlugBehaviorTest extends TestCase {
         ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
     }
 
-    /**
-     * Test that slug is changed on update.
-     */
     public function testOnUpdate() {
         $this->loadFixtures('Topics');
 
         $topic = new Topic();
-        $topic->addBehavior(new SlugBehavior());
+        $topic->addBehavior($this->object);
 
         $topic->update(1, ['title' => 'Batman vs Ironman']);
 
@@ -119,9 +117,6 @@ class SlugBehaviorTest extends TestCase {
         ]), $topic->select('title', 'slug')->where('id', 1)->first());
     }
 
-    /**
-     * Test that slug isn't changed on update.
-     */
     public function testOnUpdateDisabled() {
         $this->loadFixtures('Topics');
 
@@ -136,9 +131,6 @@ class SlugBehaviorTest extends TestCase {
         ]), $topic->select('title', 'slug')->where('id', 1)->first());
     }
 
-    /**
-     * Test that slug isn't changed on update.
-     */
     public function testOnUpdateSameSlug() {
         $this->loadFixtures('Topics');
 
@@ -153,9 +145,6 @@ class SlugBehaviorTest extends TestCase {
         ]), $topic->select('title', 'slug')->where('id', 1)->first());
     }
 
-    /**
-     * Test that scope is applied and slug adheres to it.
-     */
     public function testWithScope() {
         $this->loadFixtures('Topics');
 
@@ -173,9 +162,6 @@ class SlugBehaviorTest extends TestCase {
         ]), $topic->select('title', 'slug')->where('id', $topic_id)->first());
     }
 
-    /**
-     * Test that certain words are slugged.
-     */
     public function testSlugify() {
         $this->assertEquals('batman-and-robin', SlugBehavior::slugify('Batman & Robin'));
         $this->assertEquals('batman-and-robin', SlugBehavior::slugify('Batman &amp; Robin'));

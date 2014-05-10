@@ -18,6 +18,7 @@ use Titon\Db\Traits\RepositoryAware;
  * Provides shared functionality for behaviors.
  *
  * @package Titon\Db\Behavior
+ * @codeCoverageIgnore
  */
 abstract class AbstractBehavior extends Base implements Behavior, Listener {
     use RepositoryAware;

@@ -147,7 +147,7 @@ class Repository extends Base implements Callback, Listener {
      * Add a behavior.
      *
      * @param \Titon\Db\Behavior $behavior
-     * @return \Titon\Db\Behavior
+     * @return $this
      */
     public function addBehavior(Behavior $behavior) {
         $behavior->setRepository($this);
@@ -160,7 +160,7 @@ class Repository extends Base implements Callback, Listener {
             $this->on('db', $behavior);
         }
 
-        return $behavior;
+        return $this;
     }
 
     /**
@@ -180,7 +180,7 @@ class Repository extends Base implements Callback, Listener {
      * Add a relation between another repository.
      *
      * @param \Titon\Db\Relation $relation
-     * @return \Titon\Db\Relation|\Titon\Db\Relation\ManyToMany
+     * @return $this
      */
     public function addRelation(Relation $relation) {
         $relation->setRepository($this);
@@ -194,7 +194,7 @@ class Repository extends Base implements Callback, Listener {
             return $relation->getRelatedRepository();
         });
 
-        return $relation;
+        return $this;
     }
 
     /**
@@ -206,8 +206,10 @@ class Repository extends Base implements Callback, Listener {
      * @return \Titon\Db\Relation\ManyToOne
      */
     public function belongsTo($alias, $repo, $foreignKey) {
-        return $this->addRelation(new ManyToOne($alias, $repo))
+        $relation = (new ManyToOne($alias, $repo))
             ->setForeignKey($foreignKey);
+
+        return $this->addRelation($relation);
     }
 
     /**
@@ -221,10 +223,12 @@ class Repository extends Base implements Callback, Listener {
      * @return \Titon\Db\Relation\ManyToMany
      */
     public function belongsToMany($alias, $repo, $junction, $foreignKey, $relatedKey) {
-        return $this->addRelation(new ManyToMany($alias, $repo))
+        $relation = (new ManyToMany($alias, $repo))
             ->setJunctionClass($junction)
             ->setForeignKey($foreignKey)
             ->setRelatedForeignKey($relatedKey);
+
+        return $this->addRelation($relation);
     }
 
     /**
@@ -809,7 +813,7 @@ class Repository extends Base implements Callback, Listener {
 
         // Manually defined columns
         // Allows for full schema and key/index support
-        }else if ($this->_schema && is_array($this->_schema)) {
+        } else if ($this->_schema && is_array($this->_schema)) {
             $columns = $this->_schema;
 
         // Inspect database for columns
@@ -869,8 +873,10 @@ class Repository extends Base implements Callback, Listener {
      * @return \Titon\Db\Relation\OneToOne
      */
     public function hasOne($alias, $repo, $relatedKey) {
-        return $this->addRelation(new OneToOne($alias, $repo))
+        $relation = (new OneToOne($alias, $repo))
             ->setRelatedForeignKey($relatedKey);
+
+        return $this->addRelation($relation);
     }
 
     /**
@@ -882,8 +888,10 @@ class Repository extends Base implements Callback, Listener {
      * @return \Titon\Db\Relation\OneToMany
      */
     public function hasMany($alias, $repo, $relatedKey) {
-        return $this->addRelation(new OneToMany($alias, $repo))
+        $relation = (new OneToMany($alias, $repo))
             ->setRelatedForeignKey($relatedKey);
+
+        return $this->addRelation($relation);
     }
 
     /**
@@ -927,22 +935,6 @@ class Repository extends Base implements Callback, Listener {
         }
 
         return $query->fields($data)->save();
-    }
-
-    /**
-     * Return results for the current query and a count of the results.
-     *
-     * @param \Titon\Db\Query $query
-     * @return array
-     */
-    public function paginate(Query $query) {
-        $count = clone $query;
-        $count->limit(null, null);
-
-        return [
-            'count' => $count->count(),
-            'results' => $query->all()
-        ];
     }
 
     /**

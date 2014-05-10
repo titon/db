@@ -51,6 +51,15 @@ class FilterBehavior extends AbstractBehavior {
     }
 
     /**
+     * Return the filter configurations.
+     *
+     * @return array
+     */
+    public function getFilters() {
+        return $this->_filters;
+    }
+
+    /**
      * Run the filters before each save.
      *
      * @param \Titon\Event\Event $event

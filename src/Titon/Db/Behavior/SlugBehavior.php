@@ -65,8 +65,9 @@ class SlugBehavior extends AbstractBehavior {
 
         $this->getRepository()->emit('db.postSlug', [&$slug]);
 
-        if (mb_strlen($slug) > ($config['length'] - 5)) {
-            $slug = mb_substr($slug, 0, ($config['length'] - 5));
+        // Leave a gap of 3 to account for the appended numbers
+        if (mb_strlen($slug) > ($config['length'] - 3)) {
+            $slug = mb_substr($slug, 0, ($config['length'] - 3));
         }
 
         if ($config['unique']) {
@@ -106,7 +107,7 @@ class SlugBehavior extends AbstractBehavior {
             $count = $query->count();
 
             if ($count <= 0) {
-                return $slug;
+                break;
 
             } else if ($i) {
                 return $slug . '-' . $count;
@@ -127,9 +128,11 @@ class SlugBehavior extends AbstractBehavior {
         $string = str_replace(['&amp;', '&'], 'and', $string);
         $string = str_replace('@', 'at', $string);
 
+        // @codeCoverageIgnoreStart
         if (class_exists('Titon\G11n\Utility\Inflector')) {
             return \Titon\G11n\Utility\Inflector::slug($string);
         }
+        // @codeCoverageIgnoreEnd
 
         return Inflector::slug($string);
     }

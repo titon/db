@@ -45,9 +45,12 @@ class RepositoryTest extends TestCase {
     public function testAddHasBehaviors() {
         $stub = new RepositoryStub();
 
+        $this->assertFalse($stub->hasBehaviors());
         $this->assertFalse($stub->hasBehavior('Stub'));
 
         $stub->addBehavior(new BehaviorStub());
+
+        $this->assertTrue($stub->hasBehaviors());
         $this->assertTrue($stub->hasBehavior('Stub'));
     }
 
@@ -67,18 +70,17 @@ class RepositoryTest extends TestCase {
     }
 
     public function testBelongsTo() {
-        $relation = $this->object->belongsTo('Country', 'Titon\Test\Stub\Repository\Country', 'country_id');
+        $this->object->belongsTo('Country', 'Titon\Test\Stub\Repository\Country', 'country_id');
 
         $expected = new ManyToOne('Country', 'Titon\Test\Stub\Repository\Country');
         $expected->setForeignKey('country_id');
         $expected->setRepository($this->object);
 
-        $this->assertEquals($expected, $relation);
-        $this->assertEquals($relation, $this->object->getRelation('Country'));
+        $this->assertEquals($expected, $this->object->getRelation('Country'));
     }
 
     public function testBelongsToMany() {
-        $relation = $this->object->belongsToMany('Groups', 'Titon\Test\Stub\Repository\Group', 'Titon\Test\Stub\Repository\UserGroups', 'user_id', 'group_id');
+        $this->object->belongsToMany('Groups', 'Titon\Test\Stub\Repository\Group', 'Titon\Test\Stub\Repository\UserGroups', 'user_id', 'group_id');
 
         $expected = new ManyToMany('Groups', 'Titon\Test\Stub\Repository\Group');
         $expected->setJunctionClass('Titon\Test\Stub\Repository\UserGroups');
@@ -86,8 +88,7 @@ class RepositoryTest extends TestCase {
         $expected->setRelatedForeignKey('group_id');
         $expected->setRepository($this->object);
 
-        $this->assertEquals($expected, $relation);
-        $this->assertEquals($relation, $this->object->getRelation('Groups'));
+        $this->assertEquals($expected, $this->object->getRelation('Groups'));
     }
 
     /**
@@ -469,25 +470,23 @@ class RepositoryTest extends TestCase {
     }
 
     public function testHasOne() {
-        $relation = $this->object->hasOne('Profile', 'Titon\Test\Stub\Repository\Profile', 'user_id');
+        $this->object->hasOne('Profile', 'Titon\Test\Stub\Repository\Profile', 'user_id');
 
         $expected = new OneToOne('Profile', 'Titon\Test\Stub\Repository\Profile');
         $expected->setRelatedForeignKey('user_id');
         $expected->setRepository($this->object);
 
-        $this->assertEquals($expected, $relation);
-        $this->assertEquals($relation, $this->object->getRelation('Profile'));
+        $this->assertEquals($expected, $this->object->getRelation('Profile'));
     }
 
     public function testHasMany() {
-        $relation = $this->object->hasMany('Posts', 'Titon\Test\Stub\Repository\Post', 'user_id');
+        $this->object->hasMany('Posts', 'Titon\Test\Stub\Repository\Post', 'user_id');
 
         $expected = new OneToMany('Posts', 'Titon\Test\Stub\Repository\Post');
         $expected->setRelatedForeignKey('user_id');
         $expected->setRepository($this->object);
 
-        $this->assertEquals($expected, $relation);
-        $this->assertEquals($relation, $this->object->getRelation('Posts'));
+        $this->assertEquals($expected, $this->object->getRelation('Posts'));
     }
 
     /**
@@ -569,6 +568,16 @@ class RepositoryTest extends TestCase {
         $query->from($this->object->getTable(), 'User')->fields('id', 'username');
 
         $this->assertEquals($query, $this->object->select('id', 'username'));
+    }
+
+    public function testTruncate() {
+        $this->loadFixtures('Users');
+
+        $this->assertEquals(5, $this->object->select()->count());
+
+        $this->object->truncate();
+
+        $this->assertEquals(0, $this->object->select()->count());
     }
 
 }

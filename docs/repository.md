@@ -35,6 +35,7 @@ $repo = new Repository([
     'table' => 'users',
     'primaryKey' => 'id'
 ]);
+```
 
 ### CRUD ###
 

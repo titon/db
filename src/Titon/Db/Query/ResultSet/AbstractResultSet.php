@@ -15,6 +15,7 @@ use Titon\Db\Query;
  * Provides shared functionality for results.
  *
  * @package Titon\Db\Query\ResultSet
+ * @codeCoverageIgnore
  */
 abstract class AbstractResultSet implements ResultSet {
     use Cacheable;

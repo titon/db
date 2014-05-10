@@ -1,10 +1,4 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Behavior;
 
 use Titon\Db\Entity;
@@ -12,24 +6,16 @@ use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\TimestampBehavior.
- *
  * @property \Titon\Db\Repository $object
  */
 class TimestampBehaviorTest extends TestCase {
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
         $this->object = new User();
     }
 
-    /**
-     * Test created timestamp is appended.
-     */
     public function testOnCreate() {
         $this->loadFixtures('Users');
 
@@ -56,9 +42,6 @@ class TimestampBehaviorTest extends TestCase {
         ]), $this->object->select('id', 'username', 'created')->where('id', $id)->first());
     }
 
-    /**
-     * Test updated timestamp is appended.
-     */
     public function testOnUpdated() {
         $this->loadFixtures('Users');
 

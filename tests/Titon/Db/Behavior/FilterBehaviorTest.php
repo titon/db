@@ -1,10 +1,4 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Behavior;
 
 use Titon\Db\Entity;
@@ -12,21 +6,47 @@ use Titon\Test\Stub\Repository\Post;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\FilterBehavior.
- *
  * @property \Titon\Db\Behavior\FilterBehavior $object
  */
 class FilterBehaviorTest extends TestCase {
 
+    protected function setUp() {
+        parent::setUp();
+
+        $this->object = new FilterBehavior();
+    }
+
+    public function testFilter() {
+        $this->object->filter('field', 'html', ['foo' => 'bar']);
+
+        $this->assertEquals([
+            'field' => [
+                'html' => ['foo' => 'bar']
+            ]
+        ], $this->object->getFilters());
+
+        $this->object->filter('field', 'xss', ['foo' => 'bar']);
+
+        $this->assertEquals([
+            'field' => [
+                'html' => ['foo' => 'bar'],
+                'xss' => ['foo' => 'bar']
+            ]
+        ], $this->object->getFilters());
+    }
+
     /**
-     * Test that HTML is stripped.
+     * @expectedException \Titon\Db\Exception\InvalidArgumentException
      */
+    public function testFilterInvalidType() {
+        $this->object->filter('field', 'foobar', ['foo' => 'bar']);
+    }
+
     public function testStrip() {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterBehavior())
-            ->filter('content', 'html');
+        $post->addBehavior($this->object->filter('content', 'html'));
 
         $post_id = $post->create([
             'topic_id' => 5,
@@ -45,15 +65,11 @@ class FilterBehaviorTest extends TestCase {
         ]), $post->read($post_id));
     }
 
-    /**
-     * Test that HTML is escaped.
-     */
     public function testHtml() {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterBehavior())
-            ->filter('content', 'html', ['strip' => false]);
+        $post->addBehavior($this->object->filter('content', 'html', ['strip' => false]));
 
         $post_id = $post->create([
             'topic_id' => 5,
@@ -72,15 +88,11 @@ class FilterBehaviorTest extends TestCase {
         ]), $post->read($post_id));
     }
 
-    /**
-     * Test that newlines are trimmed.
-     */
     public function testNewLines() {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterBehavior())
-            ->filter('content', 'newlines');
+        $post->addBehavior($this->object->filter('content', 'newlines'));
 
         $post_id = $post->create([
             'topic_id' => 5,
@@ -99,15 +111,11 @@ class FilterBehaviorTest extends TestCase {
         ]), $post->read($post_id));
     }
 
-    /**
-     * Test that whitespace is trimmed.
-     */
     public function testWhitespace() {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterBehavior())
-            ->filter('content', 'whitespace');
+        $post->addBehavior($this->object->filter('content', 'whitespace'));
 
         $post_id = $post->create([
             'topic_id' => 5,
@@ -126,15 +134,11 @@ class FilterBehaviorTest extends TestCase {
         ]), $post->read($post_id));
     }
 
-    /**
-     * Test that HTML is removed.
-     */
     public function testXss() {
         $this->loadFixtures('Posts');
 
         $post = new Post();
-        $post->addBehavior(new FilterBehavior())
-            ->filter('content', 'xss', ['strip' => false]);
+        $post->addBehavior($this->object->filter('content', 'xss', ['strip' => false]));
 
         $post_id = $post->create([
             'topic_id' => 5,

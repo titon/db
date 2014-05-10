@@ -1,10 +1,4 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db\Behavior;
 
 use Titon\Db\Entity;
@@ -13,15 +7,10 @@ use Titon\Test\Stub\Repository\Post;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Behavior\SoftDeleteBehavior.
- *
  * @property \Titon\Db\Repository $object
  */
 class SoftDeleteBehaviorTest extends TestCase {
 
-    /**
-     * This method is called before a test is executed.
-     */
     protected function setUp() {
         parent::setUp();
 
@@ -29,9 +18,6 @@ class SoftDeleteBehaviorTest extends TestCase {
         $this->object->addBehavior(new SoftDeleteBehavior());
     }
 
-    /**
-     * Test that soft delete flags a record and doesn't delete it.
-     */
     public function testSoftDelete() {
         $this->loadFixtures('Posts');
 
@@ -64,9 +50,6 @@ class SoftDeleteBehaviorTest extends TestCase {
         ]), $this->object->read(3, ['preCallback' => false]));
     }
 
-    /**
-     * Test that hard delete removes the record.
-     */
     public function testHardDelete() {
         $this->loadFixtures('Posts');
 
@@ -91,9 +74,6 @@ class SoftDeleteBehaviorTest extends TestCase {
         $this->assertFalse($this->object->exists(3));
     }
 
-    /**
-     * Test deleting records within a time frame.
-     */
     public function testPurgeDeletedTimeframe() {
         $this->loadFixtures('Posts');
 
@@ -114,9 +94,6 @@ class SoftDeleteBehaviorTest extends TestCase {
         $this->assertEquals(4, $this->object->select()->count());
     }
 
-    /**
-     * Test deleting records with a flag.
-     */
     public function testPurgeDeletedFlag() {
         $this->loadFixtures('Posts');
 
@@ -143,9 +120,6 @@ class SoftDeleteBehaviorTest extends TestCase {
         $this->assertEquals(4, $this->object->select()->count());
     }
 
-    /**
-     * Test that find calls are filtered using the delete flag.
-     */
     public function testFilterDeletedWithFlag() {
         $this->loadFixtures('Posts');
 
@@ -169,9 +143,6 @@ class SoftDeleteBehaviorTest extends TestCase {
         ]), $this->object->select()->all());
     }
 
-    /**
-     * Test that find calls are filtered using the delete flag.
-     */
     public function testFilterDeletedWithTimestamp() {
         $this->loadFixtures('Posts');
 
@@ -198,9 +169,6 @@ class SoftDeleteBehaviorTest extends TestCase {
         ]), $this->object->select()->all());
     }
 
-    /**
-     * Test that auto filtered rows can be overridden of the where clause contains the field.
-     */
     public function testFilterDeletedOverride() {
         $this->loadFixtures('Posts');
 
@@ -222,9 +190,6 @@ class SoftDeleteBehaviorTest extends TestCase {
         ]), $this->object->select()->where('deleted_at', '>', '2013-01-01 00:00:00')->all());
     }
 
-    /**
-     * Test that a soft delete occurs when a delete query is called.
-     */
     public function testDeleteEvent() {
         $this->loadFixtures('Posts');
 
