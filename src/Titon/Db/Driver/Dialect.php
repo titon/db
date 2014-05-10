@@ -15,6 +15,7 @@ use Titon\Db\Driver;
  * @link http://en.wikipedia.org/wiki/SQL
  *
  * @package Titon\Db\Driver
+ * @codeCoverageIgnore
  */
 interface Dialect {
 

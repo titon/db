@@ -21,4 +21,11 @@ class FirstFinder extends AbstractFinder {
         return $results[0]; // Return the first result
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function noResults() {
+        return null;
+    }
+
 }

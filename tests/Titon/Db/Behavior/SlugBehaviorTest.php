@@ -16,11 +16,11 @@ class SlugBehaviorTest extends TestCase {
         parent::setUp();
 
         $this->object = new SlugBehavior();
+
+        $this->loadFixtures('Topics');
     }
 
     public function testUniqueSlugs() {
-        $this->loadFixtures('Topics');
-
         $topic = new Topic();
         $topic->addBehavior($this->object);
 
@@ -40,8 +40,6 @@ class SlugBehaviorTest extends TestCase {
     }
 
     public function testNonUniqueSlugs() {
-        $this->loadFixtures('Topics');
-
         $topic = new Topic();
         $topic->addBehavior(new SlugBehavior(['unique' => false]));
 
@@ -61,8 +59,6 @@ class SlugBehaviorTest extends TestCase {
     }
 
     public function testSlugLength() {
-        $this->loadFixtures('Topics');
-
         $topic = new Topic();
         $topic->addBehavior($this->object);
 
@@ -75,8 +71,6 @@ class SlugBehaviorTest extends TestCase {
     }
 
     public function testSaveWithMissingTitle() {
-        $this->loadFixtures('Topics');
-
         $topic = new Topic();
         $topic->addBehavior($this->object);
 
@@ -90,8 +84,6 @@ class SlugBehaviorTest extends TestCase {
     }
 
     public function testSaveWithSlug() {
-        $this->loadFixtures('Topics');
-
         $topic = new Topic();
         $topic->addBehavior($this->object);
 
@@ -104,8 +96,6 @@ class SlugBehaviorTest extends TestCase {
     }
 
     public function testOnUpdate() {
-        $this->loadFixtures('Topics');
-
         $topic = new Topic();
         $topic->addBehavior($this->object);
 
@@ -118,8 +108,6 @@ class SlugBehaviorTest extends TestCase {
     }
 
     public function testOnUpdateDisabled() {
-        $this->loadFixtures('Topics');
-
         $topic = new Topic();
         $topic->addBehavior(new SlugBehavior(['onUpdate' => false]));
 
@@ -132,8 +120,6 @@ class SlugBehaviorTest extends TestCase {
     }
 
     public function testOnUpdateSameSlug() {
-        $this->loadFixtures('Topics');
-
         $topic = new Topic();
         $topic->addBehavior(new SlugBehavior(['onUpdate' => false]));
 
@@ -146,8 +132,6 @@ class SlugBehaviorTest extends TestCase {
     }
 
     public function testWithScope() {
-        $this->loadFixtures('Topics');
-
         $topic = new Topic();
         $topic->addBehavior(new SlugBehavior(['scope' => function(Query $query) {
             $query->where('post_count', '<=', 3);

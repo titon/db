@@ -14,11 +14,11 @@ class TimestampBehaviorTest extends TestCase {
         parent::setUp();
 
         $this->object = new User();
+
+        $this->loadFixtures('Users');
     }
 
     public function testOnCreate() {
-        $this->loadFixtures('Users');
-
         $id = $this->object->create(['username' => 'foo']);
 
         $this->assertEquals(new Entity([
@@ -43,8 +43,6 @@ class TimestampBehaviorTest extends TestCase {
     }
 
     public function testOnUpdated() {
-        $this->loadFixtures('Users');
-
         $this->object->update(1, ['username' => 'foo']);
 
         $this->assertEquals(new Entity([

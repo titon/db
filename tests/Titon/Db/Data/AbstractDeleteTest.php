@@ -192,8 +192,8 @@ class AbstractDeleteTest extends TestCase {
         $book->delete(5, true);
 
         $this->assertFalse($book->exists(5));
-        $this->assertEquals([], $book->select()->where('id', 5)->with('Genres')->first());
-        $this->assertEquals([], $bookGenres->select()->where('book_id', 5)->first());
+        $this->assertEquals(null, $book->select()->where('id', 5)->with('Genres')->first());
+        $this->assertEquals(null, $bookGenres->select()->where('book_id', 5)->first());
 
         // The related records don't get deleted
         // Only the junction records should be
@@ -266,7 +266,7 @@ class AbstractDeleteTest extends TestCase {
 
         $this->assertFalse($series->exists(3));
         $this->assertEquals(new EntityCollection(), $series->Books->select('id', 'name')->where('series_id', 3)->all());
-        $this->assertEquals([], $bookGenres->select()->where('book_id', 14)->first());
+        $this->assertEquals(null, $bookGenres->select()->where('book_id', 14)->first());
     }
 
     /**

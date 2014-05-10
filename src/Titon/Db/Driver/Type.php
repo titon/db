@@ -13,6 +13,7 @@ use Titon\Db\Driver;
  * Represents a database column type.
  *
  * @package Titon\Db\Driver
+ * @codeCoverageIgnore
  */
 interface Type {
 

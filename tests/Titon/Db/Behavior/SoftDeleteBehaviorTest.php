@@ -16,11 +16,11 @@ class SoftDeleteBehaviorTest extends TestCase {
 
         $this->object = new Post();
         $this->object->addBehavior(new SoftDeleteBehavior());
+
+        $this->loadFixtures('Posts');
     }
 
     public function testSoftDelete() {
-        $this->loadFixtures('Posts');
-
         $this->assertEquals(new Entity([
             'id' => 3,
             'topic_id' => 1,
@@ -36,7 +36,7 @@ class SoftDeleteBehaviorTest extends TestCase {
         $this->object->getBehavior('SoftDelete')->softDelete(3);
 
         // Reading should return nothing as its filtered
-        $this->assertEquals([], $this->object->read(3));
+        $this->assertEquals(null, $this->object->read(3));
 
         // Fetch it without callbacks
         $this->assertEquals(new Entity([
@@ -51,8 +51,6 @@ class SoftDeleteBehaviorTest extends TestCase {
     }
 
     public function testHardDelete() {
-        $this->loadFixtures('Posts');
-
         /** @type \Titon\Db\Behavior\SoftDeleteBehavior $behavior */
         $behavior = $this->object->getBehavior('SoftDelete');
 
@@ -75,8 +73,6 @@ class SoftDeleteBehaviorTest extends TestCase {
     }
 
     public function testPurgeDeletedTimeframe() {
-        $this->loadFixtures('Posts');
-
         /** @type \Titon\Db\Behavior\SoftDeleteBehavior $behavior */
         $behavior = $this->object->getBehavior('SoftDelete');
 
@@ -95,8 +91,6 @@ class SoftDeleteBehaviorTest extends TestCase {
     }
 
     public function testPurgeDeletedFlag() {
-        $this->loadFixtures('Posts');
-
         $this->assertEquals(7, $this->object->select()->count());
 
         $this->object->getBehavior('SoftDelete')->purgeDeleted(null);
@@ -109,8 +103,6 @@ class SoftDeleteBehaviorTest extends TestCase {
      * Test deleting records with a timestamp.
      */
     public function testPurgeDeletedTimestamp() {
-        $this->loadFixtures('Posts');
-
         $this->object->getBehavior('SoftDelete')->setConfig('useFlag', false);
 
         $this->assertEquals(7, $this->object->select()->count());
@@ -121,8 +113,6 @@ class SoftDeleteBehaviorTest extends TestCase {
     }
 
     public function testFilterDeletedWithFlag() {
-        $this->loadFixtures('Posts');
-
         $this->assertEquals(new EntityCollection([
             new Entity(['id' => 2, 'topic_id' => 1, 'active' => 1, 'deleted' => 0, 'content' => 'Proin sed magna accumsan, mattis dolor at, commodo nisl.', 'created_at' => '2012-04-06 23:55:33', 'deleted_at' => null]),
             new Entity(['id' => 3, 'topic_id' => 1, 'active' => 1, 'deleted' => 0, 'content' => 'Nullam vel pulvinar lorem. Ut id egestas justo.', 'created_at' => '2012-07-29 11:36:12', 'deleted_at' => null]),
@@ -144,8 +134,6 @@ class SoftDeleteBehaviorTest extends TestCase {
     }
 
     public function testFilterDeletedWithTimestamp() {
-        $this->loadFixtures('Posts');
-
         $this->object->getBehavior('SoftDelete')->setConfig('useFlag', false);
 
         $this->assertEquals(new EntityCollection([
@@ -170,8 +158,6 @@ class SoftDeleteBehaviorTest extends TestCase {
     }
 
     public function testFilterDeletedOverride() {
-        $this->loadFixtures('Posts');
-
         $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'topic_id' => 1, 'active' => 1, 'deleted' => 1, 'content' => 'Curabitur vulputate sem eget metus dignissim varius.', 'created_at' => '2012-01-01 00:12:34', 'deleted_at' => '2012-02-06 23:55:33']),
             new Entity(['id' => 2, 'topic_id' => 1, 'active' => 1, 'deleted' => 0, 'content' => 'Proin sed magna accumsan, mattis dolor at, commodo nisl.', 'created_at' => '2012-04-06 23:55:33', 'deleted_at' => null]),
@@ -191,8 +177,6 @@ class SoftDeleteBehaviorTest extends TestCase {
     }
 
     public function testDeleteEvent() {
-        $this->loadFixtures('Posts');
-
         $this->assertEquals(new Entity([
             'id' => 3,
             'topic_id' => 1,
@@ -207,7 +191,7 @@ class SoftDeleteBehaviorTest extends TestCase {
         $this->object->delete(3);
 
         // Reading should return nothing as its filtered
-        $this->assertEquals([], $this->object->read(3));
+        $this->assertEquals(null, $this->object->read(3));
 
         // Fetch it without callbacks
         $this->assertEquals(new Entity([

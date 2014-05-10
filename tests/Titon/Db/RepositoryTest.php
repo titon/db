@@ -192,7 +192,7 @@ class RepositoryTest extends TestCase {
         $this->assertEquals(new Entity($result), $this->object->query(Query::SELECT)->where('id', 3)->first());
 
         // No results
-        $this->assertEquals([], $this->object->query(Query::SELECT)->where('id', 15)->first());
+        $this->assertEquals(null, $this->object->query(Query::SELECT)->where('id', 15)->first());
     }
 
     /**
@@ -557,7 +557,7 @@ class RepositoryTest extends TestCase {
         ]), $this->object->read(3));
 
         // No results
-        $this->assertEquals([], $this->object->read(25));
+        $this->assertEquals(null, $this->object->read(25));
     }
 
     /**

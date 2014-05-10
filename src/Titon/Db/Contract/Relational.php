@@ -12,6 +12,7 @@ namespace Titon\Db\Contract;
  * instead of acting as the repository.
  *
  * @package Titon\Db\Contract
+ * @codeCoverageIgnore
  */
 interface Relational {
 

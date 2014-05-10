@@ -16,12 +16,11 @@ class HierarchyBehaviorTest extends TestCase {
 
         $this->object = new Category();
         $this->object->addBehavior(new HierarchyBehavior());
+
+        $this->loadFixtures('Categories');
     }
 
-    public function testCreateNode() {
-        $this->loadFixtures('Categories');
-
-        // Add as a child
+    public function testSave() {
         $this->object->create([
             'parent_id' => 22,
             'name' => 'Prawn'
@@ -152,20 +151,42 @@ class HierarchyBehaviorTest extends TestCase {
         ], $this->object->Hierarchy->getList());
     }
 
-    public function testDeleteNode() {
-        $this->loadFixtures('Categories');
+    public function testSaveCheckIsSkipped() {
+        $this->object->Hierarchy->setConfig('onSave', false);
 
-        // Delete pork
-        $this->object->delete(18);
+        $this->object->update(18, [
+            'name' => 'Pork-y',
+            'left' => 666,
+            'right' => 1337
+        ]);
 
         $this->assertEquals(new Entity([
-            'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 36, 'Nodes' => [
-                new Entity(['id' => 17, 'name' => 'Beef', 'parent_id' => 16, 'left' => 32, 'right' => 33]),
-                new Entity(['id' => 19, 'name' => 'Chicken', 'parent_id' => 16, 'left' => 34, 'right' => 35]),
-        ]]), $this->object->Hierarchy->getTree(16));
+            'id' => 18,
+            'name' => 'Pork-y',
+            'parent_id' => 16,
+            'left' => 666,
+            'right' => 1337
+        ]), $this->object->Hierarchy->getNode(18));
+    }
 
-        // Attempt to delete meat, should fail
-        $this->assertEquals(0, $this->object->delete(16));
+    public function testSaveIgnoresLeftRight() {
+        $this->object->update(18, [
+            'name' => 'Pork-y',
+            'left' => 666,
+            'right' => 1337
+        ]);
+
+        $this->assertEquals(new Entity([
+            'id' => 18,
+            'name' => 'Pork-y',
+            'parent_id' => 16,
+            'left' => 34,
+            'right' => 35
+        ]), $this->object->Hierarchy->getNode(18));
+    }
+
+    public function testDelete() {
+        $this->assertEquals(1, $this->object->delete(18));
 
         $this->assertEquals(new Entity([
             'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 36, 'Nodes' => [
@@ -174,9 +195,26 @@ class HierarchyBehaviorTest extends TestCase {
         ]]), $this->object->Hierarchy->getTree(16));
     }
 
-    public function testGetTree() {
-        $this->loadFixtures('Categories');
+    public function testDeleteFailsWithChildren() {
+        $this->assertEquals(0, $this->object->delete(16));
 
+        $this->assertEquals(new Entity([
+            'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 38, 'Nodes' => [
+                new Entity(['id' => 17, 'name' => 'Beef', 'parent_id' => 16, 'left' => 32, 'right' => 33]),
+                new Entity(['id' => 18, 'name' => 'Pork', 'parent_id' => 16, 'left' => 34, 'right' => 35]),
+                new Entity(['id' => 19, 'name' => 'Chicken', 'parent_id' => 16, 'left' => 36, 'right' => 37]),
+        ]]), $this->object->Hierarchy->getTree(16));
+    }
+
+    public function testDeleteChildrenCheckIsSkipped() {
+        $this->object->Hierarchy->setConfig('onDelete', false);
+
+        $this->assertEquals(1, $this->object->delete(16));
+
+        $this->assertEquals([], $this->object->Hierarchy->getTree(16));
+    }
+
+    public function testGetTree() {
         $this->assertEquals([
             new Entity(['id' => 1, 'name' => 'Fruit', 'parent_id' => null, 'left' => 1, 'right' => 20, 'Nodes' => [
                 new Entity(['id' => 2, 'name' => 'Banana', 'parent_id' => 1, 'left' => 2, 'right' => 3]),
@@ -225,22 +263,16 @@ class HierarchyBehaviorTest extends TestCase {
     }
 
     public function testGetTreeInvalidID() {
-        $this->loadFixtures('Categories');
-
         $this->assertEquals([], $this->object->Hierarchy->getTree(100));
     }
 
     public function testGetTreeNoRecords() {
-        $this->loadFixtures('Categories');
-
         $this->object->truncate();
 
         $this->assertEquals([], $this->object->Hierarchy->getTree());
     }
 
     public function testGetList() {
-        $this->loadFixtures('Categories');
-
         $this->assertEquals([
             1 => 'Fruit',
             2 => '    Banana',
@@ -286,14 +318,10 @@ class HierarchyBehaviorTest extends TestCase {
     }
 
     public function testGetListInvalidID() {
-        $this->loadFixtures('Categories');
-
         $this->assertEquals([], $this->object->Hierarchy->getList(666));
     }
 
     public function testGetPath() {
-        $this->loadFixtures('Categories');
-
         $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'name' => 'Fruit', 'parent_id' => null, 'left' => 1, 'right' => 20]),
             new Entity(['id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15])
@@ -303,14 +331,10 @@ class HierarchyBehaviorTest extends TestCase {
     }
 
     public function testGetPathInvalidID() {
-        $this->loadFixtures('Categories');
-
         $this->assertEquals([], $this->object->Hierarchy->getPath(666));
     }
 
     public function testGetFirstNode() {
-        $this->loadFixtures('Categories');
-
         $this->assertEquals(new Entity([
             'id' => 1,
             'name' => 'Fruit',
@@ -321,8 +345,6 @@ class HierarchyBehaviorTest extends TestCase {
     }
 
     public function testGetLastNode() {
-        $this->loadFixtures('Categories');
-
         $this->assertEquals(new Entity([
             'id' => 20,
             'name' => 'Seafood',
@@ -333,10 +355,7 @@ class HierarchyBehaviorTest extends TestCase {
     }
 
     public function testMoveDown() {
-        $this->loadFixtures('Categories');
-
-        // Move wheat down 2 places
-        $this->object->Hierarchy->moveDown(12, 2);
+        $this->assertTrue($this->object->Hierarchy->moveDown(12, 2));
 
         $this->assertEquals(new Entity([
             'id' => 11, 'name' => 'Grain', 'parent_id' => null, 'left' => 21, 'right' => 30, 'Nodes' => [
@@ -347,7 +366,7 @@ class HierarchyBehaviorTest extends TestCase {
         ]]), $this->object->Hierarchy->getTree(11));
 
         // Move beef to outside the bottom
-        $this->object->Hierarchy->moveDown(17, 8);
+        $this->assertTrue($this->object->Hierarchy->moveDown(17, 8));
 
         $this->assertEquals(new Entity([
             'id' => 16, 'name' => 'Meat', 'parent_id' => null, 'left' => 31, 'right' => 38, 'Nodes' => [
@@ -357,7 +376,7 @@ class HierarchyBehaviorTest extends TestCase {
         ]]), $this->object->Hierarchy->getTree(16));
 
         // Move strawberry down, but it wont since its already last
-        $this->object->Hierarchy->moveDown(8);
+        $this->assertTrue($this->object->Hierarchy->moveDown(8));
 
         $this->assertEquals(new Entity([
             'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15, 'Nodes' => [
@@ -367,11 +386,16 @@ class HierarchyBehaviorTest extends TestCase {
         ]]), $this->object->Hierarchy->getTree(5));
     }
 
-    public function testMoveUp() {
-        $this->loadFixtures('Categories');
+    public function testMoveDownFailsOnMissingNode() {
+        $this->assertFalse($this->object->Hierarchy->moveDown(666));
+    }
 
-        // Move lobster up
-        $this->object->Hierarchy->moveUp(25);
+    public function testMoveDownFailsOnRootNode() {
+        $this->assertFalse($this->object->Hierarchy->moveDown(1));
+    }
+
+    public function testMoveUp() {
+        $this->assertTrue($this->object->Hierarchy->moveUp(25));
 
         $this->assertEquals(new Entity([
             'id' => 22, 'name' => 'Shellfish', 'parent_id' => 20, 'left' => 42, 'right' => 49, 'Nodes' => [
@@ -381,7 +405,7 @@ class HierarchyBehaviorTest extends TestCase {
         ]]), $this->object->Hierarchy->getTree(22));
 
         // Move farro to the top
-        $this->object->Hierarchy->moveUp(15, 4);
+        $this->assertTrue($this->object->Hierarchy->moveUp(15, 4));
 
         $this->assertEquals(new Entity([
             'id' => 11, 'name' => 'Grain', 'parent_id' => null, 'left' => 21, 'right' => 30, 'Nodes' => [
@@ -392,7 +416,7 @@ class HierarchyBehaviorTest extends TestCase {
         ]]), $this->object->Hierarchy->getTree(11));
 
         // Move Blueberry up, but it wont since its already first
-        $this->object->Hierarchy->moveUp(6);
+        $this->assertTrue($this->object->Hierarchy->moveUp(6));
 
         $this->assertEquals(new Entity([
             'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 8, 'right' => 15, 'Nodes' => [
@@ -402,11 +426,16 @@ class HierarchyBehaviorTest extends TestCase {
         ]]), $this->object->Hierarchy->getTree(5));
     }
 
-    public function testMoveTo() {
-        $this->loadFixtures('Categories');
+    public function testMoveUpFailsOnMissingNode() {
+        $this->assertFalse($this->object->Hierarchy->moveUp(666));
+    }
 
-        // Move banana to berry list
-        $this->object->Hierarchy->moveTo(2, 5);
+    public function testMoveUpFailsOnRootNode() {
+        $this->assertFalse($this->object->Hierarchy->moveUp(1));
+    }
+
+    public function testMoveTo() {
+        $this->assertTrue($this->object->Hierarchy->moveTo(2, 5));
 
         $this->assertEquals(new Entity([
             'id' => 5, 'name' => 'Berry', 'parent_id' => 1, 'left' => 6, 'right' => 15, 'Nodes' => [
@@ -417,7 +446,7 @@ class HierarchyBehaviorTest extends TestCase {
         ]]), $this->object->Hierarchy->getTree(5));
 
         // Move barley to the root
-        $this->object->Hierarchy->moveTo(14, null);
+        $this->assertTrue($this->object->Hierarchy->moveTo(14, null));
 
         $this->assertEquals(new Entity([
             'id' => 14,
@@ -428,10 +457,15 @@ class HierarchyBehaviorTest extends TestCase {
         ]), $this->object->Hierarchy->getLastNode());
     }
 
-    public function testReOrder() {
-        $this->loadFixtures('Categories');
+    public function testMoveToFailsOnMissingNode() {
+        $this->assertFalse($this->object->Hierarchy->moveTo(666, 1));
+    }
 
-        // Reorder by name
+    public function testMoveToFailsToSameParent() {
+        $this->assertFalse($this->object->Hierarchy->moveTo(3, 1));
+    }
+
+    public function testReOrder() {
         $this->object->Hierarchy->reOrder(['name' => 'asc']);
 
         $this->assertEquals([

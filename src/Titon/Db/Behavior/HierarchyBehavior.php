@@ -114,7 +114,7 @@ class HierarchyBehavior extends AbstractBehavior {
      */
     public function preSave(Event $event, $id, array &$data) {
         if (!$this->getConfig('onSave')) {
-            return $data;
+            return true;
         }
 
         $parent = $this->getConfig('parentField');
@@ -155,7 +155,7 @@ class HierarchyBehavior extends AbstractBehavior {
 
         // Remove left and right fields from updates as it should not be modified
         } else {
-            unset($data[$this->getConfig('leftField')], $data[$this->getConfig('rightField')]);
+            unset($data[$left], $data[$right]);
         }
 
         return true;
@@ -180,7 +180,7 @@ class HierarchyBehavior extends AbstractBehavior {
     /**
      * Return the fetch node in the tree.
      *
-     * @return array
+     * @return \Titon\Db\Entity
      */
     public function getFirstNode() {
         return $this->getRepository()->select()
@@ -192,7 +192,7 @@ class HierarchyBehavior extends AbstractBehavior {
     /**
      * Return the last node in the tree.
      *
-     * @return array
+     * @return \Titon\Db\Entity
      */
     public function getLastNode() {
         return $this->getRepository()->select()
@@ -234,7 +234,7 @@ class HierarchyBehavior extends AbstractBehavior {
      *
      * @param int $id
      * @param bool $withParent
-     * @return array
+     * @return \Titon\Db\Entity
      */
     public function getNode($id, $withParent = false) {
         $repo = $this->getRepository();
@@ -260,7 +260,7 @@ class HierarchyBehavior extends AbstractBehavior {
      * Return the hierarchical path to the current node.
      *
      * @param int $id
-     * @return array
+     * @return \Titon\Db\EntityCollection
      */
     public function getPath($id) {
         $node = $this->getNode($id);
@@ -302,7 +302,7 @@ class HierarchyBehavior extends AbstractBehavior {
 
         $nodes = $query->all();
 
-        if (!$nodes) {
+        if ($nodes->isEmpty()) {
             return [];
         }
 
@@ -400,7 +400,7 @@ class HierarchyBehavior extends AbstractBehavior {
         $repo = $this->getRepository();
         $node = $this->getNode($id, true);
 
-        if (!$node || empty($node['Parent'])) {
+        if (!$node || empty($node['Parent']['id'])) {
             return false;
         }
 
@@ -460,7 +460,7 @@ class HierarchyBehavior extends AbstractBehavior {
         $repo = $this->getRepository();
         $node = $this->getNode($id, true);
 
-        if (!$node || empty($node['Parent'])) {
+        if (!$node || empty($node['Parent']['id'])) {
             return false;
         }
 
@@ -544,10 +544,6 @@ class HierarchyBehavior extends AbstractBehavior {
                 $left => $lastNode[$right] + 1,
                 $right => $lastNode[$right] + 2
             ];
-        }
-
-        if (!$data) {
-            return false;
         }
 
         $repo->query(Query::UPDATE)

@@ -14,6 +14,8 @@ class ConverterBehaviorTest extends TestCase {
         parent::setUp();
 
         $this->object = new ConverterBehavior();
+
+        $this->loadFixtures('Posts');
     }
 
     public function testConvert() {
@@ -40,16 +42,12 @@ class ConverterBehaviorTest extends TestCase {
     }
 
     public function testCustom() {
-        $this->loadFixtures('Posts');
-
-        $post = new Post();
-
-        // No decoding
         $behavior = $this->object->convert('content', 'custom', [
             'encode' => 'toHash',
             'decode' => false
         ]);
 
+        $post = new Post();
         $post->addBehavior($behavior);
 
         $post_id = $post->create([
@@ -84,13 +82,9 @@ class ConverterBehaviorTest extends TestCase {
     }
 
     public function testSerialize() {
-        $this->loadFixtures('Posts');
-
-        $post = new Post();
-
-        // No decoding
         $behavior = $this->object->convert('content', 'serialize', ['decode' => false]);
 
+        $post = new Post();
         $post->addBehavior($behavior);
 
         $post_id = $post->create([
@@ -125,13 +119,9 @@ class ConverterBehaviorTest extends TestCase {
     }
 
     public function testJson() {
-        $this->loadFixtures('Posts');
-
-        $post = new Post();
-
-        // No decoding
         $behavior = $this->object->convert('content', 'json', ['decode' => false]);
 
+        $post = new Post();
         $post->addBehavior($behavior);
 
         $post_id = $post->create([
@@ -166,9 +156,6 @@ class ConverterBehaviorTest extends TestCase {
     }
 
     public function testBase64() {
-        $this->loadFixtures('Posts');
-
-        // No decoding
         $behavior = $this->object->convert('content', 'base64', ['decode' => false]);
 
         $post = new Post();
@@ -206,8 +193,6 @@ class ConverterBehaviorTest extends TestCase {
     }
 
     public function testEncodeDecodeSkip() {
-        $this->loadFixtures('Posts');
-
         $behavior = $this->object->convert('content', 'base64', ['encode' => false, 'decode' => false]);
 
         $post = new Post();
@@ -231,8 +216,6 @@ class ConverterBehaviorTest extends TestCase {
     }
 
     public function testListFinderSkip() {
-        $this->loadFixtures('Posts');
-
         $behavior = $this->object->convert('content', 'base64');
 
         $post = new Post();

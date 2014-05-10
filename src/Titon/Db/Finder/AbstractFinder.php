@@ -33,11 +33,4 @@ abstract class AbstractFinder extends Base implements Finder {
         return $query;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function noResults() {
-        return [];
-    }
-
 }

@@ -14,6 +14,8 @@ class FilterBehaviorTest extends TestCase {
         parent::setUp();
 
         $this->object = new FilterBehavior();
+
+        $this->loadFixtures('Posts');
     }
 
     public function testFilter() {
@@ -43,8 +45,6 @@ class FilterBehaviorTest extends TestCase {
     }
 
     public function testStrip() {
-        $this->loadFixtures('Posts');
-
         $post = new Post();
         $post->addBehavior($this->object->filter('content', 'html'));
 
@@ -66,8 +66,6 @@ class FilterBehaviorTest extends TestCase {
     }
 
     public function testHtml() {
-        $this->loadFixtures('Posts');
-
         $post = new Post();
         $post->addBehavior($this->object->filter('content', 'html', ['strip' => false]));
 
@@ -89,8 +87,6 @@ class FilterBehaviorTest extends TestCase {
     }
 
     public function testNewLines() {
-        $this->loadFixtures('Posts');
-
         $post = new Post();
         $post->addBehavior($this->object->filter('content', 'newlines'));
 
@@ -112,8 +108,6 @@ class FilterBehaviorTest extends TestCase {
     }
 
     public function testWhitespace() {
-        $this->loadFixtures('Posts');
-
         $post = new Post();
         $post->addBehavior($this->object->filter('content', 'whitespace'));
 
@@ -135,8 +129,6 @@ class FilterBehaviorTest extends TestCase {
     }
 
     public function testXss() {
-        $this->loadFixtures('Posts');
-
         $post = new Post();
         $post->addBehavior($this->object->filter('content', 'xss', ['strip' => false]));
 

@@ -41,4 +41,11 @@ class ListFinder extends AbstractFinder {
         return $list;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function noResults() {
+        return [];
+    }
+
 }

@@ -33,7 +33,7 @@ class FirstFinderTest extends TestCase {
     }
 
     public function testNoResults() {
-        $this->assertEquals([], $this->object->noResults());
+        $this->assertEquals(null, $this->object->noResults());
     }
 
 }
