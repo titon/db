@@ -15,7 +15,7 @@ use Titon\Db\Query;
  *
  * @package Titon\Db\Driver\Dialect
  */
-class AbstractPdoDialect extends AbstractDialect {
+abstract class AbstractPdoDialect extends AbstractDialect {
 
     /**
      * Build the CREATE INDEX query.
@@ -24,14 +24,11 @@ class AbstractPdoDialect extends AbstractDialect {
      * @return string
      */
     public function buildCreateIndex(Query $query) {
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::CREATE_INDEX));
-        $params = $params + [
+        return $this->renderStatement(Query::CREATE_INDEX, [
             'index' => $this->formatTable($query->getAlias()),
             'table' => $this->formatTable($query->getTable()),
             'fields' => $this->formatFields($query)
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::CREATE_INDEX), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
     /**
@@ -45,18 +42,15 @@ class AbstractPdoDialect extends AbstractDialect {
         $schema = $query->getSchema();
 
         if (!$schema) {
-            throw new InvalidSchemaException('Repository creation requires a valid schema object');
+            throw new InvalidSchemaException('Table creation requires a valid schema object');
         }
 
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::CREATE_TABLE));
-        $params = $params + [
+        return $this->renderStatement(Query::CREATE_TABLE, [
             'table' => $this->formatTable($schema->getTable()),
             'columns' => $this->formatColumns($schema),
             'keys' => $this->formatTableKeys($schema),
             'options' => $this->formatTableOptions($schema->getOptions())
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::CREATE_TABLE), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
     /**
@@ -66,16 +60,13 @@ class AbstractPdoDialect extends AbstractDialect {
      * @return string
      */
     public function buildDelete(Query $query) {
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DELETE));
-        $params = $params + [
+        return $this->renderStatement(Query::DELETE, [
             'table' => $this->formatTable($query->getTable(), $query->getAlias()),
             'joins' => $this->formatJoins($query->getJoins()),
             'where' => $this->formatWhere($query->getWhere()),
             'orderBy' => $this->formatOrderBy($query->getOrderBy()),
             'limit' => $this->formatLimit($query->getLimit()),
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::DELETE), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
     /**
@@ -85,13 +76,10 @@ class AbstractPdoDialect extends AbstractDialect {
      * @return string
      */
     public function buildDropIndex(Query $query) {
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DROP_INDEX));
-        $params = $params + [
+        return $this->renderStatement(Query::DROP_INDEX, [
             'index' => $this->formatTable($query->getAlias()),
             'table' => $this->formatTable($query->getTable())
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::DROP_INDEX), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
     /**
@@ -101,12 +89,9 @@ class AbstractPdoDialect extends AbstractDialect {
      * @return string
      */
     public function buildDropTable(Query $query) {
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::DROP_TABLE));
-        $params = $params + [
+        return $this->renderStatement(Query::DROP_TABLE, [
             'table' => $this->formatTable($query->getTable())
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::DROP_TABLE), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
     /**
@@ -116,14 +101,11 @@ class AbstractPdoDialect extends AbstractDialect {
      * @return string
      */
     public function buildInsert(Query $query) {
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
-        $params = $params + [
+        return $this->renderStatement(Query::INSERT, [
             'table' => $this->formatTable($query->getTable()),
             'fields' => $this->formatFields($query),
             'values' => $this->formatValues($query)
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::INSERT), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
     /**
@@ -133,14 +115,11 @@ class AbstractPdoDialect extends AbstractDialect {
      * @return string
      */
     public function buildMultiInsert(Query $query) {
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::INSERT));
-        $params = $params + [
+        return $this->renderStatement(Query::INSERT, [
             'table' => $this->formatTable($query->getTable()),
             'fields' => $this->formatFields($query),
             'values' => $this->formatValues($query)
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::INSERT), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
     /**
@@ -150,8 +129,7 @@ class AbstractPdoDialect extends AbstractDialect {
      * @return string
      */
     public function buildSelect(Query $query) {
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::SELECT));
-        $params = $params + [
+        return $this->renderStatement(Query::SELECT, [
             'fields' => $this->formatFields($query),
             'table' => $this->formatTable($query->getTable(), $query->getAlias()),
             'joins' => $this->formatJoins($query->getJoins()),
@@ -161,9 +139,7 @@ class AbstractPdoDialect extends AbstractDialect {
             'compounds' => $this->formatCompounds($query->getCompounds()),
             'orderBy' => $this->formatOrderBy($query->getOrderBy()),
             'limit' => $this->formatLimitOffset($query->getLimit(), $query->getOffset()),
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::SELECT), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
     /**
@@ -173,12 +149,9 @@ class AbstractPdoDialect extends AbstractDialect {
      * @return string
      */
     public function buildTruncate(Query $query) {
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::TRUNCATE));
-        $params = $params + [
+        return $this->renderStatement(Query::TRUNCATE, [
             'table' => $this->formatTable($query->getTable())
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::TRUNCATE), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
     /**
@@ -188,17 +161,14 @@ class AbstractPdoDialect extends AbstractDialect {
      * @return string
      */
     public function buildUpdate(Query $query) {
-        $params = $this->renderAttributes($query->getAttributes() + $this->getAttributes(Query::UPDATE));
-        $params = $params + [
+        return $this->renderStatement(Query::UPDATE, [
             'fields' => $this->formatFields($query),
             'table' => $this->formatTable($query->getTable(), $query->getAlias()),
             'joins' => $this->formatJoins($query->getJoins()),
             'where' => $this->formatWhere($query->getWhere()),
             'orderBy' => $this->formatOrderBy($query->getOrderBy()),
             'limit' => $this->formatLimit($query->getLimit()),
-        ];
-
-        return $this->renderStatement($this->getStatement(Query::UPDATE), $params);
+        ] + $this->formatAttributes($query->getAttributes()));
     }
 
 }

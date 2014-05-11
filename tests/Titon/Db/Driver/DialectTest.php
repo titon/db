@@ -2,6 +2,7 @@
 namespace Titon\Db\Driver;
 
 use Titon\Db\Driver\Dialect\AbstractDialect;
+use Titon\Db\Driver\Dialect\Statement;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
 use Titon\Db\Query\Join;
@@ -34,6 +35,69 @@ class DialectTest extends TestCase {
         parent::tearDown();
 
         $this->driver->disconnect();
+    }
+
+    public function testAddClause() {
+        $this->assertFalse($this->object->hasClause('foo'));
+
+        $this->object->addClause('foo', 'bar');
+
+        $this->assertTrue($this->object->hasClause('foo'));
+    }
+
+    public function testAddClauses() {
+        $this->assertFalse($this->object->hasClause('foo'));
+        $this->assertEquals('%s AS %s', $this->object->getClause('as'));
+
+        $this->object->addClauses([
+            'foo' => 'bar',
+            'as' => '%s ALIASED %s'
+        ]);
+
+        $this->assertTrue($this->object->hasClause('foo'));
+        $this->assertEquals('%s ALIASED %s', $this->object->getClause('as'));
+    }
+
+    public function testAddKeyword() {
+        $this->assertFalse($this->object->hasKeyword('foo'));
+
+        $this->object->addKeyword('foo', 'bar');
+
+        $this->assertTrue($this->object->hasKeyword('foo'));
+    }
+
+    public function testAddKeywords() {
+        $this->assertFalse($this->object->hasKeyword('foo'));
+        $this->assertEquals('ALL', $this->object->getKeyword('all'));
+
+        $this->object->addKeywords([
+            'foo' => 'bar',
+            'all' => 'ALL THE THINGS'
+        ]);
+
+        $this->assertTrue($this->object->hasKeyword('foo'));
+        $this->assertEquals('ALL THE THINGS', $this->object->getKeyword('all'));
+    }
+
+    public function testAddStatement() {
+        $this->assertFalse($this->object->hasStatement('foo'));
+
+        $this->object->addStatement('foo', new Statement('Foo'));
+
+        $this->assertTrue($this->object->hasStatement('foo'));
+    }
+
+    public function testAddStatements() {
+        $this->assertFalse($this->object->hasStatement('foo'));
+        $this->assertEquals(new Statement('TRUNCATE {table}'), $this->object->getStatement('truncate'));
+
+        $this->object->addStatements([
+            'foo' => new Statement('Foo'),
+            'truncate' => new Statement('TRUNCATE ALL THE THINGS')
+        ]);
+
+        $this->assertTrue($this->object->hasStatement('foo'));
+        $this->assertEquals(new Statement('TRUNCATE ALL THE THINGS'), $this->object->getStatement('truncate'));
     }
 
     public function testBuildCreateIndex() {
@@ -895,7 +959,7 @@ class DialectTest extends TestCase {
     }
 
     public function testGetStatement() {
-        $this->assertEquals('INSERT INTO {table} {fields} VALUES {values}', $this->object->getStatement('insert'));
+        $this->assertEquals(new Statement('INSERT INTO {table} {fields} VALUES {values}'), $this->object->getStatement('insert'));
     }
 
     /**
@@ -906,7 +970,7 @@ class DialectTest extends TestCase {
     }
 
     public function testGetStatements() {
-        $this->assertNotEmpty($this->object->getStatements());
+        $this->assertEquals(['insert', 'select', 'update', 'delete', 'truncate', 'createTable', 'createIndex', 'dropTable', 'dropIndex'], array_keys($this->object->getStatements()));
     }
 
     public function testQuote() {
@@ -931,18 +995,18 @@ class DialectTest extends TestCase {
     }
 
     public function testRenderAttributes() {
-        $this->assertEquals(['a.distinct' => ''], $this->object->renderAttributes(['distinct' => false]));
-        $this->assertEquals(['a.distinct' => 'DISTINCT'], $this->object->renderAttributes(['distinct' => true]));
-        $this->assertEquals(['a.distinct' => 'DISTINCT'], $this->object->renderAttributes(['distinct' => 'distinct']));
-        $this->assertEquals(['a.distinct' => 'DEFAULT test'], $this->object->renderAttributes(['distinct' => function(Dialect $dialect) {
+        $this->assertEquals(['distinct' => ''], $this->object->formatAttributes(['distinct' => false]));
+        $this->assertEquals(['distinct' => 'DISTINCT'], $this->object->formatAttributes(['distinct' => true]));
+        $this->assertEquals(['distinct' => 'DISTINCT'], $this->object->formatAttributes(['distinct' => 'distinct']));
+        $this->assertEquals(['distinct' => 'DEFAULT test'], $this->object->formatAttributes(['distinct' => function(Dialect $dialect) {
             return sprintf($dialect->getClause(Dialect::DEFAULT_TO), 'test');
         }]));
     }
 
     public function testRenderStatement() {
-        $this->assertEquals('SELECT * FROM tableName WHERE id = 1;', $this->object->renderStatement('SELECT * FROM {table} WHERE id = {id}', [
+        $this->assertEquals('SELECT * FROM tableName;', $this->object->renderStatement(Query::SELECT, [
             'table' => 'tableName',
-            'id' => 1
+            'fields' => '*'
         ]));
     }
 

@@ -13,6 +13,7 @@ use Titon\Db\Driver\Dialect;
 use Titon\Db\Driver\Schema;
 use Titon\Db\Driver\Type\AbstractType;
 use Titon\Db\Exception\InvalidQueryException;
+use Titon\Db\Exception\InvalidTableException;
 use Titon\Db\Exception\MissingClauseException;
 use Titon\Db\Exception\MissingKeywordException;
 use Titon\Db\Exception\MissingStatementException;
@@ -61,7 +62,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         self::COMMENT           => 'COMMENT %s',
         self::CONSTRAINT        => 'CONSTRAINT %s',
         self::DEFAULT_TO        => 'DEFAULT %s',
-        self::EXCEPT            => 'EXCEPT {a.flag} %s',
+        self::EXCEPT            => 'EXCEPT {flag} %s',
         self::EXPRESSION        => '%s %s ?',
         self::FOREIGN_KEY       => 'FOREIGN KEY (%s) REFERENCES %s(%s)',
         self::FUNC              => '%s(%s)',
@@ -70,7 +71,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         self::HAVING            => 'HAVING %s',
         self::IN                => '%s IN (%s)',
         self::INDEX             => 'KEY %s (%s)',
-        self::INTERSECT         => 'INTERSECT {a.flag} %s',
+        self::INTERSECT         => 'INTERSECT {flag} %s',
         self::IS_NULL           => '%s IS NULL',
         self::IS_NOT_NULL       => '%s IS NOT NULL',
         self::JOIN_INNER        => 'INNER JOIN %s ON %s',
@@ -92,7 +93,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         self::REGEXP            => '%s REGEXP ?',
         self::RLIKE             => '%s REGEXP ?',
         self::SUB_QUERY         => '(%s)',
-        self::UNION             => 'UNION {a.flag} %s',
+        self::UNION             => 'UNION {flag} %s',
         self::WHERE             => 'WHERE %s',
         self::UNIQUE_KEY        => 'UNIQUE KEY %s (%s)',
     ];
@@ -136,28 +137,11 @@ abstract class AbstractDialect extends Base implements Dialect {
     ];
 
     /**
-     * List of full SQL statements.
+     * List of statement objects.
      *
-     * @type array
+     * @type \Titon\Db\Driver\Dialect\Statement[]
      */
-    protected $_statements = [
-        Query::INSERT        => 'INSERT INTO {table} {fields} VALUES {values}',
-        Query::SELECT        => 'SELECT {fields} FROM {table} {joins} {where} {groupBy} {having} {compounds} {orderBy} {limit}',
-        Query::UPDATE        => 'UPDATE {table} {joins} SET {fields} {where} {orderBy} {limit}',
-        Query::DELETE        => 'DELETE FROM {table} {joins} {where} {orderBy} {limit}',
-        Query::TRUNCATE      => 'TRUNCATE {table}',
-        Query::CREATE_TABLE  => "CREATE TABLE IF NOT EXISTS {table} (\n{columns}{keys}\n) {options}",
-        Query::CREATE_INDEX  => 'CREATE INDEX {index} ON {table} ({fields})',
-        Query::DROP_TABLE    => 'DROP TABLE IF EXISTS {table}',
-        Query::DROP_INDEX    => 'DROP INDEX {index} ON {table}'
-    ];
-
-    /**
-     * Available attributes for each query type.
-     *
-     * @type array
-     */
-    protected $_attributes = [];
+    protected $_statements = [];
 
     /**
      * Store the driver.
@@ -165,9 +149,103 @@ abstract class AbstractDialect extends Base implements Dialect {
      * @param \Titon\Db\Driver $driver
      */
     public function __construct(Driver $driver) {
-        parent::__construct();
-
         $this->setDriver($driver);
+
+        $this->addStatements([
+            Query::INSERT        => new Statement('INSERT INTO {table} {fields} VALUES {values}'),
+            Query::SELECT        => new Statement('SELECT {fields} FROM {table} {joins} {where} {groupBy} {having} {compounds} {orderBy} {limit}'),
+            Query::UPDATE        => new Statement('UPDATE {table} {joins} SET {fields} {where} {orderBy} {limit}'),
+            Query::DELETE        => new Statement('DELETE FROM {table} {joins} {where} {orderBy} {limit}'),
+            Query::TRUNCATE      => new Statement('TRUNCATE {table}'),
+            Query::CREATE_TABLE  => new Statement("CREATE TABLE IF NOT EXISTS {table} (\n{columns}{keys}\n) {options}"),
+            Query::CREATE_INDEX  => new Statement('CREATE INDEX {index} ON {table} ({fields})'),
+            Query::DROP_TABLE    => new Statement('DROP TABLE IF EXISTS {table}'),
+            Query::DROP_INDEX    => new Statement('DROP INDEX {index} ON {table}')
+        ]);
+
+        parent::__construct();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addClause($key, $value) {
+        $this->_clauses[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addClauses(array $values) {
+        $this->_clauses = array_replace($this->_clauses, $values);
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addKeyword($key, $value) {
+        $this->_keywords[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addKeywords(array $values) {
+        $this->_keywords = array_replace($this->_keywords, $values);
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addStatement($key, Statement $statement) {
+        $this->_statements[$key] = $statement;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addStatements(array $statements) {
+        foreach ($statements as $key => $statement) {
+            $this->addStatement($key, $statement);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Prepare the list of attributes for rendering.
+     * If an attribute is found within a keyword, use the keyword.
+     *
+     * @param array $attributes
+     * @return array
+     */
+    public function formatAttributes(array $attributes) {
+        foreach ($attributes as $key => $attr) {
+            if ($attr instanceof Closure) {
+                $attributes[$key] = call_user_func($attr, $this);
+
+            } else if (is_string($attr)) {
+                $attributes[$key] = $this->getKeyword($attr);
+
+            } else if ($attr === true) {
+                $attributes[$key] = $this->getKeyword($key);
+
+            } else {
+                $attributes[$key] = '';
+            }
+        }
+
+        return $attributes;
     }
 
     /**
@@ -256,16 +334,16 @@ abstract class AbstractDialect extends Base implements Dialect {
 
         foreach ($queries as $query) {
             $attributes = $query->getAttributes();
+
             $clause = sprintf($this->getClause($attributes['compound']), trim($this->buildSelect($query), ';'));
 
-            unset($attributes['compound']);
-            $attributes = $this->renderAttributes($attributes);
+            $attributes = $this->formatAttributes($attributes);
 
-            if (empty($attributes['a.flag'])) {
-                $attributes['a.flag'] = '';
+            if (empty($attributes['flag'])) {
+                $attributes['flag'] = '';
             }
 
-            $output[] = str_replace('{a.flag}', $attributes['a.flag'], $clause);
+            $output[] = str_replace('{flag}', $attributes['flag'], $clause);
         }
 
         return implode(' ', $output);
@@ -283,7 +361,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         }
 
         if ($value instanceof Closure) {
-            $value = $value($this);
+            $value = call_user_func($value, $this);
 
         } else if (is_string($value) || $value === null) {
             $value = $this->getDriver()->escape($value);
@@ -742,19 +820,19 @@ abstract class AbstractDialect extends Base implements Dialect {
     /**
      * Format the table name and alias name.
      *
-     * @param string $repo
+     * @param string $table
      * @param string $alias
      * @return string
-     * @throws \Titon\Db\Exception\InvalidQueryException
+     * @throws \Titon\Db\Exception\InvalidTableException
      */
-    public function formatTable($repo, $alias = null) {
-        if (!$repo) {
-            throw new InvalidQueryException('Missing table for query');
+    public function formatTable($table, $alias = null) {
+        if (!$table) {
+            throw new InvalidTableException('Missing table for query');
         }
 
-        $output = $this->quote($repo);
+        $output = $this->quote($table);
 
-        if ($alias && $repo !== $alias) {
+        if ($alias && $table !== $alias) {
             $output = sprintf($this->getClause(self::AS_ALIAS), $output, $this->quote($alias));
         }
 
@@ -937,13 +1015,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 
     /**
      * {@inheritdoc}
-     */
-    public function getAttributes($type) {
-        return $this->hasAttribute($type) ? $this->_attributes[$type] : [];
-    }
-
-    /**
-     * {@inheritdoc}
      *
      * @throws \Titon\Db\Exception\MissingClauseException
      */
@@ -992,7 +1063,7 @@ abstract class AbstractDialect extends Base implements Dialect {
             return $this->_statements[$key];
         }
 
-        throw new MissingStatementException(sprintf('Invalid statement %s', $key));
+        throw new MissingStatementException(sprintf('Missing statement %s', $key));
     }
 
     /**
@@ -1000,13 +1071,6 @@ abstract class AbstractDialect extends Base implements Dialect {
      */
     public function getStatements() {
         return $this->_statements;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function hasAttribute($type) {
-        return isset($this->_attributes[$type]);
     }
 
     /**
@@ -1034,20 +1098,20 @@ abstract class AbstractDialect extends Base implements Dialect {
      * {@inheritdoc}
      */
     public function quote($value) {
+        $char = $this->getConfig('quoteCharacter');
+
+        if (!$char) {
+            return $value;
+        }
+
         if (strpos($value, '.') !== false) {
-            list($repo, $field) = explode('.', $value);
+            list($table, $field) = explode('.', $value);
 
             if ($field !== '*') {
                 $field = $this->quote($field);
             }
 
-            return $this->quote($repo) . '.' . $field;
-        }
-
-        $char = $this->getConfig('quoteCharacter');
-
-        if (!$char) {
-            return $value;
+            return $this->quote($table) . '.' . $field;
         }
 
         return $char . trim($value, $char) . $char;
@@ -1065,40 +1129,11 @@ abstract class AbstractDialect extends Base implements Dialect {
 
     /**
      * {@inheritdoc}
-     */
-    public function renderAttributes(array $attributes) {
-        $output = [];
-
-        foreach ($attributes as $key => $clause) {
-            $value = '';
-
-            if ($clause) {
-                if ($clause instanceof Closure) {
-                    $value = $clause($this);
-
-                } else if (is_string($clause)) {
-                    $value = $this->getKeyword($clause);
-
-                } else if ($clause === true) {
-                    $value = $this->getKeyword($key);
-                }
-            }
-
-            $output['a.' . $key] = $value;
-        }
-
-        return $output;
-    }
-
-    /**
-     * {@inheritdoc}
      *
      * @uses Titon\Utility\String
      */
-    public function renderStatement($statement, array $params) {
-        $statement = trim(String::insert($statement, $params, ['escape' => false])) . ';';
-
-        return $statement;
+    public function renderStatement($type, array $params) {
+        return $this->getStatement($type)->render($params);
     }
 
 }

@@ -8,6 +8,7 @@
 namespace Titon\Db\Driver;
 
 use Titon\Db\Driver;
+use Titon\Db\Driver\Dialect\Statement;
 
 /**
  * A dialect parses and builds SQL statements specific to a driver.
@@ -90,12 +91,21 @@ interface Dialect {
     const ZEROFILL = 'zerofill';
 
     /**
-     * Return attributes for a query type.
+     * Add a clause.
      *
-     * @param string $type
-     * @return array
+     * @param string $key
+     * @param string $value
+     * @return $this
      */
-    public function getAttributes($type);
+    public function addClause($key, $value);
+
+    /**
+     * Add multiple clauses.
+     *
+     * @param array $values
+     * @return $this
+     */
+    public function addClauses(array $values);
 
     /**
      * Return a clause by key.
@@ -120,6 +130,23 @@ interface Dialect {
     public function getDriver();
 
     /**
+     * Add a keyword.
+     *
+     * @param string $key
+     * @param string $value
+     * @return $this
+     */
+    public function addKeyword($key, $value);
+
+    /**
+     * Add multiple keywords.
+     *
+     * @param array $values
+     * @return $this
+     */
+    public function addKeywords(array $values);
+
+    /**
      * Return a keyword by key.
      *
      * @param string $key
@@ -135,27 +162,36 @@ interface Dialect {
     public function getKeywords();
 
     /**
+     * Add a statement.
+     *
+     * @param string $key
+     * @param \Titon\Db\Driver\Dialect\Statement $statement
+     * @return $this
+     */
+    public function addStatement($key, Statement $statement);
+
+    /**
+     * Add multiple statements.
+     *
+     * @param array $statements
+     * @return $this
+     */
+    public function addStatements(array $statements);
+
+    /**
      * Return a statement by key.
      *
      * @param string $key
-     * @return string
+     * @return \Titon\Db\Driver\Dialect\Statement
      */
     public function getStatement($key);
 
     /**
      * Return all statements.
      *
-     * @return string[]
+     * @return \Titon\Db\Driver\Dialect\Statement[]
      */
     public function getStatements();
-
-    /**
-     * Return true if the attribute by key exists.
-     *
-     * @param string $key
-     * @return bool
-     */
-    public function hasAttribute($key);
 
     /**
      * Return true if the clause by key exists.
@@ -190,22 +226,13 @@ interface Dialect {
     public function quote($value);
 
     /**
-     * Prepare the list of attributes for rendering.
-     * If an attribute value exists, fetch a matching clause for it.
-     *
-     * @param array $attributes
-     * @return array
-     */
-    public function renderAttributes(array $attributes);
-
-    /**
      * Render the statement by piecing together the parameters.
      *
-     * @param string $statement
+     * @param string $key
      * @param array $params
      * @return string
      */
-    public function renderStatement($statement, array $params);
+    public function renderStatement($key, array $params);
 
     /**
      * Set the driver that this dialect belongs to.
