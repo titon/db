@@ -20,20 +20,23 @@ class DatabaseTest extends TestCase {
     public function testAddGetDriver() {
         $this->assertInstanceOf('Titon\Db\Driver', $this->object->getDriver('mysql'));
 
-        try {
-            $this->object->getDriver('foobar');
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
         $this->object->addDriver('foobar', new DriverStub([]));
+
         $this->assertInstanceOf('Titon\Db\Driver', $this->object->getDriver('foobar'));
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\MissingDriverException
+     */
+    public function testGetDriverMissingKey() {
+        $this->object->getDriver('foobar');
     }
 
     public function testGetDrivers() {
         $this->assertEquals(1, count($this->object->getDrivers()));
+
         $this->object->addDriver('foobar', new DriverStub([]));
+
         $this->assertEquals(2, count($this->object->getDrivers()));
     }
 

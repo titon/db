@@ -1,38 +1,24 @@
 <?php
-/**
- * @copyright   2010-2014, The Titon Project
- * @license     http://opensource.org/licenses/bsd-license.php
- * @link        http://titon.io
- */
-
 namespace Titon\Db;
 
 use Titon\Db\Query\Expr;
-use Titon\Db\Query\Predicate;
 use Titon\Db\Relation\ManyToMany;
 use Titon\Db\Relation\OneToOne;
+use Titon\Test\Stub\Repository\Profile;
 use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 
 /**
- * Test class for Titon\Db\Relation.
- *
  * @property \Titon\Db\Relation\ManyToMany $object
  */
 class RelationTest extends TestCase {
 
-    /**
-     * Use a ManyToMany for testing as it provides more functionality.
-     */
     protected function setUp() {
         parent::setUp();
 
         $this->object = new ManyToMany('User', 'Titon\Test\Stub\Repository\User');
     }
 
-    /**
-     * Test alias names.
-     */
     public function testAlias() {
         $this->assertEquals('User', $this->object->getAlias());
 
@@ -40,9 +26,6 @@ class RelationTest extends TestCase {
         $this->assertEquals('Foobar', $this->object->getAlias());
     }
 
-    /**
-     * Test foreign keys.
-     */
     public function testForeignKey() {
         $this->assertEquals(null, $this->object->getForeignKey());
 
@@ -50,19 +33,6 @@ class RelationTest extends TestCase {
         $this->assertEquals('user_id', $this->object->getForeignKey());
     }
 
-    /**
-     * Test table class names.
-     */
-    public function testClass() {
-        $this->assertEquals('Titon\Test\Stub\Repository\User', $this->object->getClass());
-
-        $this->object->setClass('Titon\Test\Stub\Repository\Profile');
-        $this->assertEquals('Titon\Test\Stub\Repository\Profile', $this->object->getClass());
-    }
-
-    /**
-     * Test related foreign keys.
-     */
     public function testRelatedForeignKey() {
         $this->assertEquals(null, $this->object->getRelatedForeignKey());
 
@@ -70,9 +40,6 @@ class RelationTest extends TestCase {
         $this->assertEquals('profile_id', $this->object->getRelatedForeignKey());
     }
 
-    /**
-     * Test dependencies.
-     */
     public function testDependent() {
         $this->assertTrue($this->object->isDependent());
 
@@ -87,9 +54,6 @@ class RelationTest extends TestCase {
         $this->assertFalse($o2o->isDependent());
     }
 
-    /**
-     * Test that conditions modify queries.
-     */
     public function testConditions() {
         $query = new Query(Query::SELECT, new User());
 
@@ -106,14 +70,34 @@ class RelationTest extends TestCase {
         ], $query->getWhere()->getParams());
     }
 
-    /**
-     * Test junction table class names.
-     */
     public function testJunctionClass() {
         $this->assertEquals(null, $this->object->getJunctionClass());
 
         $this->object->setJunctionClass('Titon\Test\Stub\Repository\Profile');
         $this->assertEquals('Titon\Test\Stub\Repository\Profile', $this->object->getJunctionClass());
+    }
+
+    public function testSetClass() {
+        $this->assertEquals('Titon\Test\Stub\Repository\User', $this->object->getClass());
+
+        $this->object->setClass('Titon\Test\Stub\Repository\Profile');
+
+        $this->assertEquals('Titon\Test\Stub\Repository\Profile', $this->object->getClass());
+    }
+
+    public function testSetClassRepository() {
+        $this->assertEquals('Titon\Test\Stub\Repository\User', $this->object->getClass());
+
+        $this->object->setClass(new Profile());
+
+        $this->assertEquals('Titon\Test\Stub\Repository\Profile', $this->object->getClass());
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidRelationStructureException
+     */
+    public function testSetClassThrowsError() {
+        $this->object->setClass(123456);
     }
 
 }

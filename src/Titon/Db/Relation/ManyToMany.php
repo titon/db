@@ -7,7 +7,7 @@
 
 namespace Titon\Db\Relation;
 
-use Titon\Db\Exception\InvalidTableException;
+use Titon\Db\Exception\InvalidRelationStructureException;
 use Titon\Db\Relation;
 use Titon\Db\Repository;
 use Titon\Utility\Path;
@@ -108,21 +108,24 @@ class ManyToMany extends AbstractRelation {
      *
      * @param string|\Titon\Db\Repository $class
      * @return $this
-     * @throws \Titon\Db\Exception\InvalidTableException
+     * @throws \Titon\Db\Exception\InvalidRelationStructureException
      */
     public function setJunctionClass($class) {
-        if (is_string($class)) {
-            $this->setConfig('junctionClass', $class);
-
-        } else if ($class instanceof Repository) {
-            $this->setJunctionRepository($class);
+        if ($class instanceof Repository) {
+            $repo = $class;
             $class = get_class($class);
 
-        } else {
-            throw new InvalidTableException(sprintf('Invalid junction relation for %s, must be an instance of Repository or a fully qualified class name', $this->getAlias()));
+        } else if (!is_string($class)) {
+            throw new InvalidRelationStructureException(sprintf('Invalid junction relation for %s, must be an instance of Repository or a fully qualified class name', $this->getAlias()));
         }
 
+        $this->setConfig('junctionClass', $class);
         $this->setJunctionAlias(Path::className($class));
+
+        // Needs to be set after an alias is set
+        if (isset($repo)) {
+            $this->setJunctionRepository($repo);
+        }
 
         return $this;
     }

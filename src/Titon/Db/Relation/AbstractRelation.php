@@ -10,6 +10,7 @@ namespace Titon\Db\Relation;
 use Titon\Common\Augment\InfoAugment;
 use Titon\Common\Base;
 use Titon\Db\Contract\Relational;
+use Titon\Db\Exception\InvalidRelationStructureException;
 use Titon\Db\Exception\InvalidTableException;
 use Titon\Db\Relation;
 use Titon\Db\Repository;
@@ -140,15 +141,15 @@ abstract class AbstractRelation extends Base implements Relation {
      * {@inheritdoc}
      */
     public function setClass($class) {
-        if (is_string($class)) {
-            $this->setConfig('class', $class);
-
-        } else if ($class instanceof Repository) {
+        if ($class instanceof Repository) {
             $this->setRelatedRepository($class);
+            $class = get_class($class);
 
-        } else {
-            throw new InvalidTableException(sprintf('Invalid %s relation, must be an instance of Repository or a fully qualified class name', $this->getAlias()));
+        } else if (!is_string($class)) {
+            throw new InvalidRelationStructureException(sprintf('Invalid %s relation, must be an instance of Repository or a fully qualified class name', $this->getAlias()));
         }
+
+        $this->setConfig('class', $class);
 
         return $this;
     }
@@ -204,7 +205,7 @@ abstract class AbstractRelation extends Base implements Relation {
      *
      * @param string $class
      * @return \Titon\Db\Repository
-     * @throws \Titon\Db\Exception\InvalidTableException
+     * @throws \Titon\Db\Exception\InvalidRelationStructureException
      */
     protected function _loadRepository($class) {
         $repo = new $class();
@@ -213,7 +214,7 @@ abstract class AbstractRelation extends Base implements Relation {
             if ($repo instanceof Relational) {
                 $repo = $repo->getRepository();
             } else {
-                throw new InvalidTableException(sprintf('%s relation must return a Repository instance', $this->getAlias()));
+                throw new InvalidRelationStructureException(sprintf('%s relation must return a Repository instance', $this->getAlias()));
             }
         }
 
