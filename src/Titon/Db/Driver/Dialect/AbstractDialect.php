@@ -25,7 +25,6 @@ use Titon\Db\Query\Predicate;
 use Titon\Db\Query\RawExpr;
 use Titon\Db\Query\SubQuery;
 use Titon\Db\Traits\DriverAware;
-use Titon\Utility\String;
 use \Closure;
 
 /**
@@ -234,14 +233,14 @@ abstract class AbstractDialect extends Base implements Dialect {
             if ($attr instanceof Closure) {
                 $attributes[$key] = call_user_func($attr, $this);
 
-            } else if (is_string($attr)) {
+            } else if ($this->hasKeyword($attr)) {
                 $attributes[$key] = $this->getKeyword($attr);
 
             } else if ($attr === true) {
                 $attributes[$key] = $this->getKeyword($key);
 
             } else {
-                $attributes[$key] = '';
+                $attributes[$key] = (string) $attr;
             }
         }
 
@@ -334,7 +333,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 
         foreach ($queries as $query) {
             $attributes = $query->getAttributes();
-
             $clause = sprintf($this->getClause($attributes['compound']), trim($this->buildSelect($query), ';'));
 
             $attributes = $this->formatAttributes($attributes);
@@ -384,6 +382,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         if ($operator === Expr::AS_ALIAS) {
             return sprintf($this->getClause(self::AS_ALIAS), $this->quote($field), $this->quote($value));
 
+        // No value to use so exit early
         } else if (!$expr->useValue() && !($operator === Expr::NULL || $operator === Expr::NOT_NULL)) {
             return $this->quote($field);
         }
@@ -549,7 +548,7 @@ abstract class AbstractDialect extends Base implements Dialect {
      */
     public function formatSelectFields(array $fields, $alias = null) {
         $columns = [];
-        $quotedAlias = ($alias) ? $this->quote($alias) . '.' : '';
+        $quotedAlias = $alias ? $this->quote($alias) . '.' : '';
         $virtualJoins = $this->getConfig('virtualJoins');
 
         if (empty($fields)) {
@@ -861,9 +860,6 @@ abstract class AbstractDialect extends Base implements Dialect {
 
             if ($this->hasKeyword($action)) {
                 $value = $this->getKeyword($action);
-
-            //} else if (is_string($action)) {
-            //    $value = $this->quote($action);
             }
 
             $key .= ' ' . sprintf($this->getClause($clause), $value);
@@ -923,10 +919,6 @@ abstract class AbstractDialect extends Base implements Dialect {
         $output = [];
 
         foreach ($options as $key => $value) {
-            //if ($this->hasKeyword($value)) {
-            //    $value = $this->getKeyword($value);
-            //}
-
             if ($this->hasClause($key)) {
                 $option = sprintf($this->getClause($key), $value);
 

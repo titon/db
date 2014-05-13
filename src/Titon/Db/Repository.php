@@ -833,7 +833,7 @@ class Repository extends Base implements Callback, Listener {
      * @return string
      */
     public function getTable() {
-        return $this->getConfig('prefix') . $this->getConfig('table');
+        return $this->getTablePrefix() . $this->getConfig('table');
     }
 
     /**

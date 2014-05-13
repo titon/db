@@ -433,6 +433,17 @@ class DialectTest extends TestCase {
         $this->assertRegExp('/SELECT\s+\* FROM (`|\")?users(`|\")?\s+WHERE EXISTS \(SELECT\s+(`|\")?column2(`|\")? FROM (`|\")?profiles(`|\")?\);/', $this->object->buildSelect($query));
     }
 
+    public function testFormatAttributes() {
+        $this->assertEquals(['distinct' => ''], $this->object->formatAttributes(['distinct' => false]));
+        $this->assertEquals(['distinct' => '123'], $this->object->formatAttributes(['distinct' => 123]));
+        $this->assertEquals(['distinct' => 'DISTINCT'], $this->object->formatAttributes(['distinct' => true]));
+        $this->assertEquals(['distinct' => 'DISTINCT'], $this->object->formatAttributes(['distinct' => 'distinct']));
+        $this->assertEquals(['distinct' => 'FOOBAR'], $this->object->formatAttributes(['distinct' => 'FOOBAR']));
+        $this->assertEquals(['distinct' => 'DEFAULT test'], $this->object->formatAttributes(['distinct' => function(Dialect $dialect) {
+            return sprintf($dialect->getClause(Dialect::DEFAULT_TO), 'test');
+        }]));
+    }
+
     public function testFormatColumns() {
         $schema = new Schema('foobar');
         $schema->addColumn('column', [
@@ -992,15 +1003,6 @@ class DialectTest extends TestCase {
     public function testQuoteList() {
         $this->assertEquals('`foo`, `bar`, `baz`', $this->object->quoteList(['foo', '`bar', '`baz`']));
         $this->assertEquals('`foo`.`bar`, `baz`', $this->object->quoteList(['foo.bar', '`baz`']));
-    }
-
-    public function testRenderAttributes() {
-        $this->assertEquals(['distinct' => ''], $this->object->formatAttributes(['distinct' => false]));
-        $this->assertEquals(['distinct' => 'DISTINCT'], $this->object->formatAttributes(['distinct' => true]));
-        $this->assertEquals(['distinct' => 'DISTINCT'], $this->object->formatAttributes(['distinct' => 'distinct']));
-        $this->assertEquals(['distinct' => 'DEFAULT test'], $this->object->formatAttributes(['distinct' => function(Dialect $dialect) {
-            return sprintf($dialect->getClause(Dialect::DEFAULT_TO), 'test');
-        }]));
     }
 
     public function testRenderStatement() {
