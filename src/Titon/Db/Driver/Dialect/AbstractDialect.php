@@ -24,7 +24,7 @@ use Titon\Db\Query\Func;
 use Titon\Db\Query\Predicate;
 use Titon\Db\Query\RawExpr;
 use Titon\Db\Query\SubQuery;
-use Titon\Db\Traits\DriverAware;
+use Titon\Db\DriverAware;
 use \Closure;
 
 /**

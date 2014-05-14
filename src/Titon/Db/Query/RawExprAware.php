@@ -5,14 +5,12 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Traits;
-
-use Titon\Db\Query\RawExpr;
+namespace Titon\Db\Query;
 
 /**
  * Permits a class to instantiate new raw expressions.
  *
- * @package Titon\Db\Traits
+ * @package Titon\Db\Query
  */
 trait RawExprAware {
 

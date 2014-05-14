@@ -7,8 +7,6 @@
 
 namespace Titon\Db\Query;
 
-use Titon\Db\Traits\RawExprAware;
-
 /**
  * The RawExpr represents a raw database expression that is not modified by the DBAL.
  *

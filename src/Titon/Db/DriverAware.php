@@ -5,14 +5,14 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Traits;
+namespace Titon\Db;
 
 use Titon\Db\Driver;
 
 /**
  * Permits a class to interact with a driver.
  *
- * @package Titon\Db\Traits
+ * @package Titon\Db
  */
 trait DriverAware {
 

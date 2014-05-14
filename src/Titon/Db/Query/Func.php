@@ -8,8 +8,6 @@
 namespace Titon\Db\Query;
 
 use Titon\Db\Driver;
-use Titon\Db\Traits\AliasAware;
-use Titon\Db\Traits\FuncAware;
 
 /**
  * The Func class represents an SQL function with optional arguments.

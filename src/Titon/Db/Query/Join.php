@@ -8,7 +8,6 @@
 namespace Titon\Db\Query;
 
 use Titon\Db\Driver\Dialect;
-use Titon\Db\Traits\AliasAware;
 
 /**
  * The Join class represents meta data for an additional table to join records on.

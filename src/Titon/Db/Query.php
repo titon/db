@@ -17,11 +17,11 @@ use Titon\Db\Query\Func;
 use Titon\Db\Query\Join;
 use Titon\Db\Query\Predicate;
 use Titon\Db\Query\SubQuery;
-use Titon\Db\Traits\AliasAware;
-use Titon\Db\Traits\ExprAware;
-use Titon\Db\Traits\FuncAware;
-use Titon\Db\Traits\RawExprAware;
-use Titon\Db\Traits\RepositoryAware;
+use Titon\Db\Query\AliasAware;
+use Titon\Db\Query\ExprAware;
+use Titon\Db\Query\FuncAware;
+use Titon\Db\Query\RawExprAware;
+use Titon\Db\RepositoryAware;
 use \Closure;
 
 /**

@@ -5,14 +5,12 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Traits;
-
-use Titon\Db\Repository;
+namespace Titon\Db;
 
 /**
  * Permits a class to interact with a table.
  *
- * @package Titon\Db\Traits
+ * @package Titon\Db
  */
 trait RepositoryAware {
 

@@ -11,7 +11,7 @@ use Titon\Common\Registry;
 use Titon\Db\Driver;
 use Titon\Db\Driver\Type;
 use Titon\Db\Exception\UnsupportedTypeException;
-use Titon\Db\Traits\DriverAware;
+use Titon\Db\DriverAware;
 use \PDO;
 
 /**

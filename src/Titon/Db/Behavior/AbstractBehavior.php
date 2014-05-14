@@ -12,7 +12,7 @@ use Titon\Event\Event;
 use Titon\Event\Listener;
 use Titon\Db\Behavior;
 use Titon\Db\Query;
-use Titon\Db\Traits\RepositoryAware;
+use Titon\Db\RepositoryAware;
 
 /**
  * Provides shared functionality for behaviors.

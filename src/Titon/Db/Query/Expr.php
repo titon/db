@@ -8,7 +8,6 @@
 namespace Titon\Db\Query;
 
 use Titon\Db\Driver\Dialect;
-use Titon\Db\Traits\ExprAware;
 
 /**
  * The Expr class represents a mathematical or logical expression that can be calculated depending on context.

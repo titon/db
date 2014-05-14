@@ -5,12 +5,12 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Traits;
+namespace Titon\Db\Query;
 
 /**
  * Permits an object to set an alias name.
  *
- * @package Titon\Db\Traits
+ * @package Titon\Db\Query
  */
 trait AliasAware {
 
