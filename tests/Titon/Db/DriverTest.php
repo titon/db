@@ -8,7 +8,6 @@ use Titon\Debug\Logger;
 use Titon\Test\Stub\DialectStub;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
-use \Exception;
 
 /**
  * @property \Titon\Db\Driver $object

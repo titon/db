@@ -64,7 +64,7 @@ class Predicate {
             $key .= $value->getTimestamp();
 
         } else {
-            $key .= $value;
+            $key .= (string) $value;
         }
 
         $this->_params[$key] = new Expr($field, $op, $value);

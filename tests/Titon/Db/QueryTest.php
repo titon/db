@@ -5,7 +5,6 @@ use Titon\Db\Query;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Join;
 use Titon\Db\Query\Predicate;
-use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\Stub\Repository\User;
 use Titon\Test\TestCase;
 use \Exception;
@@ -84,13 +83,11 @@ class QueryTest extends TestCase {
         $this->assertEquals(['compound' => 'except'], $query3->getAttributes());
     }
 
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidQueryException
+     */
     public function testExceptFailsNonSelect() {
-        try {
-            $this->object->except(new Query(Query::UPDATE));
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
+        $this->object->except(new Query(Query::UPDATE));
     }
 
     public function testExpr() {

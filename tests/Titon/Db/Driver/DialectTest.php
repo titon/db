@@ -403,14 +403,14 @@ class DialectTest extends TestCase {
         // In function in fields
         $query = new Query(Query::SELECT, new User());
         $query->from('users')->fields(
-            $query->func('UPPER', [$query->subQuery('id')->from('profiles')])
+            Query::func('UPPER', [$query->subQuery('id')->from('profiles')])
         );
 
         $this->assertRegExp('/SELECT\s+UPPER\(\(SELECT\s+(`|\")?id(`|\")? FROM (`|\")?profiles(`|\")?\)\) FROM (`|\")?users(`|\")?;/', $this->object->buildSelect($query));
 
         // In where clause w/ function
         $query = new Query(Query::SELECT, new User());
-        $query->from('users')->where('column1', $query->subQuery($query->func('MAX', ['column2' => 'field']))->from('profiles'));
+        $query->from('users')->where('column1', $query->subQuery(Query::func('MAX', ['column2' => 'field']))->from('profiles'));
 
         $this->assertRegExp('/SELECT\s+\* FROM (`|\")?users(`|\")?\s+WHERE (`|\")?column1(`|\")? = \(SELECT\s+MAX\((`|\")?column2(`|\")?\) FROM (`|\")?profiles(`|\")?\);/', $this->object->buildSelect($query));
 

@@ -3,7 +3,6 @@ namespace Titon\Db;
 
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\TestCase;
-use \Exception;
 
 /**
  * @property \Titon\Db\Database $object

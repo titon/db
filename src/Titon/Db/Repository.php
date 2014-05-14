@@ -215,9 +215,17 @@ class Repository extends Base implements Listener {
      * @return int The count of records inserted
      */
     public function createMany(array $data, $hasPk = false, array $options = []) {
-        $records = [];
-        $defaults = $this->_mapDefaults();
         $pk = $this->getPrimaryKey();
+        $records = [];
+        $defaults = [];
+
+        if ($schema = $this->getSchema()) {
+            foreach ($schema->getColumns() as $key => $column) {
+                $defaults[$key] = array_key_exists('default', $column) ? $column['default'] : '';
+            }
+
+            unset($defaults[$pk]);
+        }
 
         foreach ($data as $record) {
             $record = Hash::merge($defaults, $record);
@@ -609,6 +617,25 @@ class Repository extends Base implements Listener {
     }
 
     /**
+     * Check if the finder exists.
+     *
+     * @param string $key
+     * @return bool
+     */
+    public function hasFinder($key) {
+        return isset($this->_finders[$key]);
+    }
+
+    /**
+     * Check if any finder has been set.
+     *
+     * @return bool
+     */
+    public function hasFinders() {
+        return (count($this->_finders) > 0);
+    }
+
+    /**
      * Increment the value of a field(s) using a step number.
      * Will update all records, or a single record.
      *
@@ -822,23 +849,6 @@ class Repository extends Base implements Listener {
         }
 
         return $results;
-    }
-
-    /**
-     * Map the schema with empty fields.
-     *
-     * @return array
-     */
-    protected function _mapDefaults() {
-        $defaults = [];
-
-        if ($schema = $this->getSchema()) {
-            foreach ($schema->getColumns() as $column => $data) {
-                $defaults[$column] = array_key_exists('default', $data) ? $data['default'] : '';
-            }
-        }
-
-        return $defaults;
     }
 
     /**
