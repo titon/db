@@ -68,12 +68,14 @@ class FilterBehavior extends AbstractBehavior {
      * @return bool
      */
     public function preSave(Event $event, $id, array &$data) {
+        $filters = $this->getFilters();
+
         foreach ($data as $key => $value) {
-            if (empty($this->_filters[$key])) {
+            if (empty($filters[$key])) {
                 continue;
             }
 
-            $filter = $this->_filters[$key];
+            $filter = $filters[$key];
 
             // HTML escape
             if (isset($filter['html'])) {
@@ -99,6 +101,15 @@ class FilterBehavior extends AbstractBehavior {
         }
 
         return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function registerEvents() {
+        return [
+            'db.preSave' => 'preSave'
+        ];
     }
 
 }

@@ -57,127 +57,6 @@ class HierarchyBehavior extends AbstractBehavior {
     protected $_saveIndex;
 
     /**
-     * Before a delete, fetch the node and save its left index.
-     * If a node has children, the delete will fail.
-     *
-     * @param \Titon\Event\Event $event
-     * @param int|int[] $id
-     * @param bool $cascade
-     * @return bool
-     */
-    public function preDelete(Event $event, $id, &$cascade) {
-        if (!$this->getConfig('onDelete')) {
-            return true;
-        }
-
-        if ($node = $this->getNode($id)) {
-            $count = $this->getRepository()->select()
-                ->where($this->getConfig('parentField'), $id)
-                ->count();
-
-            if ($count) {
-                return false;
-            }
-
-            $this->_deleteIndex = $node[$this->getConfig('leftField')];
-        }
-
-        return true;
-    }
-
-    /**
-     * After a delete, shift all nodes up using the base index.
-     *
-     * @param \Titon\Event\Event $event
-     * @param int|int[] $id
-     */
-    public function postDelete(Event $event, $id) {
-        if (!$this->getConfig('onDelete') || !$this->_deleteIndex) {
-            return;
-        }
-
-        $this->_removeNode($id, $this->_deleteIndex);
-        $this->_deleteIndex = null;
-    }
-
-    /**
-     * Before an insert, determine the correct left and right using the parent or root node as a base.
-     * Do not shift the nodes until postSave() just in case the insert fails.
-     *
-     * Before an update, remove the left and right fields so that the tree cannot be modified.
-     * Use moveUp(), moveDown(), moveTo() or reOrder() to update existing nodes.
-     *
-     * @param \Titon\Event\Event $event
-     * @param int|int[] $id
-     * @param array $data
-     * @return bool
-     */
-    public function preSave(Event $event, $id, array &$data) {
-        if (!$this->getConfig('onSave')) {
-            return true;
-        }
-
-        $parent = $this->getConfig('parentField');
-        $left = $this->getConfig('leftField');
-        $right = $this->getConfig('rightField');
-
-        // Append left and right during create
-        if (!$id) {
-            $indexes = [];
-
-            // Is a child
-            if (isset($data[$parent])) {
-                if ($node = $this->getNode($data[$parent])) {
-                    $parentRight = $node[$right];
-
-                    // Save index for moving postSave
-                    $this->_saveIndex = $parentRight;
-
-                    $indexes = [
-                        $left => $parentRight,
-                        $right => $parentRight + 1
-                    ];
-                }
-            }
-
-            // Fallback to root
-            if (empty($indexes)) {
-                $node = $this->getLastNode();
-                $rootRight = $node[$right];
-
-                $indexes = [
-                    $left => $rootRight + 1,
-                    $right => $rootRight + 2
-                ];
-            }
-
-            $data = $indexes + $data;
-
-        // Remove left and right fields from updates as it should not be modified
-        } else {
-            unset($data[$left], $data[$right]);
-        }
-
-        return true;
-    }
-
-    /**
-     * After an insert, shift all nodes down using the base index.
-     *
-     * @param \Titon\Event\Event $event
-     * @param int|int[] $id
-     * @param bool $created
-     */
-    public function postSave(Event $event, $id, $created = false) {
-        if (!$this->getConfig('onSave') || !$created || !$this->_saveIndex) {
-            return;
-        }
-
-        $this->_insertNode($id, $this->_saveIndex);
-        $this->_saveIndex = null;
-    }
-
-    /**
      * Return the fetch node in the tree.
      *
      * @return \Titon\Db\Entity
@@ -554,6 +433,139 @@ class HierarchyBehavior extends AbstractBehavior {
         $this->_insertNode($id, $data[$left]);
 
         return true;
+    }
+
+    /**
+     * Before a delete, fetch the node and save its left index.
+     * If a node has children, the delete will fail.
+     *
+     * @param \Titon\Event\Event $event
+     * @param int|int[] $id
+     * @param bool $cascade
+     * @return bool
+     */
+    public function preDelete(Event $event, $id, &$cascade) {
+        if (!$this->getConfig('onDelete')) {
+            return true;
+        }
+
+        if ($node = $this->getNode($id)) {
+            $count = $this->getRepository()->select()
+                ->where($this->getConfig('parentField'), $id)
+                ->count();
+
+            if ($count) {
+                return false;
+            }
+
+            $this->_deleteIndex = $node[$this->getConfig('leftField')];
+        }
+
+        return true;
+    }
+
+    /**
+     * After a delete, shift all nodes up using the base index.
+     *
+     * @param \Titon\Event\Event $event
+     * @param int|int[] $id
+     */
+    public function postDelete(Event $event, $id) {
+        if (!$this->getConfig('onDelete') || !$this->_deleteIndex) {
+            return;
+        }
+
+        $this->_removeNode($id, $this->_deleteIndex);
+        $this->_deleteIndex = null;
+    }
+
+    /**
+     * Before an insert, determine the correct left and right using the parent or root node as a base.
+     * Do not shift the nodes until postSave() just in case the insert fails.
+     *
+     * Before an update, remove the left and right fields so that the tree cannot be modified.
+     * Use moveUp(), moveDown(), moveTo() or reOrder() to update existing nodes.
+     *
+     * @param \Titon\Event\Event $event
+     * @param int|int[] $id
+     * @param array $data
+     * @return bool
+     */
+    public function preSave(Event $event, $id, array &$data) {
+        if (!$this->getConfig('onSave')) {
+            return true;
+        }
+
+        $parent = $this->getConfig('parentField');
+        $left = $this->getConfig('leftField');
+        $right = $this->getConfig('rightField');
+
+        // Append left and right during create
+        if (!$id) {
+            $indexes = [];
+
+            // Is a child
+            if (isset($data[$parent])) {
+                if ($node = $this->getNode($data[$parent])) {
+                    $parentRight = $node[$right];
+
+                    // Save index for moving postSave
+                    $this->_saveIndex = $parentRight;
+
+                    $indexes = [
+                        $left => $parentRight,
+                        $right => $parentRight + 1
+                    ];
+                }
+            }
+
+            // Fallback to root
+            if (empty($indexes)) {
+                $node = $this->getLastNode();
+                $rootRight = $node[$right];
+
+                $indexes = [
+                    $left => $rootRight + 1,
+                    $right => $rootRight + 2
+                ];
+            }
+
+            $data = $indexes + $data;
+
+        // Remove left and right fields from updates as it should not be modified
+        } else {
+            unset($data[$left], $data[$right]);
+        }
+
+        return true;
+    }
+
+    /**
+     * After an insert, shift all nodes down using the base index.
+     *
+     * @param \Titon\Event\Event $event
+     * @param int|int[] $id
+     * @param bool $created
+     */
+    public function postSave(Event $event, $id, $created = false) {
+        if (!$this->getConfig('onSave') || !$created || !$this->_saveIndex) {
+            return;
+        }
+
+        $this->_insertNode($id, $this->_saveIndex);
+        $this->_saveIndex = null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function registerEvents() {
+        return [
+            'db.preSave' => 'preSave',
+            'db.postSave' => 'postSave',
+            'db.preDelete' => 'preDelete',
+            'db.postDelete' => 'postDelete'
+        ];
     }
 
     /**

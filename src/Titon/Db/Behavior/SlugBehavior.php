@@ -39,47 +39,6 @@ class SlugBehavior extends AbstractBehavior {
     ];
 
     /**
-     * Before a save occurs, generate a unique slug using another field as the base.
-     * If no data exists, or the base doesn't exist, or the slug is already set, exit early.
-     *
-     * @param \Titon\Event\Event $event
-     * @param int|int[] $id
-     * @param array $data
-     * @return bool
-     */
-    public function preSave(Event $event, $id, array &$data) {
-        $config = $this->allConfig();
-
-        if (empty($data) || empty($data[$config['field']]) || !empty($data[$config['slug']])) {
-            return true;
-
-        } else if ($id && !$config['onUpdate']) {
-            return true;
-        }
-
-        $slug = $data[$config['field']];
-
-        $this->getRepository()->emit('db.preSlug', [&$slug]);
-
-        $slug = $this->slugify($slug);
-
-        $this->getRepository()->emit('db.postSlug', [&$slug]);
-
-        // Leave a gap of 3 to account for the appended numbers
-        if (mb_strlen($slug) > ($config['length'] - 3)) {
-            $slug = mb_substr($slug, 0, ($config['length'] - 3));
-        }
-
-        if ($config['unique']) {
-            $slug = $this->makeUnique($id, $slug);
-        }
-
-        $data[$config['slug']] = $slug;
-
-        return true;
-    }
-
-    /**
      * Validate the slug is unique by querying for other slugs.
      * If the slug is not unique, append a count to it.
      *
@@ -115,6 +74,50 @@ class SlugBehavior extends AbstractBehavior {
         }
 
         return $slug;
+    }
+
+    /**
+     * Before a save occurs, generate a unique slug using another field as the base.
+     * If no data exists, or the base doesn't exist, or the slug is already set, exit early.
+     *
+     * @param \Titon\Event\Event $event
+     * @param int|int[] $id
+     * @param array $data
+     * @return bool
+     */
+    public function preSave(Event $event, $id, array &$data) {
+        $config = $this->allConfig();
+
+        if (empty($data) || empty($data[$config['field']]) || !empty($data[$config['slug']])) {
+            return true;
+
+        } else if ($id && !$config['onUpdate']) {
+            return true;
+        }
+
+        $slug = static::slugify($data[$config['field']]);
+
+        // Leave a gap of 3 to account for the appended numbers
+        if (mb_strlen($slug) > ($config['length'] - 3)) {
+            $slug = mb_substr($slug, 0, ($config['length'] - 3));
+        }
+
+        if ($config['unique']) {
+            $slug = $this->makeUnique($id, $slug);
+        }
+
+        $data[$config['slug']] = $slug;
+
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function registerEvents() {
+        return [
+            'db.preSave' => 'preSave'
+        ];
     }
 
     /**

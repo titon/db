@@ -16,7 +16,6 @@ use Titon\Db\Driver\Type\AbstractType;
 use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Exception\MissingBehaviorException;
 use Titon\Db\Exception\MissingFinderException;
-use Titon\Db\Exception\QueryFailureException;
 use Titon\Db\Finder;
 use Titon\Db\Finder\FirstFinder;
 use Titon\Db\Finder\AllFinder;
@@ -26,7 +25,6 @@ use Titon\Event\Event;
 use Titon\Event\Listener;
 use Titon\Event\Traits\Emittable;
 use Titon\Utility\Hash;
-use \Exception;
 use \Closure;
 
 /**
@@ -40,7 +38,7 @@ use \Closure;
  *
  * @package Titon\Db
  */
-class Repository extends Base implements Callback, Listener {
+class Repository extends Base implements Listener {
     use Attachable, Cacheable, Emittable;
 
     /**
@@ -158,6 +156,34 @@ class Repository extends Base implements Callback, Listener {
         $this->_finders[$key] = $finder;
 
         return $this;
+    }
+
+    /**
+     * Type cast the results after a find operation.
+     *
+     * @param \Titon\Event\Event $event
+     * @param array $results
+     * @param string $finder
+     */
+    public function castResults(Event $event, array &$results, $finder) {
+        $schema = $this->getSchema()->getColumns();
+
+        if (!$schema) {
+            return;
+        }
+
+        $driver = $this->getDriver();
+
+        // TODO - Type cast the results first
+        // I feel like this should be on the driver layer, but where and how?
+        // Was thinking of using events on the driver, but no access to the repository or schema...
+        foreach ($results as $i => $result) {
+            foreach ($result as $field => $value) {
+                if (isset($schema[$field])) {
+                    $results[$i][$field] = AbstractType::factory($schema[$field]['type'], $driver)->from($value);
+                }
+            }
+        }
     }
 
     /**
@@ -614,65 +640,6 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function preDelete(Event $event, $id, &$cascade) {
-        return true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function preFind(Event $event, Query $query, $finder) {
-        return true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function preSave(Event $event, $id, array &$data) {
-        return true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function postDelete(Event $event, $id) {
-        return;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function postFind(Event $event, array &$results, $finder) {
-        $schema = $this->getSchema()->getColumns();
-
-        if (!$schema) {
-            return;
-        }
-
-        $driver = $this->getDriver();
-
-        // TODO - Type cast the results first
-        // I feel like this should be on the driver layer, but where and how?
-        // Was thinking of using events on the driver, but no access to the repository or schema...
-        foreach ($results as $i => $result) {
-            foreach ($result as $field => $value) {
-                if (isset($schema[$field])) {
-                    $results[$i][$field] = AbstractType::factory($schema[$field]['type'], $driver)->from($value);
-                }
-            }
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function postSave(Event $event, $id, $created = false) {
-        return;
-    }
-
-    /**
      * Instantiate a new query builder.
      *
      * @param string $type
@@ -708,12 +675,7 @@ class Repository extends Base implements Callback, Listener {
      */
     public function registerEvents() {
         return [
-            'db.preSave' => ['method' => 'preSave', 'priority' => 1],
-            'db.postSave' => ['method' => 'postSave', 'priority' => 1],
-            'db.preDelete' => ['method' => 'preDelete', 'priority' => 1],
-            'db.postDelete' => ['method' => 'postDelete', 'priority' => 1],
-            'db.preFind' => ['method' => 'preFind', 'priority' => 1],
-            'db.postFind' => ['method' => 'postFind', 'priority' => 1]
+            'db.postFind' => ['method' => 'castResults', 'priority' => 1]
         ];
     }
 

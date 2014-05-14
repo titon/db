@@ -43,4 +43,13 @@ class TimestampBehavior extends AbstractBehavior {
         return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function registerEvents() {
+        return [
+            'db.preSave' => 'preSave'
+        ];
+    }
+
 }

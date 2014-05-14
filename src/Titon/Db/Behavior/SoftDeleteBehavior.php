@@ -37,25 +37,6 @@ class SoftDeleteBehavior extends AbstractBehavior {
     ];
 
     /**
-     * Perform a soft delete by marking a record as deleted and updating a timestamp.
-     * Do not delete the actual record.
-     *
-     * @param int|int[] $id
-     * @return int
-     */
-    public function softDelete($id) {
-        $repo = $this->getRepository();
-
-        return $repo->query(Query::UPDATE)
-            ->fields([
-                $this->getConfig('flagField') => true,
-                $this->getConfig('deleteField') => time()
-            ])
-            ->where($repo->getPrimaryKey(), $id)
-            ->save();
-    }
-
-    /**
      * Perform a hard delete and delete the actual database record.
      *
      * @param int|int[] $id
@@ -134,6 +115,35 @@ class SoftDeleteBehavior extends AbstractBehavior {
         }
 
         return $query->save();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function registerEvents() {
+        return [
+            'db.preDelete' => 'preDelete',
+            'db.preFind' => 'preFind'
+        ];
+    }
+
+    /**
+     * Perform a soft delete by marking a record as deleted and updating a timestamp.
+     * Do not delete the actual record.
+     *
+     * @param int|int[] $id
+     * @return int
+     */
+    public function softDelete($id) {
+        $repo = $this->getRepository();
+
+        return $repo->query(Query::UPDATE)
+            ->fields([
+                $this->getConfig('flagField') => true,
+                $this->getConfig('deleteField') => time()
+            ])
+            ->where($repo->getPrimaryKey(), $id)
+            ->save();
     }
 
 }

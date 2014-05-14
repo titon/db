@@ -12,7 +12,7 @@ namespace Titon\Db;
  *
  * @package Titon\Db
  */
-interface Behavior extends Callback {
+interface Behavior {
 
     /**
      * Return the behavior alias name.

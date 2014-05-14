@@ -76,6 +76,39 @@ class ConverterBehavior extends AbstractBehavior {
     }
 
     /**
+     * Convert a serialized string into an array.
+     *
+     * @param string $value
+     * @param array $options
+     * @return array
+     */
+    public function fromSerialize($value, array $options) {
+        return @unserialize($value);
+    }
+
+    /**
+     * Convert a string into JSON.
+     *
+     * @param string $value
+     * @param array $options
+     * @return array
+     */
+    public function fromJson($value, array $options) {
+        return json_decode($value, !$options['object']);
+    }
+
+    /**
+     * Decode the string from base64.
+     *
+     * @param string $value
+     * @param array $options
+     * @return string
+     */
+    public function fromBase64($value, array $options) {
+        return base64_decode($value);
+    }
+
+    /**
      * Apply the encoding converter before a record is saved.
      *
      * @param \Titon\Event\Event $event
@@ -85,13 +118,14 @@ class ConverterBehavior extends AbstractBehavior {
      */
     public function preSave(Event $event, $id, array &$data) {
         $repo = $this->getRepository();
+        $converters = $this->getConverters();
 
         foreach ($data as $key => $value) {
-            if (empty($this->_converters[$key])) {
+            if (empty($converters[$key])) {
                 continue;
             }
 
-            $converter = $this->_converters[$key];
+            $converter = $converters[$key];
 
             // Exit if encoding should not happen
             if (!$converter['encode']) {
@@ -128,14 +162,15 @@ class ConverterBehavior extends AbstractBehavior {
         }
 
         $repo = $this->getRepository();
+        $converters = $this->getConverters();
 
         foreach ($results as $i => $result) {
             foreach ($result as $key => $value) {
-                if (empty($this->_converters[$key])) {
+                if (empty($converters[$key])) {
                     continue;
                 }
 
-                $converter = $this->_converters[$key];
+                $converter = $converters[$key];
 
                 // Exit if decoding should not happen
                 if (!$converter['decode']) {
@@ -159,36 +194,13 @@ class ConverterBehavior extends AbstractBehavior {
     }
 
     /**
-     * Convert a serialized string into an array.
-     *
-     * @param string $value
-     * @param array $options
-     * @return array
+     * {@inheritdoc}
      */
-    public function fromSerialize($value, array $options) {
-        return @unserialize($value);
-    }
-
-    /**
-     * Convert a string into JSON.
-     *
-     * @param string $value
-     * @param array $options
-     * @return array
-     */
-    public function fromJson($value, array $options) {
-        return json_decode($value, !$options['object']);
-    }
-
-    /**
-     * Decode the string from base64.
-     *
-     * @param string $value
-     * @param array $options
-     * @return string
-     */
-    public function fromBase64($value, array $options) {
-        return base64_decode($value);
+    public function registerEvents() {
+        return [
+            'db.preSave' => 'preSave',
+            'db.postFind' => 'postFind'
+        ];
     }
 
     /**
