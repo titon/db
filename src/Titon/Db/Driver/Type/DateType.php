@@ -35,7 +35,7 @@ class DateType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return static::DATE;
+        return self::DATE;
     }
 
     /**

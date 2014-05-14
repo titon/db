@@ -25,7 +25,7 @@ class DoubleType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return static::DOUBLE;
+        return self::DOUBLE;
     }
 
     /**

@@ -243,7 +243,7 @@ class Query {
      * @return $this
      */
     public function cache($key, $expires = null) {
-        if ($this->getType() !== static::SELECT) {
+        if ($this->getType() !== self::SELECT) {
             return $this;
         }
 
@@ -308,7 +308,7 @@ class Query {
             $fields = array_merge($this->_fields, $fields);
         }
 
-        if ($this->getType() === static::SELECT) {
+        if ($this->getType() === self::SELECT) {
             $fields = array_values(array_unique($fields));
         }
 
@@ -358,7 +358,7 @@ class Query {
      * @return string
      */
     public function getAlias() {
-        if ($this->getJoins() || $this instanceof SubQuery || in_array($this->getType(), [static::CREATE_INDEX, static::DROP_INDEX])) {
+        if ($this->getJoins() || $this instanceof SubQuery || in_array($this->getType(), [self::CREATE_INDEX, self::DROP_INDEX])) {
             return $this->_alias;
         }
 
@@ -410,8 +410,10 @@ class Query {
     public function getFields() {
         $fields = $this->_fields;
 
-        if ($this->getJoins() && !$fields && $this->getType() === static::SELECT) {
-            return $this->_mapTableFields($this->getRepository());
+        if ($this->getJoins() && !$fields && $this->getType() === self::SELECT) {
+            if ($schema = $this->getRepository()->getSchema()) {
+                return array_keys($schema->getColumns());
+            }
         }
 
         return $fields;
@@ -510,7 +512,6 @@ class Query {
     /**
      * Set what fields to group on.
      *
-     * @param string $fields,...
      * @return $this
      */
     public function groupBy() {
@@ -644,7 +645,7 @@ class Query {
         } else {
             $direction = strtolower($direction);
 
-            if ($direction != static::ASC && $direction != static::DESC) {
+            if ($direction != self::ASC && $direction != self::DESC) {
                 throw new InvalidArgumentException(sprintf('Invalid order direction %s for field %s', $direction, $field));
             }
 
@@ -840,6 +841,7 @@ class Query {
     protected function _addJoin($type, $table, $fields = [], $on = []) {
         $repo = $this->getRepository();
         $join = new Join($type);
+        $conditions = [];
 
         if (is_array($table)) {
             $alias = $table[1];
@@ -847,13 +849,6 @@ class Query {
         } else {
             $alias = $table;
         }
-
-        // Auto-populate fields if tables are the same
-        if (!$fields && $table === $repo->getTable() && $this->getType() === self::SELECT) {
-            $fields = $this->_mapTableFields($repo);
-        }
-
-        $conditions = [];
 
         foreach ($on as $pfk => $rfk) {
             if (strpos($pfk, '.') === false) {
@@ -870,22 +865,6 @@ class Query {
         $this->_joins[] = $join->from($table, $alias)->on($conditions)->fields($fields);
 
         return $this;
-    }
-
-    /**
-     * Return all fields for a table. This is required for joins and complex queries.
-     *
-     * @param \Titon\Db\Repository $repo
-     * @return array
-     */
-    protected function _mapTableFields(Repository $repo) {
-        $fields = [];
-
-        if ($schema = $repo->getSchema()) {
-            $fields = array_keys($schema->getColumns());
-        }
-
-        return $fields;
     }
 
     /**

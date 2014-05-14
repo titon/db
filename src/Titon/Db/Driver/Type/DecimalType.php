@@ -25,7 +25,7 @@ class DecimalType extends FloatType {
      * {@inheritdoc}
      */
     public function getName() {
-        return static::DECIMAL;
+        return self::DECIMAL;
     }
 
 }

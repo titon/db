@@ -50,7 +50,7 @@ class BlobType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return static::BLOB;
+        return self::BLOB;
     }
 
     /**

@@ -3,6 +3,7 @@ namespace Titon\Db\Driver;
 
 use Titon\Cache\Storage\MemoryStorage;
 use Titon\Common\Config;
+use Titon\Db\Driver;
 use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Query;
 use Titon\Db\Query\ResultSet;
@@ -493,6 +494,34 @@ class PdoDriverTest extends TestCase {
         $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
         $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
 
+        $this->object->transaction(function(Driver $driver) {
+            $driver->executeQuery('DELETE FROM profiles WHERE user_id = 1')->execute();
+            $driver->executeQuery('DELETE FROM users WHERE id = 1')->execute();
+        });
+
+        $this->assertEquals(0, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(0, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertEquals([
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1',
+            'BEGIN',
+            'DELETE FROM profiles WHERE user_id = 1',
+            'DELETE FROM users WHERE id = 1',
+            'COMMIT',
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1'
+        ], array_map(function(ResultSet $value) {
+            return $value->getStatement();
+        }, $this->object->getLoggedQueries()));
+    }
+
+    public function testCustomTransactions() {
+        $this->loadFixtures(['Users', 'Profiles']);
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
         $this->assertTrue($this->object->startTransaction());
 
         try {
@@ -527,6 +556,38 @@ class PdoDriverTest extends TestCase {
         $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
         $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
 
+        try {
+            $this->object->transaction(function(Driver $driver) {
+                $driver->executeQuery('DELETE FROM profiles WHERE user_id = 1')->execute();
+                $driver->executeQuery('DELETE FROM users WHERE id = 1')->execute();
+
+                throw new Exception('Fake error to trigger rollback!');
+            });
+        } catch (Exception $e) {}
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertEquals([
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1',
+            'BEGIN',
+            'DELETE FROM profiles WHERE user_id = 1',
+            'DELETE FROM users WHERE id = 1',
+            'ROLLBACK',
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1'
+        ], array_map(function(ResultSet $value) {
+            return $value->getStatement();
+        }, $this->object->getLoggedQueries()));
+    }
+
+    public function testCustomRollbackTransactions() {
+        $this->loadFixtures(['Users', 'Profiles']);
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
         $this->assertTrue($this->object->startTransaction());
 
         try {
@@ -556,6 +617,36 @@ class PdoDriverTest extends TestCase {
     }
 
     public function testNestedTransactions() {
+        $this->loadFixtures(['Users', 'Profiles']);
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->object->transaction(function(Driver $driver1) {
+            $driver1->transaction(function(Driver $driver2) {
+                $driver2->executeQuery('DELETE FROM profiles WHERE user_id = 1')->execute();
+                $driver2->executeQuery('DELETE FROM users WHERE id = 1')->execute();
+            });
+        });
+
+        $this->assertEquals(0, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(0, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertEquals([
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1',
+            'BEGIN',
+            'DELETE FROM profiles WHERE user_id = 1',
+            'DELETE FROM users WHERE id = 1',
+            'COMMIT',
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1'
+        ], array_map(function(ResultSet $value) {
+            return $value->getStatement();
+        }, $this->object->getLoggedQueries()));
+    }
+
+    public function testCustomNestedTransactions() {
         $this->loadFixtures(['Users', 'Profiles']);
 
         $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
@@ -599,6 +690,40 @@ class PdoDriverTest extends TestCase {
     }
 
     public function testNestedRollbackTransactions() {
+        $this->loadFixtures(['Users', 'Profiles']);
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        try {
+            $this->object->transaction(function(Driver $driver1) {
+                $driver1->transaction(function(Driver $driver2) {
+                    $driver2->executeQuery('DELETE FROM profiles WHERE user_id = 1')->execute();
+                    $driver2->executeQuery('DELETE FROM users WHERE id = 1')->execute();
+
+                    throw new Exception('Fake error to trigger rollback!');
+                });
+            });
+        } catch (Exception $e) {}
+
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());
+        $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM profiles WHERE user_id = 1')->count());
+
+        $this->assertEquals([
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1',
+            'BEGIN',
+            'DELETE FROM profiles WHERE user_id = 1',
+            'DELETE FROM users WHERE id = 1',
+            'ROLLBACK',
+            'SELECT COUNT(id) FROM users WHERE id = 1',
+            'SELECT COUNT(id) FROM profiles WHERE user_id = 1'
+        ], array_map(function(ResultSet $value) {
+            return $value->getStatement();
+        }, $this->object->getLoggedQueries()));
+    }
+
+    public function testCustomNestedRollbackTransactions() {
         $this->loadFixtures(['Users', 'Profiles']);
 
         $this->assertEquals(1, $this->object->executeQuery('SELECT COUNT(id) FROM users WHERE id = 1')->count());

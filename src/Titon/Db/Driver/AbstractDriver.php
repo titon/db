@@ -360,7 +360,9 @@ abstract class AbstractDriver extends Base implements Driver {
      */
     public function transaction(Closure $bulk) {
         if (!$this->startTransaction()) {
+            // @codeCoverageIgnoreStart
             throw new QueryFailureException('Failed to start database transaction');
+            // @codeCoverageIgnoreEnd
         }
 
         try {

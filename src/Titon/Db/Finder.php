@@ -11,6 +11,7 @@ namespace Titon\Db;
  * A finder represents a specific type of query fetch, which allows alteration before or after.
  *
  * @package Titon\Db
+ * @codeCoverageIgnore
  */
 interface Finder {
 

@@ -25,7 +25,7 @@ class BigintType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return static::BIGINT;
+        return self::BIGINT;
     }
 
     /**

@@ -41,7 +41,7 @@ class FilterBehavior extends AbstractBehavior {
      * @throws \Titon\Db\Exception\InvalidArgumentException
      */
     public function filter($field, $filter, array $options = []) {
-        if (!in_array($filter, [static::HTML, static::NEWLINES, static::WHITESPACE, static::XSS])) {
+        if (!in_array($filter, [self::HTML, self::NEWLINES, self::WHITESPACE, self::XSS])) {
             throw new InvalidArgumentException(sprintf('Filter %s does not exist', $filter));
         }
 

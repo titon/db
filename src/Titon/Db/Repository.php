@@ -161,19 +161,17 @@ class Repository extends Base implements Listener {
     public function castResults(Event $event, array &$results, $finder) {
         $schema = $this->getSchema()->getColumns();
 
-        if (!$schema) {
-            return;
-        }
+        if ($schema) {
+            $driver = $this->getDriver();
 
-        $driver = $this->getDriver();
-
-        // TODO - Type cast the results first
-        // I feel like this should be on the driver layer, but where and how?
-        // Was thinking of using events on the driver, but no access to the repository or schema...
-        foreach ($results as $i => $result) {
-            foreach ($result as $field => $value) {
-                if (isset($schema[$field])) {
-                    $results[$i][$field] = AbstractType::factory($schema[$field]['type'], $driver)->from($value);
+            // TODO - Type cast the results first
+            // I feel like this should be on the driver layer, but where and how?
+            // Was thinking of using events on the driver, but no access to the repository or schema...
+            foreach ($results as $i => $result) {
+                foreach ($result as $field => $value) {
+                    if (isset($schema[$field])) {
+                        $results[$i][$field] = AbstractType::factory($schema[$field]['type'], $driver)->from($value);
+                    }
                 }
             }
         }
@@ -375,10 +373,6 @@ class Repository extends Base implements Listener {
         // If the event returns custom data, use it
         if (is_array($state)) {
             $results = $state;
-
-            if (!isset($results[0])) {
-                $results = [$results];
-            }
 
         // Else find new records
         } else {
@@ -914,6 +908,7 @@ class Repository extends Base implements Listener {
      * @return int
      *      - The count of records updated if an update
      *      - The ID of the record if an insert
+     *      - 0 if save operation failed
      */
     protected function _processSave(Query $query, $id, array $data, $options = []) {
         $isCreate = ($query->getType() === Query::INSERT);

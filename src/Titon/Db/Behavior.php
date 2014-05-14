@@ -11,6 +11,7 @@ namespace Titon\Db;
  * A Behavior can be attached to a repository and triggered during callbacks to modify functionality.
  *
  * @package Titon\Db
+ * @codeCoverageIgnore
  */
 interface Behavior {
 

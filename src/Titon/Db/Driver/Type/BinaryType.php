@@ -34,7 +34,7 @@ class BinaryType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return static::BINARY;
+        return self::BINARY;
     }
 
     /**

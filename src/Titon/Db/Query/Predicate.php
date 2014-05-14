@@ -79,7 +79,7 @@ class Predicate {
      * @return $this
      */
     public function also(Closure $callback) {
-        $predicate = new Predicate(static::ALSO);
+        $predicate = new Predicate(self::ALSO);
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
@@ -121,7 +121,7 @@ class Predicate {
      * @return $this
      */
     public function either(Closure $callback) {
-        $predicate = new Predicate(static::EITHER);
+        $predicate = new Predicate(self::EITHER);
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
@@ -177,7 +177,7 @@ class Predicate {
      * @return string
      */
     public function getType() {
-        return $this->_type ?: static::ALSO;
+        return $this->_type ?: self::ALSO;
     }
 
     /**
@@ -281,7 +281,7 @@ class Predicate {
      * @return $this
      */
     public function maybe(Closure $callback) {
-        $predicate = new Predicate(static::MAYBE);
+        $predicate = new Predicate(self::MAYBE);
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
@@ -296,7 +296,7 @@ class Predicate {
      * @return $this
      */
     public function neither(Closure $callback) {
-        $predicate = new Predicate(static::NEITHER);
+        $predicate = new Predicate(self::NEITHER);
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;

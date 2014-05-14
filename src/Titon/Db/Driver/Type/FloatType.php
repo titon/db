@@ -25,7 +25,7 @@ class FloatType extends AbstractType {
      * {@inheritdoc}
      */
     public function getName() {
-        return static::FLOAT;
+        return self::FLOAT;
     }
 
     /**
