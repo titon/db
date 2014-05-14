@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Data;
 
+use Titon\Db\Entity;
 use Titon\Db\Query;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\Series;
@@ -36,9 +37,11 @@ class AbstractCreateTest extends TestCase {
             'age' => 38
         ];
 
-        $this->assertEquals(6, $user->create($data));
+        $last_id = $user->create($data);
 
-        $this->assertEquals([
+        $this->assertEquals(6, $last_id);
+
+        $this->assertEquals(new Entity([
             'id' => 6,
             'country_id' => 1,
             'username' => 'ironman',
@@ -49,7 +52,7 @@ class AbstractCreateTest extends TestCase {
             'age' => 38,
             'created' => '',
             'modified' => ''
-        ], $user->data);
+        ]), $user->read($last_id));
 
         // Trying again should throw a unique error on username
         unset($data['id']);

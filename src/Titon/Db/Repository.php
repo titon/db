@@ -42,18 +42,11 @@ class Repository extends Base implements Listener {
     use Attachable, Cacheable, Emittable;
 
     /**
-     * ID of last updated or inserted record.
+     * ID(s) of last updated or inserted record.
      *
-     * @type int
+     * @type int|int[]
      */
     public $id;
-
-    /**
-     * Data or results from the last query.
-     *
-     * @type array
-     */
-    public $data = [];
 
     /**
      * List of attached behaviors.
@@ -399,7 +392,7 @@ class Repository extends Base implements Listener {
         }
 
         // Wrap the results in entities
-        $this->data = $results = $this->wrapEntities($results);
+        $results = $this->wrapEntities($results);
 
         // Reset the driver local cache
         $this->getDriver()->reset();
@@ -646,8 +639,6 @@ class Repository extends Base implements Listener {
      * @return \Titon\Db\Query
      */
     public function query($type) {
-        $this->data = [];
-
         $query = $this->getDriver()->newQuery($type);
         $query->setRepository($this);
         $query->from($this->getTable(), $this->getAlias());
@@ -696,20 +687,6 @@ class Repository extends Base implements Listener {
      */
     public function select() {
         return $this->query(Query::SELECT)->fields(func_get_args());
-    }
-
-    /**
-     * Set and merge result data into the repository.
-     *
-     * @uses Titon\Utility\Hash
-     *
-     * @param array $data
-     * @return $this
-     */
-    public function setData(array $data) {
-        $this->data = Hash::merge($this->_mapDefaults(), $this->data, $data);
-
-        return $this;
     }
 
     /**
@@ -907,8 +884,6 @@ class Repository extends Base implements Listener {
             return 0;
         }
 
-        $this->data = [];
-
         if ($options['postCallback']) {
             $this->emit('db.postDelete', [$id]);
         }
@@ -971,10 +946,7 @@ class Repository extends Base implements Listener {
             $id = $driver->getLastInsertID($this);
         }
 
-        if (!is_array($id)) {
-            $this->id = $id;
-            $this->setData([$this->getPrimaryKey() => $id] + $data);
-        }
+        $this->id = $id;
 
         // Trigger after events
         if ($options['postCallback']) {
