@@ -12,7 +12,6 @@ use Titon\Db\Driver\Schema;
 use Titon\Db\Exception\ExistingPredicateException;
 use Titon\Db\Exception\InvalidArgumentException;
 use Titon\Db\Exception\InvalidQueryException;
-use Titon\Db\Exception\InvalidRelationQueryException;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
 use Titon\Db\Query\Join;
@@ -128,13 +127,6 @@ class Query {
      * @type string[]
      */
     protected $_orderBy = [];
-
-    /**
-     * Additional queries to execute for relational data.
-     *
-     * @type \Titon\Db\Query[]
-     */
-    protected $_relationQueries = [];
 
     /**
      * Table schema used for complex queries.
@@ -480,15 +472,6 @@ class Query {
     }
 
     /**
-     * Return the relation queries.
-     *
-     * @return $this[]
-     */
-    public function getRelationQueries() {
-        return $this->_relationQueries;
-    }
-
-    /**
      * Return the schema.
      *
      * @return \Titon\Db\Driver\Schema
@@ -557,13 +540,13 @@ class Query {
     /**
      * Add a new INNER join.
      *
-     * @param string|array|\Titon\Db\Relation $repo
+     * @param string|array $table
      * @param array $fields
      * @param array $on
      * @return $this
      */
-    public function innerJoin($repo, array $fields = [], array $on = []) {
-        return $this->_addJoin(Join::INNER, $repo, $fields, $on);
+    public function innerJoin($table, array $fields = [], array $on = []) {
+        return $this->_addJoin(Join::INNER, $table, $fields, $on);
     }
 
     /**
@@ -584,13 +567,13 @@ class Query {
     /**
      * Add a new LEFT join.
      *
-     * @param string|array|\Titon\Db\Relation $repo
+     * @param string|array $table
      * @param array $fields
      * @param array $on
      * @return $this
      */
-    public function leftJoin($repo, array $fields = [], array $on = []) {
-        return $this->_addJoin(Join::LEFT, $repo, $fields, $on);
+    public function leftJoin($table, array $fields = [], array $on = []) {
+        return $this->_addJoin(Join::LEFT, $table, $fields, $on);
     }
 
     /**
@@ -698,25 +681,25 @@ class Query {
     /**
      * Add a new OUTER join.
      *
-     * @param string|array|\Titon\Db\Relation $repo
+     * @param string|array $table
      * @param array $fields
      * @param array $on
      * @return $this
      */
-    public function outerJoin($repo, array $fields = [], array $on = []) {
-        return $this->_addJoin(Join::OUTER, $repo, $fields, $on);
+    public function outerJoin($table, array $fields = [], array $on = []) {
+        return $this->_addJoin(Join::OUTER, $table, $fields, $on);
     }
 
     /**
      * Add a new RIGHT join.
      *
-     * @param string|array|\Titon\Db\Relation $repo
+     * @param string|array $table
      * @param array $fields
      * @param array $on
      * @return $this
      */
-    public function rightJoin($repo, array $fields = [], array $on = []) {
-        return $this->_addJoin(Join::RIGHT, $repo, $fields, $on);
+    public function rightJoin($table, array $fields = [], array $on = []) {
+        return $this->_addJoin(Join::RIGHT, $table, $fields, $on);
     }
 
     /**
@@ -744,13 +727,13 @@ class Query {
     /**
      * Add a new STRAIGHT join.
      *
-     * @param string|array|\Titon\Db\Relation $repo
+     * @param string|array $table
      * @param array $fields
      * @param array $on
      * @return $this
      */
-    public function straightJoin($repo, array $fields, array $on = []) {
-        return $this->_addJoin(Join::STRAIGHT, $repo, $fields, $on);
+    public function straightJoin($table, array $fields, array $on = []) {
+        return $this->_addJoin(Join::STRAIGHT, $table, $fields, $on);
     }
 
     /**
@@ -802,62 +785,6 @@ class Query {
     }
 
     /**
-     * Include a repository relation by querying and joining the records.
-     *
-     * @param string|string[] $alias
-     * @param \Titon\Db\Query|\Closure $query
-     * @return $this
-     * @throws \Titon\Db\Exception\InvalidRelationQueryException
-     */
-    public function with($alias, $query = null) {
-        if ($this->getType() !== static::SELECT) {
-            throw new InvalidRelationQueryException('Only select queries can join related data');
-        }
-
-        // Allow an array of aliases to easily be set
-        if (is_array($alias)) {
-            foreach ($alias as $name) {
-                $this->with($name);
-            }
-
-            return $this;
-        }
-
-        $relation = $this->getRepository()->getRelation($alias); // Do relation check
-
-        if ($query instanceof Query) {
-            $relatedQuery = $query;
-
-            if ($query->getType() !== static::SELECT) {
-                throw new InvalidRelationQueryException('Only select sub-queries are permitted for related data');
-            }
-        } else {
-            $relatedQuery = $relation->getRelatedRepository()->select();
-
-            // Apply relation conditions
-            if ($conditions = $relation->getConditions()) {
-                $relatedQuery->bindCallback($conditions, $relation);
-            }
-
-            // Apply with conditions
-            if ($query instanceof Closure) {
-                $relatedQuery->bindCallback($query, $relation);
-            }
-        }
-
-        // Add foreign key to field list
-        if ($this->_fields) {
-            if ($relation->getType() === Relation::MANY_TO_ONE) {
-                $this->fields([$relation->getForeignKey()], true);
-            }
-        }
-
-        $this->_relationQueries[$alias] = $relatedQuery;
-
-        return $this;
-    }
-
-    /**
      * Will modify or create a having predicate using the XOR conjunction.
      *
      * @param string $field
@@ -902,76 +829,45 @@ class Query {
     }
 
     /**
-     * Add a new join type. If table is a relation instance, introspect the correct values.
+     * Add a new join type.
      *
      * @param string $type
-     * @param string|array|\Titon\Db\Relation $table
+     * @param string|array $table
      * @param array $fields
      * @param array $on
      * @return $this
-     * @throws \Titon\Db\Exception\InvalidRelationQueryException
      */
     protected function _addJoin($type, $table, $fields = [], $on = []) {
         $repo = $this->getRepository();
         $join = new Join($type);
 
-        if ($table instanceof Relation) {
-            $relation = $table;
-            $relatedRepo = $relation->getRelatedRepository();
-            $alias = $relation->getAlias();
-
-            if (!$fields && $this->getType() === self::SELECT) {
-                $fields = $this->_mapTableFields($relatedRepo);
-            }
-
-            $join
-                ->from($relatedRepo->getTable(), $alias)
-                ->fields($fields);
-
-            switch ($relation->getType()) {
-                case Relation::MANY_TO_ONE:
-                    // primary.foreign_key = join.id
-                    $join->on($repo->getAlias() . '.' . $relation->getForeignKey(), $alias . '.' . $relatedRepo->getPrimaryKey());
-                break;
-                case Relation::ONE_TO_ONE:
-                    // primary.id = join.foreign_key
-                    $join->on($repo->getAlias() . '.' . $repo->getPrimaryKey(), $alias . '.' . $relation->getRelatedForeignKey());
-                break;
-                default:
-                    throw new InvalidRelationQueryException('Only many-to-one and one-to-one relations can join data');
-                break;
-            }
+        if (is_array($table)) {
+            $alias = $table[1];
+            $table = $table[0];
         } else {
-            if (is_array($table)) {
-                $alias = $table[1];
-                $table = $table[0];
-            } else {
-                $alias = $table;
-            }
-
-            // Auto-populate fields if tables are the same
-            if (!$fields && $table === $repo->getTable() && $this->getType() === static::SELECT) {
-                $fields = $this->_mapTableFields($repo);
-            }
-
-            $conditions = [];
-
-            foreach ($on as $pfk => $rfk) {
-                if (strpos($pfk, '.') === false) {
-                    $pfk = $repo->getAlias() . '.' . $pfk;
-                }
-
-                if (strpos($rfk, '.') === false) {
-                    $rfk = $alias . '.' . $rfk;
-                }
-
-                $conditions[$pfk] = $rfk;
-            }
-
-            $join->from($table, $alias)->on($conditions)->fields($fields);
+            $alias = $table;
         }
 
-        $this->_joins[] = $join;
+        // Auto-populate fields if tables are the same
+        if (!$fields && $table === $repo->getTable() && $this->getType() === self::SELECT) {
+            $fields = $this->_mapTableFields($repo);
+        }
+
+        $conditions = [];
+
+        foreach ($on as $pfk => $rfk) {
+            if (strpos($pfk, '.') === false) {
+                $pfk = $repo->getAlias() . '.' . $pfk;
+            }
+
+            if (strpos($rfk, '.') === false) {
+                $rfk = $alias . '.' . $rfk;
+            }
+
+            $conditions[$pfk] = $rfk;
+        }
+
+        $this->_joins[] = $join->from($table, $alias)->on($conditions)->fields($fields);
 
         return $this;
     }

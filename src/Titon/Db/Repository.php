@@ -14,20 +14,14 @@ use Titon\Db\Driver\Dialect;
 use Titon\Db\Driver\Schema;
 use Titon\Db\Driver\Type\AbstractType;
 use Titon\Db\Exception\InvalidQueryException;
-use Titon\Db\Exception\InvalidRelationStructureException;
 use Titon\Db\Exception\MissingBehaviorException;
 use Titon\Db\Exception\MissingFinderException;
-use Titon\Db\Exception\MissingRelationException;
 use Titon\Db\Exception\QueryFailureException;
 use Titon\Db\Finder;
 use Titon\Db\Finder\FirstFinder;
 use Titon\Db\Finder\AllFinder;
 use Titon\Db\Finder\ListFinder;
 use Titon\Db\Query;
-use Titon\Db\Relation\OneToOne;
-use Titon\Db\Relation\OneToMany;
-use Titon\Db\Relation\ManyToOne;
-use Titon\Db\Relation\ManyToMany;
 use Titon\Event\Event;
 use Titon\Event\Listener;
 use Titon\Event\Traits\Emittable;
@@ -39,13 +33,10 @@ use \Closure;
  * Represents a database table.
  *
  *      - Defines a schema
- *      - Defines relations
- *          - One-to-one, One-to-many, Many-to-one, Many-to-many
  *      - Allows for queries to be built and executed
- *          - Returns Entity objects for each record in the result
+ *      - Returns Entity objects for each record in the result
  *
  * @link http://en.wikipedia.org/wiki/Database_model
- * @link http://en.wikipedia.org/wiki/Relational_model
  *
  * @package Titon\Db
  */
@@ -116,13 +107,6 @@ class Repository extends Base implements Callback, Listener {
     protected $_finders = [];
 
     /**
-     * Repository to repository relationships.
-     *
-     * @type \Titon\Db\Relation[]
-     */
-    protected $_relations = [];
-
-    /**
      * Database table schema object, or an array of column data.
      *
      * @type \Titon\Db\Driver\Schema|array
@@ -177,61 +161,6 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
-     * Add a relation between another repository.
-     *
-     * @param \Titon\Db\Relation $relation
-     * @return $this
-     */
-    public function addRelation(Relation $relation) {
-        $relation->setRepository($this);
-
-        $this->_relations[$relation->getAlias()] = $relation;
-
-        $this->attachObject([
-            'alias' => $relation->getAlias(),
-            'interface' => 'Titon\Db\Repository'
-        ], function() use ($relation) {
-            return $relation->getRelatedRepository();
-        });
-
-        return $this;
-    }
-
-    /**
-     * Add a many-to-one relationship.
-     *
-     * @param string $alias
-     * @param string|\Titon\Db\Repository $repo
-     * @param string $foreignKey
-     * @return \Titon\Db\Relation\ManyToOne
-     */
-    public function belongsTo($alias, $repo, $foreignKey) {
-        $relation = (new ManyToOne($alias, $repo))
-            ->setForeignKey($foreignKey);
-
-        return $this->addRelation($relation);
-    }
-
-    /**
-     * Add a many-to-many relationship.
-     *
-     * @param string $alias
-     * @param string|\Titon\Db\Repository $repo
-     * @param string $junction
-     * @param string $foreignKey
-     * @param string $relatedKey
-     * @return \Titon\Db\Relation\ManyToMany
-     */
-    public function belongsToMany($alias, $repo, $junction, $foreignKey, $relatedKey) {
-        $relation = (new ManyToMany($alias, $repo))
-            ->setJunctionClass($junction)
-            ->setForeignKey($foreignKey)
-            ->setRelatedForeignKey($relatedKey);
-
-        return $this->addRelation($relation);
-    }
-
-    /**
      * Return a count of results from the query.
      *
      * @param \Titon\Db\Query $query
@@ -249,7 +178,6 @@ class Repository extends Base implements Callback, Listener {
      * @param array $data
      * @param array $options
      * @return int The record ID on success, 0 on failure
-     * @throws \Titon\Db\Exception\QueryFailureException
      */
     public function create(array $data, array $options = []) {
         return $this->_processSave($this->query(Query::INSERT), null, $data, $options);
@@ -264,9 +192,10 @@ class Repository extends Base implements Callback, Listener {
      *
      * @param array $data Multi-dimensional array of records
      * @param bool $hasPk If true will allow primary key fields, else will remove them
+     * @param array $options
      * @return int The count of records inserted
      */
-    public function createMany(array $data, $hasPk = false) {
+    public function createMany(array $data, $hasPk = false, array $options = []) {
         $records = [];
         $defaults = $this->_mapDefaults();
         $pk = $this->getPrimaryKey();
@@ -281,7 +210,7 @@ class Repository extends Base implements Callback, Listener {
             $records[] = $record;
         }
 
-        return $this->query(Query::MULTI_INSERT)->fields($records)->save();
+        return $this->_processSave($this->query(Query::MULTI_INSERT), null, $records, $options);
     }
 
     /**
@@ -343,107 +272,24 @@ class Repository extends Base implements Callback, Listener {
      * Delete a record by ID.
      *
      * @param int|int[] $id
-     * @param mixed $options
+     * @param array $options
      * @return int The count of records deleted
      */
-    public function delete($id, $options = true) {
+    public function delete($id, array $options = []) {
         $query = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id);
 
         return $this->_processDelete($query, $id, $options);
     }
 
     /**
-     * Loop through all table relations and delete dependent records using the ID as a base.
-     * Will return a count of how many dependent records were deleted.
-     *
-     * @param int|int[] $id
-     * @param bool $cascade Will delete related records if true
-     * @return int The count of records deleted
-     * @throws \Titon\Db\Exception\QueryFailureException
-     * @throws \Exception
-     */
-    public function deleteDependents($id, $cascade = true) {
-        $count = 0;
-        $driver = $this->getDriver();
-
-        if (!$driver->startTransaction()) {
-            throw new QueryFailureException('Failed to start database transaction');
-        }
-
-        try {
-            foreach ($this->getRelations() as $relation) {
-                if (!$relation->isDependent()) {
-                    continue;
-                }
-
-                switch ($relation->getType()) {
-                    case Relation::ONE_TO_ONE:
-                    case Relation::ONE_TO_MANY:
-                        $relatedRepo = $relation->getRelatedRepository();
-                        $results = [];
-
-                        // Fetch IDs before deletion
-                        // Only delete if relations exist
-                        if ($cascade && $relatedRepo->hasRelations()) {
-                            $results = $relatedRepo
-                                ->select($relatedRepo->getPrimaryKey())
-                                ->where($relation->getRelatedForeignKey(), $id)
-                                ->all();
-                        }
-
-                        // Delete all records at once
-                        $count += $relatedRepo
-                            ->query(Query::DELETE)
-                            ->where($relation->getRelatedForeignKey(), $id)
-                            ->save();
-
-                        // Loop through the records and cascade delete dependents
-                        if ($results) {
-                            $dependentIDs = [];
-
-                            foreach ($results as $result) {
-                                $dependentIDs[] = $result->get($relatedRepo->getPrimaryKey());
-                            }
-
-                            $count += $relatedRepo->deleteDependents($dependentIDs, $cascade);
-                        }
-                    break;
-
-                    case Relation::MANY_TO_MANY:
-                        /** @type \Titon\Db\Repository $junctionRepo */
-                        $junctionRepo = $relation->getJunctionRepository();
-
-                        // Only delete the junction records
-                        // The related records should stay
-                        $count += $junctionRepo
-                            ->query(Query::DELETE)
-                            ->where($relation->getForeignKey(), $id)
-                            ->save();
-                    break;
-                }
-            }
-
-            $driver->commitTransaction();
-
-        // Rollback and re-throw exception
-        } catch (Exception $e) {
-            $driver->rollbackTransaction();
-
-            throw $e;
-        }
-
-        return $count;
-    }
-
-    /**
      * Delete multiple records with conditions.
      *
      * @param \Closure $conditions
-     * @param mixed $options
+     * @param array $options
      * @return int The count of records deleted
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
-    public function deleteMany(Closure $conditions, $options = true) {
+    public function deleteMany(Closure $conditions, array $options = []) {
         $pk = $this->getPrimaryKey();
         $ids = $this->select($pk)->bindCallback($conditions)->lists($pk, $pk);
         $query = $this->query(Query::DELETE)->bindCallback($conditions);
@@ -469,154 +315,70 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
-     * Find records in the database using a custom finder.
-     *
-     * @param Query $query
-     * @param string $type
-     * @param array $options
-     * @return mixed
-     */
-    public function find(Query $query, $type, array $options = []) {
-        return $this->_processFind($query, $type, $options);
-    }
-
-    /**
-     * Once the primary query has been executed and the results have been fetched,
-     * loop over all sub-queries and fetch related data.
-     *
-     * The related data will be added to the array indexed by the relation alias.
-     *
-     * @uses Titon\Utility\Hash
+     * All-in-one method for fetching results from a query.
+     * Depending on the type of finder, the returned results will differ.
      *
      * @param \Titon\Db\Query $query
-     * @param Entity $result
-     * @param array $options
-     * @return \Titon\Db\Entity
+     * @param string $type
+     * @param mixed $options {
+     *      @type bool $preCallback     Will trigger before callbacks
+     *      @type bool $postCallback    Will trigger after callbacks
+     * }
+     * @return array|\Titon\Db\Entity|\Titon\Db\EntityCollection
      */
-    public function fetchRelations(Query $query, Entity $result, array $options = []) {
-        $queries = $query->getRelationQueries();
+    public function find(Query $query, $type, array $options = []) {
+        $options = $options + [
+            'preCallback' => true,
+            'postCallback' => true
+        ];
 
-        if (!$queries) {
-            return $result;
+        $finder = $this->getFinder($type);
+        $state = null;
+
+        // Use the return of preFind() if applicable
+        if ($options['preCallback']) {
+            $event = $this->emit('db.preFind', [$query, $type]);
+            $state = $event->getData();
+
+            if ($state !== null && !$state) {
+                return $finder->noResults();
+            }
         }
 
-        foreach ($queries as $alias => $subQuery) {
-            $newQuery = clone $subQuery;
-            $relation = $this->getRelation($alias);
-            $relatedRepo = $relation->getRelatedRepository();
-            $relatedClass = get_class($relatedRepo);
+        // If the event returns custom data, use it
+        if (is_array($state)) {
+            $results = $state;
 
-            switch ($relation->getType()) {
-
-                // Has One
-                // The related table should be pointing to this table
-                // So use this ID in the related foreign key
-                // Since we only want one record, limit it and single fetch
-                case Relation::ONE_TO_ONE:
-                    $foreignValue = $result[$this->getPrimaryKey()];
-
-                    $newQuery
-                        ->where($relation->getRelatedForeignKey(), $foreignValue)
-                        ->cache([$relatedClass, 'fetchOneToOne', $foreignValue])
-                        ->limit(1);
-
-                    $result->set($alias, function() use ($newQuery, $options) {
-                        return $newQuery->first($options);
-                    });
-                break;
-
-                // Has Many
-                // The related tables should be pointing to this table
-                // So use this ID in the related foreign key
-                // Since we want multiple records, fetch all with no limit
-                case Relation::ONE_TO_MANY:
-                    $foreignValue = $result[$this->getPrimaryKey()];
-
-                    $newQuery
-                        ->where($relation->getRelatedForeignKey(), $foreignValue)
-                        ->cache([$relatedClass, 'fetchOneToMany', $foreignValue]);
-
-                    $result->set($alias, function() use ($newQuery, $options) {
-                        return $newQuery->all($options);
-                    });
-                break;
-
-                // Belongs To
-                // This table should be pointing to the related table
-                // So use the foreign key as the related ID
-                // We should only be fetching a single record
-                case Relation::MANY_TO_ONE:
-                    $foreignValue = $result[$relation->getForeignKey()];
-
-                    $newQuery
-                        ->where($relatedRepo->getPrimaryKey(), $foreignValue)
-                        ->cache([$relatedClass, 'fetchManyToOne', $foreignValue])
-                        ->limit(1);
-
-                    $result->set($alias, function() use ($newQuery, $options) {
-                        return $newQuery->first($options);
-                    });
-                break;
-
-                // Has And Belongs To Many
-                // This table points to a related table through a junction table
-                // Query the junction table for lookup IDs pointing to the related data
-                case Relation::MANY_TO_MANY:
-                    $foreignValue = $result[$this->getPrimaryKey()];
-
-                    if (!$foreignValue) {
-                        continue;
-                    }
-
-                    $result->set($alias, function() use ($relation, $newQuery, $foreignValue, $options) {
-                        $relatedRepo = $relation->getRelatedRepository();
-                        $relatedClass = get_class($relatedRepo);
-                        $lookupIDs = [];
-
-                        // Fetch the related records using the junction IDs
-                        $junctionRepo = $relation->getJunctionRepository();
-                        $junctionResults = $junctionRepo
-                            ->select()
-                            ->where($relation->getForeignKey(), $foreignValue)
-                            ->cache([get_class($junctionRepo), 'fetchManyToMany', $foreignValue])
-                            ->all();
-
-                        if (!$junctionResults) {
-                            return [];
-                        }
-
-                        foreach ($junctionResults as $result) {
-                            $lookupIDs[] = $result->get($relation->getRelatedForeignKey());
-                        }
-
-                        $m2mResults = $newQuery
-                            ->where($relatedRepo->getPrimaryKey(), $lookupIDs)
-                            ->cache([$relatedClass, 'fetchManyToMany', $lookupIDs])
-                            ->all($options);
-
-                        // Include the junction data
-                        foreach ($m2mResults as $i => $m2mResult) {
-                            foreach ($junctionResults as $junctionResult) {
-                                if ($junctionResult[$relation->getRelatedForeignKey()] == $m2mResult[$relatedRepo->getPrimaryKey()]) {
-                                    $m2mResults[$i]->set('Junction', $junctionResult);
-                                }
-                            }
-                        }
-
-                        return $m2mResults;
-                    });
-                break;
+            if (!isset($results[0])) {
+                $results = [$results];
             }
 
-            // Trigger query immediately
-            if (!empty($options['eager'])) {
-                $result->get($alias);
-            }
+        // Else find new records
+        } else {
+            $finder->before($query, $options);
 
-            unset($newQuery);
+            // Update the connection context
+            $driver = $this->getDriver();
+            $driver->setContext('read');
+
+            $results = $driver->executeQuery($query)->find();
         }
 
-        return $result;
+        if (!$results) {
+            return $finder->noResults();
+        }
+
+        if ($options['postCallback']) {
+            $this->emit('db.postFind', [&$results, $type]);
+        }
+
+        // Wrap the results in entities
+        $this->data = $results = $this->wrapEntities($results);
+
+        // Reset the driver local cache
+        $this->getDriver()->reset();
+
+        return $finder->after($results, $options);
     }
 
     /**
@@ -766,43 +528,6 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
-     * Return a relation by alias.
-     *
-     * @param string $alias
-     * @return \Titon\Db\Relation|\Titon\Db\Relation\ManyToMany
-     * @throws \Titon\Db\Exception\MissingRelationException
-     */
-    public function getRelation($alias) {
-        if ($this->hasRelation($alias)) {
-            return $this->_relations[$alias];
-        }
-
-        throw new MissingRelationException(sprintf('Repository relation %s does not exist', $alias));
-    }
-
-    /**
-     * Return all relations, or all relations by type.
-     *
-     * @param int $type
-     * @return \Titon\Db\Relation[]
-     */
-    public function getRelations($type = 0) {
-        if (!$type) {
-            return $this->_relations;
-        }
-
-        $relations = [];
-
-        foreach ($this->_relations as $relation) {
-            if ($relation->getType() === $type) {
-                $relations[$relation->getAlias()] = $relation;
-            }
-        }
-
-        return $relations;
-    }
-
-    /**
      * Return a schema object that represents the database table.
      *
      * @return \Titon\Db\Driver\Schema
@@ -862,55 +587,6 @@ class Repository extends Base implements Callback, Listener {
      */
     public function hasBehaviors() {
         return (count($this->_behaviors) > 0);
-    }
-
-    /**
-     * Add a one-to-one relationship.
-     *
-     * @param string $alias
-     * @param string|\Titon\Db\Repository $repo
-     * @param string $relatedKey
-     * @return \Titon\Db\Relation\OneToOne
-     */
-    public function hasOne($alias, $repo, $relatedKey) {
-        $relation = (new OneToOne($alias, $repo))
-            ->setRelatedForeignKey($relatedKey);
-
-        return $this->addRelation($relation);
-    }
-
-    /**
-     * Add a one-to-many relationship.
-     *
-     * @param string $alias
-     * @param string|\Titon\Db\Repository $repo
-     * @param string $relatedKey
-     * @return \Titon\Db\Relation\OneToMany
-     */
-    public function hasMany($alias, $repo, $relatedKey) {
-        $relation = (new OneToMany($alias, $repo))
-            ->setRelatedForeignKey($relatedKey);
-
-        return $this->addRelation($relation);
-    }
-
-    /**
-     * Check if the relation exists.
-     *
-     * @param string $alias
-     * @return bool
-     */
-    public function hasRelation($alias) {
-        return isset($this->_relations[$alias]);
-    }
-
-    /**
-     * Check if any relation has been set.
-     *
-     * @return bool
-     */
-    public function hasRelations() {
-        return (count($this->_relations) > 0);
     }
 
     /**
@@ -1186,211 +862,27 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
-     * Either update or insert related data for the primary repository's ID.
-     * Each relation will handle upserting differently.
-     *
-     * @param int $id
-     * @param array $data
-     * @param array $options
-     * @return int
-     * @throws \Titon\Db\Exception\QueryFailureException
-     * @throws \Exception
-     */
-    public function upsertRelations($id, array $data, array $options = []) {
-        $upserted = 0;
-        $driver = $this->getDriver();
-
-        if (!$data) {
-            return $upserted;
-        }
-
-        if (!$driver->startTransaction()) {
-            throw new QueryFailureException('Failed to start database transaction');
-        }
-
-        try {
-            foreach ($data as $alias => $relatedData) {
-                if (empty($data[$alias])) {
-                    continue;
-                }
-
-                $relation = $this->getRelation($alias);
-                $relatedRepo = $relation->getRelatedRepository();
-                $fk = $relation->getForeignKey();
-                $rfk = $relation->getRelatedForeignKey();
-                $rpk = $relatedRepo->getPrimaryKey();
-
-                switch ($relation->getType()) {
-                    // Append the foreign key with the current ID
-                    case Relation::ONE_TO_ONE:
-                        $relatedData[$rfk] = $id;
-                        $relatedData[$rpk] = $relatedRepo->upsert($relatedData, null, $options);
-
-                        if (!$relatedData[$rpk]) {
-                            throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
-                        }
-
-                        $relatedData = $relatedRepo->data;
-
-                        $upserted++;
-                    break;
-
-                    // Loop through and append the foreign key with the current ID
-                    case Relation::ONE_TO_MANY:
-                        foreach ($relatedData as $i => $hasManyData) {
-                            $hasManyData[$rfk] = $id;
-                            $hasManyData[$rpk] = $relatedRepo->upsert($hasManyData, null, $options);
-
-                            if (!$hasManyData[$rpk]) {
-                                throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
-                            }
-
-                            $hasManyData = $relatedRepo->data;
-                            $relatedData[$i] = $hasManyData;
-
-                            $upserted++;
-                        }
-                    break;
-
-                    // Loop through each set of data and upsert to gather an ID
-                    // Use that foreign ID with the current ID and save in the junction table
-                    case Relation::MANY_TO_MANY:
-                        $junctionRepo = $relation->getJunctionRepository();
-                        $jpk = $junctionRepo->getPrimaryKey();
-
-                        foreach ($relatedData as $i => $habtmData) {
-                            $junctionData = [$fk => $id];
-
-                            // Existing record by junction foreign key
-                            if (isset($habtmData[$rfk])) {
-                                $foreign_id = $habtmData[$rfk];
-                                unset($habtmData[$rfk]);
-
-                                if ($habtmData) {
-                                    $foreign_id = $relatedRepo->upsert($habtmData, $foreign_id, $options);
-                                }
-
-                            // Existing record by relation primary key
-                            // New record
-                            } else {
-                                $foreign_id = $relatedRepo->upsert($habtmData, null, $options);
-                                $habtmData = $relatedRepo->data;
-                            }
-
-                            if (!$foreign_id) {
-                                throw new QueryFailureException(sprintf('Failed to upsert %s relational data', $alias));
-                            }
-
-                            $junctionData[$rfk] = $foreign_id;
-
-                            // Only create the record if the junction doesn't already exist
-                            $exists = $junctionRepo->select()
-                                ->where($fk, $id)
-                                ->where($rfk, $foreign_id)
-                                ->first();
-
-                            if (!$exists) {
-                                $junctionData[$jpk] = $junctionRepo->upsert($junctionData, null, $options);
-
-                                if (!$junctionData[$jpk]) {
-                                    throw new QueryFailureException(sprintf('Failed to upsert %s junction data', $alias));
-                                }
-                            } else {
-                                $junctionData = $exists->toArray();
-                            }
-
-                            $habtmData['Junction'] = $junctionData;
-                            $relatedData[$i] = $habtmData;
-
-                            $upserted++;
-                        }
-                    break;
-
-                    // Can not save belongs to relations
-                    case Relation::MANY_TO_ONE:
-                        continue;
-                    break;
-                }
-
-                $this->setData([$alias => $relatedData]);
-            }
-
-            $driver->commitTransaction();
-
-        // Rollback and re-throw exception
-        } catch (Exception $e) {
-            $driver->rollbackTransaction();
-
-            throw $e;
-        }
-
-        return $upserted;
-    }
-
-    /**
      * Wrap results in the defined entity class and wrap joined data in the originating tables entity class.
      *
-     * @param \Titon\Db\Query $query
      * @param array $results
-     * @param mixed $options
      * @return \Titon\Db\Entity[]
      */
-    public function wrapEntities(Query $query, array $results, $options) {
+    public function wrapEntities(array $results) {
         $entityClass = $this->getEntity();
 
         foreach ($results as $i => $result) {
-
-            // Wrap data pulled through a join
             foreach ($result as $key => $value) {
                 if (!is_array($value)) {
                     continue;
                 }
 
-                // Don't wrap collections of entities
-                if (isset($value[0]) && $value[0] instanceof Entity) {
-                    continue;
-                }
-
-                if ($this->hasRelation($key)) {
-                    $relatedEntity = $this->getRelation($key)->getRelatedRepository()->getEntity() ?: $entityClass;
-
-                    $result[$key] = new $relatedEntity($value);
-                }
+                $result[$key] = new Entity($value);
             }
 
-            // Wrap with entity and fetch relations
-            $entity = new $entityClass($result);
-            $entity = $this->fetchRelations($query, $entity, $options);
-
-            $results[$i] = $entity;
+            $results[$i] = new $entityClass($result);
         }
 
         return $results;
-    }
-
-    /**
-     * Extract related table data from an array of complex data.
-     * Filter out non-schema columns from the data.
-     *
-     * @param array $data
-     * @return array
-     */
-    protected function _filterData(array &$data) {
-        $aliases = array_keys($this->getRelations());
-        $related = [];
-
-        foreach ($aliases as $alias) {
-            if (isset($data[$alias])) {
-                $related[$alias] = $data[$alias];
-                unset($data[$alias]);
-            }
-        }
-
-        if ($columns = $this->getSchema()->getColumns()) {
-            $data = array_intersect_key($data, $columns);
-        }
-
-        return $related;
     }
 
     /**
@@ -1412,28 +904,17 @@ class Repository extends Base implements Callback, Listener {
 
     /**
      * Primary method that handles the processing of delete queries.
-     * Will wrap all delete queries in a transaction call.
-     * Will delete related data if $cascade is true.
-     * Triggers callbacks before and after.
      *
      * @param \Titon\Db\Query $query
      * @param int|int[] $id
      * @param mixed $options {
-     *      @type bool $cascade         Will delete related dependent records
      *      @type bool $preCallback     Will trigger before callbacks
      *      @type bool $postCallback    Will trigger after callbacks
      * }
      * @return int The count of records deleted
-     * @throws \Titon\Db\Exception\QueryFailureException
-     * @throws \Exception
      */
-    protected function _processDelete(Query $query, $id, $options = []) {
-        if (is_bool($options)) {
-            $options = ['cascade' => $options];
-        }
-
+    protected function _processDelete(Query $query, $id, array $options = []) {
         $options = $options + [
-            'cascade' => true,
             'preCallback' => true,
             'postCallback' => true
         ];
@@ -1457,37 +938,11 @@ class Repository extends Base implements Callback, Listener {
         $driver = $this->getDriver();
         $driver->setContext('delete');
 
-        // Use transactions for cascading
-        if ($options['cascade']) {
-            if (!$driver->startTransaction()) {
-                throw new QueryFailureException('Failed to start database transaction');
-            }
+        // Execute the query
+        $count = $query->save();
 
-            try {
-                $count = $query->save();
-
-                if ($count === false) {
-                    throw new QueryFailureException(sprintf('Failed to delete %s record with ID %s', get_class($this), implode(', ', (array) $id)));
-                }
-
-                $this->deleteDependents($id, $options['cascade']);
-
-                $driver->commitTransaction();
-
-            // Rollback and re-throw exception
-            } catch (Exception $e) {
-                $driver->rollbackTransaction();
-
-                throw $e;
-            }
-
-        // No transaction needed for single query
-        } else {
-            $count = $query->save();
-
-            if ($count === false) {
-                return 0;
-            }
+        if ($count === false) {
+            return 0;
         }
 
         $this->data = [];
@@ -1500,84 +955,7 @@ class Repository extends Base implements Callback, Listener {
     }
 
     /**
-     * All-in-one method for fetching results from a query.
-     * Before the query is executed, the preFind() method is called.
-     * After the query is executed, relations will be fetched, and then postFind() will be called.
-     * If wrap option is true, all results will be wrapped in an Entity class.
-     *
-     * Depending on the $finder, the returned results will differ.
-     *
-     * @uses Titon\Db\Type\AbstractType
-     *
-     * @param \Titon\Db\Query $query
-     * @param string $finderType
-     * @param mixed $options {
-     *      @type bool $eager           Will eager load relational queries immediately
-     *      @type bool $preCallback     Will trigger before callbacks
-     *      @type bool $postCallback    Will trigger after callbacks
-     * }
-     * @return array|\Titon\Db\Entity|\Titon\Db\Entity[]
-     */
-    protected function _processFind(Query $query, $finderType, array $options = []) {
-        $options = $options + [
-            'eager' => false,
-            'preCallback' => true,
-            'postCallback' => true
-        ];
-
-        $finder = $this->getFinder($finderType);
-
-        // Use the return of preFind() if applicable
-        if ($options['preCallback']) {
-            $event = $this->emit('db.preFind', [$query, $finderType]);
-            $state = $event->getData();
-
-            if ($state !== null && !$state) {
-                return $finder->noResults();
-            }
-        }
-
-        // If the event returns custom data, use it
-        if (isset($state) && is_array($state)) {
-            $results = $state;
-
-            if (!isset($results[0])) {
-                $results = [$results];
-            }
-
-        // Else find new records
-        } else {
-            $finder->before($query, $options);
-
-            // Update the connection context
-            $driver = $this->getDriver();
-            $driver->setContext('read');
-
-            $results = $driver->executeQuery($query)->find();
-        }
-
-        if (!$results) {
-            return $finder->noResults();
-        }
-
-        if ($options['postCallback']) {
-            $this->emit('db.postFind', [&$results, $finderType]);
-        }
-
-        // Wrap the results in entities
-        $this->data = $results = $this->wrapEntities($query, $results, $options);
-
-        // Reset the driver local cache
-        $this->getDriver()->reset();
-
-        return $finder->after($results, $options);
-    }
-
-    /**
-     * Primary method that handles the processing of update queries.
-     * Will wrap all delete queries in a transaction call.
-     * If any related data exists, update those records after verifying required IDs.
-     * Validate schema data and related data structure before updating.
+     * Primary method that handles the processing of insert and update queries.
      *
      * @param \Titon\Db\Query $query
      * @param int|int[] $id
@@ -1586,17 +964,18 @@ class Repository extends Base implements Callback, Listener {
      *      @type bool $preCallback     Will trigger before callbacks
      *      @type bool $postCallback    Will trigger after callbacks
      * }
-     * @return int The count of records updated
-     * @throws \Titon\Db\Exception\QueryFailureException
-     * @throws \Exception
+     * @return int
+     *      - The count of records updated if an update
+     *      - The ID of the record if an insert
      */
     protected function _processSave(Query $query, $id, array $data, $options = []) {
-        $isCreate = !$id;
+        $isCreate = ($query->getType() === Query::INSERT);
         $options = $options + [
             'preCallback' => true,
             'postCallback' => true
         ];
 
+        // Trigger before events
         if ($options['preCallback']) {
             $event = $this->emit('db.preSave', [$id, &$data]);
             $state = $event->getData();
@@ -1606,57 +985,28 @@ class Repository extends Base implements Callback, Listener {
             }
         }
 
-        $this->_validateRelationData($data);
+        // Filter and set the data
+        if ($query->getType() !== Query::MULTI_INSERT) {
+            if ($columns = $this->getSchema()->getColumns()) {
+                $data = array_intersect_key($data, $columns);
+            }
+        }
 
-        // Filter the data
-        $relatedData = $this->_filterData($data);
-
-        // Set the data
         $query->fields($data);
 
         // Update the connection context
         $driver = $this->getDriver();
         $driver->setContext('write');
 
-        // Update the records using transactions
-        if ($relatedData) {
-            if (!$driver->startTransaction()) {
-                throw new QueryFailureException('Failed to start database transaction');
-            }
+        // Execute the query
+        $count = $query->save();
 
-            try {
-                $count = $query->save();
+        if ($count === false) {
+            return 0;
+        }
 
-                if ($count === false) {
-                    throw new QueryFailureException(sprintf('Failed to update %s record with ID %s', get_class($this), $id));
-                }
-
-                if ($isCreate) {
-                    $id = $driver->getLastInsertID($this);
-                }
-
-                $this->upsertRelations($id, $relatedData, $options);
-
-                $driver->commitTransaction();
-
-            // Rollback and re-throw exception
-            } catch (Exception $e) {
-                $driver->rollbackTransaction();
-
-                throw $e;
-            }
-
-        // No transaction needed for single query
-        } else {
-            $count = $query->save();
-
-            if ($count === false) {
-                return 0;
-            }
-
-            if ($isCreate) {
-                $id = $driver->getLastInsertID($this);
-            }
+        if ($isCreate) {
+            $id = $driver->getLastInsertID($this);
         }
 
         if (!is_array($id)) {
@@ -1664,68 +1014,17 @@ class Repository extends Base implements Callback, Listener {
             $this->setData([$this->getPrimaryKey() => $id] + $data);
         }
 
+        // Trigger after events
         if ($options['postCallback']) {
             $this->emit('db.postSave', [$id, $isCreate]);
         }
 
+        // Return ID for create, or count for update
         if ($isCreate) {
             return $id;
         }
 
         return $count;
-    }
-
-    /**
-     * Validate that relation data is structured correctly.
-     * Will only validate the top-level dimensions.
-     *
-     * @uses Titon\Utility\Hash
-     *
-     * @param array $data
-     * @throws \Titon\Db\Exception\InvalidRelationStructureException
-     */
-    protected function _validateRelationData(array $data) {
-        foreach ($this->getRelations() as $alias => $relation) {
-            if (empty($data[$alias])) {
-                continue;
-            }
-
-            $relatedData = $data[$alias];
-            $type = $relation->getType();
-
-            switch ($type) {
-                // Only child records can be validated
-                case Relation::MANY_TO_ONE:
-                    continue;
-                break;
-
-                // Both require a numerical indexed array
-                // With each value being an array of data
-                case Relation::ONE_TO_MANY:
-                case Relation::MANY_TO_MANY:
-                    if (!Hash::isNumeric(array_keys($relatedData))) {
-                        throw new InvalidRelationStructureException(sprintf('%s related data must be structured in a numerical multi-dimension array', $alias));
-                    }
-
-                    if ($type === Relation::MANY_TO_MANY) {
-                        $isNotArray = Hash::some($relatedData, function($value) {
-                            return !is_array($value);
-                        });
-
-                        if ($isNotArray) {
-                            throw new InvalidRelationStructureException(sprintf('%s related data values must be structured arrays', $alias));
-                        }
-                    }
-                break;
-
-                // A single dimension of data
-                case Relation::ONE_TO_ONE:
-                    if (Hash::isNumeric(array_keys($relatedData))) {
-                        throw new InvalidRelationStructureException(sprintf('%s related data must be structured in a single-dimension array', $alias));
-                    }
-                break;
-            }
-        }
     }
 
 }

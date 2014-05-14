@@ -117,12 +117,6 @@ class QueryTest extends TestCase {
 
         $query->fields(['username' => 'miles'], true);
         $this->assertEquals(['id' => 1, 'title' => 'Titon', 'username' => 'miles'], $query->getFields());
-
-        // Now with joins
-        $query = new Query(Query::SELECT, new User());
-        $query->innerJoin($query->getRepository()->getRelation('Profile'), []);
-
-        $this->assertEquals(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], $query->getFields());
     }
 
     public function testFrom() {
@@ -223,20 +217,8 @@ class QueryTest extends TestCase {
         $j1 = new Join(Join::INNER);
         $j1->from('profiles', 'Profile')->on('User.id', 'Profile.user_id')->fields('id', 'user_id', 'lastLogin', 'currentLogin');
 
-        $this->object->innerJoin($this->object->getRepository()->getRelation('Profile'), []);
+        $this->object->innerJoin(['profiles', 'Profile'], ['id', 'user_id', 'lastLogin', 'currentLogin'], ['User.id' => 'Profile.user_id']);
         $this->assertEquals($j1, $this->object->getJoins()[0]);
-    }
-
-    public function testJoinUnsupportedRelation() {
-        $repo = new Topic();
-        $query = $repo->select();
-
-        try {
-            $query->leftJoin($repo->getRelation('Posts'));
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
     }
 
     public function testLimit() {
@@ -406,61 +388,6 @@ class QueryTest extends TestCase {
         $expected['size>25'] = new Expr('size', '>', 25);
 
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
-    }
-
-    public function testWith() {
-        // Missing relation
-        try {
-            $this->object->with('Foobar', function() {});
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        // Not a query
-        try {
-            $this->object->with('Profile', []);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        $this->object->with('Profile', function(Query $query, Relation $relation) {
-            $query->where($relation->getRelatedForeignKey(), 1);
-        });
-
-        $queries = $this->object->getRelationQueries();
-
-        $this->assertInstanceOf('Titon\Db\Query', $queries['Profile']);
-
-        // Test exceptions
-        try {
-            $query = new Query(Query::DELETE, new User());
-            $query->with('Profile', function() {
-
-            });
-
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        // Multiple relations
-        $this->object->with(['Profile', 'Country']);
-        $this->assertEquals(['Profile', 'Country'], array_keys($this->object->getRelationQueries()));
-
-        // Test custom query
-        try {
-            $query = new Query(Query::SELECT, new User());
-            $query->with('Profile', new Query(Query::DELETE, new User()));
-
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        $query = new Query(Query::SELECT, new User());
-        $query->with('Profile', new Query(Query::SELECT, new User()));
     }
 
     public function testXorHaving() {

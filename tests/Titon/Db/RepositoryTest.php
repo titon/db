@@ -8,15 +8,7 @@
 namespace Titon\Db;
 
 use Titon\Db\Query\Predicate;
-use Titon\Db\Relation\ManyToMany;
-use Titon\Db\Relation\ManyToOne;
-use Titon\Db\Relation\OneToMany;
-use Titon\Db\Relation\OneToOne;
 use Titon\Test\Stub\BehaviorStub;
-use Titon\Test\Stub\MapperStub;
-use Titon\Test\Stub\Repository\Author;
-use Titon\Test\Stub\Repository\Book;
-use Titon\Test\Stub\Repository\Series;
 use Titon\Test\Stub\Repository\Topic;
 use Titon\Test\Stub\Repository\User;
 use Titon\Test\Stub\RepositoryStub;
@@ -52,43 +44,6 @@ class RepositoryTest extends TestCase {
 
         $this->assertTrue($stub->hasBehaviors());
         $this->assertTrue($stub->hasBehavior('Stub'));
-    }
-
-    /**
-     * Test table relation management.
-     */
-    public function testAddHasRelations() {
-        $stub = new RepositoryStub();
-
-        $this->assertFalse($stub->hasRelation('User'));
-
-        $stub->hasOne('User', 'Titon\Test\Stub\Repository\User', 'user_id');
-        $this->assertTrue($stub->hasRelation('User'));
-
-        $this->assertInstanceOf('Titon\Db\Repository', $stub->User);
-        $this->assertInstanceOf('Titon\Db\Repository', $stub->getObject('User'));
-    }
-
-    public function testBelongsTo() {
-        $this->object->belongsTo('Country', 'Titon\Test\Stub\Repository\Country', 'country_id');
-
-        $expected = new ManyToOne('Country', 'Titon\Test\Stub\Repository\Country');
-        $expected->setForeignKey('country_id');
-        $expected->setRepository($this->object);
-
-        $this->assertEquals($expected, $this->object->getRelation('Country'));
-    }
-
-    public function testBelongsToMany() {
-        $this->object->belongsToMany('Groups', 'Titon\Test\Stub\Repository\Group', 'Titon\Test\Stub\Repository\UserGroups', 'user_id', 'group_id');
-
-        $expected = new ManyToMany('Groups', 'Titon\Test\Stub\Repository\Group');
-        $expected->setJunctionClass('Titon\Test\Stub\Repository\UserGroups');
-        $expected->setForeignKey('user_id');
-        $expected->setRelatedForeignKey('group_id');
-        $expected->setRepository($this->object);
-
-        $this->assertEquals($expected, $this->object->getRelation('Groups'));
     }
 
     /**
@@ -418,31 +373,6 @@ class RepositoryTest extends TestCase {
     }
 
     /**
-     * Test relation fetching.
-     */
-    public function testGetRelations() {
-        try {
-            $this->object->getRelation('Foobar');
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        $this->assertInstanceOf('Titon\Db\Relation', $this->object->getRelation('Profile'));
-
-        $expected = [
-            'Profile' => $this->object->getRelation('Profile'),
-            'Country' => $this->object->getRelation('Country')
-        ];
-
-        $this->assertEquals($expected, $this->object->getRelations());
-
-        unset($expected['Profile']);
-
-        $this->assertEquals($expected, $this->object->getRelations(Relation::MANY_TO_ONE));
-    }
-
-    /**
      * Test that a schema object is returned.
      */
     public function testGetSchema() {
@@ -467,26 +397,6 @@ class RepositoryTest extends TestCase {
 
         $this->object->setConfig('prefix', 'test_');
         $this->assertEquals('test_', $this->object->getTablePrefix());
-    }
-
-    public function testHasOne() {
-        $this->object->hasOne('Profile', 'Titon\Test\Stub\Repository\Profile', 'user_id');
-
-        $expected = new OneToOne('Profile', 'Titon\Test\Stub\Repository\Profile');
-        $expected->setRelatedForeignKey('user_id');
-        $expected->setRepository($this->object);
-
-        $this->assertEquals($expected, $this->object->getRelation('Profile'));
-    }
-
-    public function testHasMany() {
-        $this->object->hasMany('Posts', 'Titon\Test\Stub\Repository\Post', 'user_id');
-
-        $expected = new OneToMany('Posts', 'Titon\Test\Stub\Repository\Post');
-        $expected->setRelatedForeignKey('user_id');
-        $expected->setRepository($this->object);
-
-        $this->assertEquals($expected, $this->object->getRelation('Posts'));
     }
 
     /**

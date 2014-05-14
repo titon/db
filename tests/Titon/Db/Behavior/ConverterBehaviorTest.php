@@ -75,7 +75,7 @@ class ConverterBehaviorTest extends TestCase {
             'topic_id' => 3,
             'active' => 1,
             'deleted' => 0,
-            'content' => ['foo' => 'bar'],
+            'content' => new Entity(['foo' => 'bar']),
             'created_at' => null,
             'deleted_at' => null
         ]), $post->read($post_id));
@@ -112,7 +112,7 @@ class ConverterBehaviorTest extends TestCase {
             'topic_id' => 3,
             'active' => 1,
             'deleted' => 0,
-            'content' => ['foo' => 'bar'],
+            'content' => new Entity(['foo' => 'bar']),
             'created_at' => null,
             'deleted_at' => null
         ]), $post->read($post_id));
@@ -149,7 +149,7 @@ class ConverterBehaviorTest extends TestCase {
             'topic_id' => 3,
             'active' => 1,
             'deleted' => 0,
-            'content' => ['foo' => 'bar'],
+            'content' => new Entity(['foo' => 'bar']),
             'created_at' => null,
             'deleted_at' => null
         ]), $post->read($post_id));

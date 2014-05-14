@@ -178,7 +178,7 @@ class DialectTest extends TestCase {
     public function testBuildDeleteJoins() {
         $user = new User();
         $query = $user->query(Query::DELETE);
-        $query->rightJoin($user->getRelation('Profile'), []);
+        $query->rightJoin(['profiles', 'Profile'], [], ['User.id' => 'Profile.user_id']);
 
         $this->assertRegExp('/DELETE\s+FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?;/', $this->object->buildDelete($query));
 
@@ -267,13 +267,13 @@ class DialectTest extends TestCase {
 
         $user = new User();
         $query = $user->select();
-        $query->rightJoin($user->getRelation('Profile'), []);
+        $query->rightJoin(['profiles', 'Profile'], ['*'], ['User.id' => 'Profile.user_id']);
 
         $this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.*, (`|\")?Profile(`|\")?.* FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")?;/', $this->object->buildSelect($query));
 
         // With fields
         $query = $user->select('id', 'username');
-        $query->rightJoin($user->getRelation('Profile'), ['id', 'avatar', 'lastLogin']);
+        $query->rightJoin(['profiles', 'Profile'], ['id', 'avatar', 'lastLogin'], ['User.id' => 'Profile.user_id']);
 
         $this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.(`|\")?id(`|\")?, (`|\")?User(`|\")?.(`|\")?username(`|\")?, (`|\")?Profile(`|\")?.(`|\")?id(`|\")?, (`|\")?Profile(`|\")?.(`|\")?avatar(`|\")?, (`|\")?Profile(`|\")?.(`|\")?lastLogin(`|\")? FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")?;/', $this->object->buildSelect($query));
 
@@ -290,13 +290,13 @@ class DialectTest extends TestCase {
         $user = new User();
 
         $query = $user->select();
-        $query->rightJoin($user->getRelation('Profile'), []);
+        $query->rightJoin(['profiles', 'Profile'], ['*'], ['User.id' => 'Profile.user_id']);
 
         $this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.*, (`|\")?Profile(`|\")?.* FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")?;/', $this->object->buildSelect($query));
 
         // With fields
         $query = $user->select('id', 'username');
-        $query->rightJoin($user->getRelation('Profile'), ['id', 'avatar', 'lastLogin']);
+        $query->rightJoin(['profiles', 'Profile'], ['id', 'avatar', 'lastLogin'], ['User.id' => 'Profile.user_id']);
 
         $this->assertRegExp('/SELECT\s+(`|\")?User(`|\")?.(`|\")?id(`|\")? AS User__id, (`|\")?User(`|\")?.(`|\")?username(`|\")? AS User__username, (`|\")?Profile(`|\")?.(`|\")?id(`|\")? AS Profile__id, (`|\")?Profile(`|\")?.(`|\")?avatar(`|\")? AS Profile__avatar, (`|\")?Profile(`|\")?.(`|\")?lastLogin(`|\")? AS Profile__lastLogin FROM (`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?.(`|\")?user_id(`|\")?;/', $this->object->buildSelect($query));
 
@@ -376,13 +376,13 @@ class DialectTest extends TestCase {
     public function testBuildUpdateJoins() {
         $user = new User();
         $query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
-        $query->rightJoin($user->getRelation('Profile'), []);
+        $query->rightJoin(['profiles', 'Profile'], [], ['User.id' => 'Profile.user_id']);
 
         $this->assertRegExp('/UPDATE\s+(`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?\s+SET (`|\")?User(`|\")?\.(`|\")?username(`|\")? = \?;/', $this->object->buildUpdate($query));
 
         // With fields
         $query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
-        $query->rightJoin($user->getRelation('Profile'), ['avatar' => 'image.jpg']);
+        $query->rightJoin(['profiles', 'Profile'], ['avatar' => 'image.jpg'], ['User.id' => 'Profile.user_id']);
 
         $this->assertRegExp('/UPDATE\s+(`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?\s+SET (`|\")?User(`|\")?\.(`|\")?username(`|\")? = \?, (`|\")?Profile(`|\")?\.(`|\")?avatar(`|\")? = \?;/', $this->object->buildUpdate($query));
     }
