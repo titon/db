@@ -13,9 +13,12 @@ use Titon\Common\Traits\Cacheable;
 use Titon\Cache\Storage;
 use Titon\Db\Driver;
 use Titon\Db\Exception\InvalidArgumentException;
+use Titon\Db\Exception\QueryFailureException;
 use Titon\Db\Query\ResultSet;
 use Titon\Db\Query;
 use Titon\Utility\Hash;
+use \Closure;
+use \Exception;
 
 /**
  * Implements basic driver functionality.
@@ -350,6 +353,28 @@ abstract class AbstractDriver extends Base implements Driver {
         $this->_storage = $storage;
 
         return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function transaction(Closure $bulk) {
+        if (!$this->startTransaction()) {
+            throw new QueryFailureException('Failed to start database transaction');
+        }
+
+        try {
+            $result = call_user_func($bulk, $this);
+
+            $this->commitTransaction();
+
+        } catch (Exception $e) {
+            $this->rollbackTransaction();
+
+            throw $e;
+        }
+
+        return $result;
     }
 
 }

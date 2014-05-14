@@ -13,6 +13,7 @@ use Titon\Db\Driver\Dialect;
 use Titon\Db\Finder;
 use Titon\Db\Query;
 use Titon\Db\Query\ResultSet;
+use \Closure;
 
 /**
  * Represents a data source, whether a database, API, or other storage system.
@@ -238,5 +239,14 @@ interface Driver {
      * @return bool
      */
     public function startTransaction();
+
+    /**
+     * Perform a transaction by wrapping all the relevant queries in a closure.
+     * Will automatically start, commit and rollback a transaction.
+     *
+     * @param \Closure $bulk
+     * @return bool
+     */
+    public function transaction(Closure $bulk);
 
 }
