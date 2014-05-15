@@ -5,12 +5,12 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Query;
+namespace Titon\Db\Driver;
 
 /**
  * Handles the result set and profiling of a query.
  *
- * @package Titon\Db\Query
+ * @package Titon\Db\Driver
  */
 interface ResultSet {
 

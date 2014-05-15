@@ -6,7 +6,7 @@ use Titon\Common\Config;
 use Titon\Db\Driver;
 use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Query;
-use Titon\Db\Query\ResultSet;
+use Titon\Db\Driver\ResultSet;
 use Titon\Test\Stub\DriverStub;
 use Titon\Test\Stub\Repository\Stat;
 use Titon\Test\Stub\Repository\User;
@@ -231,7 +231,7 @@ class PdoDriverTest extends TestCase {
         $query = (new Query(Query::SELECT, $this->table))->from('users');
         $result = $this->object->executeQuery($query);
 
-        $this->assertInstanceOf('Titon\Db\Query\ResultSet', $result);
+        $this->assertInstanceOf('Titon\Db\Driver\ResultSet', $result);
 
         // Test before and after execute
         $this->assertEquals(0, $result->getExecutionTime());
@@ -253,7 +253,7 @@ class PdoDriverTest extends TestCase {
 
         $result = $this->object->executeQuery('DELETE FROM users WHERE country_id = ?', [1]);
 
-        $this->assertInstanceOf('Titon\Db\Query\ResultSet', $result);
+        $this->assertInstanceOf('Titon\Db\Driver\ResultSet', $result);
 
         $this->assertEquals(0, $result->getRowCount());
         $this->assertEquals(1, $result->save());
@@ -264,7 +264,7 @@ class PdoDriverTest extends TestCase {
 
         $result = $this->object->executeQuery('DELETE FROM users');
 
-        $this->assertInstanceOf('Titon\Db\Query\ResultSet', $result);
+        $this->assertInstanceOf('Titon\Db\Driver\ResultSet', $result);
 
         $this->assertEquals(0, $result->getRowCount());
         $this->assertEquals(5, $result->save());

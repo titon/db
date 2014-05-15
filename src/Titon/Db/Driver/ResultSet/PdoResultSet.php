@@ -5,10 +5,10 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Query\ResultSet;
+namespace Titon\Db\Driver\ResultSet;
 
 use Titon\Db\Query;
-use Titon\Db\Query\ResultSet;
+use Titon\Db\Driver\ResultSet;
 use \PDO;
 use \PDOStatement;
 use \PDOException;
@@ -16,7 +16,7 @@ use \PDOException;
 /**
  * Accepts a PDOStatement instance which is used for result fetching and query profiling.
  *
- * @package Titon\Db\Query\ResultSet
+ * @package Titon\Db\Driver\ResultSet
  */
 class PdoResultSet extends AbstractResultSet implements ResultSet {
 

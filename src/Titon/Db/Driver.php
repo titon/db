@@ -12,7 +12,7 @@ use Titon\Cache\Storage;
 use Titon\Db\Driver\Dialect;
 use Titon\Db\Finder;
 use Titon\Db\Query;
-use Titon\Db\Query\ResultSet;
+use Titon\Db\Driver\ResultSet;
 use \Closure;
 
 /**
@@ -67,7 +67,7 @@ interface Driver {
      *
      * @param \Titon\Db\Query|string $query
      * @param array $params
-     * @return \Titon\Db\Query\ResultSet
+     * @return \Titon\Db\Driver\ResultSet
      */
     public function executeQuery($query, array $params = []);
 
@@ -175,7 +175,7 @@ interface Driver {
     /**
      * Logs a query result.
      *
-     * @param \Titon\Db\Query\ResultSet $result
+     * @param \Titon\Db\Driver\ResultSet $result
      * @return $this
      */
     public function logQuery(ResultSet $result);

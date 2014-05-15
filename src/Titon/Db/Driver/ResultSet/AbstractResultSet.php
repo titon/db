@@ -5,16 +5,16 @@
  * @link        http://titon.io
  */
 
-namespace Titon\Db\Query\ResultSet;
+namespace Titon\Db\Driver\ResultSet;
 
 use Titon\Common\Traits\Cacheable;
-use Titon\Db\Query\ResultSet;
+use Titon\Db\Driver\ResultSet;
 use Titon\Db\Query;
 
 /**
  * Provides shared functionality for results.
  *
- * @package Titon\Db\Query\ResultSet
+ * @package Titon\Db\Driver\ResultSet
  * @codeCoverageIgnore
  */
 abstract class AbstractResultSet implements ResultSet {

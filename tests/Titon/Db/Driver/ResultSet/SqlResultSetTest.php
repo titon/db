@@ -1,10 +1,10 @@
 <?php
-namespace Titon\Db\Query\ResultSet;
+namespace Titon\Db\Driver\ResultSet;
 
 use Titon\Test\TestCase;
 
 /**
- * @property \Titon\Db\Query\ResultSet\SqlResultSet
+ * @property \Titon\Db\Driver\ResultSet\SqlResultSet
  */
 class SqlResultSetTest extends TestCase {
 

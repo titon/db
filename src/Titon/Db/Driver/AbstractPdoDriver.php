@@ -8,6 +8,8 @@
 namespace Titon\Db\Driver;
 
 use Titon\Db\Driver\Type\AbstractType;
+use Titon\Db\Driver\ResultSet\PdoResultSet;
+use Titon\Db\Driver\ResultSet\SqlResultSet;
 use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Exception\MissingDriverException;
 use Titon\Db\Exception\UnsupportedQueryStatementException;
@@ -17,8 +19,6 @@ use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
 use Titon\Db\Query\Predicate;
 use Titon\Db\Query\RawExpr;
-use Titon\Db\Query\ResultSet\PdoResultSet;
-use Titon\Db\Query\ResultSet\SqlResultSet;
 use Titon\Db\Query\SubQuery;
 use \PDO;
 

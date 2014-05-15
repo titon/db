@@ -3,7 +3,7 @@ namespace Titon\Db;
 
 use Titon\Cache\Storage\MemoryStorage;
 use Titon\Common\Config;
-use Titon\Db\Query\ResultSet\SqlResultSet;
+use Titon\Db\Driver\ResultSet\SqlResultSet;
 use Titon\Debug\Logger;
 use Titon\Test\Stub\DialectStub;
 use Titon\Test\Stub\DriverStub;

@@ -14,7 +14,7 @@ use Titon\Cache\Storage;
 use Titon\Db\Driver;
 use Titon\Db\Exception\InvalidArgumentException;
 use Titon\Db\Exception\QueryFailureException;
-use Titon\Db\Query\ResultSet;
+use Titon\Db\Driver\ResultSet;
 use Titon\Db\Query;
 use Titon\Utility\Hash;
 use \Closure;
@@ -90,14 +90,14 @@ abstract class AbstractDriver extends Base implements Driver {
     /**
      * Logged query statements and bound parameters.
      *
-     * @type \Titon\Db\Query\ResultSet[]
+     * @type \Titon\Db\Driver\ResultSet[]
      */
     protected $_logs = [];
 
     /**
      * The last query result.
      *
-     * @type \Titon\Db\Query\ResultSet
+     * @type \Titon\Db\Driver\ResultSet
      */
     protected $_result;
 

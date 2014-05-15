@@ -1,5 +1,5 @@
 <?php
-namespace Titon\Db\Query\ResultSet;
+namespace Titon\Db\Driver\ResultSet;
 
 use Titon\Db\Entity;
 use Titon\Db\EntityCollection;
