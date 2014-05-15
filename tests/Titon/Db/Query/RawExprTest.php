@@ -9,7 +9,6 @@ class RawExprTest extends TestCase {
         $expr = new RawExpr('`column` = 5');
 
         $this->assertEquals('`column` = 5', $expr->getValue());
-        $this->assertEquals('`column` = 5', (string) $expr);
     }
 
 }

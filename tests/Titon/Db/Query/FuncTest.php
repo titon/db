@@ -14,7 +14,6 @@ class FuncTest extends TestCase {
             ['type' => null, 'value' => 'TitonFramework'],
             ['type' => null, 'value' => 5],
         ], $func->getArguments());
-        $this->assertEquals('SUBSTRING(TitonFramework, 5) AS ', (string) $func);
     }
 
     public function testFunctionLiteralArgs() {
@@ -26,7 +25,6 @@ class FuncTest extends TestCase {
             ['type' => null, 'value' => 'Titon'],
             ['type' => Func::LITERAL, 'value' => 'FROM -4 FOR 2'],
         ], $func->getArguments());
-        $this->assertEquals('SUBSTRING(Titon FROM -4 FOR 2) AS ', (string) $func);
     }
 
     public function testNestedFunctions() {
@@ -38,9 +36,6 @@ class FuncTest extends TestCase {
         $this->assertEquals([
             ['type' => null, 'value' => $func1],
         ], $func2->getArguments());
-
-        $this->assertEquals('CHAR(0x65 USING utf8) AS ', (string) $func1);
-        $this->assertEquals('CHARSET(CHAR(0x65 USING utf8) AS ) AS ', (string) $func2);
     }
 
 }

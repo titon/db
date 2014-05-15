@@ -105,8 +105,9 @@ class QueryTest extends TestCase {
         // Override
         $this->object->fields(['username', 'created']);
         $this->assertEquals(['username', 'created'], $this->object->getFields());
+    }
 
-        // Non-select
+    public function testFieldsInsert() {
         $query = new Query(Query::INSERT, new User());
 
         $query->fields(['id' => 1, 'title' => 'Titon']);
@@ -137,33 +138,29 @@ class QueryTest extends TestCase {
     }
 
     public function testHaving() {
-        $expected = ['id=1' => new Expr('id', '=', 1)];
+        $expected = [new Expr('id', '=', 1)];
 
         $this->object->having('id', 1);
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
-
         $this->assertEquals(Predicate::ALSO, $this->object->getHaving()->getType());
-
-        $expected['titlenotLike%Titon%'] = new Expr('title', 'notLike', '%Titon%');
 
         $this->object->having(function(Predicate $having) {
             $having->notLike('title', '%Titon%');
         });
+        $expected[] = new Expr('title', 'notLike', '%Titon%');
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
 
-        try {
-            $this->object->orHaving('id', 1);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        // Custom operator
         $this->object->having('size', '!=', 15);
-
-        $expected['size!=15'] = new Expr('size', '!=', 15);
-
+        $expected[] = new Expr('size', '!=', 15);
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\ExistingPredicateException
+     */
+    public function testHavingErrorsOnTypeMismatch() {
+        $this->object->having('id', 1);
+        $this->object->orHaving('id', 1);
     }
 
     public function testIntersects() {
@@ -185,13 +182,11 @@ class QueryTest extends TestCase {
         $this->assertEquals(['compound' => 'intersect'], $query3->getAttributes());
     }
 
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidQueryException
+     */
     public function testIntersectFailsNonSelect() {
-        try {
-            $this->object->intersect(new Query(Query::UPDATE));
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
+        $this->object->intersect(new Query(Query::UPDATE));
     }
 
     public function testLeftJoin() {
@@ -245,13 +240,11 @@ class QueryTest extends TestCase {
         $this->assertEquals(['id' => 'desc', 'created' => 'asc'], $this->object->getOrderBy());
     }
 
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidArgumentException
+     */
     public function testOrderByErrorsInvalidType() {
-        try {
-            $this->object->orderBy('id', 'ascending');
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
+        $this->object->orderBy('id', 'ascending');
     }
 
     public function testOrderByRand() {
@@ -265,62 +258,55 @@ class QueryTest extends TestCase {
     }
 
     public function testOrHaving() {
-        $expected = ['id=1' => new Expr('id', '=', 1)];
+        $expected = [new Expr('id', '=', 1)];
 
         $this->object->orHaving('id', 1);
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
-
         $this->assertEquals(Predicate::EITHER, $this->object->getHaving()->getType());
-
-        $expected['titlenotLike%Titon%'] = new Expr('title', 'notLike', '%Titon%');
 
         $this->object->orHaving(function(Predicate $having) {
             $having->notLike('title', '%Titon%');
         });
+        $expected[] = new Expr('title', 'notLike', '%Titon%');
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
 
-        try {
-            $this->object->having('id', 1);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        // Custom operator
         $this->object->orHaving('size', '>=', 15);
-
-        $expected['size>=15'] = new Expr('size', '>=', 15);
-
+        $expected[] = new Expr('size', '>=', 15);
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
     }
 
+    /**
+     * @expectedException \Titon\Db\Exception\ExistingPredicateException
+     */
+    public function testOrHavingErrorsOnTypeMismatch() {
+        $this->object->orHaving('id', 1);
+        $this->object->having('id', 1);
+    }
+
     public function testOrWhere() {
-        $expected = ['id=152' => new Expr('id', '=', 152)];
+        $expected = [new Expr('id', '=', 152)];
 
         $this->object->orWhere('id', 152);
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
-
         $this->assertEquals(Predicate::EITHER, $this->object->getWhere()->getType());
-
-        $expected['levelbetween[1,100]'] = new Expr('level', 'between', [1, 100]);
 
         $this->object->orWhere(function(Predicate $where) {
             $where->between('level', 1, 100);
         });
+        $expected[] = new Expr('level', 'between', [1, 100]);
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
-
-        try {
-            $this->object->where('id', 1);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
 
         $this->object->orWhere('size', Expr::NOT_IN, [1, 2]);
-
-        $expected['sizenotIn[1,2]'] = new Expr('size', 'notIn', [1, 2]);
-
+        $expected[] = new Expr('size', 'notIn', [1, 2]);
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\ExistingPredicateException
+     */
+    public function testOrWhereErrorsOnTypeMismatch() {
+        $this->object->orWhere('id', 1);
+        $this->object->where('id', 1);
     }
 
     public function testUnions() {
@@ -348,102 +334,89 @@ class QueryTest extends TestCase {
         $this->assertEquals(['compound' => 'union'], $query4->getAttributes());
     }
 
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidQueryException
+     */
     public function testUnionFailsNonSelect() {
-        try {
-            $this->object->union(new Query(Query::UPDATE));
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
+        $this->object->union(new Query(Query::UPDATE));
     }
 
     public function testWhere() {
-        $expected = ['id=152' => new Expr('id', '=', 152)];
+        $expected = [new Expr('id', '=', 152)];
 
         $this->object->where('id', 152);
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
-
         $this->assertEquals(Predicate::ALSO, $this->object->getWhere()->getType());
-
-        $expected['levelbetween[1,100]'] = new Expr('level', 'between', [1, 100]);
 
         $this->object->where(function(Predicate $where) {
             $where->between('level', 1, 100);
         });
+        $expected[] = new Expr('level', 'between', [1, 100]);
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
 
-        try {
-            $this->object->orWhere('id', 1);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        // Custom operator
         $this->object->where('size', '>', 25);
-
-        $expected['size>25'] = new Expr('size', '>', 25);
-
+        $expected[] = new Expr('size', '>', 25);
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
     }
 
+    /**
+     * @expectedException \Titon\Db\Exception\ExistingPredicateException
+     */
+    public function testWhereErrorsOnTypeMismatch() {
+        $this->object->where('id', 1);
+        $this->object->orWhere('id', 1);
+    }
+
     public function testXorHaving() {
-        $expected = ['id=1' => new Expr('id', '=', 1)];
+        $expected = [new Expr('id', '=', 1)];
 
         $this->object->xorHaving('id', 1);
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
-
         $this->assertEquals(Predicate::MAYBE, $this->object->getHaving()->getType());
-
-        $expected['titlenotLike%Titon%'] = new Expr('title', 'notLike', '%Titon%');
 
         $this->object->xorHaving(function(Predicate $having) {
             $having->notLike('title', '%Titon%');
         });
+        $expected[] = new Expr('title', 'notLike', '%Titon%');
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
 
-        try {
-            $this->object->having('id', 1);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        // Custom operator
         $this->object->xorHaving('size', '>=', 15);
-
-        $expected['size>=15'] = new Expr('size', '>=', 15);
-
+        $expected[] = new Expr('size', '>=', 15);
         $this->assertEquals($expected, $this->object->getHaving()->getParams());
     }
 
+    /**
+     * @expectedException \Titon\Db\Exception\ExistingPredicateException
+     */
+    public function testXorHavingErrorsOnTypeMismatch() {
+        $this->object->xorHaving('id', 1);
+        $this->object->orHaving('id', 1);
+    }
+
     public function testXorWhere() {
-        $expected = ['id=152' => new Expr('id', '=', 152)];
+        $expected = [new Expr('id', '=', 152)];
 
         $this->object->xorWhere('id', 152);
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
-
         $this->assertEquals(Predicate::MAYBE, $this->object->getWhere()->getType());
-
-        $expected['levelbetween[1,100]'] = new Expr('level', 'between', [1, 100]);
 
         $this->object->xorWhere(function(Predicate $where) {
             $where->between('level', 1, 100);
         });
+        $expected[] = new Expr('level', 'between', [1, 100]);
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
-
-        try {
-            $this->object->where('id', 1);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
 
         $this->object->xorWhere('size', Expr::NOT_IN, [1, 2]);
-
-        $expected['sizenotIn[1,2]'] = new Expr('size', 'notIn', [1, 2]);
-
+        $expected[] = new Expr('size', 'notIn', [1, 2]);
         $this->assertEquals($expected, $this->object->getWhere()->getParams());
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\ExistingPredicateException
+     */
+    public function testXorWhereErrorsOnTypeMismatch() {
+        $this->object->xorWhere('id', 1);
+        $this->object->where('id', 1);
     }
 
     public function testCloning() {

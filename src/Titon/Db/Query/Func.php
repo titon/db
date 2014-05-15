@@ -88,22 +88,6 @@ class Func {
     }
 
     /**
-     * Cast to a string to use for sorting, filtering, etc.
-     * This should not be used in an SQL statement.
-     *
-     * @return string
-     */
-    public function __toString() {
-        $arguments = [];
-
-        foreach ($this->getArguments() as $arg) {
-            $arguments[] = $arg['value'];
-        }
-
-        return sprintf('%s(%s) AS %s', $this->getName(), implode($this->getSeparator(), $arguments), $this->getAlias());
-    }
-
-    /**
      * Return the function name.
      *
      * @return string

@@ -32,7 +32,7 @@ class Predicate {
     /**
      * List of parameters for this predicate.
      *
-     * @type \Titon\Db\Query\Expr[]
+     * @type \Titon\Db\Query\Expr[]|\Titon\Db\Query\Predicate[]
      */
     protected $_params = [];
 
@@ -55,19 +55,7 @@ class Predicate {
      * @return $this
      */
     public function add($field, $op, $value) {
-        $key = (string) $field . $op;
-
-        if (is_array($value)) {
-            $key .= json_encode($value);
-
-        } else if ($value instanceof \DateTime) {
-            $key .= $value->getTimestamp();
-
-        } else {
-            $key .= (string) $value;
-        }
-
-        $this->_params[$key] = new Expr($field, $op, $value);
+        $this->_params[] = new Expr($field, $op, $value);
 
         return $this;
     }

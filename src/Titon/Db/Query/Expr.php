@@ -59,16 +59,6 @@ class Expr extends RawExpr {
     }
 
     /**
-     * Cast to a string to use for sorting, filtering, etc.
-     * This should not be used in an SQL statement.
-     *
-     * @return string
-     */
-    public function __toString() {
-        return sprintf('%s %s %s', $this->getField(), $this->getOperator(), $this->getValue());
-    }
-
-    /**
      * Return the field name.
      *
      * @return string

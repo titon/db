@@ -309,7 +309,7 @@ class Query {
         }
 
         if ($this->getType() === self::SELECT) {
-            $fields = array_values(array_unique($fields));
+            $fields = array_values(array_unique($fields, SORT_REGULAR)); // SORT_REGULAR allows for objects
         }
 
         $this->_fields = $fields;
@@ -883,7 +883,7 @@ class Query {
             $predicate = new Predicate($type);
 
         } else if ($predicate->getType() !== $type) {
-            throw new ExistingPredicateException(sprintf('Predicate clause already created using "%s" conjunction', $predicate));
+            throw new ExistingPredicateException(sprintf('Predicate clause already created using "%s" conjunction', $predicate->getType()));
         }
 
         if ($field instanceof Closure) {

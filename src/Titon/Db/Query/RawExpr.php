@@ -32,15 +32,6 @@ class RawExpr {
     }
 
     /**
-     * Return the expression when cast as a string.
-     *
-     * @return string
-     */
-    public function __toString() {
-        return $this->getValue();
-    }
-
-    /**
      * Return the expression.
      *
      * @return string
