@@ -15,11 +15,8 @@ use Titon\Db\Exception\MissingDriverException;
 use Titon\Db\Exception\UnsupportedQueryStatementException;
 use Titon\Db\Repository;
 use Titon\Db\Query;
-use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
-use Titon\Db\Query\Predicate;
 use Titon\Db\Query\RawExpr;
-use Titon\Db\Query\SubQuery;
 use \PDO;
 
 /**
@@ -395,59 +392,20 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      * @return array
      */
     public function resolveParams(Query $query) {
-        $binds = [];
-        $type = $query->getType();
+        $params = [];
         $schema = $query->getRepository()->getSchema()->getColumns();
 
-        // Grab values from insert and update queries
-        if ($type === Query::INSERT || $type === Query::UPDATE) {
-            foreach ($query->getFields() as $field => $value) {
-                $binds[] = $this->resolveBind($field, $value, $schema);
-            }
-
-        } else if ($type === Query::MULTI_INSERT) {
-            foreach ($query->getFields() as $record) {
-                foreach ($record as $field => $value) {
-                    $binds[] = $this->resolveBind($field, $value, $schema);
-                }
+        foreach ($query->getGroupedBindings() as $groupedBinds) {
+            foreach ($groupedBinds as $binds) {
+                $params[] = $this->resolveBind($binds['field'], $binds['value'], $schema);
             }
         }
 
-        // Grab values from the where and having predicate
-        $driver = $this;
-        $resolvePredicate = function(Predicate $predicate) use (&$resolvePredicate, &$binds, $driver, $schema) {
-            foreach ($predicate->getParams() as $param) {
-                if ($param instanceof Predicate) {
-                    $resolvePredicate($param);
-
-                } else if ($param instanceof Expr) {
-                    $values = $param->getValue();
-
-                    if (is_array($values)) {
-                        foreach ($values as $value) {
-                            $binds[] = $this->resolveBind($param->getField(), $value, $schema);
-                        }
-
-                    } else if ($values instanceof SubQuery) {
-                        $resolvePredicate($values->getWhere());
-                        $resolvePredicate($values->getHaving());
-
-                    } else if ($param->useValue()) {
-                        $binds[] = $this->resolveBind($param->getField(), $values, $schema);
-                    }
-                }
-            }
-        };
-
-        $resolvePredicate($query->getWhere());
-        $resolvePredicate($query->getHaving());
-
-        // Grab values from compound queries
         foreach ($query->getCompounds() as $compound) {
-            $binds = array_merge($binds, $this->resolveParams($compound));
+            $params = array_merge($params, $this->resolveParams($compound));
         }
 
-        return $binds;
+        return $params;
     }
 
     /**

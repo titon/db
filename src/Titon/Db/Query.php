@@ -15,6 +15,7 @@ use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
 use Titon\Db\Query\Join;
+use Titon\Db\Query\BindingAware;
 use Titon\Db\Query\Predicate;
 use Titon\Db\Query\SubQuery;
 use Titon\Db\Query\AliasAware;
@@ -32,7 +33,7 @@ use \Closure;
  * @package Titon\Db
  */
 class Query {
-    use AliasAware, ExprAware, FuncAware, RawExprAware, RepositoryAware;
+    use AliasAware, ExprAware, FuncAware, RawExprAware, RepositoryAware, BindingAware;
 
     // Order directions
     const ASC = Dialect::ASC;
@@ -308,8 +309,29 @@ class Query {
             $fields = array_merge($this->_fields, $fields);
         }
 
+        // When doing a select, unique the field list
         if ($this->getType() === self::SELECT) {
             $fields = array_values(array_unique($fields, SORT_REGULAR)); // SORT_REGULAR allows for objects
+
+        // When saving data, gather the values to bind
+        } else {
+            $binds = [];
+            $rows = $fields;
+
+            if ($this->getType() !== self::MULTI_INSERT) {
+                $rows = [$rows];
+            }
+
+            foreach ($rows as $row) {
+                foreach ($row as $field => $value) {
+                    $binds[] = [
+                        'field' => $field,
+                        'value' => $value
+                    ];
+                }
+            }
+
+            $this->setBindings($binds);
         }
 
         $this->_fields = $fields;
@@ -426,6 +448,19 @@ class Query {
      */
     public function getGroupBy() {
         return $this->_groupBy;
+    }
+
+    /**
+     * Return the mapped bindings.
+     *
+     * @return array
+     */
+    public function getGroupedBindings() {
+        return [
+            'fields' => $this->getBindings(),
+            'where' => $this->getWhere()->getBindings(),
+            'having' => $this->getHaving()->getBindings()
+        ];
     }
 
     /**
@@ -838,7 +873,7 @@ class Query {
      * @param array $on
      * @return $this
      */
-    protected function _addJoin($type, $table, $fields = [], $on = []) {
+    protected function _addJoin($type, $table, $fields, $on = []) {
         $repo = $this->getRepository();
         $join = new Join($type);
         $conditions = [];

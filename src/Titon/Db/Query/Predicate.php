@@ -16,6 +16,7 @@ use \Closure;
  * @package Titon\Db\Query
  */
 class Predicate {
+    use BindingAware;
 
     const ALSO = Dialect::ALSO; // AND
     const EITHER = Dialect::EITHER; // OR
@@ -55,7 +56,13 @@ class Predicate {
      * @return $this
      */
     public function add($field, $op, $value) {
-        $this->_params[] = new Expr($field, $op, $value);
+        $param = new Expr($field, $op, $value);
+
+        $this->_params[] = $param;
+
+        if ($param->useValue()) {
+            $this->addBinding($field, $value);
+        }
 
         return $this;
     }
@@ -71,6 +78,8 @@ class Predicate {
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
+
+        $this->addBinding(null, $predicate);
 
         return $this;
     }
@@ -113,6 +122,8 @@ class Predicate {
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
+
+        $this->addBinding(null, $predicate);
 
         return $this;
     }
@@ -274,6 +285,8 @@ class Predicate {
 
         $this->_params[] = $predicate;
 
+        $this->addBinding(null, $predicate);
+
         return $this;
     }
 
@@ -288,6 +301,8 @@ class Predicate {
         $predicate->bindCallback($callback);
 
         $this->_params[] = $predicate;
+
+        $this->addBinding(null, $predicate);
 
         return $this;
     }
