@@ -1,5 +1,5 @@
 <?php
-namespace Titon\Db;
+namespace Titon\Db\Driver;
 
 use Titon\Cache\Storage\MemoryStorage;
 use Titon\Common\Config;
