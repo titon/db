@@ -30,18 +30,19 @@ Supported database engines are packaged as individual driver packages, which are
 * `Repository` - Table representation, queries drivers, maps relations and returns entities
 * `Behavior` - Executes logic during database events
 * `Entity` - Single record of data
+* `EntityCollection` - Collection of entities
 * `Finder` - Select query formatting
 * `Driver` - Interacts with a database or remote service
     * `Dialect` - Driver specific SQL formatting
     * `Schema` - Repository schema
     * `Type` - Data type mapping
+    * `ResultSet` - Result set mapper
 * `Query` - Object oriented query builder
     * `RawExpr` - Raw expression builder
     * `Expr` - Expression builder
     * `Func` - Function builder
     * `Join` - Join builder
     * `Predicate` - Clause builder
-    * `ResultSet` - Result set mapper
 
 ### Dependencies ###
 

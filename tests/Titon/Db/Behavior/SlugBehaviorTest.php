@@ -65,7 +65,7 @@ class SlugBehaviorTest extends TestCase {
         $data = ['title' => 'This is something we need to slug and shorten'];
 
         $this->object->setConfig('length', 15);
-        $this->object->preSave(new Event('db.preSave'), 1, $data);
+        $this->object->preSave(new Event('db.preSave'), 1, $data, 'insert');
 
         $this->assertEquals('this-is-some', $data['slug']);
     }

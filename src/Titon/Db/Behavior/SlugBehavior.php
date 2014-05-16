@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Behavior;
 
+use Titon\Db\Query;
 use Titon\Event\Event;
 use Titon\Utility\Inflector;
 
@@ -83,15 +84,16 @@ class SlugBehavior extends AbstractBehavior {
      * @param \Titon\Event\Event $event
      * @param int|int[] $id
      * @param array $data
+     * @param string $type
      * @return bool
      */
-    public function preSave(Event $event, $id, array &$data) {
+    public function preSave(Event $event, $id, array &$data, $type) {
         $config = $this->allConfig();
 
         if (empty($data) || empty($data[$config['field']]) || !empty($data[$config['slug']])) {
             return true;
 
-        } else if ($id && !$config['onUpdate']) {
+        } else if ($type === Query::UPDATE && !$config['onUpdate']) {
             return true;
         }
 

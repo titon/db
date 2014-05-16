@@ -441,10 +441,9 @@ class HierarchyBehavior extends AbstractBehavior {
      *
      * @param \Titon\Event\Event $event
      * @param int|int[] $id
-     * @param bool $cascade
      * @return bool
      */
-    public function preDelete(Event $event, $id, &$cascade) {
+    public function preDelete(Event $event, $id) {
         if (!$this->getConfig('onDelete')) {
             return true;
         }
@@ -489,9 +488,10 @@ class HierarchyBehavior extends AbstractBehavior {
      * @param \Titon\Event\Event $event
      * @param int|int[] $id
      * @param array $data
+     * @param string $type
      * @return bool
      */
-    public function preSave(Event $event, $id, array &$data) {
+    public function preSave(Event $event, $id, array &$data, $type) {
         if (!$this->getConfig('onSave')) {
             return true;
         }
@@ -545,10 +545,10 @@ class HierarchyBehavior extends AbstractBehavior {
      *
      * @param \Titon\Event\Event $event
      * @param int|int[] $id
-     * @param bool $created
+     * @param string $type
      */
-    public function postSave(Event $event, $id, $created = false) {
-        if (!$this->getConfig('onSave') || !$created || !$this->_saveIndex) {
+    public function postSave(Event $event, $id, $type) {
+        if (!$this->getConfig('onSave') || !$this->_saveIndex) {
             return;
         }
 

@@ -6,6 +6,7 @@ use Titon\Db\Finder\ListFinder;
 use Titon\Db\Query\Func;
 use Titon\Db\Query\Predicate;
 use Titon\Db\Query\SubQuery;
+use Titon\Event\Event;
 use Titon\Test\Stub\BehaviorStub;
 use Titon\Test\Stub\Repository\Book;
 use Titon\Test\Stub\Repository\Category;
@@ -2150,6 +2151,169 @@ class RepositoryTest extends TestCase {
         ], $this->object->wrapEntities([
             ['foo' => 'bar', 'join' => ['key' => 'value']]
         ]));
+    }
+
+    public function testPreFindFalseyReturnsNoResults() {
+        $this->loadFixtures('Users');
+
+        $this->object->on('db.preFind', function(Event $event, Query $query, $type) {
+            return false;
+        });
+
+        $this->assertEquals(new EntityCollection(), $this->object->select()->all());
+        $this->assertEquals(null, $this->object->select()->first());
+        $this->assertEquals([], $this->object->select()->lists());
+    }
+
+    public function testPreFindCustomArrayResults() {
+        $this->loadFixtures('Users');
+
+        $this->object->on('db.preFind', function(Event $event, Query $query, $type) {
+            return [
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3]
+            ];
+        });
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['id' => 1]),
+            new Entity(['id' => 2]),
+            new Entity(['id' => 3])
+        ]), $this->object->select()->all());
+
+        $this->assertEquals(new Entity(['id' => 1]), $this->object->select()->first());
+
+        $this->assertEquals([1 => 1, 2 => 2, 3 => 3], $this->object->select()->lists());
+    }
+
+    public function testPostFindAltersResults() {
+        $this->loadFixtures('Users');
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['id' => 1, 'username' => 'miles']),
+            new Entity(['id' => 2, 'username' => 'batman']),
+            new Entity(['id' => 3, 'username' => 'superman']),
+            new Entity(['id' => 4, 'username' => 'spiderman']),
+            new Entity(['id' => 5, 'username' => 'wolverine'])
+        ]), $this->object->select('id', 'username')->orderBy('id', 'asc')->all());
+
+        $this->object->on('db.postFind', function(Event $event, array &$results, $type) {
+            foreach ($results as $i => $result) {
+                $results[$i]['username'] = strtoupper($result['username']);
+            }
+        });
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['id' => 1, 'username' => 'MILES']),
+            new Entity(['id' => 2, 'username' => 'BATMAN']),
+            new Entity(['id' => 3, 'username' => 'SUPERMAN']),
+            new Entity(['id' => 4, 'username' => 'SPIDERMAN']),
+            new Entity(['id' => 5, 'username' => 'WOLVERINE'])
+        ]), $this->object->select('id', 'username')->orderBy('id', 'asc')->all());
+    }
+
+    public function testPreDeleteFalseyReturnsZero() {
+        $this->loadFixtures('Users');
+
+        $callback = function(Event $event, $id) {
+            return false;
+        };
+
+        $this->object->on('db.preDelete', $callback);
+
+        $this->assertEquals(0, $this->object->delete(1));
+
+        $this->object->off('db.preDelete', $callback);
+
+        $this->assertEquals(1, $this->object->delete(1));
+    }
+
+    public function testPreDeleteNumericIsReturnedEarly() {
+        $this->loadFixtures('Users');
+
+        $callback = function(Event $event, $id) {
+            return 666;
+        };
+
+        $this->object->on('db.preDelete', $callback);
+
+        $this->assertEquals(666, $this->object->delete(1));
+
+        $this->object->off('db.preDelete', $callback);
+
+        $this->assertEquals(1, $this->object->delete(1));
+    }
+
+    public function testPostDeleteIsntCalledIfDeleteFails() {
+        $this->loadFixtures('Users');
+
+        $deleted = false;
+
+        $this->object->on('db.postDelete', function(Event $event, $id) use (&$deleted) {
+            $deleted = true;
+        });
+
+        $this->assertEquals(0, $this->object->delete(666)); // Fake ID
+        $this->assertFalse($deleted);
+
+        $this->assertEquals(1, $this->object->delete(1)); // Real ID
+        $this->assertTrue($deleted);
+    }
+
+    public function testPreSaveFalseyReturnsZero() {
+        $this->loadFixtures('Users');
+
+        $callback = function(Event $event, $id, array &$data) {
+            return false;
+        };
+
+        $this->object->on('db.preSave', $callback);
+
+        $this->assertEquals(0, $this->object->create(['username' => 'ironman']));
+
+        $this->object->off('db.preSave', $callback);
+
+        $this->assertEquals(6, $this->object->create(['username' => 'ironman']));
+    }
+
+    public function testPreSaveAltersData() {
+        $this->loadFixtures('Users');
+
+        $this->object->on('db.preSave', function(Event $event, $id, array &$data) {
+            $data['username'] = strtoupper($data['username']);
+        });
+
+        $this->assertEquals(6, $this->object->create(['username' => 'ironman']));
+
+        $this->assertEquals(new Entity([
+            'id' => 6,
+            'country_id' => 0,
+            'username' => 'IRONMAN',
+            'password' => '',
+            'email' => '',
+            'firstName' => '',
+            'lastName' => '',
+            'age' => 0,
+            'created' => null,
+            'modified' => null
+        ]), $this->object->read(6));
+    }
+
+    public function testPostSaveIsntCalledIfSaveFails() {
+        $this->loadFixtures('Users');
+
+        $saved = false;
+
+        $this->object->on('db.postSave', function(Event $event, $id, $type) use (&$saved) {
+            $saved = true;
+        });
+
+        $this->assertEquals(0, $this->object->update(666, ['modified' => time()])); // Fake ID
+        $this->assertFalse($saved);
+
+        $this->assertEquals(1, $this->object->update(1, ['modified' => time()])); // Real ID
+        $this->assertTrue($saved);
     }
 
 }

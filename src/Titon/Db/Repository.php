@@ -235,6 +235,9 @@ class Repository extends Base implements Listener {
             $records[] = $record;
         }
 
+        // Disable before event since multi-insert has a different data structure
+        $options['preCallback'] = false;
+
         return $this->_processSave($this->query(Query::MULTI_INSERT), null, $records, $options);
     }
 
@@ -316,7 +319,6 @@ class Repository extends Base implements Listener {
      */
     public function deleteMany(Closure $conditions, array $options = []) {
         $pk = $this->getPrimaryKey();
-        $ids = $this->select($pk)->bindCallback($conditions)->lists($pk, $pk);
         $query = $this->query(Query::DELETE)->bindCallback($conditions);
 
         // Validate that this won't delete all records
@@ -325,6 +327,8 @@ class Repository extends Base implements Listener {
         if (empty($where)) {
             throw new InvalidQueryException('No where clause detected, will not delete all records');
         }
+
+        $ids = $this->select($pk)->bindCallback($conditions)->lists($pk, $pk);
 
         return $this->_processDelete($query, $ids, $options);
     }
@@ -343,6 +347,25 @@ class Repository extends Base implements Listener {
      * All-in-one method for fetching results from a query.
      * Depending on the type of finder, the returned results will differ.
      *
+     * Before a fetch is executed, a `preFind` event will be triggered.
+     * If this event returns a falsey value, the find will exit and
+     * return a `noResults` value based on the current finder.
+     * If this event returns an array of data, the find will exit and
+     * return the array as the results instead of querying the driver.
+     *
+     * Before executing against the driver, the finders `before` method
+     * will be called allowing the current query to be modified.
+     * The driver connection context will also be set to `read`.
+     * If no results are returned from the driver, the finders `noResults`
+     * method will be called.
+     *
+     * After a fetch is executed (or a `preFind` event returns data),
+     * a `postFind` event will be triggered. This event allows
+     * the results to be modified via references.
+     *
+     * Finally, before the results are returned, wrap each row in an
+     * entity object and pass it through the finders `after` method.
+     *
      * @param \Titon\Db\Query $query
      * @param string $type
      * @param mixed $options {
@@ -360,7 +383,6 @@ class Repository extends Base implements Listener {
         $finder = $this->getFinder($type);
         $state = null;
 
-        // Use the return of preFind() if applicable
         if ($options['preCallback']) {
             $event = $this->emit('db.preFind', [$query, $type]);
             $state = $event->getData();
@@ -370,19 +392,19 @@ class Repository extends Base implements Listener {
             }
         }
 
-        // If the event returns custom data, use it
+        // Use the event response as the results
         if (is_array($state)) {
             $results = $state;
 
-        // Else find new records
+        // Query the driver for results
         } else {
             $finder->before($query, $options);
 
             // Update the connection context
-            $driver = $this->getDriver();
-            $driver->setContext('read');
-
-            $results = $driver->executeQuery($query)->find();
+            $results = $this->getDriver()
+                ->setContext('read')
+                ->executeQuery($query)
+                ->find();
         }
 
         if (!$results) {
@@ -848,6 +870,15 @@ class Repository extends Base implements Listener {
     /**
      * Primary method that handles the processing of delete queries.
      *
+     * Before a delete is executed, a `preDelete` event will be triggered.
+     * If a falsey value is returned, exit early with a 0. If a numeric value
+     * is returned, exit early and return the number, which acts as a virtual
+     * affected row count (permitting behaviors to short circuit the process).
+     *
+     * Before the driver is queried, the connection context will be set to `delete`.
+     *
+     * After a delete has executed successfully, a `postDelete` event will be triggered.
+     *
      * @param \Titon\Db\Query $query
      * @param int|int[] $id
      * @param mixed $options {
@@ -862,41 +893,45 @@ class Repository extends Base implements Listener {
             'postCallback' => true
         ];
 
-        // If a falsey value is returned, exit early
-        // If an integer is returned, return it
         if ($options['preCallback']) {
-            $event = $this->emit('db.preDelete', [$id, &$options['cascade']]);
+            $event = $this->emit('db.preDelete', [$id]);
             $state = $event->getData();
 
             if ($state !== null) {
                 if (!$state) {
                     return 0;
                 } else if (is_numeric($state)) {
-                    return $state;
+                    return (int) $state;
                 }
             }
         }
 
-        // Update the connection group
-        $driver = $this->getDriver();
-        $driver->setContext('delete');
+        // Update the connection context
+        $this->getDriver()->setContext('delete');
 
         // Execute the query
         $count = $query->save();
 
-        if ($count === false) {
-            return 0;
-        }
-
-        if ($options['postCallback']) {
+        // Only trigger callback if something was deleted
+        if ($count && $options['postCallback']) {
             $this->emit('db.postDelete', [$id]);
         }
 
-        return $count;
+        return (int) $count;
     }
 
     /**
      * Primary method that handles the processing of insert and update queries.
+     *
+     * Before a save is executed, a `preSave` event will be triggered.
+     * This event allows data to be modified before saving via references.
+     * If this event returns a falsey value, the save will exit early and
+     * return a 0. This allows behaviors and events to cease save operations.
+     *
+     * Before the driver is queried, the connection context will be set to `write`.
+     *
+     * After the query has executed, and no rows have been affected, the method
+     * will exit early with a 0 response. Otherwise, a `postSave` event will be triggered.
      *
      * @param \Titon\Db\Query $query
      * @param int|int[] $id
@@ -907,19 +942,20 @@ class Repository extends Base implements Listener {
      * }
      * @return int
      *      - The count of records updated if an update
-     *      - The ID of the record if an insert
+     *      - The count of records inserted if a multi-insert
+     *      - The ID of the record if a single insert
      *      - 0 if save operation failed
      */
     protected function _processSave(Query $query, $id, array $data, $options = []) {
-        $isCreate = ($query->getType() === Query::INSERT);
+        $type = $query->getType();
+        $isCreate = ($type === Query::INSERT);
         $options = $options + [
             'preCallback' => true,
             'postCallback' => true
         ];
 
-        // Trigger before events
         if ($options['preCallback']) {
-            $event = $this->emit('db.preSave', [$id, &$data]);
+            $event = $this->emit('db.preSave', [$id, &$data, $type]);
             $state = $event->getData();
 
             if ($state !== null && !$state) {
@@ -927,13 +963,7 @@ class Repository extends Base implements Listener {
             }
         }
 
-        // Filter and set the data
-        if ($query->getType() !== Query::MULTI_INSERT) {
-            if ($columns = $this->getSchema()->getColumns()) {
-                $data = array_intersect_key($data, $columns);
-            }
-        }
-
+        // Set data
         $query->fields($data);
 
         // Update the connection context
@@ -943,8 +973,9 @@ class Repository extends Base implements Listener {
         // Execute the query
         $count = $query->save();
 
-        if ($count === false) {
-            return 0;
+        // Exit early if save failed
+        if (!$count) {
+            return (int) $count;
         }
 
         if ($isCreate) {
@@ -953,12 +984,11 @@ class Repository extends Base implements Listener {
 
         $this->id = $id;
 
-        // Trigger after events
         if ($options['postCallback']) {
-            $this->emit('db.postSave', [$id, $isCreate]);
+            $this->emit('db.postSave', [$id, $type]);
         }
 
-        // Return ID for create, or count for update
+        // Return ID for create
         if ($isCreate) {
             return $id;
         }

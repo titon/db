@@ -65,9 +65,10 @@ class FilterBehavior extends AbstractBehavior {
      * @param \Titon\Event\Event $event
      * @param int|int[] $id
      * @param array $data
+     * @param string $type
      * @return bool
      */
-    public function preSave(Event $event, $id, array &$data) {
+    public function preSave(Event $event, $id, array &$data, $type) {
         $filters = $this->getFilters();
 
         foreach ($data as $key => $value) {

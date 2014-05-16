@@ -83,10 +83,9 @@ class SoftDeleteBehavior extends AbstractBehavior {
      *
      * @param \Titon\Event\Event $event
      * @param int|\int[] $id
-     * @param bool $cascade
      * @return int
      */
-    public function preDelete(Event $event, $id, &$cascade) {
+    public function preDelete(Event $event, $id) {
         return $this->softDelete($id);
     }
 
