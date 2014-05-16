@@ -117,6 +117,15 @@ class QueryTest extends TestCase {
         $this->assertEquals(['id' => 1, 'title' => 'Titon', 'username' => 'miles'], $query->getFields());
     }
 
+    public function testFieldsAutoPopulateViaJoins() {
+        $this->object->leftJoin('profiles', [], ['profiles.user_id' => 'users.id']);
+
+        $this->assertEquals([
+            'id', 'country_id', 'username', 'password', 'email', 'firstName',
+            'lastName', 'age', 'created', 'modified'
+        ], $this->object->getFields());
+    }
+
     public function testFrom() {
         $this->object->from('users');
         $this->assertEquals('users', $this->object->getTable());
@@ -420,13 +429,17 @@ class QueryTest extends TestCase {
     }
 
     public function testCloning() {
-        $query1 = new Query(Query::SELECT, new User());
-        $query1->where('id', 1)->having('id', '>', 1);
+        $this->object->where('id', 1)->having('id', '>', 1);
 
-        $query2 = clone $query1;
+        $clone = clone $this->object;
 
-        $this->assertEquals($query1, $query2);
-        $this->assertNotSame($query1, $query2);
+        $this->assertEquals($this->object, $clone);
+        $this->assertNotSame($this->object, $clone);
+    }
+
+    public function testToString() {
+        $this->assertRegExp('/^[a-z0-9]{32}$/', $this->object->toString());
+        $this->assertRegExp('/^[a-z0-9]{32}$/', (string) $this->object);
     }
 
 }
