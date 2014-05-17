@@ -1089,23 +1089,17 @@ abstract class AbstractDialect extends Base implements Dialect {
      * {@inheritdoc}
      */
     public function quote($value) {
-        $char = $this->getConfig('quoteCharacter');
-
-        if (!$char) {
-            return $value;
-        }
-
         if (strpos($value, '.') !== false) {
             list($table, $field) = explode('.', $value);
 
             if ($field !== '*') {
-                $field = $this->quote($field);
+                $field = $this->_quote($field);
             }
 
-            return $this->quote($table) . '.' . $field;
+            return $this->_quote($table) . '.' . $field;
         }
 
-        return $char . trim($value, $char) . $char;
+        return $this->_quote($value);
     }
 
     /**
@@ -1125,6 +1119,19 @@ abstract class AbstractDialect extends Base implements Dialect {
      */
     public function renderStatement($type, array $params) {
         return $this->getStatement($type)->render($params);
+    }
+
+    /**
+     * Place quoting in a protected method for speed improvements.
+     * This reduces the amount of calls to `strpos()` and `explode()`.
+     *
+     * @param string $value
+     * @return string
+     */
+    protected function _quote($value) {
+        $char = $this->getConfig('quoteCharacter');
+
+        return $char . trim($value, $char) . $char;
     }
 
 }

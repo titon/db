@@ -35,7 +35,7 @@ class ListFinder extends AbstractFinder {
                 $result = $result->toArray();
             }
 
-            $list[Hash::extract($result, $key)] = Hash::extract($result, $value);
+            $list[Hash::get($result, $key)] = Hash::get($result, $value);
         }
 
         return $list;
