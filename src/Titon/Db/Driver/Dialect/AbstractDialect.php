@@ -917,7 +917,7 @@ abstract class AbstractDialect extends Base implements Dialect {
     public function formatTableOptions(array $options) {
         $output = [];
 
-        foreach ($options as $key => $value) {
+        foreach ($this->formatAttributes($options) as $key => $value) {
             if ($this->hasClause($key)) {
                 $option = sprintf($this->getClause($key), $value);
 
