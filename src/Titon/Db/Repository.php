@@ -333,6 +333,15 @@ class Repository extends Base implements Listener {
     }
 
     /**
+     * Drop a database table.
+     *
+     * @return bool
+     */
+    public function dropTable() {
+        return (bool) $this->query(Query::DROP_TABLE)->save();
+    }
+
+    /**
      * Check if a record with an ID exists.
      *
      * @param int $id

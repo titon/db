@@ -169,7 +169,7 @@ class RepositoryTest extends TestCase {
         $this->assertRegExp("/^INSERT INTO `users` \(`created`\) VALUES \(NULL\);$/i", $query->getStatement());
     }
 
-    public function testCreateTable() {
+    public function testCreateDropTable() {
         $sql = sprintf("SELECT COUNT(table_name) FROM information_schema.tables WHERE table_schema = 'titon_test' AND table_name = '%s';", $this->object->getTable());
 
         $this->assertEquals(0, $this->object->getDriver()->executeQuery($sql)->count());
@@ -178,7 +178,7 @@ class RepositoryTest extends TestCase {
 
         $this->assertEquals(1, $this->object->getDriver()->executeQuery($sql)->count());
 
-        $this->object->query(Query::DROP_TABLE)->save();
+        $this->object->dropTable();
 
         $this->assertEquals(0, $this->object->getDriver()->executeQuery($sql)->count());
     }
