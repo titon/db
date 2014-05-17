@@ -1678,7 +1678,7 @@ class RepositoryTest extends TestCase {
     }
 
     public function testSelectTypeCastingStatements() {
-        $this->loadFixtures('Stats');
+        $this->loadFixtures(['Stats', 'Users']);
 
         $stat = new Stat();
         $time = time();
@@ -1946,7 +1946,7 @@ class RepositoryTest extends TestCase {
     }
 
     public function testUpdateTypeCastingStatements() {
-        $this->loadFixtures('Stats');
+        $this->loadFixtures(['Stats', 'Users']);
 
         $stat = new Stat();
         $time = time();
