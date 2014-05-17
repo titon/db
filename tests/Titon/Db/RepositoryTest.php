@@ -128,7 +128,7 @@ class RepositoryTest extends TestCase {
     }
 
     public function testCreateTypeCastingStatements() {
-        $this->loadFixtures('Stats');
+        $this->loadFixtures(['Stats', 'Users']);
 
         $stat = new Stat();
         $time = time();
@@ -137,36 +137,36 @@ class RepositoryTest extends TestCase {
 
         // int
         $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['health' => '100', 'energy' => 200]));
-        $this->assertRegExp("/^INSERT INTO `stats` \(`health`, `energy`\) VALUES \(100, 200\);$/i", $query->getStatement());
+        $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?health(`|\")?, (`|\")?energy(`|\")?\) VALUES \(100, 200\);$/i", $query->getStatement());
 
         // string
         $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['name' => 12345]));
-        $this->assertRegExp("/^INSERT INTO `stats` \(`name`\) VALUES \('12345'\);$/i", $query->getStatement());
+        $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?name(`|\")?\) VALUES \('12345'\);$/i", $query->getStatement());
 
         // float, double, decimal (they are strings in PDO)
         $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['damage' => '123.45', 'defense' => 456.78, 'range' => 999.00]));
-        $this->assertRegExp("/^INSERT INTO `stats` \(`damage`, `defense`, `range`\) VALUES \('123.45', '456.78', '999'\);$/i", $query->getStatement());
+        $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?damage(`|\")?, (`|\")?defense(`|\")?, (`|\")?range(`|\")?\) VALUES \('123.45', '456.78', '999'\);$/i", $query->getStatement());
 
         // bool
         $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['isMelee' => 'true']));
-        $this->assertRegExp("/^INSERT INTO `stats` \(`isMelee`\) VALUES \(1\);$/i", $query->getStatement());
+        $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?isMelee(`|\")?\) VALUES \(1\);$/i", $query->getStatement());
 
         $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['isMelee' => false]));
-        $this->assertRegExp("/^INSERT INTO `stats` \(`isMelee`\) VALUES \(0\);$/i", $query->getStatement());
+        $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?isMelee(`|\")?\) VALUES \(0\);$/i", $query->getStatement());
 
         // datetime
         $query = $driver->executeQuery($this->object->query(Query::INSERT)->fields(['created' => $time]));
-        $this->assertRegExp("/^INSERT INTO `users` \(`created`\) VALUES \('" . $date . "'\);$/i", $query->getStatement());
+        $this->assertRegExp("/^INSERT INTO (`|\")?users(`|\")? \((`|\")?created(`|\")?\) VALUES \('" . $date . "'\);$/i", $query->getStatement());
 
         $query = $driver->executeQuery($this->object->query(Query::INSERT)->fields(['created' => new DateTime($date)]));
-        $this->assertRegExp("/^INSERT INTO `users` \(`created`\) VALUES \('" . $date . "'\);$/i", $query->getStatement());
+        $this->assertRegExp("/^INSERT INTO (`|\")?users(`|\")? \((`|\")?created(`|\")?\) VALUES \('" . $date . "'\);$/i", $query->getStatement());
 
         $query = $driver->executeQuery($this->object->query(Query::INSERT)->fields(['created' => $date]));
-        $this->assertRegExp("/^INSERT INTO `users` \(`created`\) VALUES \('" . $date . "'\);$/i", $query->getStatement());
+        $this->assertRegExp("/^INSERT INTO (`|\")?users(`|\")? \((`|\")?created(`|\")?\) VALUES \('" . $date . "'\);$/i", $query->getStatement());
 
         // null
         $query = $driver->executeQuery($this->object->query(Query::INSERT)->fields(['created' => null]));
-        $this->assertRegExp("/^INSERT INTO `users` \(`created`\) VALUES \(NULL\);$/i", $query->getStatement());
+        $this->assertRegExp("/^INSERT INTO (`|\")?users(`|\")? \((`|\")?created(`|\")?\) VALUES \(NULL\);$/i", $query->getStatement());
     }
 
     public function testCreateDropTable() {
@@ -919,10 +919,10 @@ class RepositoryTest extends TestCase {
         ]), $book->select('id', 'name')->where('series_id', 1)->orderBy('id', 'asc')->all());
 
         $actual = $book->select('id', 'name', 'series_id')
-            ->where('series_id', 3)
+            ->where('Book.series_id', 3)
             ->leftJoin(['series', 'Series'], ['name'], ['Book.series_id' => 'Series.id'])
-            ->orderBy('id', 'asc')
-            ->all(['eager' => true]);
+            ->orderBy('Book.id', 'asc')
+            ->all();
 
         $this->assertEquals(new EntityCollection([
             new Entity([
@@ -1332,8 +1332,7 @@ class RepositoryTest extends TestCase {
             }
         }
 
-        $query = $this->object->select()
-            ->fields('id', 'username')
+        $query = $this->object->select('id', 'username')
             ->outerJoin(['countries', 'Country'], ['id', 'name', 'iso'], ['country_id' => 'Country.id'])
             ->orderBy('User.id', 'asc');
 
