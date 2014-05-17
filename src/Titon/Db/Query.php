@@ -309,16 +309,18 @@ class Query {
             $fields = array_merge($this->_fields, $fields);
         }
 
+        $type = $this->getType();
+
         // When doing a select, unique the field list
-        if ($this->getType() === self::SELECT) {
+        if ($type === self::SELECT) {
             $fields = array_values(array_unique($fields, SORT_REGULAR)); // SORT_REGULAR allows for objects
 
         // When saving data, gather the values to bind
-        } else {
+        } else if (in_array($type, [self::INSERT, self::MULTI_INSERT, self::UPDATE])) {
             $binds = [];
             $rows = $fields;
 
-            if ($this->getType() !== self::MULTI_INSERT) {
+            if ($type !== self::MULTI_INSERT) {
                 $rows = [$rows];
             }
 
