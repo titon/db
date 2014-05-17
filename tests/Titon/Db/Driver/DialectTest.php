@@ -335,26 +335,9 @@ class DialectTest extends TestCase {
 
     public function testBuildUpdate() {
         $query = new Query(Query::UPDATE, new User());
-
-        // No fields
-        try {
-            $this->object->buildUpdate($query);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
+        $query->from('foobar');
 
         $query->fields(['username' => 'miles']);
-
-        // No table
-        try {
-            $this->object->buildUpdate($query);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
-
-        $query->from('foobar');
         $this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?username(`|\")? = \?;/', $this->object->buildUpdate($query));
 
         $query->limit(15);
@@ -371,6 +354,20 @@ class DialectTest extends TestCase {
 
         $query->where('status', 3);
         $this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?email(`|\")? = \?, (`|\")?website(`|\")? = \?\s+WHERE (`|\")?status(`|\")? = \?\s+ORDER BY (`|\")?username(`|\")? DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidQueryException
+     */
+    public function testBuildUpdateErrorsNoFields() {
+        $this->object->buildUpdate(new Query(Query::UPDATE, new User()));
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidTableException
+     */
+    public function testBuildUpdateErrorsNoTable() {
+        $this->object->buildUpdate((new Query(Query::UPDATE, new User()))->fields(['username' => 'miles']));
     }
 
     public function testBuildUpdateJoins() {
@@ -660,38 +657,44 @@ class DialectTest extends TestCase {
     }
 
     public function testFormatSelectFieldsFunctions() {
-        $this->assertEquals(['SUBSTR(`name`, -3)'], $this->object->formatSelectFields([Query::func('SUBSTR', ['name' => Func::FIELD, -3])]));
-        $this->assertEquals(['SUBSTR(`name`, -3) AS `alias`'], $this->object->formatSelectFields([Query::func('SUBSTR', ['name' => Func::FIELD, -3])->asAlias('alias')], 'foo'));
+        $this->assertRegExp('/SUBSTR\((`|\")?name(`|\")?, \-3\)/', $this->object->formatSelectFields([Query::func('SUBSTR', ['name' => Func::FIELD, -3])])[0]);
+        $this->assertRegExp('/SUBSTR\((`|\")?name(`|\")?, \-3\) AS (`|\")?alias(`|\")?/', $this->object->formatSelectFields([Query::func('SUBSTR', ['name' => Func::FIELD, -3])->asAlias('alias')], 'foo')[0]);
     }
 
     public function testFormatSelectFieldsExprs() {
-        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields([Query::expr('name', 'as', 'alias')]));
-        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields([Query::expr('name', 'as', 'alias')], 'foo'));
+        $this->assertRegExp('/(`|\")?name(`|\")? AS (`|\")?alias(`|\")?/', $this->object->formatSelectFields([Query::expr('name', 'as', 'alias')])[0]);
+        $this->assertRegExp('/(`|\")?name(`|\")? AS (`|\")?alias(`|\")?/', $this->object->formatSelectFields([Query::expr('name', 'as', 'alias')], 'foo')[0]);
     }
 
     public function testFormatSelectFieldsRawExprs() {
-        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields([Query::raw('`name` AS `alias`')]));
-        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields([Query::raw('`name` AS `alias`')], 'foo'));
+        $this->assertRegExp('/(`|\")?name(`|\")? AS (`|\")?alias(`|\")?/', $this->object->formatSelectFields([Query::raw('`name` AS `alias`')])[0]);
+        $this->assertRegExp('/(`|\")?name(`|\")? AS (`|\")?alias(`|\")?/', $this->object->formatSelectFields([Query::raw('`name` AS `alias`')], 'foo')[0]);
     }
 
     public function testFormatSelectFieldsAsAlias() {
-        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields(['name as alias']));
-        $this->assertEquals(['`name` AS `alias`'], $this->object->formatSelectFields(['name  AS  alias']));
-        $this->assertEquals(['`foo`.`name` AS `alias`'], $this->object->formatSelectFields(['name as alias'], 'foo'));
+        $this->assertRegExp('/(`|\")?name(`|\")? AS (`|\")?alias(`|\")?/', $this->object->formatSelectFields(['name as alias'])[0]);
+        $this->assertRegExp('/(`|\")?name(`|\")? AS (`|\")?alias(`|\")?/', $this->object->formatSelectFields(['name  AS  alias'])[0]);
+        $this->assertRegExp('/(`|\")?foo(`|\")?\.(`|\")?name(`|\")? AS (`|\")?alias(`|\")?/', $this->object->formatSelectFields(['name as alias'], 'foo')[0]);
     }
 
     public function testFormatSelectFieldsVirtualJoins() {
-        $this->assertEquals(['`foo`.`name`'], $this->object->formatSelectFields(['name'], 'foo'));
+        $this->assertRegExp('/(`|\")?foo(`|\")?\.(`|\")?name(`|\")?/', $this->object->formatSelectFields(['name'], 'foo')[0]);
         $this->object->setConfig('virtualJoins', true);
-        $this->assertEquals(['`foo`.`name` AS foo__name'], $this->object->formatSelectFields(['name'], 'foo'));
+        $this->assertRegExp('/(`|\")?foo(`|\")?\.(`|\")?name(`|\")? AS foo__name/', $this->object->formatSelectFields(['name'], 'foo')[0]);
     }
 
     public function testFormatUpdateFields() {
-        $this->assertEquals(['`foo` = ?', '`views` = ?'], $this->object->formatUpdateFields(['foo' => 'bar', 'views' => 1]));
+        $fields = $this->object->formatUpdateFields(['foo' => 'bar', 'views' => 1]);
+
+        $this->assertRegExp('/(`|\")?foo(`|\")? = \?/', $fields[0]);
+        $this->assertRegExp('/(`|\")?views(`|\")? = \?/', $fields[1]);
     }
 
     public function testFormatUpdateFieldsExprs() {
-        $this->assertEquals(['`foo` = ?', '`views` = `views` + ?'], $this->object->formatUpdateFields(['foo' => 'bar', 'views' => Query::expr('views', '+', 5)]));
+        $fields = $this->object->formatUpdateFields(['foo' => 'bar', 'views' => Query::expr('views', '+', 5)]);
+
+        $this->assertRegExp('/(`|\")?foo(`|\")? = \?/', $fields[0]);
+        $this->assertRegExp('/(`|\")?views(`|\")? = (`|\")?views(`|\")? \+ \?/', $fields[1]);
     }
 
     public function testFormatFunction() {
