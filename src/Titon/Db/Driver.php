@@ -144,6 +144,14 @@ interface Driver {
     public function getSupportedTypes();
 
     /**
+     * Instantiate a new type object based off the column type and list of supported types.
+     *
+     * @param string $key
+     * @return \Titon\Db\Driver\Type
+     */
+    public function getType($key);
+
+    /**
      * Return true if connected to the driver.
      *
      * @return bool

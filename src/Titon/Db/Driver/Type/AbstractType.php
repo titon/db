@@ -7,10 +7,8 @@
 
 namespace Titon\Db\Driver\Type;
 
-use Titon\Common\Registry;
 use Titon\Db\Driver;
 use Titon\Db\Driver\Type;
-use Titon\Db\Exception\UnsupportedTypeException;
 use Titon\Db\DriverAware;
 use \PDO;
 
@@ -29,31 +27,6 @@ abstract class AbstractType implements Type {
      */
     public function __construct(Driver $driver) {
         $this->setDriver($driver);
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @uses \Titon\Common\Registry
-     *
-     * @throws \Titon\Db\Exception\UnsupportedTypeException
-     */
-    public static function factory($type, Driver $driver) {
-        $types = $driver->getSupportedTypes();
-
-        if (isset($types[$type])) {
-            $class = $types[$type];
-
-            if (Registry::has($class)) {
-                return Registry::get($class);
-            }
-
-            $object = new $class($driver);
-
-            return Registry::set($object, $class);
-        }
-
-        throw new UnsupportedTypeException(sprintf('Unsupported data type %s', $type));
     }
 
     /**

@@ -12,7 +12,6 @@ use Titon\Common\Traits\Attachable;
 use Titon\Common\Traits\Cacheable;
 use Titon\Db\Driver\Dialect;
 use Titon\Db\Driver\Schema;
-use Titon\Db\Driver\Type\AbstractType;
 use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Exception\MissingBehaviorException;
 use Titon\Db\Exception\MissingFinderException;
@@ -170,7 +169,7 @@ class Repository extends Base implements Listener {
             foreach ($results as $i => $result) {
                 foreach ($result as $field => $value) {
                     if (isset($schema[$field])) {
-                        $results[$i][$field] = AbstractType::factory($schema[$field]['type'], $driver)->from($value);
+                        $results[$i][$field] = $driver->getType($schema[$field]['type'])->from($value);
                     }
                 }
             }

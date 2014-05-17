@@ -11,7 +11,6 @@ use Titon\Common\Base;
 use Titon\Db\Driver;
 use Titon\Db\Driver\Dialect;
 use Titon\Db\Driver\Schema;
-use Titon\Db\Driver\Type\AbstractType;
 use Titon\Db\Exception\InvalidQueryException;
 use Titon\Db\Exception\InvalidTableException;
 use Titon\Db\Exception\MissingClauseException;
@@ -257,7 +256,7 @@ abstract class AbstractDialect extends Base implements Dialect {
         $columns = [];
 
         foreach ($schema->getColumns() as $column => $options) {
-            $dataType = AbstractType::factory($options['type'], $this->getDriver());
+            $dataType = $this->getDriver()->getType($options['type']);
 
             $options = $options + $dataType->getDefaultOptions();
             $type = $options['type'];

@@ -35,15 +35,6 @@ interface Type {
     const BLOB = 'blob';
 
     /**
-     * Instantiate a new type object based off the column type and list of supported types.
-     *
-     * @param string $type
-     * @param \Titon\Db\Driver $driver
-     * @return $this
-     */
-    public static function factory($type, Driver $driver);
-
-    /**
      * Convert the value after it leaves the database and enters the codebase.
      *
      * @param mixed $value

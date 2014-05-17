@@ -7,7 +7,6 @@
 
 namespace Titon\Db\Driver;
 
-use Titon\Db\Driver\Type\AbstractType;
 use Titon\Db\Driver\ResultSet\PdoResultSet;
 use Titon\Db\Driver\ResultSet\SqlResultSet;
 use Titon\Db\Exception\InvalidQueryException;
@@ -108,8 +107,6 @@ abstract class AbstractPdoDriver extends AbstractDriver {
 
     /**
      * {@inheritdoc}
-     *
-     * @uses Titon\Db\Type\AbstractType
      */
     public function describeTable($repo) {
         return $this->cache([__METHOD__, $repo], function() use ($repo) {
@@ -135,7 +132,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
                 }
 
                 // Inherit type defaults
-                $data = AbstractType::factory($type, $this)->getDefaultOptions();
+                $data = $this->getType($type)->getDefaultOptions();
 
                 // Overwrite with custom
                 $data = [
@@ -347,8 +344,6 @@ abstract class AbstractPdoDriver extends AbstractDriver {
     /**
      * Resolve the bind value and the PDO binding type.
      *
-     * @uses Titon\Db\Type\AbstractType
-     *
      * @param string $field
      * @param mixed $value
      * @param array $schema
@@ -372,7 +367,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
             $type = PDO::PARAM_NULL;
 
         } else if (isset($schema[$field]['type'])) {
-            $dataType = AbstractType::factory($schema[$field]['type'], $this);
+            $dataType = $this->getType($schema[$field]['type']);
             $value = $dataType->to($value);
             $type = $dataType->getBindingType();
         }

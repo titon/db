@@ -136,6 +136,19 @@ class DriverTest extends TestCase {
         ], $driver->getContextConfig('write'));
     }
 
+    public function testGetType() {
+        $this->assertInstanceOf('Titon\Db\Driver\Type', $this->object->getType('int'));
+        $this->assertInstanceOf('Titon\Db\Driver\Type', $this->object->getType('varchar'));
+        $this->assertInstanceOf('Titon\Db\Driver\Type', $this->object->getType('longblob'));
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\UnsupportedTypeException
+     */
+    public function testGetTypeThrowsError() {
+        $this->object->getType('foobar');
+    }
+
     public function testContextGetters() {
         $driver = new DriverStub([
             'database' => 'titon_test',

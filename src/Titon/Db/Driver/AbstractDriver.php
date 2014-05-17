@@ -15,6 +15,7 @@ use Titon\Db\Driver;
 use Titon\Db\Exception\InvalidArgumentException;
 use Titon\Db\Exception\QueryFailureException;
 use Titon\Db\Driver\ResultSet;
+use Titon\Db\Exception\UnsupportedTypeException;
 use Titon\Db\Query;
 use Titon\Utility\Hash;
 use \Closure;
@@ -263,6 +264,23 @@ abstract class AbstractDriver extends Base implements Driver {
      */
     public function getStorage() {
         return $this->_storage;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @uses \Titon\Common\Registry
+     *
+     * @throws \Titon\Db\Exception\UnsupportedTypeException
+     */
+    public function getType($key) {
+        $types = $this->getSupportedTypes();
+
+        if (isset($types[$key])) {
+            return new $types[$key]($this);
+        }
+
+        throw new UnsupportedTypeException(sprintf('Unsupported data type %s', $key));
     }
 
     /**
