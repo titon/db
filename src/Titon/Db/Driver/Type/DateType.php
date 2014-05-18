@@ -44,11 +44,6 @@ class DateType extends AbstractType {
      * @uses Titon\Utility\Time
      */
     public function to($value) {
-        if ($value instanceof DateTime) {
-            return $value->format($this->format);
-        }
-
-        // Convert array to UNIX timestamp
         if (is_array($value)) {
             $hour = isset($value['hour']) ? $value['hour'] : 0;
 
@@ -56,13 +51,19 @@ class DateType extends AbstractType {
                 $hour += 12;
             }
 
-            $value = mktime(
+            $timestamp = mktime(
                 $hour,
                 isset($value['minute']) ? $value['minute'] : 0,
                 isset($value['second']) ? $value['second'] : 0,
                 isset($value['month']) ? $value['month'] : date('m'),
                 isset($value['day']) ? $value['day'] : date('d'),
                 isset($value['year']) ? $value['year'] : date('Y'));
+
+            $value = Time::factory(date('Y-m-d H:i:s', $timestamp), isset($value['timezone']) ? $value['timezone'] : null);
+        }
+
+        if ($value instanceof DateTime) {
+            return $value->format($this->format);
         }
 
         return date($this->format, Time::toUnix($value));
