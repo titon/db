@@ -1,6 +1,7 @@
 # Queries #
 
-A Query is an object oriented approach to SQL query building. A query can be instantiated through the Repository as so:
+A query is an object oriented approach to SQL query building.
+A query can be instantiated through the Repository as so:
 
 ```php
 $query = $this->query(Query::UPDATE); // specify the type of query
@@ -54,7 +55,8 @@ $query->with('RelationAlias');
 ### Where and Having ###
 
 Where and having clauses support the following group operators: or, and and xor.
-They can be called with the methods: `where()`, `orWhere()`, `xorWhere()`, `having()`, `orHaving()`, `xorHaving()`. Each method works exactly the same.
+They can be called with the methods: `where()`, `orWhere()`, `xorWhere()`, `having()`, `orHaving()`, `xorHaving()`.
+Each method works exactly the same.
 
 Call the method multiple times to add multiple expressions.
 
@@ -88,24 +90,21 @@ $query->where(function() {
 }); // color IN ('red', 'green', 'blue') AND size NOT LIKE '%small%' AND (quantity >= 5 OR soldOut != 0)
 ```
 
-To generate sub-groupings, call the following methods. `also()` will create an AND group. `either()` will create an OR group. `neither()` will create a NOR group. `maybe()` will create a XOR group.
+To generate sub-groupings, call the following methods.
+`also()` will create an AND group. `either()` will create an OR group. `neither()` will create a NOR group.
+`maybe()` will create a XOR group.
 
 ### Joins ###
 
 Data from other tables can be joined in. This is different than using `with()` to include relationships.
-The following methods can be used to join data: `leftJoin()`, `rightJoin()`, `innerJoin()`, `outerJoin()`, `straightJoin()`. Each method works exactly the same.
+The following methods can be used to join data: `leftJoin()`, `rightJoin()`, `innerJoin()`, `outerJoin()`, `straightJoin()`.
+Each method works exactly the same.
 
 Join tables through ON declarations. The second argument is the field list, leave blank to include all.
 
 ```php
 $query->rightJoin('profiles', [], ['id' => 'profiles.id']);
 $query->rightJoin(['profiles', 'Profile'], [], ['id' => 'Profile.id']); // with aliasing
-```
-
-Join relations or just use `with()` instead.
-
-```php
-$query->leftJoin($this->getRelation('Profile'));
 ```
 
 When data is fetched, all joined records will be indexed in a sub-array using the alias.
