@@ -435,9 +435,7 @@ class Query {
         $fields = $this->_fields;
 
         if ($this->getJoins() && !$fields && $this->getType() === self::SELECT) {
-            if ($schema = $this->getRepository()->getSchema()) {
-                return array_keys($schema->getColumns());
-            }
+            return array_keys($this->getRepository()->getSchema()->getColumns());
         }
 
         return $fields;

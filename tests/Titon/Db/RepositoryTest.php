@@ -109,6 +109,37 @@ class RepositoryTest extends TestCase {
         $this->object->create([]);
     }
 
+    public function testCreateFiltersInvalidColumn() {
+        $this->loadFixtures('Users');
+
+        $data = [
+            'country_id' => 1,
+            'username' => 'ironman',
+            'firstName' => 'Tony',
+            'lastName' => 'Stark',
+            'password' => '7NAks9193KAkjs1',
+            'email' => 'ironman@email.com',
+            'age' => 38,
+            'company' => 'Stark Industries'
+        ];
+
+        $last_id = $this->object->create($data);
+
+        $this->assertEquals(6, $last_id);
+        $this->assertEquals(new Entity([
+            'id' => 6,
+            'country_id' => 1,
+            'username' => 'ironman',
+            'firstName' => 'Tony',
+            'lastName' => 'Stark',
+            'password' => '7NAks9193KAkjs1',
+            'email' => 'ironman@email.com',
+            'age' => 38,
+            'created' => '',
+            'modified' => ''
+        ]), $this->object->read($last_id));
+    }
+
     public function testCreateMany() {
         $this->loadFixtures('Users');
 
@@ -122,6 +153,24 @@ class RepositoryTest extends TestCase {
             ['country_id' => 2, 'username' => 'superman', 'email' => 'superman@email.com', 'age' => 33, 'created' => '1970-09-18 21:22:34'],
             ['country_id' => 5, 'username' => 'spiderman', 'firstName' => 'Peter', 'lastName' => 'Parker', 'password' => '1Z5895jf72yL77h', 'email' => 'spiderman@email.com', 'age' => 22, 'created' => '1990-01-05 21:22:34'],
             ['country_id' => 4, 'username' => 'wolverine', 'password' => '1Z5895jf72yL77h', 'email' => 'wolverine@email.com'],
+        ]));
+
+        $this->assertEquals(5, $this->object->select()->count());
+    }
+
+    public function testCreateManyFiltersInvalidColumn() {
+        $this->loadFixtures('Users');
+
+        $this->object->truncate(); // Empty first
+
+        $this->assertEquals(0, $this->object->select()->count());
+
+        $this->assertEquals(5, $this->object->createMany([
+            ['foo' => 'bar', 'country_id' => 1, 'username' => 'miles', 'firstName' => 'Miles', 'lastName' => 'Johnson', 'password' => '1Z5895jf72yL77h', 'email' => 'miles@email.com', 'age' => 25, 'created' => '1988-02-26 21:22:34'],
+            ['foo' => 'bar', 'country_id' => 3, 'username' => 'batman', 'firstName' => 'Bruce', 'lastName' => 'Wayne', 'created' => '1960-05-11 21:22:34'],
+            ['foo' => 'bar', 'country_id' => 2, 'username' => 'superman', 'email' => 'superman@email.com', 'age' => 33, 'created' => '1970-09-18 21:22:34'],
+            ['foo' => 'bar', 'country_id' => 5, 'username' => 'spiderman', 'firstName' => 'Peter', 'lastName' => 'Parker', 'password' => '1Z5895jf72yL77h', 'email' => 'spiderman@email.com', 'age' => 22, 'created' => '1990-01-05 21:22:34'],
+            ['foo' => 'bar', 'country_id' => 4, 'username' => 'wolverine', 'password' => '1Z5895jf72yL77h', 'email' => 'wolverine@email.com'],
         ]));
 
         $this->assertEquals(5, $this->object->select()->count());
@@ -588,8 +637,27 @@ class RepositoryTest extends TestCase {
         $this->assertEquals('id', $this->object->getPrimaryKey());
     }
 
+    public function testGetPrimaryKeyNoSchema() {
+        $repo = new Repository(['table' => 'users', 'primaryKey' => null]);
+
+        $this->assertEquals('id', $repo->getPrimaryKey());
+    }
+
     public function testGetSchema() {
-        $this->assertInstanceOf('Titon\Db\Driver\Schema', $this->object->getSchema());
+        $schema = $this->object->getSchema();
+
+        $this->assertInstanceOf('Titon\Db\Driver\Schema', $schema);
+        $this->assertEquals(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], array_keys($schema->getColumns()));
+    }
+
+    public function testGetSchemaThroughDescribe() {
+        $this->loadFixtures('Users'); // Requires table to be created
+
+        $repo = new Repository(['table' => 'users']);
+        $schema = $repo->getSchema();
+
+        $this->assertInstanceOf('Titon\Db\Driver\Schema', $schema);
+        $this->assertEquals(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], array_keys($schema->getColumns()));
     }
 
     public function testGetTable() {
@@ -1780,6 +1848,29 @@ class RepositoryTest extends TestCase {
         $this->loadFixtures('Users');
 
         $this->object->update(1, []);
+    }
+
+    public function testUpdateFiltersInvalidColumn() {
+        $this->loadFixtures('Users');
+
+        $this->assertEquals(1, $this->object->update(1, [
+            'country_id' => 3,
+            'username' => 'milesj',
+            'company' => 'Titon Project' // Invalid
+        ]));
+
+        $this->assertEquals(new Entity([
+            'id' => 1,
+            'country_id' => 3,
+            'username' => 'milesj',
+            'password' => '1Z5895jf72yL77h',
+            'email' => 'miles@email.com',
+            'firstName' => 'Miles',
+            'lastName' => 'Johnson',
+            'age' => 25,
+            'created' => '1988-02-26 21:22:34',
+            'modified' => null
+        ]), $this->object->read(1));
     }
 
     public function testUpdateWithExpressions() {
