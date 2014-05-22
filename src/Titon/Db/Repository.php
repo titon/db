@@ -158,9 +158,7 @@ class Repository extends Base implements Listener {
      * @param string $finder
      */
     public function castResults(Event $event, array &$results, $finder) {
-        $schema = $this->getSchema()->getColumns();
-
-        if ($schema) {
+        if ($columns = $this->getSchema()->getColumns()) {
             $driver = $this->getDriver();
 
             // TODO - Type cast the results first
@@ -168,8 +166,8 @@ class Repository extends Base implements Listener {
             // Was thinking of using events on the driver, but no access to the repository or schema...
             foreach ($results as $i => $result) {
                 foreach ($result as $field => $value) {
-                    if (isset($schema[$field])) {
-                        $results[$i][$field] = $driver->getType($schema[$field]['type'])->from($value);
+                    if (isset($columns[$field])) {
+                        $results[$i][$field] = $driver->getType($columns[$field]['type'])->from($value);
                     }
                 }
             }
@@ -207,17 +205,18 @@ class Repository extends Base implements Listener {
      * @uses Titon\Utility\Hash
      *
      * @param array $data Multi-dimensional array of records
-     * @param bool $hasPk If true will allow primary key fields, else will remove them
+     * @param bool $allowPk If true will allow primary key fields, else will remove them
      * @param array $options
      * @return int The count of records inserted
      */
-    public function createMany(array $data, $hasPk = false, array $options = []) {
+    public function createMany(array $data, $allowPk = false, array $options = []) {
         $pk = $this->getPrimaryKey();
+        $columns = $this->getSchema()->getColumns();
         $records = [];
         $defaults = [];
 
-        if ($schema = $this->getSchema()) {
-            foreach ($schema->getColumns() as $key => $column) {
+        if ($columns) {
+            foreach ($columns as $key => $column) {
                 $defaults[$key] = array_key_exists('default', $column) ? $column['default'] : '';
             }
 
@@ -227,8 +226,14 @@ class Repository extends Base implements Listener {
         foreach ($data as $record) {
             $record = Hash::merge($defaults, $record);
 
-            if (!$hasPk) {
+            // Remove primary key
+            if (!$allowPk) {
                 unset($record[$pk]);
+            }
+
+            // Filter out invalid columns
+            if ($columns) {
+                $record = array_intersect_key($record, $columns);
             }
 
             $records[] = $record;
@@ -349,6 +354,23 @@ class Repository extends Base implements Listener {
      */
     public function exists($id) {
         return (bool) $this->select()->where($this->getPrimaryKey(), $id)->count();
+    }
+
+    /**
+     * Filter out invalid columns before a save operation.
+     *
+     * @param \Titon\Event\Event $event
+     * @param int|int[] $id
+     * @param array $data
+     * @param string $type
+     * @return bool
+     */
+    public function filterData(Event $event, $id, array &$data, $type) {
+        if ($columns = $this->getSchema()->getColumns()) {
+            $data = array_intersect_key($data, $columns);
+        }
+
+        return true;
     }
 
     /**
@@ -717,7 +739,8 @@ class Repository extends Base implements Listener {
      */
     public function registerEvents() {
         return [
-            'db.postFind' => ['method' => 'castResults', 'priority' => 1]
+            'db.postFind' => ['method' => 'castResults', 'priority' => 1],
+            'db.preSave' => ['method' => 'filterData', 'priority' => 1]
         ];
     }
 
