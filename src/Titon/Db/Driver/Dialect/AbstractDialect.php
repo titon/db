@@ -1089,6 +1089,12 @@ abstract class AbstractDialect extends Base implements Dialect {
      * {@inheritdoc}
      */
     public function quote($value) {
+        if ($value === '') {
+            return '';
+        } else if ($value === '*') {
+            return '*';
+        }
+
         if (strpos($value, '.') !== false) {
             list($table, $field) = explode('.', $value);
 
@@ -1131,7 +1137,7 @@ abstract class AbstractDialect extends Base implements Dialect {
     protected function _quote($value) {
         $char = $this->getConfig('quoteCharacter');
 
-        return $char . trim($value, $char) . $char;
+        return $char . str_replace($char, '', $value) . $char;
     }
 
 }
