@@ -222,6 +222,16 @@ class Query {
     }
 
     /**
+     * Perform a `AVG` aggregation against the defined field and return the calculated value.
+     *
+     * @param string $field
+     * @return int
+     */
+    public function avg($field) {
+        return $this->getRepository()->aggregate($this, __FUNCTION__, $field);
+    }
+
+    /**
      * Bind a Closure callback to this query and execute it.
      *
      * @param \Closure $callback
@@ -263,9 +273,7 @@ class Query {
     public function count() {
         $repo = $this->getRepository();
 
-        $this->fields(Query::func('COUNT', [$repo->getPrimaryKey() => Func::FIELD]))->limit(0);
-
-        return $repo->count($this);
+        return $repo->aggregate($this->limit(0), __FUNCTION__, $repo->getPrimaryKey());
     }
 
     /**
@@ -646,6 +654,26 @@ class Query {
     }
 
     /**
+     * Perform a `MAX` aggregation against the defined field and return the calculated value.
+     *
+     * @param string $field
+     * @return int
+     */
+    public function max($field) {
+        return $this->getRepository()->aggregate($this, __FUNCTION__, $field);
+    }
+
+    /**
+     * Perform a `MIN` aggregation against the defined field and return the calculated value.
+     *
+     * @param string $field
+     * @return int
+     */
+    public function min($field) {
+        return $this->getRepository()->aggregate($this, __FUNCTION__, $field);
+    }
+
+    /**
      * Set the record offset.
      *
      * @param int $offset
@@ -782,6 +810,16 @@ class Query {
         $query->fields(func_get_args());
 
         return $query;
+    }
+
+    /**
+     * Perform a `SUM` aggregation against the defined field and return the calculated value.
+     *
+     * @param string $field
+     * @return int
+     */
+    public function sum($field) {
+        return $this->getRepository()->aggregate($this, __FUNCTION__, $field);
     }
 
     /**

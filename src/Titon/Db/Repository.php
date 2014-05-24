@@ -20,6 +20,7 @@ use Titon\Db\Finder\FirstFinder;
 use Titon\Db\Finder\AllFinder;
 use Titon\Db\Finder\ListFinder;
 use Titon\Db\Query;
+use Titon\Db\Query\Func;
 use Titon\Event\Event;
 use Titon\Event\Listener;
 use Titon\Event\Traits\Emittable;
@@ -151,6 +152,32 @@ class Repository extends Base implements Listener {
     }
 
     /**
+     * Perform an aggregation on the database and return the calculated value.
+     * The currently supported aggregates are `avg`, `count`, `min`, `max`, and `sum`.
+     *
+     * @param \Titon\Db\Query $query
+     * @param string $function
+     * @param string $field
+     * @return int
+     */
+    public function aggregate(Query $query, $function, $field) {
+        $query->fields(
+            Query::func(strtoupper($function), [$field => Func::FIELD])->asAlias('aggregate')
+        );
+
+        $results = $this->getDriver()
+            ->setContext('read')
+            ->executeQuery($query)
+            ->find();
+
+        if (isset($results[0])) {
+            return (int) $results[0]['aggregate'];
+        }
+
+        return 0;
+    }
+
+    /**
      * Type cast the results after a find operation.
      *
      * @param \Titon\Event\Event $event
@@ -172,16 +199,6 @@ class Repository extends Base implements Listener {
                 }
             }
         }
-    }
-
-    /**
-     * Return a count of results from the query.
-     *
-     * @param \Titon\Db\Query $query
-     * @return int
-     */
-    public function count(Query $query) {
-        return $this->getDriver()->executeQuery($query)->count();
     }
 
     /**

@@ -881,7 +881,7 @@ class RepositoryTest extends TestCase {
         ]), $query->all());
     }
 
-    public function testSelectCount() {
+    public function testSelectAggregateCount() {
         $this->loadFixtures('Books');
 
         $book = new Book();
@@ -894,6 +894,58 @@ class RepositoryTest extends TestCase {
 
         $query->where('name', 'like', '%prince%');
         $this->assertEquals(1, $query->count());
+    }
+
+    public function testSelectAggregateAvg() {
+        $this->loadFixtures('Orders');
+
+        $order = new Order();
+        $query = $order->select();
+
+        $this->assertEquals(16, $query->avg('quantity'));
+
+        $query->where('status', 'delivered');
+
+        $this->assertEquals(15, $query->avg('quantity'));
+    }
+
+    public function testSelectAggregateMin() {
+        $this->loadFixtures('Orders');
+
+        $order = new Order();
+        $query = $order->select();
+
+        $this->assertEquals(1, $query->min('quantity'));
+
+        $query->where('status', 'delivered');
+
+        $this->assertEquals(9, $query->min('quantity'));
+    }
+
+    public function testSelectAggregateMax() {
+        $this->loadFixtures('Orders');
+
+        $order = new Order();
+        $query = $order->select();
+
+        $this->assertEquals(33, $query->max('quantity'));
+
+        $query->where('status', 'delivered');
+
+        $this->assertEquals(20, $query->max('quantity'));
+    }
+
+    public function testSelectAggregateSum() {
+        $this->loadFixtures('Orders');
+
+        $order = new Order();
+        $query = $order->select();
+
+        $this->assertEquals(490, $query->sum('quantity'));
+
+        $query->where('status', 'delivered');
+
+        $this->assertEquals(94, $query->sum('quantity'));
     }
 
     public function testSelectLike() {

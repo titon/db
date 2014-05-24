@@ -56,7 +56,3 @@ Supported database engines are packaged as individual driver packages, which are
 
 * PHP 5.4.0
     * PDO
-
-### Upcoming Features ###
-
-* Built-in aggregate methods
