@@ -40,15 +40,12 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
     }
 
     /**
-     * Override the original get method to execute closure values.
-     * Will allow for lazy-loaded properties to be fetched.
-     *
-     * @param string $key
-     * @return mixed
+     * {@inheritdoc}
      */
-    public function get($key) {
-        $value = isset($this->_data[$key]) ? $this->_data[$key] : null;
+    public function get($key, $default = null) {
+        $value = $this->has($key) ? $this->_data[$key] : $default;
 
+        // Execute closure to trigger any lazy-loaded values
         if ($value instanceof Closure) {
             $value = call_user_func($value);
             $this->set($key, $value);
@@ -58,12 +55,40 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function has($key) {
+        return isset($this->_data[$key]);
+    }
+
+    /**
      * Map data by storing the raw value and setting public properties.
      *
      * @param array $data
+     * @return $this
      */
     public function mapData(array $data) {
         $this->_data = $data;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function remove($key) {
+        unset($this->_data[$key]);
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function set($key, $value = null) {
+        $this->_data[$key] = $value;
+
+        return $this;
     }
 
     /**
@@ -99,12 +124,21 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
     public function toArray() {
         $data = [];
 
-        // Loop and trigger any closures
-        foreach ($this->keys() as $key) {
-            $data[$key] = $this->get($key);
+        foreach ($this->_data as $key => $value) {
+            if ($value instanceof Closure) {
+                $value = call_user_func($value);
+                $this->set($key, $value);
+            }
+
+            if ($value instanceof Arrayable) {
+                $data[$key] = $value->toArray();
+
+            } else {
+                $data[$key] = $value;
+            }
         }
 
-        return $this->_toArray($data);
+        return $data;
     }
 
     /**
@@ -112,30 +146,6 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
      */
     public function toJson($options = 0) {
         return json_encode($this, $options);
-    }
-
-    /**
-     * Apply array casting recursively.
-     *
-     * @param mixed $data
-     * @return array
-     */
-    protected function _toArray($data) {
-        $array = [];
-
-        foreach ($data as $key => $value) {
-            if ($value instanceof Arrayable) {
-                $array[$key] = $value->toArray();
-
-            } else if (is_array($value)) {
-                $array[$key] = $this->_toArray($value);
-
-            } else {
-                $array[$key] = $value;
-            }
-        }
-
-        return $array;
     }
 
 }
