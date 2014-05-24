@@ -119,6 +119,46 @@ abstract class AbstractDriver extends Base implements Driver {
     }
 
     /**
+     * A helper method for executing a query (through a closure) and caching the result.
+     * Before the query is executed, the cache is checked for its existence by a key.
+     * If a cache is found, return it, else fetch a new result and cache it.
+     *
+     * @param string|array $cacheKey
+     * @param \Closure $callback
+     * @param string|int $cacheLength
+     * @return mixed
+     */
+    public function cacheQuery($cacheKey, Closure $callback, $cacheLength = '+1 hour') {
+        $storage = $this->getStorage();
+
+        // Use the storage engine first
+        if ($cacheKey) {
+            if ($storage && $storage->has($cacheKey)) {
+                return $storage->get($cacheKey);
+
+            // Fallback to driver cache
+            // This is used to cache duplicate queries
+            } else if ($this->hasCache($cacheKey)) {
+                return $this->getCache($cacheKey);
+            }
+        }
+
+        // Execute the query and grab the result
+        $result = call_user_func($callback, $this);
+
+        // Cache the result and return
+        if ($cacheKey) {
+            if ($storage) {
+                $storage->set($cacheKey, $result, $cacheLength);
+            } else {
+                $this->setCache($cacheKey, $result);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function disconnect($flush = false) {

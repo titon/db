@@ -109,8 +109,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
      * {@inheritdoc}
      */
     public function describeTable($table) {
-        return $this->cache([__METHOD__, $table], function() use ($table) {
-            $columns = $this->executeQuery('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->find();
+        return $this->cacheQuery([__METHOD__, $table], function(AbstractPdoDriver $driver) use ($table) {
+            $columns = $driver->executeQuery('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$driver->getDatabase(), $table])->find();
             $schema = [];
 
             if (!$columns) {
@@ -132,7 +132,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
                 }
 
                 // Inherit type defaults
-                $data = $this->getType($type)->getDefaultOptions();
+                $data = $driver->getType($type)->getDefaultOptions();
 
                 // Overwrite with custom
                 $data = [
@@ -167,7 +167,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
             }
 
             return $schema;
-        });
+        }, '+1 year');
     }
 
     /**
@@ -189,13 +189,11 @@ abstract class AbstractPdoDriver extends AbstractDriver {
     public function executeQuery($query, array $params = []) {
         $this->connect();
 
-        $storage = $this->getStorage();
         $cacheKey = null;
         $cacheLength = null;
-        $isQuery = ($query instanceof Query);
 
         // Determine cache key and lengths
-        if ($isQuery) {
+        if ($query instanceof Query) {
             $cacheKey = $query->getCacheKey();
             $cacheLength = $query->getCacheLength();
 
@@ -203,57 +201,41 @@ abstract class AbstractPdoDriver extends AbstractDriver {
             throw new InvalidQueryException('Query must be a raw SQL string or a Titon\Db\Query instance');
         }
 
-        // Use the storage engine first
-        if ($cacheKey) {
-            if ($storage && $storage->has($cacheKey)) {
-                return $storage->get($cacheKey);
+        // Execute and return result
+        return $this->_result = $this->cacheQuery($cacheKey, function(AbstractPdoDriver $driver) use ($query, $params) {
+            $isQuery = ($query instanceof Query);
 
-            // Fallback to driver cache
-            // This is used to cache duplicate queries
-            } else if ($this->hasCache($cacheKey)) {
-                return $this->getCache($cacheKey);
-            }
-        }
+            // Prepare statement and bind parameters
+            if ($isQuery) {
+                $statement = $driver->buildStatement($query);
+                $binds = $driver->resolveParams($query);
 
-        // Prepare statement and bind parameters
-        if ($isQuery) {
-            $statement = $this->buildStatement($query);
-            $binds = $this->resolveParams($query);
-
-        } else {
-            $statement = $this->getConnection()->prepare($query);
-            $binds = [];
-
-            foreach ($params as $value) {
-                $binds[] = [$value, $this->resolveType($value)];
-            }
-        }
-
-        foreach ($binds as $i => $value) {
-            $statement->bindValue($i + 1, $value[0], $value[1]);
-        }
-
-        $statement->params = $binds;
-
-        // Gather and log result
-        if ($isQuery) {
-            $this->_result = new PdoResultSet($statement, $query);
-        } else {
-            $this->_result = new PdoResultSet($statement);
-        }
-
-        $this->logQuery($this->_result);
-
-        // Return and cache result
-        if ($cacheKey) {
-            if ($storage) {
-                $storage->set($cacheKey, $this->_result, $cacheLength);
             } else {
-                $this->setCache($cacheKey, $this->_result);
-            }
-        }
+                $statement = $driver->getConnection()->prepare($query);
+                $binds = [];
 
-        return $this->_result;
+                foreach ($params as $value) {
+                    $binds[] = [$value, $driver->resolveType($value)];
+                }
+            }
+
+            foreach ($binds as $i => $value) {
+                $statement->bindValue($i + 1, $value[0], $value[1]);
+            }
+
+            $statement->params = $binds;
+
+            // Gather and log result
+            if ($isQuery) {
+                $result = new PdoResultSet($statement, $query);
+            } else {
+                $result = new PdoResultSet($statement);
+            }
+
+            $driver->logQuery($result);
+
+            return $result;
+        }, $cacheLength);
     }
 
     /**
@@ -325,8 +307,8 @@ abstract class AbstractPdoDriver extends AbstractDriver {
     public function listTables($database = null) {
         $database = $database ?: $this->getDatabase();
 
-        return $this->cache([__METHOD__, $database], function() use ($database) {
-            $tables = $this->executeQuery('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->find();
+        return $this->cacheQuery([__METHOD__, $database], function(AbstractPdoDriver $driver) use ($database) {
+            $tables = $driver->executeQuery('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->find();
             $schema = [];
 
             if (!$tables) {
@@ -338,7 +320,7 @@ abstract class AbstractPdoDriver extends AbstractDriver {
             }
 
             return $schema;
-        });
+        }, '+1 year');
     }
 
     /**

@@ -638,7 +638,7 @@ class RepositoryTest extends TestCase {
     }
 
     public function testGetPrimaryKeyNoSchema() {
-        $repo = new Repository(['table' => 'users', 'primaryKey' => null]);
+        $repo = new Repository(['table' => 'profiles', 'primaryKey' => null]);
 
         $this->assertEquals('id', $repo->getPrimaryKey());
     }
