@@ -108,9 +108,9 @@ abstract class AbstractPdoDriver extends AbstractDriver {
     /**
      * {@inheritdoc}
      */
-    public function describeTable($repo) {
-        return $this->cache([__METHOD__, $repo], function() use ($repo) {
-            $columns = $this->executeQuery('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $repo])->find();
+    public function describeTable($table) {
+        return $this->cache([__METHOD__, $table], function() use ($table) {
+            $columns = $this->executeQuery('SELECT * FROM information_schema.columns WHERE table_schema = ? AND table_name = ?;', [$this->getDatabase(), $table])->find();
             $schema = [];
 
             if (!$columns) {
@@ -326,15 +326,15 @@ abstract class AbstractPdoDriver extends AbstractDriver {
         $database = $database ?: $this->getDatabase();
 
         return $this->cache([__METHOD__, $database], function() use ($database) {
-            $repos = $this->executeQuery('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->find();
+            $tables = $this->executeQuery('SELECT * FROM information_schema.tables WHERE table_schema = ?;', [$database])->find();
             $schema = [];
 
-            if (!$repos) {
+            if (!$tables) {
                 return $schema;
             }
 
-            foreach ($repos as $repo) {
-                $schema[] = $repo['TABLE_NAME'];
+            foreach ($tables as $table) {
+                $schema[] = $table['TABLE_NAME'];
             }
 
             return $schema;

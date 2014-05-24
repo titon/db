@@ -8,7 +8,7 @@
 namespace Titon\Db\Exception;
 
 /**
- * Exception thrown for invalid table instances.
+ * Exception thrown for invalid or missing table names.
  *
  * @package Titon\Db\Exception
  */

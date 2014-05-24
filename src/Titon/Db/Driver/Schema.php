@@ -69,11 +69,11 @@ class Schema {
     /**
      * Set the table and add optional columns.
      *
-     * @param string $repo
+     * @param string $table
      * @param array $columns
      */
-    public function __construct($repo, array $columns = []) {
-        $this->_table = $repo;
+    public function __construct($table, array $columns = []) {
+        $this->_table = $table;
 
         $this->addColumns($columns);
     }

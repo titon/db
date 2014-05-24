@@ -50,7 +50,7 @@ interface Type {
     public function getBindingType();
 
     /**
-     * Return an array of default table column options.
+     * Return an array of default column options.
      *
      * @return array
      */

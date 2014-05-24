@@ -84,12 +84,12 @@ class Join {
     /**
      * Set the table to join against.
      *
-     * @param string $repo
+     * @param string $table
      * @param string $alias
      * @return $this
      */
-    public function from($repo, $alias = null) {
-        $this->_table = (string) $repo;
+    public function from($table, $alias = null) {
+        $this->_table = (string) $table;
         $this->asAlias($alias);
 
         return $this;

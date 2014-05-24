@@ -8,7 +8,7 @@
 namespace Titon\Db;
 
 /**
- * Permits a class to interact with a table.
+ * Permits a class to interact with a repository.
  *
  * @package Titon\Db
  */
@@ -22,7 +22,7 @@ trait RepositoryAware {
     protected $_repository;
 
     /**
-     * Return the table.
+     * Return the repository.
      *
      * @return \Titon\Db\Repository
      */
@@ -31,7 +31,7 @@ trait RepositoryAware {
     }
 
     /**
-     * Set the table.
+     * Set the repository.
      *
      * @param \Titon\Db\Repository $repository
      * @return $this

@@ -59,7 +59,7 @@ class Repository extends Base implements Listener {
      *
      * @type array {
      *      @type $string $connection   The connection driver key
-     *      @type $string $repo         Database table name
+     *      @type $string $table        Database table name
      *      @type $string $prefix       Prefix to prepend to the table name
      *      @type $string $primaryKey   The field representing the primary key
      *      @type $string $displayField The field representing a readable label
@@ -455,7 +455,7 @@ class Repository extends Base implements Listener {
     }
 
     /**
-     * Return an alias for the table. Usually the class name.
+     * Return an alias for the repository. Usually the class name.
      *
      * @return string
      */
@@ -776,7 +776,7 @@ class Repository extends Base implements Listener {
     }
 
     /**
-     * Set the schema for this repository table.
+     * Set the schema for this repository.
      *
      * @param \Titon\Db\Driver\Schema $schema
      * @return $this
@@ -875,7 +875,7 @@ class Repository extends Base implements Listener {
     }
 
     /**
-     * Wrap results in the defined entity class and wrap joined data in the originating tables entity class.
+     * Wrap results in the defined entity class and wrap joined data in the base entity class.
      *
      * @param array $results
      * @return \Titon\Db\Entity[]

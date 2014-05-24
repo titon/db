@@ -825,7 +825,7 @@ abstract class AbstractDialect extends Base implements Dialect {
      */
     public function formatTable($table, $alias = null) {
         if (!$table) {
-            throw new InvalidTableException('Missing table for query');
+            throw new InvalidTableException('Missing table name for query');
         }
 
         $output = $this->quote($table);
