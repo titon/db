@@ -657,7 +657,7 @@ class RepositoryTest extends TestCase {
         $schema = $repo->getSchema();
 
         $this->assertInstanceOf('Titon\Db\Driver\Schema', $schema);
-        $this->assertEquals(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], array_keys($schema->getColumns()));
+        $this->assertArraysEqual(['id', 'country_id', 'username', 'password', 'email', 'firstName', 'lastName', 'age', 'created', 'modified'], array_keys($schema->getColumns()));
     }
 
     public function testGetTable() {

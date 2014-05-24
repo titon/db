@@ -49,6 +49,25 @@ class EntityTest extends TestCase {
         $this->assertEquals('Post #1', $this->object->Posts[0]->title);
     }
 
+    public function testSetters() {
+        $this->object->id = 2;
+        $this->assertEquals(2, $this->object->id);
+
+        $this->object['id'] = 3;
+        $this->assertEquals(3, $this->object->id);
+
+        $this->object->set('id', 4);
+        $this->assertEquals(4, $this->object->id);
+    }
+
+    public function testRemovers() {
+        unset($this->object->id);
+        $this->assertFalse($this->object->has('id'));
+
+        $this->object->remove('username');
+        $this->assertFalse($this->object->has('username'));
+    }
+
     public function testArrayAccess() {
         $this->assertEquals(1, $this->object['id']);
         $this->assertEquals(null, $this->object['age']);
@@ -93,6 +112,16 @@ class EntityTest extends TestCase {
         ]);
 
         $this->assertEquals('Miles', $this->object->username);
+    }
+
+    public function testClosureReadingArray() {
+        $this->object = new Entity([
+            'id' => 1,
+            'username' => function() {
+                return 'Miles';
+            }
+        ]);
+
         $this->assertEquals([
             'id' => 1,
             'username' => 'Miles'
