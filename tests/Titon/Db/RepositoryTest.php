@@ -67,7 +67,7 @@ class RepositoryTest extends TestCase {
     public function testCreate() {
         $this->loadFixtures('Users');
 
-        $data = [
+        $last_id = $this->object->create([
             'country_id' => 1,
             'username' => 'ironman',
             'firstName' => 'Tony',
@@ -75,11 +75,39 @@ class RepositoryTest extends TestCase {
             'password' => '7NAks9193KAkjs1',
             'email' => 'ironman@email.com',
             'age' => 38
-        ];
-
-        $last_id = $this->object->create($data);
+        ]);
 
         $this->assertEquals(6, $last_id);
+
+        $this->assertEquals(new Entity([
+            'id' => 6,
+            'country_id' => 1,
+            'username' => 'ironman',
+            'firstName' => 'Tony',
+            'lastName' => 'Stark',
+            'password' => '7NAks9193KAkjs1',
+            'email' => 'ironman@email.com',
+            'age' => 38,
+            'created' => '',
+            'modified' => ''
+        ]), $this->object->read($last_id));
+    }
+
+    public function testCreateEntity() {
+        $this->loadFixtures('Users');
+
+        $last_id = $this->object->create(new Entity([
+            'country_id' => 1,
+            'username' => 'ironman',
+            'firstName' => 'Tony',
+            'lastName' => 'Stark',
+            'password' => '7NAks9193KAkjs1',
+            'email' => 'ironman@email.com',
+            'age' => 38
+        ]));
+
+        $this->assertEquals(6, $last_id);
+
         $this->assertEquals(new Entity([
             'id' => 6,
             'country_id' => 1,
@@ -153,6 +181,24 @@ class RepositoryTest extends TestCase {
             ['country_id' => 2, 'username' => 'superman', 'email' => 'superman@email.com', 'age' => 33, 'created' => '1970-09-18 21:22:34'],
             ['country_id' => 5, 'username' => 'spiderman', 'firstName' => 'Peter', 'lastName' => 'Parker', 'password' => '1Z5895jf72yL77h', 'email' => 'spiderman@email.com', 'age' => 22, 'created' => '1990-01-05 21:22:34'],
             ['country_id' => 4, 'username' => 'wolverine', 'password' => '1Z5895jf72yL77h', 'email' => 'wolverine@email.com'],
+        ]));
+
+        $this->assertEquals(5, $this->object->select()->count());
+    }
+
+    public function testCreateManyEntity() {
+        $this->loadFixtures('Users');
+
+        $this->object->truncate(); // Empty first
+
+        $this->assertEquals(0, $this->object->select()->count());
+
+        $this->assertEquals(5, $this->object->createMany([
+            new Entity(['country_id' => 1, 'username' => 'miles', 'firstName' => 'Miles', 'lastName' => 'Johnson', 'password' => '1Z5895jf72yL77h', 'email' => 'miles@email.com', 'age' => 25, 'created' => '1988-02-26 21:22:34']),
+            new Entity(['country_id' => 3, 'username' => 'batman', 'firstName' => 'Bruce', 'lastName' => 'Wayne', 'created' => '1960-05-11 21:22:34']),
+            new Entity(['country_id' => 2, 'username' => 'superman', 'email' => 'superman@email.com', 'age' => 33, 'created' => '1970-09-18 21:22:34']),
+            new Entity(['country_id' => 5, 'username' => 'spiderman', 'firstName' => 'Peter', 'lastName' => 'Parker', 'password' => '1Z5895jf72yL77h', 'email' => 'spiderman@email.com', 'age' => 22, 'created' => '1990-01-05 21:22:34']),
+            new Entity(['country_id' => 4, 'username' => 'wolverine', 'password' => '1Z5895jf72yL77h', 'email' => 'wolverine@email.com']),
         ]));
 
         $this->assertEquals(5, $this->object->select()->count());
@@ -1877,6 +1923,28 @@ class RepositoryTest extends TestCase {
         ]), $this->object->read(1));
     }
 
+    public function testUpdateEntity() {
+        $this->loadFixtures('Users');
+
+        $this->assertEquals(1, $this->object->update(1, new Entity([
+            'country_id' => 3,
+            'username' => 'milesj'
+        ])));
+
+        $this->assertEquals(new Entity([
+            'id' => 1,
+            'country_id' => 3,
+            'username' => 'milesj',
+            'password' => '1Z5895jf72yL77h',
+            'email' => 'miles@email.com',
+            'firstName' => 'Miles',
+            'lastName' => 'Johnson',
+            'age' => 25,
+            'created' => '1988-02-26 21:22:34',
+            'modified' => null
+        ]), $this->object->read(1));
+    }
+
     public function testUpdateNonExistingRecord() {
         $this->loadFixtures('Users');
 
@@ -2201,6 +2269,14 @@ class RepositoryTest extends TestCase {
         }));
     }
 
+    public function testUpdateManyEntity() {
+        $this->loadFixtures('Users');
+
+        $this->assertEquals(3, $this->object->updateMany(new Entity(['country_id' => null]), function(Query $query) {
+            $query->where('age', '>', 30);
+        }));
+    }
+
     /**
      * @expectedException \Titon\Db\Exception\InvalidQueryException
      */
@@ -2222,6 +2298,18 @@ class RepositoryTest extends TestCase {
         $this->assertTrue($this->object->exists(6));
     }
 
+    public function testUpsertInsertsEntity() {
+        $this->loadFixtures('Users');
+
+        $this->assertFalse($this->object->exists(6));
+
+        $this->assertEquals(6, $this->object->upsert(new Entity([
+            'username' => 'ironman'
+        ])));
+
+        $this->assertTrue($this->object->exists(6));
+    }
+
     public function testUpsertUpdates() {
         $this->loadFixtures('Users');
 
@@ -2231,6 +2319,19 @@ class RepositoryTest extends TestCase {
             'id' => 1,
             'username' => 'ironman'
         ]));
+
+        $this->assertFalse($this->object->exists(6));
+    }
+
+    public function testUpsertUpdatesEntity() {
+        $this->loadFixtures('Users');
+
+        $this->assertFalse($this->object->exists(6));
+
+        $this->assertEquals(1, $this->object->upsert(new Entity([
+            'id' => 1,
+            'username' => 'ironman'
+        ])));
 
         $this->assertFalse($this->object->exists(6));
     }

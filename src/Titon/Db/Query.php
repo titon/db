@@ -23,6 +23,7 @@ use Titon\Db\Query\ExprAware;
 use Titon\Db\Query\FuncAware;
 use Titon\Db\Query\RawExprAware;
 use Titon\Db\RepositoryAware;
+use Titon\Type\Contract\Arrayable;
 use \Closure;
 
 /**
@@ -288,10 +289,18 @@ class Query {
      * Set the data to use in an update, insert, or create index statement.
      * We should also extract data to later bind during a prepared statement.
      *
-     * @param array $data
+     * @param array|\Titon\Type\Contract\Arrayable $data
      * @return $this
+     * @throws \Titon\Db\Exception\InvalidArgumentException
      */
-    public function data(array $data) {
+    public function data($data) {
+        if ($data instanceof Arrayable) {
+            $data = $data->toArray();
+
+        } else if (!is_array($data)) {
+            throw new InvalidArgumentException('Data passed must be an array or extend the Titon\Type\Contract\Arrayable interface');
+        }
+
         $binds = [];
         $rows = $data;
 
@@ -795,10 +804,10 @@ class Query {
      * Pass the query to the repository to interact with the database.
      * Return the count of how many records were affected.
      *
-     * @param array $data
+     * @param array|\Titon\Type\Contract\Arrayable $data
      * @return int
      */
-    public function save(array $data = []) {
+    public function save($data = null) {
         if ($data) {
             $this->data($data);
         }

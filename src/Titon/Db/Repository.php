@@ -24,6 +24,7 @@ use Titon\Db\Query\Func;
 use Titon\Event\Event;
 use Titon\Event\Listener;
 use Titon\Event\Traits\Emittable;
+use Titon\Type\Contract\Arrayable;
 use Titon\Utility\Hash;
 use \Closure;
 
@@ -206,11 +207,11 @@ class Repository extends Base implements Listener {
      * If any related data exists, insert new records after joining them to the original record.
      * Validate schema data and related data structure before inserting.
      *
-     * @param array $data
+     * @param array|\Titon\Type\Contract\Arrayable $data
      * @param array $options
      * @return int The record ID on success, 0 on failure
      */
-    public function create(array $data, array $options = []) {
+    public function create($data, array $options = []) {
         return $this->_processSave($this->query(Query::INSERT), null, $data, $options);
     }
 
@@ -241,6 +242,13 @@ class Repository extends Base implements Listener {
         }
 
         foreach ($data as $record) {
+
+            // Convert from an entity
+            if ($record instanceof Arrayable) {
+                $record = $record->toArray();
+            }
+
+            // Merge in defaults
             $record = Hash::merge($defaults, $record);
 
             // Remove primary key
@@ -816,11 +824,11 @@ class Repository extends Base implements Listener {
      * Update a database record based on ID.
      *
      * @param int $id
-     * @param array $data
+     * @param array|\Titon\Type\Contract\Arrayable $data
      * @param array $options
      * @return int The count of records updated
      */
-    public function update($id, array $data, array $options = []) {
+    public function update($id, $data, array $options = []) {
         $query = $this->query(Query::UPDATE)->where($this->getPrimaryKey(), $id);
 
         return $this->_processSave($query, $id, $data, $options);
@@ -829,13 +837,13 @@ class Repository extends Base implements Listener {
     /**
      * Update multiple records with conditions.
      *
-     * @param array $data
+     * @param array|\Titon\Type\Contract\Arrayable $data
      * @param \Closure $conditions
      * @param array $options
      * @return int The count of records updated
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
-    public function updateMany(array $data, Closure $conditions, array $options = []) {
+    public function updateMany($data, Closure $conditions, array $options = []) {
         $pk = $this->getPrimaryKey();
         $ids = $this->select($pk)->bindCallback($conditions)->lists($pk, $pk);
         $query = $this->query(Query::UPDATE)->bindCallback($conditions);
@@ -853,12 +861,12 @@ class Repository extends Base implements Listener {
     /**
      * Either update or insert a record by checking for ID and record existence.
      *
-     * @param array $data
+     * @param array|\Titon\Type\Contract\Arrayable $data
      * @param int $id
      * @param array $options
      * @return int The record ID on success, 0 on failure
      */
-    public function upsert(array $data, $id = null, array $options = []) {
+    public function upsert($data, $id = null, array $options = []) {
         $pk = $this->getPrimaryKey();
         $update = false;
 
@@ -982,7 +990,7 @@ class Repository extends Base implements Listener {
      *
      * @param \Titon\Db\Query $query
      * @param int|int[] $id
-     * @param array $data
+     * @param array|\Titon\Type\Contract\Arrayable $data
      * @param mixed $options {
      *      @type bool $preCallback     Will trigger before callbacks
      *      @type bool $postCallback    Will trigger after callbacks
@@ -993,13 +1001,18 @@ class Repository extends Base implements Listener {
      *      - The ID of the record if a single insert
      *      - 0 if save operation failed
      */
-    protected function _processSave(Query $query, $id, array $data, $options = []) {
+    protected function _processSave(Query $query, $id, $data, $options = []) {
         $type = $query->getType();
         $isCreate = ($type === Query::INSERT);
         $options = $options + [
             'preCallback' => true,
             'postCallback' => true
         ];
+
+        // Convert from an entity
+        if ($data instanceof Arrayable) {
+            $data = $data->toArray();
+        }
 
         if ($options['preCallback']) {
             $event = $this->emit('db.preSave', [$id, &$data, $type]);

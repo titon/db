@@ -59,13 +59,27 @@ class QueryTest extends TestCase {
     }
 
     public function testData() {
-        $query = new Query(Query::INSERT, new User());
+        $this->object->data(['id' => 1, 'title' => 'Titon']);
+        $this->assertEquals(['id' => 1, 'title' => 'Titon'], $this->object->getData());
 
-        $query->data(['id' => 1, 'title' => 'Titon']);
-        $this->assertEquals(['id' => 1, 'title' => 'Titon'], $query->getData());
+        $this->object->data(['username' => 'miles']);
+        $this->assertEquals(['username' => 'miles'], $this->object->getData());
+    }
 
-        $query->data(['username' => 'miles']);
-        $this->assertEquals(['username' => 'miles'], $query->getData());
+    public function testDataArrayable() {
+        $this->object->data(new Entity([
+            'id' => 1,
+            'title' => 'Titon'
+        ]));
+
+        $this->assertEquals(['id' => 1, 'title' => 'Titon'], $this->object->getData());
+    }
+
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidArgumentException
+     */
+    public function testDataErrorsInvalidType() {
+        $this->object->data(true);
     }
 
     public function testDistinct() {
