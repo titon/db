@@ -102,20 +102,20 @@ class DialectTest extends TestCase {
 
     public function testBuildCreateIndex() {
         $query = new Query(Query::CREATE_INDEX, new User());
-        $query->fields('profile_id')->from('users')->asAlias('idx');
+        $query->data(['profile_id'])->from('users')->asAlias('idx');
 
         $this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")?\)/', $this->object->buildCreateIndex($query));
 
-        $query->fields(['profile_id' => 5]);
+        $query->data(['profile_id' => 5]);
         $this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")?\(5\)\)/', $this->object->buildCreateIndex($query));
 
-        $query->fields(['profile_id' => 'asc', 'other_id']);
+        $query->data(['profile_id' => 'asc', 'other_id']);
         $this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")? ASC, (`|\")?other_id(`|\")?\)/', $this->object->buildCreateIndex($query));
 
-        $query->fields(['profile_id' => ['length' => 5, 'order' => 'desc']]);
+        $query->data(['profile_id' => ['length' => 5, 'order' => 'desc']]);
         $this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")?\(5\) DESC\)/', $this->object->buildCreateIndex($query));
 
-        $query->fields(['profile_id' => ['collate' => 'utf8_general_ci']]);
+        $query->data(['profile_id' => ['collate' => 'utf8_general_ci']]);
         $this->assertRegExp('/CREATE\s+INDEX (`|\")?idx(`|\")? ON (`|\")?users(`|\")? \((`|\")?profile_id(`|\")? COLLATE utf8_general_ci\)/', $this->object->buildCreateIndex($query));
     }
 
@@ -206,13 +206,13 @@ class DialectTest extends TestCase {
 
     public function testBuildInsert() {
         $query = new Query(Query::INSERT, new User());
-        $query->from('foobar')->fields([
+        $query->from('foobar')->data([
             'username' => 'miles'
         ]);
 
         $this->assertRegExp('/INSERT\s+INTO (`|\")?foobar(`|\")? \((`|\")?username(`|\")?\) VALUES \(\?\);/', $this->object->buildInsert($query));
 
-        $query->fields([
+        $query->data([
             'email' => 'email@domain.com',
             'website' => 'http://titon.io'
         ]);
@@ -222,7 +222,7 @@ class DialectTest extends TestCase {
 
     public function testBuildMultiInsert() {
         $query = new Query(Query::MULTI_INSERT, new User());
-        $query->from('foobar')->fields([
+        $query->from('foobar')->data([
             ['username' => 'miles', 'firstName' => 'Miles', 'lastName' => 'Johnson'],
             ['username' => 'batman', 'firstName' => 'Bruce', 'lastName' => 'Wayne'],
             ['username' => 'superman', 'firstName' => 'Clark', 'lastName' => 'Kent'],
@@ -337,7 +337,7 @@ class DialectTest extends TestCase {
         $query = new Query(Query::UPDATE, new User());
         $query->from('foobar');
 
-        $query->fields(['username' => 'miles']);
+        $query->data(['username' => 'miles']);
         $this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?username(`|\")? = \?;/', $this->object->buildUpdate($query));
 
         $query->limit(15);
@@ -346,7 +346,7 @@ class DialectTest extends TestCase {
         $query->orderBy('username', 'desc');
         $this->assertRegExp('/UPDATE\s+(`|\")?foobar(`|\")?\s+SET (`|\")?username(`|\")? = \?\s+ORDER BY (`|\")?username(`|\")? DESC\s+LIMIT 15;/', $this->object->buildUpdate($query));
 
-        $query->fields([
+        $query->data([
             'email' => 'email@domain.com',
             'website' => 'http://titon.io'
         ]);
@@ -367,18 +367,18 @@ class DialectTest extends TestCase {
      * @expectedException \Titon\Db\Exception\InvalidTableException
      */
     public function testBuildUpdateErrorsNoTable() {
-        $this->object->buildUpdate((new Query(Query::UPDATE, new User()))->fields(['username' => 'miles']));
+        $this->object->buildUpdate((new Query(Query::UPDATE, new User()))->data(['username' => 'miles']));
     }
 
     public function testBuildUpdateJoins() {
         $user = new User();
-        $query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
+        $query = $user->query(Query::UPDATE)->data(['username' => 'foo']);
         $query->rightJoin(['profiles', 'Profile'], [], ['User.id' => 'Profile.user_id']);
 
         $this->assertRegExp('/UPDATE\s+(`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?\s+SET (`|\")?User(`|\")?\.(`|\")?username(`|\")? = \?;/', $this->object->buildUpdate($query));
 
         // With fields
-        $query = $user->query(Query::UPDATE)->fields(['username' => 'foo']);
+        $query = $user->query(Query::UPDATE)->data(['username' => 'foo']);
         $query->rightJoin(['profiles', 'Profile'], ['avatar' => 'image.jpg'], ['User.id' => 'Profile.user_id']);
 
         $this->assertRegExp('/UPDATE\s+(`|\")?users(`|\")? AS (`|\")?User(`|\")? RIGHT JOIN (`|\")?profiles(`|\")? AS (`|\")?Profile(`|\")? ON (`|\")?User(`|\")?\.(`|\")?id(`|\")? = (`|\")?Profile(`|\")?\.(`|\")?user_id(`|\")?\s+SET (`|\")?User(`|\")?\.(`|\")?username(`|\")? = \?, (`|\")?Profile(`|\")?\.(`|\")?avatar(`|\")? = \?;/', $this->object->buildUpdate($query));
@@ -603,12 +603,12 @@ class DialectTest extends TestCase {
         ];
 
         $query = new Query(Query::INSERT, new User());
-        $query->fields($fields);
+        $query->data($fields);
 
         $this->assertRegExp('/\((`|\")?id(`|\")?, (`|\")?username(`|\")?, (`|\")?email(`|\")?\)/', $this->object->formatFields($query));
 
         $query = new Query(Query::UPDATE, new User());
-        $query->fields($fields);
+        $query->data($fields);
 
         $this->assertRegExp('/(`|\")?id(`|\")? = \?, (`|\")?username(`|\")? = \?, (`|\")?email(`|\")? = \?/', $this->object->formatFields($query));
 
@@ -913,7 +913,7 @@ class DialectTest extends TestCase {
 
     public function testFormatValues() {
         $query = new Query(Query::INSERT, new User());
-        $query->fields([
+        $query->data([
             'id' => 1,
             'username' => 'miles',
             'email' => 'email@domain.com'

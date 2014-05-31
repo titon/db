@@ -15,7 +15,7 @@ Set the fields to fetch, or the data to insert/update.
 ```php
 $query->fields('id', 'username'); // select
 $query->fields(['created'], true); // select merge or overwrite fields
-$query->fields(['username' => 'foo']); // update or insert
+$query->data(['username' => 'foo']); // update or insert
 ```
 
 Set the table to query. Defaults to the table name.

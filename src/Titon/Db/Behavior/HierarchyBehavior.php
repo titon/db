@@ -307,22 +307,20 @@ class HierarchyBehavior extends AbstractBehavior {
 
         // Move following nodes up
         $repo->query(Query::UPDATE)
-            ->fields([
-                $left => Query::expr($left, '-', 2),
-                $right => Query::expr($right, '-', 2)
-            ])
             ->where($left, '>', $nodeRight)
             ->where($right, '<=', $newNodeRight)
-            ->save();
+            ->save([
+                $left => Query::expr($left, '-', 2),
+                $right => Query::expr($right, '-', 2)
+            ]);
 
         // Move node down
         $repo->query(Query::UPDATE)
-            ->fields([
+            ->where($repo->getPrimaryKey(), $id)
+            ->save([
                 $left => $newNodeLeft,
                 $right => $newNodeRight
-            ])
-            ->where($repo->getPrimaryKey(), $id)
-            ->save();
+            ]);
 
         return true;
     }
@@ -367,22 +365,20 @@ class HierarchyBehavior extends AbstractBehavior {
 
         // Move previous nodes down
         $repo->query(Query::UPDATE)
-            ->fields([
-                $left => Query::expr($left, '+', 2),
-                $right => Query::expr($right, '+', 2)
-            ])
             ->where($left, '>=', $newNodeLeft)
             ->where($right, '<', $nodeLeft)
-            ->save();
+            ->save([
+                $left => Query::expr($left, '+', 2),
+                $right => Query::expr($right, '+', 2)
+            ]);
 
         // Move node up
         $repo->query(Query::UPDATE)
-            ->fields([
+            ->where($repo->getPrimaryKey(), $id)
+            ->save([
                 $left => $newNodeLeft,
                 $right => $newNodeRight
-            ])
-            ->where($repo->getPrimaryKey(), $id)
-            ->save();
+            ]);
 
         return true;
     }
@@ -426,9 +422,10 @@ class HierarchyBehavior extends AbstractBehavior {
         }
 
         $repo->query(Query::UPDATE)
-            ->fields($data + [$this->getConfig('parentField') => $parent_id])
             ->where($repo->getPrimaryKey(), $id)
-            ->save();
+            ->save($data + [
+                $this->getConfig('parentField') => $parent_id
+            ]);
 
         $this->_insertNode($id, $data[$left]);
 
@@ -590,15 +587,13 @@ class HierarchyBehavior extends AbstractBehavior {
         $repo = $this->getRepository();
 
         foreach ([$this->getConfig('leftField'), $this->getConfig('rightField')] as $field) {
-            $query = $repo->query(Query::UPDATE)
-                ->fields([$field => Query::expr($field, '+', 2)])
-                ->where($field, '>=', $index);
+            $query = $repo->query(Query::UPDATE)->where($field, '>=', $index);
 
             if ($id) {
                 $query->where($repo->getPrimaryKey(), '!=', $id);
             }
 
-            $query->save();
+            $query->save([$field => Query::expr($field, '+', 2)]);
         }
     }
 
@@ -612,15 +607,13 @@ class HierarchyBehavior extends AbstractBehavior {
         $repo = $this->getRepository();
 
         foreach ([$this->getConfig('leftField'), $this->getConfig('rightField')] as $field) {
-            $query = $repo->query(Query::UPDATE)
-                ->fields([$field => Query::expr($field, '-', 2)])
-                ->where($field, '>=', $index);
+            $query = $repo->query(Query::UPDATE)->where($field, '>=', $index);
 
             if ($id) {
                 $query->where($repo->getPrimaryKey(), '!=', $id);
             }
 
-            $query->save();
+            $query->save([$field => Query::expr($field, '-', 2)]);
         }
     }
 
@@ -652,12 +645,11 @@ class HierarchyBehavior extends AbstractBehavior {
         // Update parent node
         if ($parent_id) {
             $repo->query(Query::UPDATE)
-                ->fields([
+                ->where($pk, $parent_id)
+                ->save([
                     $this->getConfig('leftField') => $left,
                     $this->getConfig('rightField') => $right
-                ])
-                ->where($pk, $parent_id)
-                ->save();
+                ]);
         }
 
         return $right + 1;

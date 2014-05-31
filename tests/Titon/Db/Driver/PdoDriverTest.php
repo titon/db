@@ -403,7 +403,7 @@ class PdoDriverTest extends TestCase {
 
         // Include fields
         $query2 = new Query(Query::UPDATE, $this->table);
-        $query2->fields([
+        $query2->data([
             'username' => 'miles',
             'age' => 26
         ])->where('id', 666);
@@ -416,7 +416,7 @@ class PdoDriverTest extends TestCase {
 
         // All at once!
         $query3 = new Query(Query::UPDATE, $this->table);
-        $query3->fields([
+        $query3->data([
             'username' => 'miles',
             'age' => 26
         ])->orWhere(function(Query\Predicate $where) {
@@ -445,7 +445,7 @@ class PdoDriverTest extends TestCase {
         $time = time();
 
         $query = new Query(Query::MULTI_INSERT, $this->table);
-        $query->fields([
+        $query->data([
             ['username' => 'foo', 'age' => 16, 'created' => null],
             ['username' => 'bar', 'age' => 33, 'created' => new \DateTime()]
         ]);

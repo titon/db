@@ -297,13 +297,11 @@ class SchemaTest extends TestCase {
         ], $this->object->getForeignKeys());
     }
 
+    /**
+     * @expectedException \Titon\Db\Exception\InvalidArgumentException
+     */
     public function testForeignKeyFailNoReference() {
-        try {
-            $this->object->addForeign('column1', ['constraint' => 'foo']);
-            $this->assertTrue(false);
-        } catch (Exception $e) {
-            $this->assertTrue(true);
-        }
+        $this->object->addForeign('column1', ['constraint' => 'foo']);
     }
 
     public function testForeignKeyConstraint() {

@@ -80,6 +80,14 @@ class Query {
     protected $_compounds = [];
 
     /**
+     * The data to save during an update or insert.
+     * Can also be used as meta data for other query types.
+     *
+     * @type array
+     */
+    protected $_data = [];
+
+    /**
      * The fields to query for. An empty array will query all fields.
      *
      * @type string[]
@@ -277,6 +285,36 @@ class Query {
     }
 
     /**
+     * Set the data to use in an update, insert, or create index statement.
+     * We should also extract data to later bind during a prepared statement.
+     *
+     * @param array $data
+     * @return $this
+     */
+    public function data(array $data) {
+        $binds = [];
+        $rows = $data;
+
+        if ($this->getType() !== self::MULTI_INSERT) {
+            $rows = [$rows];
+        }
+
+        foreach ($rows as $row) {
+            foreach ($row as $field => $value) {
+                $binds[] = [
+                    'field' => $field,
+                    'value' => $value
+                ];
+            }
+        }
+
+        $this->setBindings($binds);
+        $this->_data = $data;
+
+        return $this;
+    }
+
+    /**
      * Mark a query with a distinct attribute.
      *
      * @return $this
@@ -317,31 +355,9 @@ class Query {
             $fields = array_merge($this->_fields, $fields);
         }
 
-        $type = $this->getType();
-
         // When doing a select, unique the field list
-        if ($type === self::SELECT) {
+        if ($this->getType() === self::SELECT) {
             $fields = array_values(array_unique($fields, SORT_REGULAR)); // SORT_REGULAR allows for objects
-
-        // When saving data, gather the values to bind
-        } else if (in_array($type, [self::INSERT, self::MULTI_INSERT, self::UPDATE])) {
-            $binds = [];
-            $rows = $fields;
-
-            if ($type !== self::MULTI_INSERT) {
-                $rows = [$rows];
-            }
-
-            foreach ($rows as $row) {
-                foreach ($row as $field => $value) {
-                    $binds[] = [
-                        'field' => $field,
-                        'value' => $value
-                    ];
-                }
-            }
-
-            $this->setBindings($binds);
         }
 
         $this->_fields = $fields;
@@ -431,6 +447,15 @@ class Query {
      */
     public function getCompounds() {
         return $this->_compounds;
+    }
+
+    /**
+     * Return the data to save.
+     *
+     * @return array
+     */
+    public function getData() {
+        return $this->_data;
     }
 
     /**
@@ -770,9 +795,14 @@ class Query {
      * Pass the query to the repository to interact with the database.
      * Return the count of how many records were affected.
      *
+     * @param array $data
      * @return int
      */
-    public function save() {
+    public function save(array $data = []) {
+        if ($data) {
+            $this->data($data);
+        }
+
         return $this->getRepository()->save($this);
     }
 

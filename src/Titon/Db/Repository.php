@@ -285,8 +285,7 @@ class Repository extends Base implements Listener {
             foreach ($schema->getIndexes() as $index => $columns) {
                 $this->query(Query::CREATE_INDEX)
                     ->from($schema->getTable(), $index)
-                    ->fields($columns)
-                    ->save();
+                    ->save($columns);
             }
         }
 
@@ -314,7 +313,7 @@ class Repository extends Base implements Listener {
             $data[$field] = Query::expr($field, '-', $step);
         }
 
-        return $query->fields($data)->save();
+        return $query->save($data);
     }
 
     /**
@@ -719,7 +718,7 @@ class Repository extends Base implements Listener {
             $data[$field] = Query::expr($field, '+', $step);
         }
 
-        return $query->fields($data)->save();
+        return $query->save($data);
     }
 
     /**
@@ -1011,15 +1010,12 @@ class Repository extends Base implements Listener {
             }
         }
 
-        // Set data
-        $query->fields($data);
-
         // Update the connection context
         $driver = $this->getDriver();
         $driver->setContext('write');
 
         // Execute the query
-        $count = $query->save();
+        $count = $query->save($data);
 
         // Exit early if save failed
         if (!$count) {

@@ -58,6 +58,16 @@ class QueryTest extends TestCase {
         $this->assertEquals(null, $this->object->getCacheLength());
     }
 
+    public function testData() {
+        $query = new Query(Query::INSERT, new User());
+
+        $query->data(['id' => 1, 'title' => 'Titon']);
+        $this->assertEquals(['id' => 1, 'title' => 'Titon'], $query->getData());
+
+        $query->data(['username' => 'miles']);
+        $this->assertEquals(['username' => 'miles'], $query->getData());
+    }
+
     public function testDistinct() {
         $this->assertEquals([], $this->object->getAttributes());
         $this->object->distinct();
@@ -105,16 +115,6 @@ class QueryTest extends TestCase {
         // Override
         $this->object->fields(['username', 'created']);
         $this->assertEquals(['username', 'created'], $this->object->getFields());
-    }
-
-    public function testFieldsInsert() {
-        $query = new Query(Query::INSERT, new User());
-
-        $query->fields(['id' => 1, 'title' => 'Titon']);
-        $this->assertEquals(['id' => 1, 'title' => 'Titon'], $query->getFields());
-
-        $query->fields(['username' => 'miles'], true);
-        $this->assertEquals(['id' => 1, 'title' => 'Titon', 'username' => 'miles'], $query->getFields());
     }
 
     public function testFieldsAutoPopulateViaJoins() {

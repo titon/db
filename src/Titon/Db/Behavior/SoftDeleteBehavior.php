@@ -137,12 +137,11 @@ class SoftDeleteBehavior extends AbstractBehavior {
         $repo = $this->getRepository();
 
         return $repo->query(Query::UPDATE)
-            ->fields([
+            ->where($repo->getPrimaryKey(), $id)
+            ->save([
                 $this->getConfig('flagField') => true,
                 $this->getConfig('deleteField') => time()
-            ])
-            ->where($repo->getPrimaryKey(), $id)
-            ->save();
+            ]);
     }
 
 }

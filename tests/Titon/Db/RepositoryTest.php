@@ -185,36 +185,36 @@ class RepositoryTest extends TestCase {
         $driver = $stat->getDriver();
 
         // int
-        $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['health' => '100', 'energy' => 200]));
+        $query = $driver->executeQuery($stat->query(Query::INSERT)->data(['health' => '100', 'energy' => 200]));
         $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?health(`|\")?, (`|\")?energy(`|\")?\) VALUES \(100, 200\);$/i", $query->getStatement());
 
         // string
-        $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['name' => 12345]));
+        $query = $driver->executeQuery($stat->query(Query::INSERT)->data(['name' => 12345]));
         $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?name(`|\")?\) VALUES \('12345'\);$/i", $query->getStatement());
 
         // float, double, decimal (they are strings in PDO)
-        $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['damage' => '123.45', 'defense' => 456.78, 'range' => 999.00]));
+        $query = $driver->executeQuery($stat->query(Query::INSERT)->data(['damage' => '123.45', 'defense' => 456.78, 'range' => 999.00]));
         $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?damage(`|\")?, (`|\")?defense(`|\")?, (`|\")?range(`|\")?\) VALUES \('123.45', '456.78', '999'\);$/i", $query->getStatement());
 
         // bool
-        $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['isMelee' => 'true']));
+        $query = $driver->executeQuery($stat->query(Query::INSERT)->data(['isMelee' => 'true']));
         $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?isMelee(`|\")?\) VALUES \(1\);$/i", $query->getStatement());
 
-        $query = $driver->executeQuery($stat->query(Query::INSERT)->fields(['isMelee' => false]));
+        $query = $driver->executeQuery($stat->query(Query::INSERT)->data(['isMelee' => false]));
         $this->assertRegExp("/^INSERT INTO (`|\")?stats(`|\")? \((`|\")?isMelee(`|\")?\) VALUES \(0\);$/i", $query->getStatement());
 
         // datetime
-        $query = $driver->executeQuery($this->object->query(Query::INSERT)->fields(['created' => $time]));
+        $query = $driver->executeQuery($this->object->query(Query::INSERT)->data(['created' => $time]));
         $this->assertRegExp("/^INSERT INTO (`|\")?users(`|\")? \((`|\")?created(`|\")?\) VALUES \('" . $date . "'\);$/i", $query->getStatement());
 
-        $query = $driver->executeQuery($this->object->query(Query::INSERT)->fields(['created' => new DateTime($date)]));
+        $query = $driver->executeQuery($this->object->query(Query::INSERT)->data(['created' => new DateTime($date)]));
         $this->assertRegExp("/^INSERT INTO (`|\")?users(`|\")? \((`|\")?created(`|\")?\) VALUES \('" . $date . "'\);$/i", $query->getStatement());
 
-        $query = $driver->executeQuery($this->object->query(Query::INSERT)->fields(['created' => $date]));
+        $query = $driver->executeQuery($this->object->query(Query::INSERT)->data(['created' => $date]));
         $this->assertRegExp("/^INSERT INTO (`|\")?users(`|\")? \((`|\")?created(`|\")?\) VALUES \('" . $date . "'\);$/i", $query->getStatement());
 
         // null
-        $query = $driver->executeQuery($this->object->query(Query::INSERT)->fields(['created' => null]));
+        $query = $driver->executeQuery($this->object->query(Query::INSERT)->data(['created' => null]));
         $this->assertRegExp("/^INSERT INTO (`|\")?users(`|\")? \((`|\")?created(`|\")?\) VALUES \(NULL\);$/i", $query->getStatement());
     }
 
@@ -1011,7 +1011,7 @@ class RepositoryTest extends TestCase {
     public function testSelectNull() {
         $this->loadFixtures('Users');
 
-        $this->object->query(Query::UPDATE)->fields(['created' => null])->where('country_id', 1)->save();
+        $this->object->query(Query::UPDATE)->data(['created' => null])->where('country_id', 1)->save();
 
         $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'username' => 'miles'])
@@ -1937,7 +1937,7 @@ class RepositoryTest extends TestCase {
         ]), $stat->select('id', 'name', 'health')->orderBy('id', 'asc')->all());
 
         $query = $stat->query(Query::UPDATE);
-        $query->fields(['health' => Query::expr('health', '+', 75)]);
+        $query->data(['health' => Query::expr('health', '+', 75)]);
 
         $this->assertEquals(3, $query->save());
 
@@ -1961,7 +1961,7 @@ class RepositoryTest extends TestCase {
     public function testUpdateMultiple() {
         $this->loadFixtures('Users');
 
-        $this->assertSame(4, $this->object->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', '!=', 1)->save());
+        $this->assertSame(4, $this->object->query(Query::UPDATE)->data(['country_id' => 1])->where('country_id', '!=', 1)->save());
 
         $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'country_id' => 1, 'username' => 'miles']),
@@ -1972,7 +1972,7 @@ class RepositoryTest extends TestCase {
         ]), $this->object->select('id', 'country_id', 'username')->orderBy('id', 'asc')->all());
 
         // No where clause
-        $this->assertSame(5, $this->object->query(Query::UPDATE)->fields(['country_id' => 2])->save());
+        $this->assertSame(5, $this->object->query(Query::UPDATE)->data(['country_id' => 2])->save());
 
         $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'country_id' => 2, 'username' => 'miles']),
@@ -1986,7 +1986,7 @@ class RepositoryTest extends TestCase {
     public function testUpdateMultipleWithLimit() {
         $this->loadFixtures('Users');
 
-        $this->assertSame(2, $this->object->query(Query::UPDATE)->fields(['country_id' => 1])->where('country_id', '!=', 1)->limit(2)->save());
+        $this->assertSame(2, $this->object->query(Query::UPDATE)->data(['country_id' => 1])->where('country_id', '!=', 1)->limit(2)->save());
 
         $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'country_id' => 1, 'username' => 'miles']),
@@ -1997,7 +1997,7 @@ class RepositoryTest extends TestCase {
         ]), $this->object->select('id', 'country_id', 'username')->orderBy('id', 'asc')->all());
 
         // No where clause, offset ignored
-        $this->assertSame(2, $this->object->query(Query::UPDATE)->fields(['country_id' => 5])->limit(2, 2)->save());
+        $this->assertSame(2, $this->object->query(Query::UPDATE)->data(['country_id' => 5])->limit(2, 2)->save());
 
         $this->assertEquals(new EntityCollection([
             new Entity(['id' => 1, 'country_id' => 5, 'username' => 'miles']),
@@ -2012,7 +2012,7 @@ class RepositoryTest extends TestCase {
         $this->loadFixtures('Users');
 
         $this->assertSame(2, $this->object->query(Query::UPDATE)
-            ->fields(['country_id' => 6])
+            ->data(['country_id' => 6])
             ->orderBy('username', 'desc')
             ->limit(2)
             ->save());
@@ -2030,7 +2030,7 @@ class RepositoryTest extends TestCase {
         $this->loadFixtures('Users');
 
         $this->assertSame(3, $this->object->query(Query::UPDATE)
-            ->fields(['country_id' => null])
+            ->data(['country_id' => null])
             ->where('username', 'like', '%man%')
             ->save());
 
@@ -2047,7 +2047,7 @@ class RepositoryTest extends TestCase {
         $this->loadFixtures('Users');
 
         $this->assertSame(5, $this->object->query(Query::UPDATE)
-            ->fields(['firstName' => ''])
+            ->data(['firstName' => ''])
             ->save());
 
         $this->assertEquals(new EntityCollection([
@@ -2097,36 +2097,36 @@ class RepositoryTest extends TestCase {
         $driver = $stat->getDriver();
 
         // int
-        $query = $driver->executeQuery($stat->query(Query::UPDATE)->fields(['health' => '100', 'energy' => 200]));
+        $query = $driver->executeQuery($stat->query(Query::UPDATE)->data(['health' => '100', 'energy' => 200]));
         $this->assertRegExp("/^UPDATE (`|\")?stats(`|\")? SET (`|\")?health(`|\")? = 100, (`|\")?energy(`|\")? = 200;$/i", $query->getStatement());
 
         // string
-        $query = $driver->executeQuery($stat->query(Query::UPDATE)->fields(['name' => 12345]));
+        $query = $driver->executeQuery($stat->query(Query::UPDATE)->data(['name' => 12345]));
         $this->assertRegExp("/^UPDATE (`|\")?stats(`|\")? SET (`|\")?name(`|\")? = '12345';$/i", $query->getStatement());
 
         // float, double, decimal (they are strings in PDO)
-        $query = $driver->executeQuery($stat->query(Query::UPDATE)->fields(['damage' => '123.45', 'defense' => 456.78, 'range' => 999.00]));
+        $query = $driver->executeQuery($stat->query(Query::UPDATE)->data(['damage' => '123.45', 'defense' => 456.78, 'range' => 999.00]));
         $this->assertRegExp("/^UPDATE (`|\")?stats(`|\")? SET (`|\")?damage(`|\")? = '123.45', (`|\")?defense(`|\")? = '456.78', (`|\")?range(`|\")? = '999';$/i", $query->getStatement());
 
         // bool
-        $query = $driver->executeQuery($stat->query(Query::UPDATE)->fields(['isMelee' => 'true']));
+        $query = $driver->executeQuery($stat->query(Query::UPDATE)->data(['isMelee' => 'true']));
         $this->assertRegExp("/^UPDATE (`|\")?stats(`|\")? SET (`|\")?isMelee(`|\")? = 1;$/i", $query->getStatement());
 
-        $query = $driver->executeQuery($stat->query(Query::UPDATE)->fields(['isMelee' => false]));
+        $query = $driver->executeQuery($stat->query(Query::UPDATE)->data(['isMelee' => false]));
         $this->assertRegExp("/^UPDATE (`|\")?stats(`|\")? SET (`|\")?isMelee(`|\")? = 0;$/i", $query->getStatement());
 
         // datetime
-        $query = $driver->executeQuery($this->object->query(Query::UPDATE)->fields(['created' => $time]));
+        $query = $driver->executeQuery($this->object->query(Query::UPDATE)->data(['created' => $time]));
         $this->assertRegExp("/^UPDATE (`|\")?users(`|\")? SET (`|\")?created(`|\")? = '" . $date . "';$/i", $query->getStatement());
 
-        $query = $driver->executeQuery($this->object->query(Query::UPDATE)->fields(['created' => new DateTime($date)]));
+        $query = $driver->executeQuery($this->object->query(Query::UPDATE)->data(['created' => new DateTime($date)]));
         $this->assertRegExp("/^UPDATE (`|\")?users(`|\")? SET (`|\")?created(`|\")? = '" . $date . "';$/i", $query->getStatement());
 
-        $query = $driver->executeQuery($this->object->query(Query::UPDATE)->fields(['created' => $date]));
+        $query = $driver->executeQuery($this->object->query(Query::UPDATE)->data(['created' => $date]));
         $this->assertRegExp("/^UPDATE (`|\")?users(`|\")? SET (`|\")?created(`|\")? = '" . $date . "';$/i", $query->getStatement());
 
         // null
-        $query = $driver->executeQuery($this->object->query(Query::UPDATE)->fields(['created' => null]));
+        $query = $driver->executeQuery($this->object->query(Query::UPDATE)->data(['created' => null]));
         $this->assertRegExp("/^UPDATE (`|\")?users(`|\")? SET (`|\")?created(`|\")? = NULL;$/i", $query->getStatement());
     }
 

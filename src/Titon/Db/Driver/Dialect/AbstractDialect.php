@@ -443,13 +443,14 @@ abstract class AbstractDialect extends Base implements Dialect {
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
     public function formatFields(Query $query) {
-        $fields = $query->getFields();
         $joins = $query->getJoins();
         $type = $query->getType();
 
         switch ($type) {
             case Query::INSERT:
             case Query::MULTI_INSERT:
+                $fields = $query->getData();
+
                 if (empty($fields)) {
                     throw new InvalidQueryException('Missing field data for insert query');
                 }
@@ -462,6 +463,8 @@ abstract class AbstractDialect extends Base implements Dialect {
             break;
 
             case Query::SELECT:
+                $fields = $query->getFields();
+
                 if ($joins) {
                     $columns = $this->formatSelectFields($fields, $query->getRepository()->getAlias());
 
@@ -482,6 +485,8 @@ abstract class AbstractDialect extends Base implements Dialect {
             break;
 
             case Query::UPDATE:
+                $fields = $query->getData();
+
                 if (empty($fields)) {
                     throw new InvalidQueryException('Missing field data for update query');
                 }
@@ -500,6 +505,7 @@ abstract class AbstractDialect extends Base implements Dialect {
             break;
 
             case Query::CREATE_INDEX:
+                $fields = $query->getData();
                 $columns = [];
 
                 foreach ($fields as $column => $data) {
@@ -974,7 +980,7 @@ abstract class AbstractDialect extends Base implements Dialect {
      * @return string
      */
     public function formatValues(Query $query) {
-        $fields = $query->getFields();
+        $fields = $query->getData();
 
         switch ($query->getType()) {
             case Query::INSERT:
