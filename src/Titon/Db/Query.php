@@ -301,23 +301,29 @@ class Query {
             throw new InvalidArgumentException('Data passed must be an array or extend the Titon\Type\Contract\Arrayable interface');
         }
 
-        $binds = [];
-        $rows = $data;
+        $type = $this->getType();
 
-        if ($this->getType() !== self::MULTI_INSERT) {
-            $rows = [$rows];
-        }
+        // Only set binds for queries with dynamic data
+        if (in_array($type, [self::INSERT, self::UPDATE, self::MULTI_INSERT])) {
+            $binds = [];
+            $rows = $data;
 
-        foreach ($rows as $row) {
-            foreach ($row as $field => $value) {
-                $binds[] = [
-                    'field' => $field,
-                    'value' => $value
-                ];
+            if ($type !== self::MULTI_INSERT) {
+                $rows = [$rows];
             }
+
+            foreach ($rows as $row) {
+                foreach ($row as $field => $value) {
+                    $binds[] = [
+                        'field' => $field,
+                        'value' => $value
+                    ];
+                }
+            }
+
+            $this->setBindings($binds);
         }
 
-        $this->setBindings($binds);
         $this->_data = $data;
 
         return $this;
