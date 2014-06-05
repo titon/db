@@ -2543,20 +2543,4 @@ class RepositoryTest extends TestCase {
         ]), $this->object->read(6));
     }
 
-    public function testPostSaveIsntCalledIfSaveFails() {
-        $this->loadFixtures('Users');
-
-        $saved = false;
-
-        $this->object->on('db.postSave', function(Event $event, $id, $type) use (&$saved) {
-            $saved = true;
-        });
-
-        $this->assertEquals(0, $this->object->update(666, ['modified' => time()])); // Fake ID
-        $this->assertFalse($saved);
-
-        $this->assertEquals(1, $this->object->update(1, ['modified' => time()])); // Real ID
-        $this->assertTrue($saved);
-    }
-
 }

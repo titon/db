@@ -542,9 +542,10 @@ class HierarchyBehavior extends AbstractBehavior {
      *
      * @param \Titon\Event\Event $event
      * @param int|int[] $id
+     * @Param int $count
      * @param string $type
      */
-    public function postSave(Event $event, $id, $type) {
+    public function postSave(Event $event, $id, $count, $type) {
         if (!$this->getConfig('onSave') || !$this->_saveIndex) {
             return;
         }

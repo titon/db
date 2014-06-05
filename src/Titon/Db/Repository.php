@@ -1031,7 +1031,8 @@ class Repository extends Base implements Listener {
         $count = $query->save($data);
 
         // Exit early if save failed
-        if (!$count) {
+        // Don't check for a falsey value (zero) since updates can return a 0 affected count
+        if ($count === false) {
             return (int) $count;
         }
 
@@ -1042,7 +1043,7 @@ class Repository extends Base implements Listener {
         $this->id = $id;
 
         if ($options['postCallback']) {
-            $this->emit('db.postSave', [$id, $type]);
+            $this->emit('db.postSave', [$id, $count, $type]);
         }
 
         // Return ID for create
