@@ -43,15 +43,7 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
      * {@inheritdoc}
      */
     public function get($key, $default = null) {
-        $value = $this->has($key) ? $this->_data[$key] : $default;
-
-        // Execute closure to trigger any lazy-loaded values
-        if ($value instanceof Closure) {
-            $value = call_user_func($value);
-            $this->set($key, $value);
-        }
-
-        return $value;
+        return $this->has($key) ? $this->_data[$key] : $default;
     }
 
     /**
@@ -106,7 +98,7 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
      * @param string $data
      */
     public function unserialize($data) {
-        $this->mapData(unserialize($data));
+        $this->__construct(unserialize($data));
     }
 
     /**
@@ -122,23 +114,9 @@ class Entity implements Serializable, JsonSerializable, IteratorAggregate, Array
      * {@inheritdoc}
      */
     public function toArray() {
-        $data = [];
-
-        foreach ($this->_data as $key => $value) {
-            if ($value instanceof Closure) {
-                $value = call_user_func($value);
-                $this->set($key, $value);
-            }
-
-            if ($value instanceof Arrayable) {
-                $data[$key] = $value->toArray();
-
-            } else {
-                $data[$key] = $value;
-            }
-        }
-
-        return $data;
+        return array_map(function($value) {
+            return ($value instanceof Arrayable) ? $value->toArray() : $value;
+        }, $this->_data);
     }
 
     /**

@@ -103,31 +103,6 @@ class EntityTest extends TestCase {
         $this->assertEquals($keys, $this->object->keys());
     }
 
-    public function testClosureReading() {
-        $this->object = new Entity([
-            'id' => 1,
-            'username' => function() {
-                return 'Miles';
-            }
-        ]);
-
-        $this->assertEquals('Miles', $this->object->username);
-    }
-
-    public function testClosureReadingArray() {
-        $this->object = new Entity([
-            'id' => 1,
-            'username' => function() {
-                return 'Miles';
-            }
-        ]);
-
-        $this->assertEquals([
-            'id' => 1,
-            'username' => 'Miles'
-        ], $this->object->toArray());
-    }
-
     public function testToJson() {
         $this->assertEquals('{"id":1,"username":"Miles","password":"iamasecret","email":"email@domain.com","created":"1988-02-26 10:22:33","interests":["food","games"],"Profile":{"id":1,"age":25,"country":"USA"},"Posts":[{"id":666,"title":"Post #1"},{"id":1337,"title":"Post #2"}]}', $this->object->toJson());
     }
