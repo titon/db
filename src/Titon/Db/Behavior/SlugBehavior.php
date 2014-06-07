@@ -82,18 +82,18 @@ class SlugBehavior extends AbstractBehavior {
      * If no data exists, or the base doesn't exist, or the slug is already set, exit early.
      *
      * @param \Titon\Event\Event $event
+     * @param \Titon\Db\Query $query
      * @param int|int[] $id
      * @param array $data
-     * @param string $type
      * @return bool
      */
-    public function preSave(Event $event, $id, array &$data, $type) {
+    public function preSave(Event $event, Query $query, $id, array &$data) {
         $config = $this->allConfig();
 
         if (empty($data) || empty($data[$config['field']]) || !empty($data[$config['slug']])) {
             return true;
 
-        } else if ($type === Query::UPDATE && !$config['onUpdate']) {
+        } else if ($query->getType() === Query::UPDATE && !$config['onUpdate']) {
             return true;
         }
 

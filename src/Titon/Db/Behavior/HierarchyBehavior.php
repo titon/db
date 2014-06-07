@@ -9,6 +9,7 @@ namespace Titon\Db\Behavior;
 
 use Titon\Event\Event;
 use Titon\Db\Query;
+use \Closure;
 
 /**
  * The HierarchyBehavior implements a pattern of tree traversal which allows for a nested hierarchy of nodes.
@@ -276,7 +277,7 @@ class HierarchyBehavior extends AbstractBehavior {
      * @return bool
      */
     public function moveDown($id, $count = 1) {
-        $repo = $this->getRepository();
+        $pk = $this->getRepository()->getPrimaryKey();
         $node = $this->getNode($id, true);
 
         if (!$node || empty($node['Parent']['id'])) {
@@ -306,21 +307,20 @@ class HierarchyBehavior extends AbstractBehavior {
         }
 
         // Move following nodes up
-        $repo->query(Query::UPDATE)
-            ->where($left, '>', $nodeRight)
-            ->where($right, '<=', $newNodeRight)
-            ->save([
-                $left => Query::expr($left, '-', 2),
-                $right => Query::expr($right, '-', 2)
-            ]);
+        $this->_moveNode(function(Query $query) use ($left, $right, $nodeRight, $newNodeRight) {
+            $query->where($left, '>', $nodeRight)->where($right, '<=', $newNodeRight);
+        }, [
+            $left => Query::expr($left, '-', 2),
+            $right => Query::expr($right, '-', 2)
+        ]);
 
         // Move node down
-        $repo->query(Query::UPDATE)
-            ->where($repo->getPrimaryKey(), $id)
-            ->save([
-                $left => $newNodeLeft,
-                $right => $newNodeRight
-            ]);
+        $this->_moveNode(function(Query $query) use ($pk, $id) {
+            $query->where($pk, $id);
+        }, [
+            $left => $newNodeLeft,
+            $right => $newNodeRight
+        ]);
 
         return true;
     }
@@ -334,7 +334,7 @@ class HierarchyBehavior extends AbstractBehavior {
      * @return bool
      */
     public function moveUp($id, $count = 1) {
-        $repo = $this->getRepository();
+        $pk = $this->getRepository()->getPrimaryKey();
         $node = $this->getNode($id, true);
 
         if (!$node || empty($node['Parent']['id'])) {
@@ -364,21 +364,20 @@ class HierarchyBehavior extends AbstractBehavior {
         }
 
         // Move previous nodes down
-        $repo->query(Query::UPDATE)
-            ->where($left, '>=', $newNodeLeft)
-            ->where($right, '<', $nodeLeft)
-            ->save([
-                $left => Query::expr($left, '+', 2),
-                $right => Query::expr($right, '+', 2)
-            ]);
+        $this->_moveNode(function(Query $query) use ($left, $right, $nodeLeft, $newNodeLeft) {
+            $query->where($left, '>=', $newNodeLeft)->where($right, '<', $nodeLeft);
+        }, [
+            $left => Query::expr($left, '+', 2),
+            $right => Query::expr($right, '+', 2)
+        ]);
 
         // Move node up
-        $repo->query(Query::UPDATE)
-            ->where($repo->getPrimaryKey(), $id)
-            ->save([
-                $left => $newNodeLeft,
-                $right => $newNodeRight
-            ]);
+        $this->_moveNode(function(Query $query) use ($pk, $id) {
+            $query->where($pk, $id);
+        }, [
+            $left => $newNodeLeft,
+            $right => $newNodeRight
+        ]);
 
         return true;
     }
@@ -392,7 +391,7 @@ class HierarchyBehavior extends AbstractBehavior {
      * @return bool
      */
     public function moveTo($id, $parent_id) {
-        $repo = $this->getRepository();
+        $pk = $this->getRepository()->getPrimaryKey();
         $node = $this->getNode($id);
 
         if (!$node || $node[$this->getConfig('parentField')] == $parent_id) {
@@ -421,11 +420,12 @@ class HierarchyBehavior extends AbstractBehavior {
             ];
         }
 
-        $repo->query(Query::UPDATE)
-            ->where($repo->getPrimaryKey(), $id)
-            ->save($data + [
-                $this->getConfig('parentField') => $parent_id
-            ]);
+        // Move it
+        $this->_moveNode(function(Query $query) use ($pk, $id) {
+            $query->where($pk, $id);
+        }, $data + [
+            $this->getConfig('parentField') => $parent_id
+        ]);
 
         $this->_insertNode($id, $data[$left]);
 
@@ -437,10 +437,11 @@ class HierarchyBehavior extends AbstractBehavior {
      * If a node has children, the delete will fail.
      *
      * @param \Titon\Event\Event $event
+     * @param \Titon\Db\Query $query
      * @param int|int[] $id
      * @return bool
      */
-    public function preDelete(Event $event, $id) {
+    public function preDelete(Event $event, Query $query, $id) {
         if (!$this->getConfig('onDelete')) {
             return true;
         }
@@ -465,8 +466,9 @@ class HierarchyBehavior extends AbstractBehavior {
      *
      * @param \Titon\Event\Event $event
      * @param int|int[] $id
+     * @param int $count
      */
-    public function postDelete(Event $event, $id) {
+    public function postDelete(Event $event, $id, $count) {
         if (!$this->getConfig('onDelete') || !$this->_deleteIndex) {
             return;
         }
@@ -483,12 +485,12 @@ class HierarchyBehavior extends AbstractBehavior {
      * Use moveUp(), moveDown(), moveTo() or reOrder() to update existing nodes.
      *
      * @param \Titon\Event\Event $event
+     * @param \Titon\Db\Query $query
      * @param int|int[] $id
      * @param array $data
-     * @param string $type
      * @return bool
      */
-    public function preSave(Event $event, $id, array &$data, $type) {
+    public function preSave(Event $event, Query $query, $id, array &$data) {
         if (!$this->getConfig('onSave')) {
             return true;
         }
@@ -498,7 +500,7 @@ class HierarchyBehavior extends AbstractBehavior {
         $right = $this->getConfig('rightField');
 
         // Append left and right during create
-        if (!$id) {
+        if ($query->getType() === Query::INSERT) {
             $indexes = [];
 
             // Is a child
@@ -528,10 +530,6 @@ class HierarchyBehavior extends AbstractBehavior {
             }
 
             $data = $indexes + $data;
-
-        // Remove left and right fields from updates as it should not be modified
-        } else {
-            unset($data[$left], $data[$right]);
         }
 
         return true;
@@ -543,9 +541,8 @@ class HierarchyBehavior extends AbstractBehavior {
      * @param \Titon\Event\Event $event
      * @param int|int[] $id
      * @Param int $count
-     * @param string $type
      */
-    public function postSave(Event $event, $id, $count, $type) {
+    public function postSave(Event $event, $id, $count) {
         if (!$this->getConfig('onSave') || !$this->_saveIndex) {
             return;
         }
@@ -585,17 +582,34 @@ class HierarchyBehavior extends AbstractBehavior {
      * @param int $index
      */
     protected function _insertNode($id, $index) {
-        $repo = $this->getRepository();
+        $pk = $this->getRepository()->getPrimaryKey();
 
         foreach ([$this->getConfig('leftField'), $this->getConfig('rightField')] as $field) {
-            $query = $repo->query(Query::UPDATE)->where($field, '>=', $index);
+            $this->_moveNode(function(Query $query) use ($field, $index, $id, $pk) {
+                $query->where($field, '>=', $index);
 
-            if ($id) {
-                $query->where($repo->getPrimaryKey(), '!=', $id);
-            }
-
-            $query->save([$field => Query::expr($field, '+', 2)]);
+                if ($id) {
+                    $query->where($pk, '!=', $id);
+                }
+            }, [
+                $field => Query::expr($field, '+', 2)
+            ]);
         }
+    }
+
+    /**
+     * Move a node, or nodes, by applying a where clause to an update query and saving data.
+     * Disable before and after callbacks to recursive events don't trigger.
+     *
+     * @param callable $callback
+     * @param array $data
+     * @return int
+     */
+    protected function _moveNode(Closure $callback, array $data) {
+        return $this->getRepository()->updateMany($data, $callback, [
+            'before' => false,
+            'after' => false
+        ]);
     }
 
     /**
@@ -605,16 +619,18 @@ class HierarchyBehavior extends AbstractBehavior {
      * @param int $index
      */
     protected function _removeNode($id, $index) {
-        $repo = $this->getRepository();
+        $pk = $this->getRepository()->getPrimaryKey();
 
         foreach ([$this->getConfig('leftField'), $this->getConfig('rightField')] as $field) {
-            $query = $repo->query(Query::UPDATE)->where($field, '>=', $index);
+            $this->_moveNode(function(Query $query) use ($field, $index, $id, $pk) {
+                $query->where($field, '>=', $index);
 
-            if ($id) {
-                $query->where($repo->getPrimaryKey(), '!=', $id);
-            }
-
-            $query->save([$field => Query::expr($field, '-', 2)]);
+                if ($id) {
+                    $query->where($pk, '!=', $id);
+                }
+            }, [
+                $field => Query::expr($field, '-', 2)
+            ]);
         }
     }
 
@@ -645,12 +661,12 @@ class HierarchyBehavior extends AbstractBehavior {
 
         // Update parent node
         if ($parent_id) {
-            $repo->query(Query::UPDATE)
-                ->where($pk, $parent_id)
-                ->save([
-                    $this->getConfig('leftField') => $left,
-                    $this->getConfig('rightField') => $right
-                ]);
+            $this->_moveNode(function(Query $query) use ($pk, $parent_id) {
+                $query->where($pk, $parent_id);
+            }, [
+                $this->getConfig('leftField') => $left,
+                $this->getConfig('rightField') => $right
+            ]);
         }
 
         return $right + 1;

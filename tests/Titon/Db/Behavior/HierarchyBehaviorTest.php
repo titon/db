@@ -169,22 +169,6 @@ class HierarchyBehaviorTest extends TestCase {
         ]), $this->object->Hierarchy->getNode(18));
     }
 
-    public function testSaveIgnoresLeftRight() {
-        $this->object->update(18, [
-            'name' => 'Pork-y',
-            'left' => 666,
-            'right' => 1337
-        ]);
-
-        $this->assertEquals(new Entity([
-            'id' => 18,
-            'name' => 'Pork-y',
-            'parent_id' => 16,
-            'left' => 34,
-            'right' => 35
-        ]), $this->object->Hierarchy->getNode(18));
-    }
-
     public function testDelete() {
         $this->assertEquals(1, $this->object->delete(18));
 

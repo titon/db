@@ -7,8 +7,9 @@
 
 namespace Titon\Db\Behavior;
 
-use Titon\Event\Event;
+use Titon\Db\Query;
 use Titon\Db\Exception\InvalidArgumentException;
+use Titon\Event\Event;
 use Titon\Utility\Sanitize;
 
 /**
@@ -63,12 +64,12 @@ class FilterBehavior extends AbstractBehavior {
      * Run the filters before each save.
      *
      * @param \Titon\Event\Event $event
+     * @param \Titon\Db\Query $query
      * @param int|int[] $id
      * @param array $data
-     * @param string $type
      * @return bool
      */
-    public function preSave(Event $event, $id, array &$data, $type) {
+    public function preSave(Event $event, Query $query, $id, array &$data) {
         $filters = $this->getFilters();
 
         foreach ($data as $key => $value) {

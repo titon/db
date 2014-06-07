@@ -7,6 +7,7 @@
 
 namespace Titon\Db\Behavior;
 
+use Titon\Db\Query;
 use Titon\Event\Event;
 
 /**
@@ -33,13 +34,13 @@ class TimestampBehavior extends AbstractBehavior {
      * Append the current timestamp to the data.
      *
      * @param \Titon\Event\Event $event
+     * @param \Titon\Db\Query $query
      * @param int|int[] $id
      * @param array $data
-     * @param string $type
      * @return bool
      */
-    public function preSave(Event $event, $id, array &$data, $type) {
-        $data[$this->getConfig($id ? 'updateField' : 'createField')] = time();
+    public function preSave(Event $event, Query $query, $id, array &$data) {
+        $data[$this->getConfig($query->getType() === Query::UPDATE ? 'updateField' : 'createField')] = time();
 
         return true;
     }

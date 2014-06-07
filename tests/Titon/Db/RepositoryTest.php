@@ -2277,15 +2277,6 @@ class RepositoryTest extends TestCase {
         }));
     }
 
-    /**
-     * @expectedException \Titon\Db\Exception\InvalidQueryException
-     */
-    public function testUpdateManyFailsOnNoConditions() {
-        $this->loadFixtures('Users');
-
-        $this->object->updateMany(['country_id' => null], function() {});
-    }
-
     public function testUpsertInserts() {
         $this->loadFixtures('Users');
 
@@ -2373,29 +2364,6 @@ class RepositoryTest extends TestCase {
         $this->assertTrue($this->object->exists(6));
     }
 
-    public function testWrapEntities() {
-        $this->assertEquals([
-            new Entity(['foo' => 'bar']),
-            new Entity(['foo' => 'baz'])
-        ], $this->object->wrapEntities([
-            ['foo' => 'bar'],
-            ['foo' => 'baz']
-        ]));
-    }
-
-    public function testWrapEntitiesNested() {
-        $this->assertEquals([
-            new Entity([
-                'foo' => 'bar',
-                'join' => new Entity([
-                    'key' => 'value'
-                ])
-            ])
-        ], $this->object->wrapEntities([
-            ['foo' => 'bar', 'join' => ['key' => 'value']]
-        ]));
-    }
-
     public function testPreFindFalseyReturnsNoResults() {
         $this->loadFixtures('Users');
 
@@ -2459,7 +2427,7 @@ class RepositoryTest extends TestCase {
     public function testPreDeleteFalseyReturnsZero() {
         $this->loadFixtures('Users');
 
-        $callback = function(Event $event, $id) {
+        $callback = function(Event $event, Query $query, $id) {
             return false;
         };
 
@@ -2475,7 +2443,7 @@ class RepositoryTest extends TestCase {
     public function testPreDeleteNumericIsReturnedEarly() {
         $this->loadFixtures('Users');
 
-        $callback = function(Event $event, $id) {
+        $callback = function(Event $event, Query $query, $id) {
             return 666;
         };
 
@@ -2507,7 +2475,7 @@ class RepositoryTest extends TestCase {
     public function testPreSaveFalseyReturnsZero() {
         $this->loadFixtures('Users');
 
-        $callback = function(Event $event, $id, array &$data) {
+        $callback = function(Event $event, Query $query, $id, array &$data) {
             return false;
         };
 
@@ -2523,7 +2491,7 @@ class RepositoryTest extends TestCase {
     public function testPreSaveAltersData() {
         $this->loadFixtures('Users');
 
-        $this->object->on('db.preSave', function(Event $event, $id, array &$data) {
+        $this->object->on('db.preSave', function(Event $event, Query $query, $id, array &$data) {
             $data['username'] = strtoupper($data['username']);
         });
 

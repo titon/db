@@ -12,6 +12,7 @@ use Titon\Db\Driver\Schema;
 use Titon\Db\Exception\ExistingPredicateException;
 use Titon\Db\Exception\InvalidArgumentException;
 use Titon\Db\Exception\InvalidQueryException;
+use Titon\Db\Exception\UnsupportedTypeException;
 use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
 use Titon\Db\Query\Join;
@@ -173,7 +174,7 @@ class Query {
      * @param \Titon\Db\Repository $repo
      */
     public function __construct($type, Repository $repo = null) {
-        $this->_type = $type;
+        $this->setType($type);
 
         if ($repo) {
             $this->setRepository($repo);
@@ -304,7 +305,7 @@ class Query {
         $type = $this->getType();
 
         // Only set binds for queries with dynamic data
-        if (in_array($type, [self::INSERT, self::UPDATE, self::MULTI_INSERT])) {
+        if (in_array($type, [self::INSERT, self::UPDATE, self::MULTI_INSERT], true)) {
             $binds = [];
             $rows = $data;
 
@@ -687,10 +688,13 @@ class Query {
      */
     public function lists($value = null, $key = null, array $options = []) {
         $repo = $this->getRepository();
-        $options['key'] = $key ?: $repo->getPrimaryKey();
-        $options['value'] = $value ?: $repo->getDisplayField();
+        $key = $key ?: $repo->getPrimaryKey();
+        $value = $value ?: $repo->getDisplayField();
 
-        return $this->find('list', $options);
+        $options['key'] = $key;
+        $options['value'] = $value;
+
+        return $this->fields([$key, $value], true)->find('list', $options);
     }
 
     /**
@@ -811,14 +815,15 @@ class Query {
      * Return the count of how many records were affected.
      *
      * @param array|\Titon\Type\Contract\Arrayable $data
+     * @param array $options
      * @return int
      */
-    public function save($data = null) {
+    public function save($data = null, array $options = []) {
         if ($data) {
             $this->data($data);
         }
 
-        return $this->getRepository()->save($this);
+        return $this->getRepository()->save($this, $options);
     }
 
     /**
@@ -829,6 +834,30 @@ class Query {
      */
     public function schema(Schema $schema) {
         $this->_schema = $schema;
+
+        return $this;
+    }
+
+    /**
+     * Set the type of query.
+     *
+     * @param string $type
+     * @return $this
+     * @throws \Titon\Db\Exception\UnsupportedTypeException
+     */
+    public function setType($type) {
+        if (!in_array($type, [
+            self::INSERT, self::MULTI_INSERT, self::SELECT, self::UPDATE, self::DELETE,
+            self::TRUNCATE, self::CREATE_TABLE, self::CREATE_INDEX, self::DROP_TABLE, self::DROP_INDEX
+        ], true)) {
+            throw new UnsupportedTypeException(sprintf('Invalid query type %s', $type));
+        }
+
+        $this->_type = $type;
+
+        // Reset data and binds when changing types
+        $this->_data = [];
+        $this->_bindings = [];
 
         return $this;
     }

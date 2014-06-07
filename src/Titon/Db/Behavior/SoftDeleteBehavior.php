@@ -43,11 +43,10 @@ class SoftDeleteBehavior extends AbstractBehavior {
      * @return int
      */
     public function hardDelete($id) {
-        $repo = $this->getRepository();
-
-        return $repo->query(Query::DELETE)
-            ->where($repo->getPrimaryKey(), $id)
-            ->save();
+        return $this->getRepository()->delete($id, [
+            'before' => false,
+            'after' => false
+        ]);
     }
 
     /**
@@ -82,10 +81,11 @@ class SoftDeleteBehavior extends AbstractBehavior {
      * Return a count of affected row count and exit actual deletion process.
      *
      * @param \Titon\Event\Event $event
+     * @param \Titon\Db\Query $query
      * @param int|\int[] $id
      * @return int
      */
-    public function preDelete(Event $event, $id) {
+    public function preDelete(Event $event, Query $query, $id) {
         return $this->softDelete($id);
     }
 
@@ -100,20 +100,22 @@ class SoftDeleteBehavior extends AbstractBehavior {
      * @return int
      */
     public function purgeDeleted($timeFrame) {
-        $query = $this->getRepository()->query(Query::DELETE);
         $config = $this->allConfig();
 
-        if ($timeFrame) {
-            $query->where($config['deleteField'], '>=', Time::toUnix($timeFrame));
+        return $this->getRepository()->deleteMany(function(Query $query) use ($timeFrame, $config) {
+            if ($timeFrame) {
+                $query->where($config['deleteField'], '>=', Time::toUnix($timeFrame));
 
-        } else if ($config['useFlag']) {
-            $query->where($config['flagField'], true);
+            } else if ($config['useFlag']) {
+                $query->where($config['flagField'], true);
 
-        } else {
-            $query->where($config['deleteField'], '!=', null);
-        }
-
-        return $query->save();
+            } else {
+                $query->where($config['deleteField'], '!=', null);
+            }
+        }, [
+            'before' => false,
+            'after' => false
+        ]);
     }
 
     /**
@@ -134,14 +136,13 @@ class SoftDeleteBehavior extends AbstractBehavior {
      * @return int
      */
     public function softDelete($id) {
-        $repo = $this->getRepository();
-
-        return $repo->query(Query::UPDATE)
-            ->where($repo->getPrimaryKey(), $id)
-            ->save([
-                $this->getConfig('flagField') => true,
-                $this->getConfig('deleteField') => time()
-            ]);
+        return $this->getRepository()->update($id, [
+            $this->getConfig('flagField') => true,
+            $this->getConfig('deleteField') => time()
+        ], [
+            'before' => false,
+            'after' => false
+        ]);
     }
 
 }

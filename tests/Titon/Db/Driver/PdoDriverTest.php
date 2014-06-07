@@ -48,7 +48,7 @@ class PdoDriverTest extends TestCase {
     }
 
     /**
-     * @expectedException \Titon\Db\Exception\UnsupportedQueryStatementException
+     * @expectedException \Titon\Db\Exception\UnsupportedTypeException
      */
     public function testBuildStatementInvalidQuery() {
         $this->object->buildStatement(new Query('someType', $this->table));

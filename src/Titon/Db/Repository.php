@@ -20,6 +20,7 @@ use Titon\Db\Finder\FirstFinder;
 use Titon\Db\Finder\AllFinder;
 use Titon\Db\Finder\ListFinder;
 use Titon\Db\Query;
+use Titon\Db\Query\Expr;
 use Titon\Db\Query\Func;
 use Titon\Event\Event;
 use Titon\Event\Listener;
@@ -38,6 +39,17 @@ use \Closure;
  * @link http://en.wikipedia.org/wiki/Database_model
  *
  * @package Titon\Db
+ * @events
+ *      db.preFind(Query $query, $finder)
+ *      db.preSave,
+ *      db.preCreate,
+ *      db.preUpdate(Query $query, $id, &$data)
+ *      db.preDelete(Query $query, $id)
+ *      db.postFind(&$results, $finder)
+ *      db.postSave,
+ *      db.postCreate,
+ *      db.postUpdate($id, $count)
+ *      db.postDelete($id, $count)
  */
 class Repository extends Base implements Listener {
     use Attachable, Cacheable, Emittable;
@@ -179,26 +191,31 @@ class Repository extends Base implements Listener {
     }
 
     /**
-     * Type cast the results after a find operation.
+     * Type cast the results and wrap each result in an entity after a find operation.
      *
      * @param \Titon\Event\Event $event
      * @param array $results
      * @param string $finder
      */
     public function castResults(Event $event, array &$results, $finder) {
-        if ($columns = $this->getSchema()->getColumns()) {
-            $driver = $this->getDriver();
+        $columns = $this->getSchema()->getColumns();
+        $driver = $this->getDriver();
+        $entityClass = $this->getEntity();
 
-            // TODO - Type cast the results first
-            // I feel like this should be on the driver layer, but where and how?
-            // Was thinking of using events on the driver, but no access to the repository or schema...
-            foreach ($results as $i => $result) {
-                foreach ($result as $field => $value) {
-                    if (isset($columns[$field])) {
-                        $results[$i][$field] = $driver->getType($columns[$field]['type'])->from($value);
-                    }
+        foreach ($results as $i => $result) {
+            foreach ($result as $field => $value) {
+                if (isset($columns[$field])) {
+                    $result[$field] = $driver->getType($columns[$field]['type'])->from($value);
                 }
+
+                if (!is_array($value)) {
+                    continue;
+                }
+
+                $result[$field] = new Entity($value);
             }
+
+            $results[$i] = new $entityClass($result);
         }
     }
 
@@ -212,7 +229,7 @@ class Repository extends Base implements Listener {
      * @return int The record ID on success, 0 on failure
      */
     public function create($data, array $options = []) {
-        return $this->_processSave($this->query(Query::INSERT), null, $data, $options);
+        return $this->query(Query::INSERT)->save($data, $options);
     }
 
     /**
@@ -264,10 +281,7 @@ class Repository extends Base implements Listener {
             $records[] = $record;
         }
 
-        // Disable before event since multi-insert has a different data structure
-        $options['preCallback'] = false;
-
-        return $this->_processSave($this->query(Query::MULTI_INSERT), null, $records, $options);
+        return $this->query(Query::MULTI_INSERT)->save($records, $options);
     }
 
     /**
@@ -304,21 +318,24 @@ class Repository extends Base implements Listener {
      * Decrement the value of a field(s) using a step number.
      * Will update all records, or a single record.
      *
-     * @param int|int[] $id
+     * @param int|int[]|\Closure $id
      * @param array $fields
      * @return int
      */
     public function decrement($id, array $fields) {
-        $query = $this->query(Query::UPDATE);
-
-        if ($id) {
-            $query->where($this->getPrimaryKey(), $id);
-        }
-
         $data = [];
 
         foreach ($fields as $field => $step) {
             $data[$field] = Query::expr($field, '-', $step);
+        }
+
+        $query = $this->query(Query::UPDATE);
+
+        if ($id instanceof Closure) {
+            $query->bindCallback($id);
+
+        } else if ($id) {
+            $query->where($this->getPrimaryKey(), $id);
         }
 
         return $query->save($data);
@@ -332,9 +349,9 @@ class Repository extends Base implements Listener {
      * @return int The count of records deleted
      */
     public function delete($id, array $options = []) {
-        $query = $this->query(Query::DELETE)->where($this->getPrimaryKey(), $id);
-
-        return $this->_processDelete($query, $id, $options);
+        return $this->query(Query::DELETE)
+            ->where($this->getPrimaryKey(), $id)
+            ->save([], $options);
     }
 
     /**
@@ -346,7 +363,6 @@ class Repository extends Base implements Listener {
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
     public function deleteMany(Closure $conditions, array $options = []) {
-        $pk = $this->getPrimaryKey();
         $query = $this->query(Query::DELETE)->bindCallback($conditions);
 
         // Validate that this won't delete all records
@@ -356,9 +372,7 @@ class Repository extends Base implements Listener {
             throw new InvalidQueryException('No where clause detected, will not delete all records');
         }
 
-        $ids = $this->select($pk)->bindCallback($conditions)->lists($pk, $pk);
-
-        return $this->_processDelete($query, $ids, $options);
+        return $query->save([], $options);
     }
 
     /**
@@ -384,12 +398,12 @@ class Repository extends Base implements Listener {
      * Filter out invalid columns before a save operation.
      *
      * @param \Titon\Event\Event $event
+     * @param \Titon\Db\Query $query
      * @param int|int[] $id
      * @param array $data
-     * @param string $type
      * @return bool
      */
-    public function filterData(Event $event, $id, array &$data, $type) {
+    public function filterData(Event $event, Query $query, $id, array &$data) {
         if ($columns = $this->getSchema()->getColumns()) {
             $data = array_intersect_key($data, $columns);
         }
@@ -423,21 +437,21 @@ class Repository extends Base implements Listener {
      * @param \Titon\Db\Query $query
      * @param string $type
      * @param mixed $options {
-     *      @type bool $preCallback     Will trigger before callbacks
-     *      @type bool $postCallback    Will trigger after callbacks
+     *      @type bool $before  Will trigger before callbacks
+     *      @type bool $after   Will trigger after callbacks
      * }
      * @return array|\Titon\Db\Entity|\Titon\Db\EntityCollection
      */
     public function find(Query $query, $type, array $options = []) {
         $options = $options + [
-            'preCallback' => true,
-            'postCallback' => true
+            'before' => true,
+            'after' => true
         ];
 
         $finder = $this->getFinder($type);
         $state = null;
 
-        if ($options['preCallback']) {
+        if ($options['before']) {
             $event = $this->emit('db.preFind', [$query, $type]);
             $state = $event->getData();
 
@@ -465,17 +479,45 @@ class Repository extends Base implements Listener {
             return $finder->noResults();
         }
 
-        if ($options['postCallback']) {
+        if ($options['after']) {
             $this->emit('db.postFind', [&$results, $type]);
         }
 
-        // Wrap the results in entities
-        $results = $this->wrapEntities($results);
-
-        // Reset the driver local cache
-        $this->getDriver()->reset();
-
         return $finder->after($results, $options);
+    }
+
+    /**
+     * Find the a primary key value within a query. Begin by looping through the where clause and match any value
+     * that equates to the PK field. If none can be found, do a select query for a list of IDs.
+     *
+     * @param \Titon\Db\Query $query
+     * @return int|int[]
+     */
+    public function findID(Query $query) {
+        $pk = $this->getPrimaryKey();
+
+        // Gather ID from where clause
+        foreach ($query->getWhere()->getParams() as $param) {
+            if ($param instanceof Expr && $param->getField() === $pk && in_array($param->getOperator(), ['=', 'in'])) {
+                return $param->getValue();
+            }
+        }
+
+        // Query for the ID then
+        $select = clone $query;
+        $results = array_values($select->setType(Query::SELECT)->fields($pk)->lists($pk, $pk, [
+            'before' => false,
+            'after' => false
+        ]));
+
+        if (count($results) > 1) {
+            return $results;
+
+        } else if (count($results) === 1) {
+            return $results[0];
+        }
+
+        return null;
     }
 
     /**
@@ -709,21 +751,24 @@ class Repository extends Base implements Listener {
      * Increment the value of a field(s) using a step number.
      * Will update all records, or a single record.
      *
-     * @param int|int[] $id
+     * @param int|int[]|\Closure $id
      * @param array $fields
      * @return int
      */
     public function increment($id, array $fields) {
-        $query = $this->query(Query::UPDATE);
-
-        if ($id) {
-            $query->where($this->getPrimaryKey(), $id);
-        }
-
         $data = [];
 
         foreach ($fields as $field => $step) {
             $data[$field] = Query::expr($field, '+', $step);
+        }
+
+        $query = $this->query(Query::UPDATE);
+
+        if ($id instanceof Closure) {
+            $query->bindCallback($id);
+
+        } else if ($id) {
+            $query->where($this->getPrimaryKey(), $id);
         }
 
         return $query->save($data);
@@ -772,9 +817,22 @@ class Repository extends Base implements Listener {
      * Return a count of how many rows were affected by the query.
      *
      * @param \Titon\Db\Query $query
+     * @param array $options
      * @return int
      */
-    public function save(Query $query) {
+    public function save(Query $query, array $options = []) {
+        $type = $query->getType();
+
+        if ($type === Query::DELETE) {
+            return $this->_processDelete($query, $options);
+
+        } else if ($type === Query::INSERT) {
+            return $this->_processCreate($query, $options);
+
+        } else if ($type === Query::UPDATE) {
+            return $this->_processUpdate($query, $options);
+        }
+
         return $this->getDriver()->executeQuery($query)->save();
     }
 
@@ -829,9 +887,9 @@ class Repository extends Base implements Listener {
      * @return int The count of records updated
      */
     public function update($id, $data, array $options = []) {
-        $query = $this->query(Query::UPDATE)->where($this->getPrimaryKey(), $id);
-
-        return $this->_processSave($query, $id, $data, $options);
+        return $this->query(Query::UPDATE)
+            ->where($this->getPrimaryKey(), $id)
+            ->save($data, $options);
     }
 
     /**
@@ -844,18 +902,9 @@ class Repository extends Base implements Listener {
      * @throws \Titon\Db\Exception\InvalidQueryException
      */
     public function updateMany($data, Closure $conditions, array $options = []) {
-        $pk = $this->getPrimaryKey();
-        $ids = $this->select($pk)->bindCallback($conditions)->lists($pk, $pk);
-        $query = $this->query(Query::UPDATE)->bindCallback($conditions);
-
-        // Validate that this won't update all records
-        $where = $query->getWhere()->getParams();
-
-        if (empty($where)) {
-            throw new InvalidQueryException('No where clause detected, will not update all records');
-        }
-
-        return $this->_processSave($query, $ids, $data, $options);
+        return $this->query(Query::UPDATE)
+            ->bindCallback($conditions)
+            ->save($data, $options);
     }
 
     /**
@@ -899,27 +948,67 @@ class Repository extends Base implements Listener {
     }
 
     /**
-     * Wrap results in the defined entity class and wrap joined data in the base entity class.
+     * Primary method that handles the processing of insert queries.
      *
-     * @param array $results
-     * @return \Titon\Db\Entity[]
+     * Before a save is executed, a `preSave` and `preCreate` event will be triggered.
+     * This event allows data to be modified before saving via references.
+     * If this event returns a falsey value, the save will exit early and
+     * return a 0. This allows behaviors and events to cease save operations.
+     *
+     * Before the driver is queried, the connection context will be set to `write`.
+     *
+     * After the query has executed, and no rows have been affected, the method
+     * will exit early with a 0 response. Otherwise, a `postSave` and `postCreate` event will be triggered.
+     *
+     * @param \Titon\Db\Query $query
+     * @param mixed $options {
+     *      @type bool $before  Will trigger before callbacks
+     *      @type bool $after   Will trigger after callbacks
+     * }
+     * @return int
+     *      - The ID of the record if successful
+     *      - 0 if save operation failed
      */
-    public function wrapEntities(array $results) {
-        $entityClass = $this->getEntity();
+    protected function _processCreate(Query $query, array $options = []) {
+        $data = $query->getData();
+        $options = $options + [
+            'before' => true,
+            'after' => true
+        ];
 
-        foreach ($results as $i => $result) {
-            foreach ($result as $key => $value) {
-                if (!is_array($value)) {
-                    continue;
+        if ($options['before']) {
+            foreach (['db.preSave', 'db.preCreate'] as $event) {
+                $event = $this->emit($event, [$query, null, &$data]);
+                $state = $event->getData();
+
+                if ($state !== null && !$state) {
+                    return 0;
                 }
-
-                $result[$key] = new Entity($value);
             }
-
-            $results[$i] = new $entityClass($result);
         }
 
-        return $results;
+        // Reset the modified data
+        $query->data($data);
+
+        // Update the connection context
+        $driver = $this->getDriver();
+        $driver->setContext('write');
+
+        // Execute the query
+        $count = $driver->executeQuery($query)->save();
+
+        // Exit early if save failed
+        if ($count === false) {
+            return 0;
+        }
+
+        $id = $driver->getLastInsertID($this);
+
+        if ($options['after']) {
+            $this->emit('db.postSave db.postCreate', [$id, $count]);
+        }
+
+        return $this->id = $id;
     }
 
     /**
@@ -935,21 +1024,23 @@ class Repository extends Base implements Listener {
      * After a delete has executed successfully, a `postDelete` event will be triggered.
      *
      * @param \Titon\Db\Query $query
-     * @param int|int[] $id
      * @param mixed $options {
-     *      @type bool $preCallback     Will trigger before callbacks
-     *      @type bool $postCallback    Will trigger after callbacks
+     *      @type bool $before  Will trigger before callbacks
+     *      @type bool $after   Will trigger after callbacks
      * }
      * @return int The count of records deleted
      */
-    protected function _processDelete(Query $query, $id, array $options = []) {
+    protected function _processDelete(Query $query, array $options = []) {
         $options = $options + [
-            'preCallback' => true,
-            'postCallback' => true
+            'before' => true,
+            'after' => true
         ];
 
-        if ($options['preCallback']) {
-            $event = $this->emit('db.preDelete', [$id]);
+        // Fetch ID
+        $this->id = $id = $this->findID($query);
+
+        if ($options['before']) {
+            $event = $this->emit('db.preDelete', [$query, $id]);
             $state = $event->getData();
 
             if ($state !== null) {
@@ -961,24 +1052,24 @@ class Repository extends Base implements Listener {
             }
         }
 
-        // Update the connection context
-        $this->getDriver()->setContext('delete');
-
-        // Execute the query
-        $count = $query->save();
+        // Update the connection context and execute the query
+        $count = $this->getDriver()
+            ->setContext('delete')
+            ->executeQuery($query)
+            ->save();
 
         // Only trigger callback if something was deleted
-        if ($count && $options['postCallback']) {
-            $this->emit('db.postDelete', [$id]);
+        if ($count && $options['after']) {
+            $this->emit('db.postDelete', [$id, $count]);
         }
 
         return (int) $count;
     }
 
     /**
-     * Primary method that handles the processing of insert and update queries.
+     * Primary method that handles the processing of update queries.
      *
-     * Before a save is executed, a `preSave` event will be triggered.
+     * Before a save is executed, a `preSave` and `preUpdate` event will be triggered.
      * This event allows data to be modified before saving via references.
      * If this event returns a falsey value, the save will exit early and
      * return a 0. This allows behaviors and events to cease save operations.
@@ -986,69 +1077,54 @@ class Repository extends Base implements Listener {
      * Before the driver is queried, the connection context will be set to `write`.
      *
      * After the query has executed, and no rows have been affected, the method
-     * will exit early with a 0 response. Otherwise, a `postSave` event will be triggered.
+     * will exit early with a 0 response. Otherwise, a `postSave` and `postUpdate` event will be triggered.
      *
      * @param \Titon\Db\Query $query
-     * @param int|int[] $id
-     * @param array|\Titon\Type\Contract\Arrayable $data
      * @param mixed $options {
-     *      @type bool $preCallback     Will trigger before callbacks
-     *      @type bool $postCallback    Will trigger after callbacks
+     *      @type bool $before  Will trigger before callbacks
+     *      @type bool $after   Will trigger after callbacks
      * }
      * @return int
-     *      - The count of records updated if an update
-     *      - The count of records inserted if a multi-insert
-     *      - The ID of the record if a single insert
+     *      - The count of records updated
      *      - 0 if save operation failed
      */
-    protected function _processSave(Query $query, $id, $data, $options = []) {
-        $type = $query->getType();
-        $isCreate = ($type === Query::INSERT);
+    protected function _processUpdate(Query $query, array $options = []) {
+        $data = $query->getData();
         $options = $options + [
-            'preCallback' => true,
-            'postCallback' => true
+            'before' => true,
+            'after' => true
         ];
 
-        // Convert from an entity
-        if ($data instanceof Arrayable) {
-            $data = $data->toArray();
-        }
+        // Fetch ID
+        $this->id = $id = $this->findID($query);
 
-        if ($options['preCallback']) {
-            $event = $this->emit('db.preSave', [$id, &$data, $type]);
-            $state = $event->getData();
+        if ($options['before']) {
+            foreach (['db.preSave', 'db.preUpdate'] as $event) {
+                $event = $this->emit($event, [$query, $id, &$data]);
+                $state = $event->getData();
 
-            if ($state !== null && !$state) {
-                return 0;
+                if ($state !== null && !$state) {
+                    return 0;
+                }
             }
         }
 
-        // Update the connection context
-        $driver = $this->getDriver();
-        $driver->setContext('write');
+        // Reset the modified data
+        $query->data($data);
 
-        // Execute the query
-        $count = $query->save($data);
+        // Update the connection context and execute the query
+        $count = $this->getDriver()
+            ->setContext('write')
+            ->executeQuery($query)
+            ->save();
 
         // Exit early if save failed
-        // Don't check for a falsey value (zero) since updates can return a 0 affected count
         if ($count === false) {
-            return (int) $count;
+            return 0;
         }
 
-        if ($isCreate) {
-            $id = $driver->getLastInsertID($this);
-        }
-
-        $this->id = $id;
-
-        if ($options['postCallback']) {
-            $this->emit('db.postSave', [$id, $count, $type]);
-        }
-
-        // Return ID for create
-        if ($isCreate) {
-            return $id;
+        if ($options['after']) {
+            $this->emit('db.postSave db.postUpdate', [$id, $count]);
         }
 
         return $count;

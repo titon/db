@@ -7,8 +7,9 @@
 
 namespace Titon\Db\Behavior;
 
-use Titon\Event\Event;
+use Titon\Db\Query;
 use Titon\Db\Exception\InvalidArgumentException;
+use Titon\Event\Event;
 use Titon\Utility\Hash;
 
 /**
@@ -112,12 +113,12 @@ class ConverterBehavior extends AbstractBehavior {
      * Apply the encoding converter before a record is saved.
      *
      * @param \Titon\Event\Event $event
+     * @param \Titon\Db\Query $query
      * @param int|int[] $id
      * @param array $data
-     * @param string $type
      * @return bool
      */
-    public function preSave(Event $event, $id, array &$data, $type) {
+    public function preSave(Event $event, Query $query, $id, array &$data) {
         $repo = $this->getRepository();
         $converters = $this->getConverters();
 

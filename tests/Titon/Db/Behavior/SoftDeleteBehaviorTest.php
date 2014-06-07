@@ -47,7 +47,7 @@ class SoftDeleteBehaviorTest extends TestCase {
             'content' => 'Nullam vel pulvinar lorem. Ut id egestas justo.',
             'created_at' => '2012-07-29 11:36:12',
             'deleted_at' => date('Y-m-d H:i:s', $time)
-        ]), $this->object->read(3, ['preCallback' => false]));
+        ]), $this->object->read(3, ['before' => false]));
     }
 
     public function testHardDelete() {
@@ -202,7 +202,7 @@ class SoftDeleteBehaviorTest extends TestCase {
             'content' => 'Nullam vel pulvinar lorem. Ut id egestas justo.',
             'created_at' => '2012-07-29 11:36:12',
             'deleted_at' => date('Y-m-d H:i:s', $time)
-        ]), $this->object->read(3, ['preCallback' => false]));
+        ]), $this->object->read(3, ['before' => false]));
     }
 
 }
