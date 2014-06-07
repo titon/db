@@ -317,6 +317,26 @@ class RepositoryTest extends TestCase {
         ]), $topic->select('post_count')->all());
     }
 
+    public function testDecrementCallback() {
+        $this->loadFixtures('Topics');
+
+        $topic = new Topic();
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['post_count' => 4]),
+            new Entity(['post_count' => 1])
+        ]), $topic->select('post_count')->all());
+
+        $topic->decrement(function(Query $query) {
+            $query->where('slug', 'like', '%batman%');
+        }, ['post_count' => 1]);
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['post_count' => 3]),
+            new Entity(['post_count' => 1])
+        ]), $topic->select('post_count')->all());
+    }
+
     public function testDelete() {
         $this->loadFixtures('Users');
 
@@ -760,6 +780,26 @@ class RepositoryTest extends TestCase {
         $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 7]),
             new Entity(['post_count' => 4])
+        ]), $topic->select('post_count')->all());
+    }
+
+    public function testIncrementCallback() {
+        $this->loadFixtures('Topics');
+
+        $topic = new Topic();
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['post_count' => 4]),
+            new Entity(['post_count' => 1])
+        ]), $topic->select('post_count')->all());
+
+        $topic->increment(function(Query $query) {
+            $query->where('slug', 'like', '%batman%');
+        }, ['post_count' => 1]);
+
+        $this->assertEquals(new EntityCollection([
+            new Entity(['post_count' => 5]),
+            new Entity(['post_count' => 1])
         ]), $topic->select('post_count')->all());
     }
 

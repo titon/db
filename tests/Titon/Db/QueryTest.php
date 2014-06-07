@@ -141,8 +141,8 @@ class QueryTest extends TestCase {
     }
 
     public function testFieldsAutoPopulateViaJoinsNoSchema() {
-        $query = new Query(Query::SELECT, new Repository(['table' => 'users'])); // Repo has no schema
-        $query->leftJoin('profiles', [], ['profiles.user_id' => 'users.id']);
+        $query = new Query(Query::SELECT, new Repository(['table' => 'foo'])); // Repo has no schema
+        $query->leftJoin('bar', [], ['bar.user_id' => 'foo.id']);
 
         $this->assertEquals([], $query->getFields());
     }

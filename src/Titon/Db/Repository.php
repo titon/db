@@ -55,7 +55,7 @@ class Repository extends Base implements Listener {
     use Attachable, Cacheable, Emittable;
 
     /**
-     * ID(s) of last updated or inserted record.
+     * ID(s) of records before and after an insert, update, or delete.
      *
      * @type int|int[]
      */
@@ -833,6 +833,7 @@ class Repository extends Base implements Listener {
             return $this->_processUpdate($query, $options);
         }
 
+        // No processing or events, just execute it directly
         return $this->getDriver()->executeQuery($query)->save();
     }
 
@@ -933,11 +934,7 @@ class Repository extends Base implements Listener {
 
         // Either update
         if ($update) {
-
-            // Do false check since updating can return 0 rows affected
-            if ($this->update($id, $data, $options) === false) {
-                return 0;
-            }
+            $this->update($id, $data, $options);
 
         // Or insert
         } else {
