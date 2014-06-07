@@ -307,14 +307,14 @@ class RepositoryTest extends TestCase {
         $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 4]),
             new Entity(['post_count' => 1])
-        ]), $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->orderBy('id', 'asc')->all());
 
         $topic->decrement(null, ['post_count' => 1]);
 
         $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 3]),
             new Entity(['post_count' => 0])
-        ]), $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->orderBy('id', 'asc')->all());
     }
 
     public function testDecrementCallback() {
@@ -325,7 +325,7 @@ class RepositoryTest extends TestCase {
         $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 4]),
             new Entity(['post_count' => 1])
-        ]), $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->orderBy('id', 'asc')->all());
 
         $topic->decrement(function(Query $query) {
             $query->where('slug', 'like', '%batman%');
@@ -334,7 +334,7 @@ class RepositoryTest extends TestCase {
         $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 3]),
             new Entity(['post_count' => 1])
-        ]), $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->orderBy('id', 'asc')->all());
     }
 
     public function testDelete() {
@@ -773,14 +773,14 @@ class RepositoryTest extends TestCase {
         $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 4]),
             new Entity(['post_count' => 1])
-        ]), $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->orderBy('id', 'asc')->all());
 
         $topic->increment(null, ['post_count' => 3]);
 
         $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 7]),
             new Entity(['post_count' => 4])
-        ]), $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->orderBy('id', 'asc')->all());
     }
 
     public function testIncrementCallback() {
@@ -791,7 +791,7 @@ class RepositoryTest extends TestCase {
         $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 4]),
             new Entity(['post_count' => 1])
-        ]), $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->orderBy('id', 'asc')->all());
 
         $topic->increment(function(Query $query) {
             $query->where('slug', 'like', '%batman%');
@@ -800,7 +800,7 @@ class RepositoryTest extends TestCase {
         $this->assertEquals(new EntityCollection([
             new Entity(['post_count' => 5]),
             new Entity(['post_count' => 1])
-        ]), $topic->select('post_count')->all());
+        ]), $topic->select('post_count')->orderBy('id', 'asc')->all());
     }
 
     public function testQuery() {
