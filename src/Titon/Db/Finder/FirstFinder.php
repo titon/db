@@ -24,7 +24,7 @@ class FirstFinder extends AbstractFinder {
     /**
      * {@inheritdoc}
      */
-    public function noResults() {
+    public function noResults(array $options = []) {
         return null;
     }
 

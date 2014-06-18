@@ -7,8 +7,6 @@
 
 namespace Titon\Db\Finder;
 
-use Titon\Db\EntityCollection;
-
 /**
  * Returns all records wrapped in a collection.
  *
@@ -20,14 +18,18 @@ class AllFinder extends AbstractFinder {
      * {@inheritdoc}
      */
     public function after(array $results, array $options = []) {
-        return new EntityCollection($results);
+        $collection = $options['collection'];
+
+        return new $collection($results);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function noResults() {
-        return new EntityCollection();
+    public function noResults(array $options = []) {
+        $collection = $options['collection'];
+
+        return new $collection();
     }
 
 }

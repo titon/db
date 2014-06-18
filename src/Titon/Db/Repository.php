@@ -72,12 +72,13 @@ class Repository extends Base implements Listener {
      * Configuration.
      *
      * @type array {
-     *      @type $string $connection   The connection driver key
-     *      @type $string $table        Database table name
-     *      @type $string $prefix       Prefix to prepend to the table name
-     *      @type $string $primaryKey   The field representing the primary key
-     *      @type $string $displayField The field representing a readable label
-     *      @type $string $entity       The Entity class to wrap results in
+     *      @type string $connection    The connection driver key
+     *      @type string $table         Database table name
+     *      @type string $prefix        Prefix to prepend to the table name
+     *      @type string $primaryKey    The field representing the primary key
+     *      @type string $displayField  The field representing a readable label
+     *      @type string $entity        The Entity class to wrap results in
+     *      @type string $collection    The Collection class to wrap entities in
      * }
      */
     protected $_config = [
@@ -86,7 +87,8 @@ class Repository extends Base implements Listener {
         'prefix' => '',
         'primaryKey' => 'id',
         'displayField' => ['title', 'name', 'id'],
-        'entity' => 'Titon\Db\Entity'
+        'entity' => 'Titon\Db\Entity',
+        'collection' => 'Titon\Db\EntityCollection'
     ];
 
     /**
@@ -445,7 +447,8 @@ class Repository extends Base implements Listener {
     public function find(Query $query, $type, array $options = []) {
         $options = $options + [
             'before' => true,
-            'after' => true
+            'after' => true,
+            'collection' => $this->getConfig('collection')
         ];
 
         $finder = $this->getFinder($type);
@@ -456,7 +459,7 @@ class Repository extends Base implements Listener {
             $state = $event->getData();
 
             if ($state !== null && !$state) {
-                return $finder->noResults();
+                return $finder->noResults($options);
             }
         }
 
@@ -476,7 +479,7 @@ class Repository extends Base implements Listener {
         }
 
         if (!$results) {
-            return $finder->noResults();
+            return $finder->noResults($options);
         }
 
         if ($options['after']) {

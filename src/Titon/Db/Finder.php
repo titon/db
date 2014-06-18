@@ -36,8 +36,9 @@ interface Finder {
     /**
      * Return an empty value when no results are found.
      *
+     * @param array $options
      * @return mixed
      */
-    public function noResults();
+    public function noResults(array $options = []);
 
 }

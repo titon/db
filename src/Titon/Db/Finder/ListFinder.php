@@ -44,7 +44,7 @@ class ListFinder extends AbstractFinder {
     /**
      * {@inheritdoc}
      */
-    public function noResults() {
+    public function noResults(array $options = []) {
         return [];
     }
 
