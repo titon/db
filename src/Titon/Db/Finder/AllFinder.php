@@ -18,18 +18,28 @@ class AllFinder extends AbstractFinder {
      * {@inheritdoc}
      */
     public function after(array $results, array $options = []) {
-        $collection = $options['collection'];
-
-        return new $collection($results);
+        return $this->createCollection($results, $options);
     }
 
     /**
      * {@inheritdoc}
      */
     public function noResults(array $options = []) {
-        $collection = $options['collection'];
+        return $this->createCollection([], $options);
+    }
 
-        return new $collection();
+    /**
+     * Create a collection object and fill it with the results.
+     * The collection class can be customized through the options.
+     *
+     * @param array $results
+     * @param array $options
+     * @return \Titon\Db\EntityCollection
+     */
+    public function createCollection(array $results, array $options) {
+        $collection = isset($options['collection']) ? $options['collection'] : 'Titon\Db\EntityCollection';
+
+        return new $collection($results);
     }
 
 }
