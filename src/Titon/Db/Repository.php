@@ -937,7 +937,7 @@ class Repository extends Base implements Listener {
 
         // Either update
         if ($update) {
-            if (!$this->update($id, $data, $options)) {
+            if ($this->update($id, $data, $options) === false) {
                 return 0;
             }
 
@@ -1122,7 +1122,7 @@ class Repository extends Base implements Listener {
 
         // Exit early if save failed
         if ($count === false) {
-            return 0;
+            return false;
         }
 
         if ($options['after']) {
