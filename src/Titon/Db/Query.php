@@ -650,6 +650,37 @@ class Query {
     }
 
     /**
+     * Return the last record from the results.
+     * Reverse the direction of any order by declarations.
+     *
+     * @param array $options
+     * @return \Titon\Db\Entity
+     */
+    public function last(array $options = []) {
+        if ($order = $this->getOrderBy()) {
+            $this->_orderBy = [];
+
+            foreach ($order as $field => $dir) {
+                if ($dir === 'asc') {
+                    $dir = 'desc';
+                } else if ($dir === 'desc') {
+                    $dir = 'asc';
+                }
+
+                if (is_numeric($field)) {
+                    $this->orderBy($dir);
+                } else {
+                    $this->orderBy($field, $dir);
+                }
+            }
+        } else {
+            $this->orderBy($this->getRepository()->getPrimaryKey(), 'desc');
+        }
+
+        return $this->limit(1)->find('first', $options);
+    }
+
+    /**
      * Add a new LEFT join.
      *
      * @param string|array $table

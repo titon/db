@@ -566,6 +566,40 @@ class RepositoryTest extends TestCase {
         $this->assertEquals(new EntityCollection(), $this->object->select()->where('country_id', 15)->all());
     }
 
+    public function testFindLast() {
+        $this->loadFixtures('Users');
+
+        $this->assertEquals(new Entity([
+            'id' => 5,
+            'country_id' => 4,
+            'username' => 'wolverine',
+            'firstName' => 'Logan',
+            'lastName' => '',
+            'password' => '1Z5895jf72yL77h',
+            'email' => 'wolverine@email.com',
+            'age' => 355,
+            'created' => '2000-11-30 21:22:34',
+            'modified' => null
+        ]), $this->object->select()->last());
+    }
+
+    public function testFindLastReversedOrder() {
+        $this->loadFixtures('Users');
+
+        $this->assertEquals(new Entity([
+            'id' => 2,
+            'country_id' => 3,
+            'username' => 'batman',
+            'firstName' => 'Bruce',
+            'lastName' => 'Wayne',
+            'password' => '1Z5895jf72yL77h',
+            'email' => 'batman@email.com',
+            'age' => 35,
+            'created' => '1960-05-11 21:22:34',
+            'modified' => null
+        ]), $this->object->select()->orderBy('lastName', 'asc')->last());
+    }
+
     public function testFindList() {
         $this->loadFixtures('Users');
 
