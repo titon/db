@@ -937,7 +937,9 @@ class Repository extends Base implements Listener {
 
         // Either update
         if ($update) {
-            $this->update($id, $data, $options);
+            if (!$this->update($id, $data, $options)) {
+                return 0;
+            }
 
         // Or insert
         } else {
