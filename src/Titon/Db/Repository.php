@@ -456,9 +456,9 @@ class Repository extends Base implements Listener {
 
         if ($options['before']) {
             $event = $this->emit('db.preFind', [$query, $type]);
-            $state = $event->getData();
+            $state = $event->getState();
 
-            if ($state !== null && !$state) {
+            if (!$state) {
                 return $finder->noResults($options);
             }
         }
@@ -981,9 +981,8 @@ class Repository extends Base implements Listener {
         if ($options['before']) {
             foreach (['db.preSave', 'db.preCreate'] as $event) {
                 $event = $this->emit($event, [$query, null, &$data]);
-                $state = $event->getData();
 
-                if ($state !== null && !$state) {
+                if (!$event->getState()) {
                     return 0;
                 }
             }
@@ -1043,14 +1042,12 @@ class Repository extends Base implements Listener {
 
         if ($options['before']) {
             $event = $this->emit('db.preDelete', [$query, $id]);
-            $state = $event->getData();
+            $state = $event->getState();
 
-            if ($state !== null) {
-                if (!$state) {
-                    return 0;
-                } else if (is_numeric($state)) {
-                    return (int) $state;
-                }
+            if (!$state) {
+                return 0;
+            } else if (is_numeric($state)) {
+                return (int) $state;
             }
         }
 
@@ -1103,9 +1100,8 @@ class Repository extends Base implements Listener {
         if ($options['before']) {
             foreach (['db.preSave', 'db.preUpdate'] as $event) {
                 $event = $this->emit($event, [$query, $id, &$data]);
-                $state = $event->getData();
 
-                if ($state !== null && !$state) {
+                if (!$event->getState()) {
                     return 0;
                 }
             }
